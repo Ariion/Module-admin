@@ -152,21 +152,39 @@ restent accrochés. La reconstruction n'a lieu que si la structure change.
 Un bloc ajouté ensuite dans le code n'apparaîtra pas. Le bouton « revenir aux
 blocs du code » dans la barre d'outils du bloc rend la main au développeur.
 
-### Sections de page
+### Sections et éléments
 
-Un éditeur comme Elementor propose une bibliothèque de blocs génériques,
-parce qu'il possède le design du site. Ici c'est le développeur qui le
-possède : un bloc générique jurerait avec tout site écrit à la main. **La
-bibliothèque est donc constituée des sections déjà présentes dans la page** —
-ajouter une section, c'est en dupliquer une existante. Le rendu reste celui du
-développeur, quoi que fasse le client.
+Le client ajoute une section vide, puis y dépose des éléments : titre, texte,
+bouton, liste, image, vidéo, carte, colonnes, séparateur, espaceur. La
+bibliothèque, la recherche, les catégories et le glisser-déposer reprennent ce
+que fait Elementor.
+
+**Comment un élément générique s'intègre à un site écrit à la main.** C'est le
+problème de fond : un widget qui apporte son propre style jure avec tout. La
+réponse tient dans le balisage — les éléments émettent du HTML **sémantique et
+sans classes** : un `<h2>`, un `<p>`, un `<img>`. La feuille de style du site
+s'y applique donc d'elle-même, et un titre inséré prend sa police, sa couleur
+et ses marges. Seuls les conteneurs portent quelques styles en ligne, pour la
+mise en grille. *Vérifié :* un titre inséré dans le site du Domaine de
+Lamartine hérite bien de sa police `Fraunces`.
+
+Un élément n'est jamais inséré dans le balisage du développeur : il vit dans
+une section ajoutée. La mise en page du site reste intacte.
+
+Deuxième façon d'ajouter une section : **copier une section existante** de la
+page, quand on veut reprendre une mise en page déjà écrite. Le rendu est alors
+exactement celui du développeur.
 
 Trois opérations : ajouter (copie d'une section), retirer, réordonner. Elles
 sont stockées à part du contenu :
 
 ```json
 { "sections": {
-  "add":  [ { "key": "s1", "from": "e_utvrr0", "after": "e_181fezc", "fields": {} } ],
+  "add":  [
+    { "kind": "copy",    "key": "s1", "from": "e_utvrr0", "after": "e_181fezc", "fields": {} },
+    { "kind": "widgets", "key": "s2", "after": "e_9ka22p",
+      "tree": { "type": "section", "children": [ { "type": "heading", "props": { "text": "…" } } ] } }
+  ],
   "hide": [ { "ref": "e_9ka22p", "label": "Loisirs" } ],
   "order": []
 } }
@@ -417,7 +435,8 @@ Le contenu est fidèle, l'indentation d'origine ne l'est pas.
 
 | Limite | Détail |
 |---|---|
-| Sections : copies uniquement | Ajouter une section, c'est dupliquer une section existante de la page. Il n'y a pas de bibliothèque de blocs génériques — un bloc générique jurerait avec un site écrit à la main. |
+| Éléments : dans les sections ajoutées | On dépose un élément dans une section qu'on a ajoutée, jamais dans le balisage du développeur. C'est ce qui garantit que la mise en page du site reste intacte. |
+| Vidéo et carte | Seuls YouTube, Vimeo et Google Maps sont acceptés, en URL d'intégration vérifiée. |
 | Habillage restreint | Couleurs et image de fond seulement. Ni marges, ni tailles, ni positionnement. |
 | Contenu masqué au scan | Un menu mobile invisible sur grand écran n'est pas détecté depuis un grand écran. Passer `scan.visibleOnly: false` ou éditer depuis la largeur concernée. |
 | Listes appropriées par le client | Voir §2. Le bouton « revenir aux blocs du code » rend la main. |

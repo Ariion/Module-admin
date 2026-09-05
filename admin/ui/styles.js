@@ -100,8 +100,9 @@ button, input, textarea, select { font: inherit; color: inherit; }
 }
 .panel__state {
   display: flex; align-items: center; gap: 8px; margin-bottom: 11px;
-  font-size: 11.5px; color: var(--muted); flex-wrap: wrap;
+  font-size: 11.5px; color: var(--muted); min-width: 0;
 }
+.panel__state > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .panel__actions { display: flex; gap: 7px; }
 .panel__actions .btn--primary { flex: 1; justify-content: center; }
 
@@ -199,6 +200,16 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .group[data-open="false"] .group__body { display: none; }
 .group--sect .group__head > svg:first-child { color: var(--sect); }
 
+/* Groupe de boutons segmenté (alignement) */
+.seg { display: flex; gap: 2px; padding: 2px; background: var(--bg-sunk); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.seg__btn {
+  flex: 1; height: 26px; border: 0; border-radius: 4px; cursor: pointer;
+  background: none; color: var(--muted); font-size: 11.5px;
+}
+.seg__btn:hover { color: var(--text); }
+.seg__btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
+select.input { appearance: none; cursor: pointer; }
+
 /* Sélecteur de couleur */
 .color { display: flex; align-items: center; gap: 8px; }
 .color__swatch {
@@ -281,6 +292,77 @@ button, input, textarea, select { font: inherit; color: inherit; }
   background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
 }
+
+/* ================= Bibliothèque de widgets ================= */
+.search {
+  display: flex; align-items: center; gap: 8px; padding: 0 10px; margin-bottom: 14px;
+  background: var(--bg-sunk); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  color: var(--faint);
+}
+.search__input {
+  border: 0; background: none; padding: 9px 0; flex: 1;
+}
+.search__input:focus { border: 0; outline: none; }
+.search:focus-within { border-color: var(--accent); }
+
+.wcat { margin-bottom: 6px; }
+.wcat__head {
+  width: 100%; display: flex; align-items: center; padding: 9px 2px;
+  background: none; border: 0; color: var(--muted); cursor: pointer; text-align: left;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+.wcat__head:hover { color: var(--text); }
+.wcat__head span { flex: 1; }
+.wcat__head svg { transition: transform .16s; }
+.wcat[data-open="false"] .wcat__head svg { transform: rotate(-90deg); }
+.wcat[data-open="false"] .wgrid { display: none; }
+
+.wgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-bottom: 8px; }
+.wtile {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 9px; padding: 18px 8px; min-height: 92px; cursor: grab;
+  background: var(--bg-soft); border: 1px solid var(--line-soft); border-radius: var(--radius);
+  color: var(--muted); text-align: center;
+  transition: background .14s, border-color .14s, color .14s, transform .1s;
+}
+.wtile:hover { background: var(--bg-raise); border-color: var(--accent); color: var(--text); }
+.wtile:active { cursor: grabbing; transform: scale(.97); }
+.wtile:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.wtile__icon { color: var(--accent); display: flex; }
+.wtile:hover .wtile__icon { color: var(--accent-hi); }
+.wtile__label { font-size: 11.5px; line-height: 1.25; }
+
+/* ---- Zones de dépôt dans l'aperçu ---- */
+.drop {
+  position: absolute; pointer-events: none;
+  border: 2px dashed var(--accent); border-radius: var(--radius);
+  background: var(--accent-dim);
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  color: var(--accent-hi); font-size: 12.5px; font-weight: 550;
+}
+.drop--empty { pointer-events: auto; cursor: pointer; }
+.drop--over { background: rgba(77,139,245,.28); border-style: solid; }
+.dropline {
+  position: absolute; height: 3px; border-radius: 2px; pointer-events: none;
+  background: var(--accent); box-shadow: 0 0 10px rgba(77,139,245,.8);
+}
+
+/* ---- Widget sélectionné dans l'aperçu ---- */
+.wsel { position: absolute; pointer-events: none; border: 1px solid var(--accent); border-radius: 2px; }
+.wtools {
+  position: absolute; display: flex; align-items: center; gap: 2px; padding: 3px;
+  pointer-events: auto; background: var(--accent); border-radius: 6px 6px 0 0;
+  box-shadow: var(--shadow);
+}
+.wtools__name {
+  padding: 0 8px 0 5px; font-size: 11px; font-weight: 650; color: #fff;
+  max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.wtools .btn {
+  height: 22px; width: 22px; padding: 0; justify-content: center; border-radius: 4px;
+  background: rgba(255,255,255,.16); border-color: transparent; color: #fff;
+}
+.wtools .btn:hover { background: rgba(255,255,255,.32); border-color: transparent; }
 
 /* ---- Structure : sections ----
    Le violet distingue la structure du contenu, qui reste bleu. Deux natures

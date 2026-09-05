@@ -61,6 +61,17 @@ export function icon(name, size = 14) {
     plus: 'M12 5v14M5 12h14',
     text: 'M5 5h14M12 5v14M9 19h6',
     section: 'M3 4h18v6H3zM3 14h18v6H3',
+    columns: 'M4 4h6v16H4zM14 4h6v16h-6z',
+    heading: 'M6 4v16M18 4v16M6 12h12M4 4h4M16 4h4',
+    button: 'M3 8h18v8H3zM8 12h8',
+    list: 'M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01',
+    divider: 'M3 12h18M7 8h10M7 16h10',
+    spacer: 'M12 4v16M8 7l4-3 4 3M8 17l4 3 4-3',
+    video: 'M3 5h18v14H3zM10 9l5 3-5 3z',
+    map: 'M9 3 3 6v15l6-3 6 3 6-3V3l-6 3zM9 3v15M15 6v15',
+    search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3',
+    grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
+    drag: 'M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01',
   };
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');

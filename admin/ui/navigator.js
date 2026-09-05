@@ -25,10 +25,16 @@ export function createNavigator({ vue, t, onSelect, onHover, onAddSection, onRes
     for (const entry of model.entries.values()) parEnfant.set(entry.el, entry);
 
     if (onAddSection) {
-      vue.appendChild(h('button', {
-        class: 'btn btn--wide btn--sect', type: 'button', style: { marginBottom: '13px' },
-        onclick: () => onAddSection(null),
-      }, icon('plus', 13), t('addSection')));
+      vue.appendChild(h('div', { class: 'row', style: { marginBottom: '13px' } },
+        h('button', {
+          class: 'btn btn--sect', type: 'button',
+          onclick: () => onAddSection(null, 'blank'),
+        }, icon('plus', 13), t('addBlankSection')),
+        h('button', {
+          class: 'btn', type: 'button',
+          onclick: () => onAddSection(null, 'copy'),
+        }, icon('copy', 13), t('copySection')),
+      ));
     }
 
     const racine = h('ul', { class: 'tree' });

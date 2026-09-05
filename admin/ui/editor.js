@@ -15,6 +15,7 @@ import { createOverlay } from './overlay.js';
 import { createTextEditor } from './text-edit.js';
 import { createInspector } from './inspector.js';
 import { createNavigator } from './navigator.js';
+import { createWidgetsPanel } from './widgets-panel.js';
 import { createLibrary } from './library.js';
 import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
@@ -81,12 +82,34 @@ export async function startEditor(runtime) {
   function buildShell() {
     shell = createShell({ root, t, config, onDevice: () => setTimeout(() => overlay?.reposition(), 240) });
 
-    const vueContenu = shell.addView('contenu', t('tabContent'), 'sliders');
+    const vueElements = shell.addView('elements', t('tabElements'), 'grid');
     const vueStructure = shell.addView('structure', t('tabStructure'), 'layers');
     const vueMedias = shell.addView('medias', t('tabMedia'), 'image');
 
+    // L'onglet Éléments montre la bibliothèque, et bascule sur les réglages
+    // dès qu'un élément est choisi — comme le fait Elementor.
+    hoteBibliotheque = h('div', {});
+    hoteInspecteur = h('div', {});
+    retourBibliotheque = h('button', {
+      class: 'btn btn--ghost btn--wide', type: 'button', style: { marginBottom: '10px', justifyContent: 'flex-start' },
+      onclick: () => showLibrary(),
+    }, icon('up', 13), t('backToLibrary'));
+    hoteInspecteur.appendChild(retourBibliotheque);
+    vueElements.append(hoteBibliotheque, hoteInspecteur);
+    hoteInspecteur.style.display = 'none';
+
+    const vueInspecteur = h('div', {});
+    hoteInspecteur.appendChild(vueInspecteur);
+
+    createWidgetsPanel({
+      vue: hoteBibliotheque, t,
+      onInsert: (type) => insererWidget(type),
+      onDragStart: (type) => overlay.beginDrag(type),
+      onDragEnd: () => overlay.endDrag(),
+    });
+
     inspector = createInspector({
-      vue: vueContenu, t,
+      vue: vueInspecteur, t,
       actions: {
         valueOf: (entry) => valeurDe(entry),
         setContent: (entry, patch) => setValue(entry, patch),
@@ -102,6 +125,12 @@ export async function startEditor(runtime) {
         addSection: (from, after) => sectionOp(from, 'add', after),
         pickMedia: (rappel) => { shell.showView('medias'); library.pick(rappel); },
         upload: (fichier, onProgress) => media.primary.upload(fichier, { onProgress }),
+        setWidgetProps: (key, patch) => {
+          if (!model.setWidgetProps(key, patch)) return;
+          markDirty();
+          apresStructure(key);
+        },
+        widgetOp: (key, op, arg) => widgetOp(key, op, arg),
       },
     });
 
@@ -109,7 +138,7 @@ export async function startEditor(runtime) {
       vue: vueStructure, t,
       onSelect: (sel) => { select(sel, { reveal: true }); },
       onHover: (el) => { if (el) overlay.setActive(el); },
-      onAddSection: (afterRef) => ouvrirSections(afterRef),
+      onAddSection: (afterRef, mode) => (mode === 'copy' ? ouvrirSections(afterRef) : ajouterSectionVide(afterRef)),
       onRestoreSection: (ref) => sectionOp(ref, 'show'),
     });
 
@@ -123,8 +152,16 @@ export async function startEditor(runtime) {
       onSelect: (sel) => select(sel),
       onCollectionOp: (id, op, ...args) => collectionOp(id, op, ...args),
       onSectionOp: (ref, op, ...args) => sectionOp(ref, op, ...args),
-      onAddSection: (afterRef) => ouvrirSections(afterRef),
+      onAddSection: (afterRef) => ajouterSectionVide(afterRef),
       onReposition: () => textEditor?.reposition(),
+      onWidgetSelect: (key) => selectWidget(key),
+      onWidgetOp: (key, op, arg) => widgetOp(key, op, arg),
+      onWidgetDrop: (type, parentKey, index) => {
+        const key = model.insertWidget(type, parentKey, index);
+        if (!key) return;
+        markDirty();
+        apresStructure(key);
+      },
     });
 
     textEditor = createTextEditor({
@@ -134,10 +171,82 @@ export async function startEditor(runtime) {
 
     shell.setActions([
       publishButton,
+      previewButton,
       h('button', { class: 'btn btn--icon', type: 'button', title: t('history'), onclick: history }, icon('history', 13)),
       h('button', { class: 'btn btn--icon', type: 'button', title: t('exportSite'), onclick: exporter }, icon('download', 13)),
       h('button', { class: 'btn btn--icon', type: 'button', title: t('signOut'), onclick: quit }, icon('close', 13)),
     ]);
+  }
+
+  let hoteBibliotheque = null;
+  let hoteInspecteur = null;
+  let retourBibliotheque = null;
+
+  function showLibrary() {
+    if (!hoteBibliotheque) return;
+    hoteBibliotheque.style.display = '';
+    hoteInspecteur.style.display = 'none';
+    overlay?.setActive(null);
+    shell.showView('elements');
+  }
+
+  function showInspector() {
+    hoteBibliotheque.style.display = 'none';
+    hoteInspecteur.style.display = '';
+    shell.showView('elements');
+  }
+
+  /** Conteneur qui reçoit un widget ajouté par un clic sur sa vignette. */
+  function conteneurActif() {
+    const choisi = inspector.selection?.widget;
+    if (choisi) {
+      const cible = model.findWidgetNode(choisi.key);
+      if (cible?.noeud.children) return choisi.key;
+      const parent = cible?.parent;
+      if (parent?.key) return parent.key;
+      if (cible?.record) return cible.record.tree.key;
+    }
+    const sections = model.widgetSections();
+    return sections.length ? sections[sections.length - 1].tree.key : null;
+  }
+
+  async function insererWidget(type) {
+    let parent = conteneurActif();
+    if (!parent) {
+      // Aucune section à remplir : on en crée une, puis on y dépose.
+      parent = await ajouterSectionVide(null, { silencieux: true });
+      if (!parent) return;
+    }
+    const key = model.insertWidget(type, parent, -1);
+    if (!key) return;
+    markDirty();
+    apresStructure(key);
+  }
+
+  function widgetOp(key, op, arg) {
+    let change = false;
+    if (op === 'remove') change = model.removeWidgetNode(key);
+    else if (op === 'move') change = model.moveWidgetNode(key, arg);
+    if (!change) return;
+    markDirty();
+    if (op === 'remove') { overlay.refresh(model); navigator.render(model); showLibrary(); }
+    else apresStructure(key);
+  }
+
+  /** Rafraîchit l'aperçu après une modification d'arbre, puis resélectionne. */
+  function apresStructure(key) {
+    overlay.refresh(model);
+    navigator.render(model);
+    if (key) selectWidget(key);
+  }
+
+  function selectWidget(key) {
+    const cible = model.findWidgetNode(key);
+    if (!cible) return;
+    const el = model.doc.querySelector(`[data-admin-widget="${key}"]`);
+    if (el) overlay.setActive(el);
+    inspector.render({ widget: cible.noeud, el });
+    showInspector();
   }
 
   const publishButton = h('button', {
@@ -145,8 +254,8 @@ export async function startEditor(runtime) {
   }, icon('check', 13), t('publish'));
 
   const previewButton = h('button', {
-    class: 'btn btn--sm', type: 'button', onclick: () => togglePreview(),
-  }, icon('eye', 13), t('preview'));
+    class: 'btn btn--icon', type: 'button', title: t('preview'), onclick: () => togglePreview(),
+  }, icon('eye', 13));
 
   // ================================================================
   //  Aperçu et modèle
@@ -184,7 +293,7 @@ export async function startEditor(runtime) {
     overlay.enable();
     navigator.render(model);
     inspector.render(null);
-    surveillerNavigation();
+    surveillerNavigation(doc.location.href);
     render();
     debug('aperçu prêt —', state.pageId, model.entries.size, 'éléments');
   }
@@ -212,15 +321,23 @@ export async function startEditor(runtime) {
       || (structure.order || []).length > 0;
   }
 
-  /** Le client peut se déplacer dans son site : on suit l'aperçu. */
-  function surveillerNavigation() {
+  /**
+   * Le client peut se déplacer dans son site : on suit l'aperçu.
+   *
+   * L'aperçu est considéré prêt avant son évènement `load` — on n'attend pas
+   * les dernières images. Ce `load` arrive donc APRÈS le branchement, et le
+   * confondre avec une navigation ferait recharger la page en boucle. On
+   * compare donc l'adresse : seule une adresse différente est une navigation.
+   */
+  function surveillerNavigation(urlApercu) {
     const frame = shell.frame;
     if (!frame || frame.dataset.adminWatched) return;
     frame.dataset.adminWatched = '1';
     frame.addEventListener('load', async () => {
-      if (!frame.contentDocument) return;
-      const url = frame.contentDocument.location.href;
-      if (!url || url === 'about:blank') return;
+      const doc = frame.contentDocument;
+      if (!doc) return;
+      const url = doc.location.href;
+      if (!url || url === 'about:blank' || url === urlApercu) return;
       await autosave.flush();
       notify(t('pageLoaded'));
       await loadPage(url.split('?')[0]);
@@ -235,11 +352,11 @@ export async function startEditor(runtime) {
     textEditor.commit();
     overlay.setActive(sel.el);
     if (options.reveal) overlay.reveal(sel.el);
+    showInspector();
 
     const section = model.sectionList().find((x) => x.el === sel.el) || null;
     const item = { ...sel, ...(sel.collection ? {} : trouverBloc(sel.el)), section };
     inspector.render(item);
-    shell.showView('contenu');
 
     if (item.entry && item.entry.role === 'text' && !options.reveal) {
       textEditor.start(item.entry);
@@ -312,8 +429,31 @@ export async function startEditor(runtime) {
 
   function ouvrirSections(afterRef) {
     const ref = afterRef || model.sectionList().slice(-1)[0]?.ref;
-    shell.showView('contenu');
+    showInspector();
     inspector.showSections(ref);
+  }
+
+  /** Crée une section vide, prête à recevoir des widgets. */
+  async function ajouterSectionVide(afterRef, options = {}) {
+    const ref = afterRef || model.sectionList().slice(-1)[0]?.ref || null;
+    const key = model.addBlankSection(ref);
+    markDirty();
+    await autosave.flush();
+    await loadPage(urlCourante());
+    const record = model.sections.add.find((r) => r.key === key);
+
+    // La nouvelle section est ajoutée en bas de page : sans amener l'aperçu
+    // dessus, l'utilisateur ne verrait rien se passer.
+    const el = model.doc.querySelector(`[data-admin-section="${key}"]`);
+    if (el) {
+      overlay.reveal(el);
+      overlay.setActive(el);
+    }
+    if (!options.silencieux) {
+      showLibrary();
+      notify(t('sectionAdded'));
+    }
+    return record ? record.tree.key : null;
   }
 
   /**
@@ -484,12 +624,10 @@ export async function startEditor(runtime) {
     if (state.savedAt) details.push(timeAgo(state.savedAt, config.lang));
     if (model && model.orphans.size) details.push(t('orphans', model.orphans.size));
 
-    shell.setState([pastille, h('span', {}, details.join(' · ')), previewButton]);
+    shell.setState([pastille, h('span', {}, details.join(' · '))]);
 
-    previewButton.replaceChildren(
-      icon(state.editing ? 'eye' : 'pencil', 13),
-      state.editing ? t('preview') : t('edit'),
-    );
+    previewButton.replaceChildren(icon(state.editing ? 'eye' : 'pencil', 13));
+    previewButton.title = state.editing ? t('preview') : t('edit');
     publishButton.disabled = !modifications && !state.hasDraft;
   }
 

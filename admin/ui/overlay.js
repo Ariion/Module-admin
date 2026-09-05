@@ -10,7 +10,7 @@ import { h, icon, clear } from './el.js';
 
 const LABELS = { text: 'text', image: 'image', link: 'link', background: 'background' };
 
-export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSectionOp, onAddSection, onReposition }) {
+export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSectionOp, onAddSection, onReposition, onWidgetOp, onWidgetDrop, onWidgetSelect }) {
   let doc = null;
   let win = null;
   let model = null;
@@ -49,6 +49,19 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
 
   let sections = [];
   let sectionSurvolee = null;
+
+  // --- Widgets : sélection et dépôt ------------------------------------
+  const cadreWidget = h('div', { class: 'wsel' });
+  const outilsWidget = h('div', { class: 'wtools' });
+  const ligneDepot = h('div', { class: 'dropline' });
+  const zonesVides = [];
+  layer.append(cadreWidget, outilsWidget, ligneDepot);
+  cacher(cadreWidget); cacher(outilsWidget); cacher(ligneDepot);
+
+  let widgetSurvole = null;
+  let typeEnCours = null;
+
+  const CONTENEURS = new Set(['section', 'columns', 'column']);
 
   function cacher(n) { n.style.display = 'none'; }
   function montrer(n) { n.style.display = ''; }
@@ -169,6 +182,99 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     montrer(outilsBloc);
   }
 
+  /** Élément de widget le plus proche au-dessus d'un nœud. */
+  function widgetSous(noeud) {
+    let courant = noeud;
+    while (courant && courant !== doc.body) {
+      if (courant.hasAttribute && courant.hasAttribute('data-admin-widget')) return courant;
+      courant = courant.parentElement;
+    }
+    return null;
+  }
+
+  /** Conteneur de widgets le plus proche, et l'enfant direct visé. */
+  function conteneurSous(el) {
+    let enfant = null;
+    let courant = el;
+    while (courant && courant !== doc.body) {
+      if (courant.hasAttribute && courant.hasAttribute('data-admin-widget')) {
+        if (CONTENEURS.has(courant.getAttribute('data-admin-type'))) {
+          return { conteneur: courant, enfant };
+        }
+        enfant = courant;
+      }
+      courant = courant.parentElement;
+    }
+    return null;
+  }
+
+  /** Enfants widgets directs d'un conteneur. */
+  function enfantsDe(conteneur) {
+    const type = conteneur.getAttribute('data-admin-type');
+    // Une section enveloppe ses enfants dans un div de mise en page.
+    const hote = type === 'section' ? conteneur.firstElementChild : conteneur;
+    return hote ? Array.from(hote.children).filter((n) => n.hasAttribute('data-admin-widget')) : [];
+  }
+
+  function peindreWidget(el) {
+    if (!el || !el.isConnected) { cacher(cadreWidget); cacher(outilsWidget); return; }
+    placer(cadreWidget, el);
+
+    const decalage = origin();
+    const rect = el.getBoundingClientRect();
+    const key = el.getAttribute('data-admin-widget');
+    const type = el.getAttribute('data-admin-type');
+
+    clear(outilsWidget);
+    const bouton = (nom, titre, action) => h('button', {
+      class: 'btn btn--sm', type: 'button', title: titre,
+      onclick: (e) => { e.preventDefault(); e.stopPropagation(); action(); },
+    }, icon(nom, 12));
+
+    outilsWidget.append(
+      h('span', { class: 'wtools__name' }, t('w_' + type)),
+      bouton('up', t('moveUp'), () => onWidgetOp(key, 'move', -1)),
+      bouton('down', t('moveDown'), () => onWidgetOp(key, 'move', 1)),
+      bouton('trash', t('remove'), () => onWidgetOp(key, 'remove')),
+    );
+    outilsWidget.style.left = (decalage.x + rect.left) + 'px';
+    outilsWidget.style.top = (decalage.y + Math.max(rect.top - 27, 2)) + 'px';
+    montrer(outilsWidget);
+  }
+
+  /** Dessine une invite de dépôt sur chaque conteneur vide. */
+  function peindreZonesVides() {
+    for (const zone of zonesVides) zone.remove();
+    zonesVides.length = 0;
+    if (!doc) return;
+
+    const decalage = origin();
+    for (const conteneur of doc.querySelectorAll('[data-admin-widget]')) {
+      const type = conteneur.getAttribute('data-admin-type');
+      if (!CONTENEURS.has(type) || type === 'columns') continue;
+      if (enfantsDe(conteneur).length) continue;
+
+      const hote = type === 'section' ? conteneur.firstElementChild : conteneur;
+      if (!hote) continue;
+      const rect = hote.getBoundingClientRect();
+      if (rect.width < 40) continue;
+
+      const key = conteneur.getAttribute('data-admin-widget');
+      const zone = h('div', {
+        class: 'drop drop--empty',
+        onclick: () => onWidgetSelect?.(key),
+        style: {
+          left: (decalage.x + rect.left) + 'px',
+          top: (decalage.y + rect.top) + 'px',
+          width: rect.width + 'px',
+          height: Math.max(rect.height, 92) + 'px',
+        },
+      }, icon('plus', 14), t('dropHere'));
+      layer.appendChild(zone);
+      zonesVides.push(zone);
+    }
+  }
+
   /** Section de premier niveau contenant un nœud. */
   function sectionSous(noeud) {
     for (const section of sections) {
@@ -225,6 +331,12 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     if (entry !== survole) { survole = entry; peindreSurvol(entry); }
     peindreOutilsBloc(itemSous(event.target));
 
+    const widget = widgetSous(event.target);
+    if (widget !== widgetSurvole) {
+      widgetSurvole = widget;
+      peindreWidget(widget);
+    }
+
     const section = sectionSous(event.target);
     if (section !== sectionSurvolee) {
       garderSection();
@@ -237,6 +349,13 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
 
   const surClic = (event) => {
     if (!actif) return;
+    const widget = widgetSous(event.target);
+    if (widget) {
+      event.preventDefault();
+      event.stopPropagation();
+      onWidgetSelect?.(widget.getAttribute('data-admin-widget'));
+      return;
+    }
     // En édition, un lien se modifie ; il ne se suit pas.
     event.preventDefault();
     event.stopPropagation();
@@ -255,9 +374,94 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     placer(cadre, survole?.el);
     placer(cadreActif, selectionne);
     cacher(outilsBloc);
+    if (widgetSurvole) peindreWidget(widgetSurvole); else { cacher(cadreWidget); cacher(outilsWidget); }
     if (sectionSurvolee) peindreSection(sectionSurvolee); else cacher(cadreSection);
+    peindreZonesVides();
     onReposition?.();
   };
+
+  // ================= Glisser-déposer =================
+  // Tout est traité dans le document de l'éditeur : la couche passe au
+  // premier plan pendant le glissement et retrouve la cible par ses
+  // coordonnées. Pas de transfert entre documents, donc pas de surprise.
+  function pointDansApercu(event) {
+    const cadreEl = layer.parentElement.querySelector('iframe');
+    if (!cadreEl) return null;
+    const r = cadreEl.getBoundingClientRect();
+    return { x: event.clientX - r.left, y: event.clientY - r.top };
+  }
+
+  function cibleDepot(event) {
+    const point = pointDansApercu(event);
+    if (!point || !doc) return null;
+    const sous = doc.elementFromPoint(point.x, point.y);
+    if (!sous) return null;
+
+    const trouve = conteneurSous(sous);
+    if (!trouve) return null;
+
+    const { conteneur, enfant } = trouve;
+    const enfants = enfantsDe(conteneur);
+    const key = conteneur.getAttribute('data-admin-widget');
+
+    if (!enfants.length) {
+      const type = conteneur.getAttribute('data-admin-type');
+      const hote = type === 'section' ? conteneur.firstElementChild : conteneur;
+      return { parentKey: key, index: 0, rect: hote.getBoundingClientRect(), pleine: true };
+    }
+
+    const voisin = enfant && enfants.includes(enfant) ? enfant : enfants[enfants.length - 1];
+    const rect = voisin.getBoundingClientRect();
+    const avant = point.y < rect.top + rect.height / 2;
+    const index = enfants.indexOf(voisin) + (avant ? 0 : 1);
+    return { parentKey: key, index, rect, avant };
+  }
+
+  function montrerLigne(cible) {
+    if (!cible) { cacher(ligneDepot); return; }
+    const decalage = origin();
+    if (cible.pleine) {
+      ligneDepot.style.left = (decalage.x + cible.rect.left + 10) + 'px';
+      ligneDepot.style.top = (decalage.y + cible.rect.top + cible.rect.height / 2) + 'px';
+      ligneDepot.style.width = Math.max(0, cible.rect.width - 20) + 'px';
+    } else {
+      ligneDepot.style.left = (decalage.x + cible.rect.left) + 'px';
+      ligneDepot.style.top = (decalage.y + (cible.avant ? cible.rect.top : cible.rect.bottom)) + 'px';
+      ligneDepot.style.width = cible.rect.width + 'px';
+    }
+    montrer(ligneDepot);
+  }
+
+  const surGlisse = (event) => {
+    if (!typeEnCours) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    montrerLigne(cibleDepot(event));
+  };
+
+  const surDepot = (event) => {
+    if (!typeEnCours) return;
+    event.preventDefault();
+    const cible = cibleDepot(event);
+    const type = typeEnCours;
+    endDrag();
+    if (cible) onWidgetDrop?.(type, cible.parentKey, cible.index);
+  };
+
+  function beginDrag(type) {
+    typeEnCours = type;
+    layer.style.pointerEvents = 'auto';
+    layer.addEventListener('dragover', surGlisse);
+    layer.addEventListener('drop', surDepot);
+  }
+
+  function endDrag() {
+    typeEnCours = null;
+    layer.style.pointerEvents = '';
+    layer.removeEventListener('dragover', surGlisse);
+    layer.removeEventListener('drop', surDepot);
+    cacher(ligneDepot);
+  }
 
   function brancher() {
     if (!doc) return;
@@ -284,6 +488,8 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     reposition,
     enable() { if (actif) return; actif = true; brancher(); reposition(); },
     disable() { debrancher(); actif = false; survole = null; sectionSurvolee = null; reposition(); },
+    beginDrag,
+    endDrag,
     /** Sections de la page, telles que l'aperçu les voit. */
     get sections() { return sections; },
     setActive(el) { selectionne = el || null; placer(cadreActif, selectionne); },
@@ -291,7 +497,13 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     reveal(el) {
       if (!el || !el.isConnected) return;
       el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      setTimeout(reposition, 320);
+      // Le défilement est animé : on repositionne pendant et après, sinon
+      // les contours et les zones de dépôt resteraient à l'ancienne place.
+      const debut = Date.now();
+      const suivre = setInterval(() => {
+        reposition();
+        if (Date.now() - debut > 700) clearInterval(suivre);
+      }, 60);
     },
     get document() { return doc; },
   };

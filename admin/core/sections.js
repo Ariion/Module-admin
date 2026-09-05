@@ -1,12 +1,15 @@
 /**
  * Sections de page : ajouter, masquer, réordonner.
  *
- * Choix de conception important. Un éditeur du type Elementor propose une
- * bibliothèque de blocs génériques, parce qu'il possède le design du site.
- * Ici c'est le développeur qui le possède : un bloc générique jurerait avec
- * tout site écrit à la main. La bibliothèque est donc constituée des SECTIONS
- * DÉJÀ PRÉSENTES dans la page — ajouter une section, c'est en dupliquer une
- * existante. Le rendu reste celui du développeur, quoi que fasse le client.
+ * Deux façons d'ajouter une section, complémentaires :
+ *   - `widgets` — une section vide que l'on remplit de widgets (titre, texte,
+ *     image, colonnes…). Les widgets émettent du HTML sémantique sans classes,
+ *     donc la feuille de style du site s'y applique d'elle-même.
+ *   - `copy` — une copie d'une section déjà présente dans la page, quand on
+ *     veut reprendre une mise en page que le développeur a déjà écrite.
+ *
+ * Dans les deux cas la section ajoutée vit à côté du balisage du développeur,
+ * jamais dedans : la mise en page du site reste intacte.
  *
  * Les opérations de structure sont appliquées APRÈS le contenu : les
  * empreintes des éléments sont calculées sur la page d'origine, donc insérer
@@ -15,6 +18,7 @@
  */
 import { hash, uid } from './util.js';
 import { fingerprint, pathBetween, anchorOf } from './identity.js';
+import { createWidget, renderWidget } from './widgets.js';
 
 const IGNORE = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'LINK', 'BR'];
 
@@ -24,7 +28,10 @@ export function listSections(doc = document) {
   for (const el of Array.from(doc.body.children)) {
     if (IGNORE.includes(el.tagName)) continue;
     if (el.hasAttribute('data-admin-ui')) continue;
-    if (!el.textContent.trim() && !el.querySelector('img, svg')) continue;
+    // Une section ajoutée est listée même vide : sans cela on ne pourrait ni
+    // la déplacer ni la retirer tant qu'elle n'a pas de contenu.
+    if (!el.hasAttribute('data-admin-section')
+      && !el.textContent.trim() && !el.querySelector('img, svg')) continue;
     sections.push({ el, ref: refOf(el), label: labelOf(el) });
   }
   return sections;
@@ -77,18 +84,17 @@ export function applySections(doc, state, applyFields) {
 
   // --- Ajouts ---------------------------------------------------------
   for (const record of data.add) {
-    const source = parRef.get(record.from);
-    if (!source) continue;
+    const el = record.kind === 'widgets'
+      ? construireSectionWidgets(record, doc)
+      : construireCopie(record, parRef);
+    if (!el) continue;
 
-    const copie = source.cloneNode(true);
-    copie.setAttribute('data-admin-section', record.key);
-    copie.removeAttribute('id'); // un id doit rester unique dans la page
+    el.setAttribute('data-admin-section', record.key);
+    const apres = parRef.get(record.after) || parRef.get(record.from) || doc.body.lastElementChild;
+    if (apres) apres.after(el); else doc.body.appendChild(el);
 
-    const apres = parRef.get(record.after) || source;
-    apres.after(copie);
-
-    parRef.set('ins:' + record.key, copie);
-    if (applyFields && record.fields) applyFields(copie, record.fields);
+    parRef.set('ins:' + record.key, el);
+    if (record.kind !== 'widgets' && applyFields && record.fields) applyFields(el, record.fields);
     ajoutees++;
   }
 
@@ -119,6 +125,21 @@ export function applySections(doc, state, applyFields) {
   return { ajoutees, masquees };
 }
 
+/** Copie d'une section existante de la page. */
+function construireCopie(record, parRef) {
+  const source = parRef.get(record.from);
+  if (!source) return null;
+  const copie = source.cloneNode(true);
+  copie.removeAttribute('id'); // un id doit rester unique dans la page
+  for (const el of copie.querySelectorAll('[id]')) el.removeAttribute('id');
+  return copie;
+}
+
+/** Section construite à partir d'un arbre de widgets. */
+function construireSectionWidgets(record, doc) {
+  return renderWidget(record.tree, doc);
+}
+
 /** Clé d'un champ à l'intérieur d'une section ajoutée. */
 export function sectionFieldKey(racine, el, role) {
   return 'f_' + hash(pathBetween(racine, el) + '|' + role);
@@ -128,8 +149,16 @@ export function sectionFieldKey(racine, el, role) {
 export const ops = {
   /** Ajoute une copie de `from`, placée juste après `after`. */
   add(state, from, after) {
-    const suivant = { ...state, add: [...state.add, { key: uid('s'), from, after: after || from, fields: {} }] };
-    return suivant;
+    return {
+      ...state,
+      add: [...state.add, { kind: 'copy', key: uid('s'), from, after: after || from, fields: {} }],
+    };
+  },
+
+  /** Ajoute une section vide, prête à recevoir des widgets. */
+  addBlank(state, after) {
+    const record = { kind: 'widgets', key: uid('s'), after, tree: createWidget('section') };
+    return { ...state, add: [...state.add, record], lastKey: record.key };
   },
   hide(state, ref, label = '') {
     if (ref.startsWith('ins:')) {

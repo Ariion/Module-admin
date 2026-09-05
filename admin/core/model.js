@@ -12,6 +12,7 @@ import {
   listSections, applySections, emptyState as emptySections, isEmpty as sectionsEmpty,
   sectionFieldKey, ops as sectionOps,
 } from './sections.js';
+import { createWidget, renderWidget, findWidget, removeWidget, WIDGETS } from './widgets.js';
 import { clone, equal } from './util.js';
 import { debug, safe } from './log.js';
 
@@ -208,6 +209,115 @@ export class PageModel {
       : sectionOps[op](this.sections, ...args);
     if (suivant === this.sections) return false;
     this.sections = suivant;
+    return true;
+  }
+
+  // ---------------------------------------------------------- widgets
+  /** Sections ajoutées qui sont construites avec des widgets. */
+  widgetSections() {
+    return this.sections.add.filter((r) => r.kind === 'widgets');
+  }
+
+  /** Retrouve un widget par sa clé, dans n'importe quelle section ajoutée. */
+  findWidgetNode(key) {
+    for (const record of this.widgetSections()) {
+      if (record.tree.key === key) return { record, noeud: record.tree, liste: [record.tree] };
+      const trouve = findWidget(record.tree.children || [], key);
+      if (trouve) return { record, ...trouve };
+    }
+    return null;
+  }
+
+  /** Section ajoutée à laquelle appartient un widget. */
+  sectionOfWidget(key) {
+    return this.findWidgetNode(key)?.record || null;
+  }
+
+  /** Ajoute une section vide, prête à recevoir des widgets. */
+  addBlankSection(afterRef) {
+    this.sections = sectionOps.addBlank(this.sections, afterRef);
+    return this.sections.lastKey;
+  }
+
+  /**
+   * Insère un widget dans un conteneur.
+   * @param {string} type      type de widget
+   * @param {string} parentKey clé du conteneur (section, colonnes, colonne)
+   * @param {number} index     position, -1 pour la fin
+   */
+  insertWidget(type, parentKey, index = -1) {
+    const cible = this.findWidgetNode(parentKey);
+    if (!cible || !cible.noeud.children) return null;
+    const def = WIDGETS[type];
+    if (!def) return null;
+
+    const noeud = createWidget(type);
+    const liste = cible.noeud.children;
+    if (index < 0 || index >= liste.length) liste.push(noeud);
+    else liste.splice(index, 0, noeud);
+
+    this.rerenderSection(cible.record.key);
+    return noeud.key;
+  }
+
+  removeWidgetNode(key) {
+    const cible = this.findWidgetNode(key);
+    if (!cible) return false;
+    // Retirer la racine, c'est retirer la section entière.
+    if (cible.record.tree.key === key) {
+      this.sections = { ...this.sections, add: this.sections.add.filter((r) => r.key !== cible.record.key) };
+      const el = this.doc.querySelector(`[data-admin-section="${cible.record.key}"]`);
+      if (el) el.remove();
+      return true;
+    }
+    if (!removeWidget(cible.record.tree.children || [], key)) return false;
+    this.rerenderSection(cible.record.key);
+    return true;
+  }
+
+  moveWidgetNode(key, delta) {
+    const cible = this.findWidgetNode(key);
+    if (!cible || cible.record.tree.key === key) return false;
+    const liste = cible.liste;
+    const index = liste.findIndex((n) => n.key === key);
+    const vers = index + delta;
+    if (index < 0 || vers < 0 || vers >= liste.length) return false;
+    const [noeud] = liste.splice(index, 1);
+    liste.splice(vers, 0, noeud);
+    this.rerenderSection(cible.record.key);
+    return true;
+  }
+
+  setWidgetProps(key, patch) {
+    const cible = this.findWidgetNode(key);
+    if (!cible) return false;
+    cible.noeud.props = { ...cible.noeud.props, ...patch };
+
+    // Changer le nombre de colonnes ajoute ou retire des colonnes, sans
+    // perdre le contenu de celles qui restent.
+    if (cible.noeud.type === 'columns' && patch.count != null) {
+      const voulu = Math.max(1, Math.min(4, Number(patch.count) || 2));
+      const enfants = cible.noeud.children || [];
+      while (enfants.length < voulu) enfants.push(createWidget('column'));
+      while (enfants.length > voulu) enfants.pop();
+      cible.noeud.children = enfants;
+    }
+
+    this.rerenderSection(cible.record.key);
+    return true;
+  }
+
+  /** Redessine une section ajoutée après modification de son arbre. */
+  rerenderSection(sectionKey) {
+    const record = this.sections.add.find((r) => r.key === sectionKey);
+    if (!record || record.kind !== 'widgets') return false;
+    const ancien = this.doc.querySelector(`[data-admin-section="${sectionKey}"]`);
+    if (!ancien) return false;
+    const neuf = renderWidget(record.tree, this.doc);
+    if (!neuf) return false;
+    neuf.setAttribute('data-admin-section', sectionKey);
+    ancien.replaceWith(neuf);
+    this.refresh();
     return true;
   }
 
