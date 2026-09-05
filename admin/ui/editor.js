@@ -321,8 +321,7 @@ export async function startEditor(runtime) {
     parts.push(changes ? t('changes', changes) : t('noChanges'));
     if (state.savedAt) parts.push(t('draftSaved') + ' ' + timeAgo(state.savedAt, config.lang));
     if (model && model.orphans.size) parts.push(t('orphans', model.orphans.size));
-    if (!state.editing) parts.push('— ' + t('preview'));
-    else parts.push('— ' + t('hint'));
+    parts.push(state.editing ? t('hint') : t('preview'));
     statusText.textContent = parts.join(' · ');
 
     clear(previewButton);
