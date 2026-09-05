@@ -19,6 +19,7 @@
 import { hash, uid } from './util.js';
 import { fingerprint, pathBetween, anchorOf } from './identity.js';
 import { createWidget, renderWidget } from './widgets.js';
+import { findTemplate } from './templates.js';
 
 const IGNORE = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'LINK', 'BR'];
 
@@ -158,6 +159,14 @@ export const ops = {
   /** Ajoute une section vide, prête à recevoir des widgets. */
   addBlank(state, after) {
     const record = { kind: 'widgets', key: uid('s'), after, tree: createWidget('section') };
+    return { ...state, add: [...state.add, record], lastKey: record.key };
+  },
+
+  /** Ajoute une section construite depuis un modèle. */
+  addTemplate(state, id, after) {
+    const modele = findTemplate(id);
+    if (!modele) return state;
+    const record = { kind: 'widgets', key: uid('s'), after, tree: modele.build() };
     return { ...state, add: [...state.add, record], lastKey: record.key };
   },
   hide(state, ref, label = '') {

@@ -176,6 +176,10 @@ button, input, textarea, select { font: inherit; color: inherit; }
 }
 .input:focus, .textarea:focus { border-color: var(--accent); }
 .textarea { min-height: 68px; resize: vertical; }
+.textarea.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px; line-height: 1.5; min-height: 110px;
+}
 .check { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 12px; }
 .hint { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
 .row { display: flex; gap: 7px; }
@@ -331,6 +335,25 @@ select.input { appearance: none; cursor: pointer; }
 .wtile__icon { color: var(--accent); display: flex; }
 .wtile:hover .wtile__icon { color: var(--accent-hi); }
 .wtile__label { font-size: 11.5px; line-height: 1.25; }
+
+/* ---- Modèles de section ---- */
+.tpls { display: grid; gap: 8px; padding-bottom: 8px; }
+.tpl {
+  display: flex; align-items: center; gap: 11px; padding: 9px 11px; width: 100%;
+  background: var(--bg-soft); border: 1px solid var(--line-soft); border-radius: var(--radius);
+  cursor: pointer; text-align: left; color: var(--text);
+  transition: border-color .14s, background .14s;
+}
+.tpl:hover { border-color: var(--sect); background: var(--bg-raise); }
+.tpl__preview {
+  width: 46px; height: 34px; flex: none; padding: 4px; display: flex; flex-direction: column; gap: 3px;
+  background: var(--bg-sunk); border: 1px solid var(--line); border-radius: 4px;
+}
+.tpl__bar { height: 5px; border-radius: 2px; background: var(--sect); opacity: .75; }
+.tpl__cols { flex: 1; display: flex; gap: 3px; }
+.tpl__col { flex: 1; border-radius: 2px; background: var(--line); }
+.tpl:hover .tpl__col { background: #3b4351; }
+.tpl__label { font-size: 12px; line-height: 1.3; }
 
 /* ---- Zones de dépôt dans l'aperçu ---- */
 .drop {

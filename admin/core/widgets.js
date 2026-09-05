@@ -14,6 +14,7 @@
  */
 import { uid } from './util.js';
 import { safeHtml, safeUrl, safeImageUrl, safeText } from './sanitize.js';
+import { applyStyleObject } from './style.js';
 
 /** Catégories affichées dans le panneau, dans l'ordre. */
 export const CATEGORIES = ['structure', 'basique', 'media'];
@@ -126,7 +127,7 @@ export const WIDGETS = {
 export function createWidget(type) {
   const def = WIDGETS[type];
   if (!def) return null;
-  const noeud = { key: uid('w'), type, props: def.defaults() };
+  const noeud = { key: uid('w'), type, props: { ...def.defaults(), style: {} } };
   if (def.container) {
     noeud.children = def.columns
       ? Array.from({ length: noeud.props.count }, () => ({ key: uid('c'), type: 'column', children: [] }))
@@ -285,9 +286,8 @@ export function renderWidget(noeud, doc) {
       return null;
   }
 
-  // Couleurs propres au widget, communes à tous les types.
-  if (p.color) el.style.color = p.color;
-  if (p.background) el.style.backgroundColor = p.background;
+  // Habillage propre au widget : même schéma que pour les éléments du site.
+  if (p.style) applyStyleObject(el, p.style);
 
   el.setAttribute('data-admin-widget', noeud.key);
   el.setAttribute('data-admin-type', noeud.type);

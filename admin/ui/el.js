@@ -72,6 +72,8 @@ export function icon(name, size = 14) {
     search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3',
     grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
     drag: 'M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01',
+    code: 'M8 6l-5 6 5 6M16 6l5 6-5 6',
+    template: 'M4 4h16v4H4zM4 11h7v9H4zM14 11h6v9h-6z',
   };
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');

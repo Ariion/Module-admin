@@ -201,14 +201,36 @@ Une section retirée reste listée dans l'onglet Structure avec son titre, pour
 pouvoir la remettre — sans cela le client n'aurait aucun moyen de revenir en
 arrière.
 
+### Modèles de section
+
+Huit mises en page prêtes à l'emploi — trois colonnes, image et texte, appel à
+l'action, galerie, contact… Ce sont de simples arbres de widgets : un modèle
+inséré n'apporte que la **structure**, jamais un style qui jurerait avec le
+site. La typographie et les couleurs viennent de la feuille du site.
+
 ### Habillage
 
-Couleur du texte, couleur de fond, image de fond, sur n'importe quel élément.
-Volontairement limité : pas de marges, pas de tailles, pas de positionnement.
-Le client habille, il ne redimensionne rien — la mise en page reste au
-développeur. Ces surcharges sont stockées comme le reste du contenu, avec le
-rôle `style`, et retrouvées par le chemin de l'élément : le scanner ne remonte
-pas les conteneurs, un résolveur direct par chemin prend le relais.
+Un schéma unique (`core/style.js`) décrit ce qui est réglable, et sert à la
+fois à construire le panneau et à écrire les styles : couleurs, typographie
+(taille, graisse, casse, interlignage, espacement des lettres), espacements,
+largeur maximale, bordure et ombre. Le même code sert aux éléments du site et
+aux widgets ; seules les fonctions de lecture et d'écriture changent.
+
+Tout est appliqué en **style en ligne** : les valeurs suivent donc l'élément
+jusque dans le fichier HTML régénéré, sans dépendre d'une feuille séparée.
+Chaque valeur est vérifiée contre son type avant d'entrer dans `style` — une
+couleur doit être une couleur, un nombre un nombre.
+
+Le **CSS personnalisé** fait exception, parce qu'une règle a besoin d'un
+sélecteur (un `:hover`, par exemple). Il produit une classe `admin-c-…` sur
+l'élément et une règle dans une feuille unique ; le mot `selector` y désigne
+l'élément, comme dans Elementor. Classe et feuille sont conservées à la
+régénération du HTML — vérifié.
+
+Les surcharges d'habillage des éléments du site sont stockées comme le reste
+du contenu, avec le rôle `style`, et retrouvées par le chemin de l'élément :
+le scanner ne remonte pas les conteneurs, un résolveur direct par chemin prend
+le relais. Celles des widgets vivent dans leur arbre.
 
 ---
 
@@ -437,7 +459,7 @@ Le contenu est fidèle, l'indentation d'origine ne l'est pas.
 |---|---|
 | Éléments : dans les sections ajoutées | On dépose un élément dans une section qu'on a ajoutée, jamais dans le balisage du développeur. C'est ce qui garantit que la mise en page du site reste intacte. |
 | Vidéo et carte | Seuls YouTube, Vimeo et Google Maps sont acceptés, en URL d'intégration vérifiée. |
-| Habillage restreint | Couleurs et image de fond seulement. Ni marges, ni tailles, ni positionnement. |
+| CSS personnalisé : déclarations et règles | Le mot `selector` désigne l'élément. Les `@import` et les sélecteurs contenant `<` ou `@` sont refusés. |
 | Contenu masqué au scan | Un menu mobile invisible sur grand écran n'est pas détecté depuis un grand écran. Passer `scan.visibleOnly: false` ou éditer depuis la largeur concernée. |
 | Listes appropriées par le client | Voir §2. Le bouton « revenir aux blocs du code » rend la main. |
 | Listes alternées | Une frise `date / texte / date / texte` n'est pas vue comme répétable : la détection cherche des frères consécutifs de **même** signature. Chaque cellule reste éditable ; envelopper chaque paire dans un `<div>` rend la liste extensible. |

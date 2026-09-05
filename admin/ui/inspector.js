@@ -10,6 +10,7 @@
 import { h, icon, clear } from './el.js';
 import { safeImageUrl } from '../core/sanitize.js';
 import { WIDGETS } from '../core/widgets.js';
+import { STYLE_FIELDS, STYLE_GROUPS, readStyleValues } from '../core/style.js';
 
 const TITRES = { text: 'text', link: 'link', image: 'image', background: 'background' };
 
@@ -38,7 +39,7 @@ export function createInspector({ vue, t, actions }) {
     ));
 
     if (entry) vue.appendChild(groupe(t('content'), 'text', () => champsContenu(entry), true));
-    vue.appendChild(groupe(t('style'), 'palette', () => champsStyle(el), !entry));
+    for (const bloc of champsStyle(el)) vue.appendChild(bloc);
     if (collection) vue.appendChild(groupe(t('block'), 'layers', () => champsBloc(collection, itemIndex), true));
     if (selection.section) {
       vue.appendChild(groupe(t('sectionGroup'), 'section', () => champsSection(selection.section), !entry, true));
@@ -61,7 +62,7 @@ export function createInspector({ vue, t, actions }) {
     if (def.fields.length) {
       vue.appendChild(groupe(t('content'), def.icon, () => def.fields.map((f) => champWidget(noeud, f)), true));
     }
-    vue.appendChild(groupe(t('style'), 'palette', () => champsStyleWidget(noeud), !def.fields.length));
+    for (const bloc of champsStyleWidget(noeud)) vue.appendChild(bloc);
 
     vue.appendChild(h('div', { class: 'row', style: { marginTop: '4px' } },
       h('button', {
@@ -163,12 +164,16 @@ export function createInspector({ vue, t, actions }) {
     }
   }
 
-  /** Couleurs d'un widget : stockées dans ses propres propriétés. */
+  /** Habillage d'un widget : même panneau, stocké dans ses propriétés. */
   function champsStyleWidget(noeud) {
-    return [
-      champ(t('textColor'), couleur(noeud.props.color, (v) => actions.setWidgetProps(noeud.key, { color: v }))),
-      champ(t('bgColor'), couleur(noeud.props.background, (v) => actions.setWidgetProps(noeud.key, { background: v }))),
-    ];
+    return panneauStyle(
+      () => {
+        const el = actions.widgetElement?.(noeud.key);
+        const effectifs = el ? readStyleValues(el) : {};
+        return { ...effectifs, ...(noeud.props.style || {}) };
+      },
+      (patch) => actions.setWidgetProps(noeud.key, { style: patch }),
+    );
   }
 
   // ---------------------------------------------------------- structure
@@ -371,36 +376,97 @@ export function createInspector({ vue, t, actions }) {
   }
 
   // -------------------------------------------------------------- style
-  function champsStyle(el) {
-    const style = actions.styleOf(el);
-    const fond = h('input', {
-      class: 'input', type: 'text', value: style.backgroundImage || '',
-      placeholder: t('noImage'),
-      onchange: (e) => actions.setStyle(el, { backgroundImage: e.target.value }),
-    });
+  /**
+   * Panneau d'habillage, construit à partir du schéma partagé. Le même code
+   * sert aux éléments du site et aux widgets : seules les fonctions de
+   * lecture et d'écriture changent.
+   */
+  function panneauStyle(lire, ecrire, ouvertPremier) {
+    const valeurs = lire();
+    const groupes = [];
 
-    return [
-      champ(t('textColor'), couleur(style.color, (v) => actions.setStyle(el, { color: v }))),
-      champ(t('bgColor'), couleur(style.background, (v) => actions.setStyle(el, { background: v }))),
-      champ(t('bgImage'), fond),
-      h('div', { class: 'row', style: { marginBottom: '11px' } },
-        h('button', {
-          class: 'btn', type: 'button',
-          onclick: () => actions.pickMedia((item) => {
-            fond.value = item.url;
-            actions.setStyle(el, { backgroundImage: item.url });
+    for (const nom of STYLE_GROUPS) {
+      const champs = STYLE_FIELDS.filter((f) => f.group === nom);
+      if (!champs.length) continue;
+      groupes.push(groupe(t('grp_' + nom), iconeGroupe(nom),
+        () => champs.map((f) => champStyle(f, valeurs[f.key], ecrire)),
+        nom === 'colors' ? ouvertPremier !== false : false));
+    }
+
+    groupes.push(groupe(t('grp_css'), 'code', () => [
+      h('textarea', {
+        class: 'textarea code', spellcheck: 'false', value: valeurs.customCss || '',
+        placeholder: 'selector { border-radius: 12px; }\nselector:hover { transform: translateY(-4px); }',
+        onchange: (e) => ecrire({ customCss: e.target.value }),
+      }),
+      h('p', { class: 'hint' }, t('cssHint')),
+    ], false));
+
+    groupes.push(h('button', {
+      class: 'btn btn--wide', type: 'button', style: { marginTop: '4px' },
+      onclick: () => { ecrire(remiseAZero()); render(selection); },
+    }, icon('history', 13), t('resetStyle')));
+
+    return groupes;
+  }
+
+  function remiseAZero() {
+    const vide = { customCss: '' };
+    for (const f of STYLE_FIELDS) vide[f.key] = '';
+    return vide;
+  }
+
+  function iconeGroupe(nom) {
+    return { colors: 'palette', type: 'heading', space: 'spacer', border: 'section' }[nom] || 'palette';
+  }
+
+  function champStyle(f, valeur, ecrire) {
+    const ecrit = (v) => ecrire({ [f.key]: v });
+    switch (f.type) {
+      case 'color':
+        return champ(t(f.label), couleur(valeur, ecrit));
+      case 'select':
+        return champ(t(f.label), h('select', {
+          class: 'input', onchange: (e) => ecrit(e.target.value),
+        }, f.options.map((o) => h('option', {
+          value: o, selected: String(o) === String(valeur ?? ''),
+        }, o === '' ? t('inherited') : etiquetteOption(o)))));
+      case 'align':
+        return champ(t(f.label), h('div', { class: 'seg' },
+          ['left', 'center', 'right'].map((a) => h('button', {
+            class: 'seg__btn', type: 'button', 'aria-pressed': valeur === a ? 'true' : 'false',
+            onclick: () => { ecrit(a); render(selection); },
+          }, t('align_' + a)))));
+      case 'image':
+        return champ(t(f.label), h('div', { class: 'row' },
+          h('input', {
+            class: 'input', type: 'text', value: valeur || '', placeholder: t('noImage'),
+            onchange: (e) => ecrit(e.target.value),
           }),
-        }, icon('folder', 13), t('library')),
-        h('button', {
-          class: 'btn', type: 'button',
-          onclick: () => { fond.value = ''; actions.setStyle(el, { backgroundImage: 'none' }); },
-        }, t('removeImage')),
-      ),
-      h('button', {
-        class: 'btn btn--wide', type: 'button',
-        onclick: () => { actions.resetStyle(el); render(selection); },
-      }, icon('history', 13), t('resetStyle')),
-    ];
+          h('button', {
+            class: 'btn btn--icon', type: 'button', title: t('library'),
+            onclick: () => actions.pickMedia((item) => { ecrit(item.url); render(selection); }),
+          }, icon('folder', 13)),
+        ));
+      default:
+        return champ(t(f.label), h('input', {
+          class: 'input', type: 'number', value: valeur ?? '',
+          min: f.min, max: f.max, step: f.step, placeholder: t('inherited'),
+          onchange: (e) => ecrit(e.target.value),
+        }));
+    }
+  }
+
+  function etiquetteOption(o) {
+    const court = String(o);
+    return court.length > 22 ? t('shadowPreset') : court;
+  }
+
+  function champsStyle(el) {
+    return panneauStyle(
+      () => actions.styleOf(el),
+      (patch) => actions.setStyle(el, patch),
+    );
   }
 
   /** Pastille native + saisie libre : hexadécimal, rgb() ou nom CSS. */

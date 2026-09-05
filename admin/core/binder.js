@@ -9,6 +9,7 @@
  */
 import { safeHtml, safeText, safeUrl, safeImageUrl } from './sanitize.js';
 import { readValue } from './scanner.js';
+import { applyStyleObject, readStyleValues } from './style.js';
 
 /**
  * Applique une valeur à un élément.
@@ -96,63 +97,16 @@ function applyLink(el, value) {
 }
 
 /**
- * Applique une surcharge de style. Volontairement limité aux couleurs et à
- * l'image de fond : le client peut changer l'habillage, jamais les
- * dimensions ni le positionnement — la mise en page reste au développeur.
+ * Applique une surcharge d'habillage. Le schéma partagé décrit ce qui est
+ * réglable et vérifie chaque valeur : rien d'autre n'entre dans `style`.
  */
-const STYLE_PROPS = {
-  color: 'color',
-  background: 'backgroundColor',
-  backgroundImage: 'backgroundImage',
-};
-
 function applyStyle(el, value) {
-  let changed = false;
-  for (const [cle, propriete] of Object.entries(STYLE_PROPS)) {
-    if (!(cle in value)) continue;
-    const brut = String(value[cle] ?? '').trim();
-
-    if (!brut) {
-      if (el.style[propriete]) { el.style[propriete] = ''; changed = true; }
-      continue;
-    }
-
-    let css = brut;
-    if (cle === 'backgroundImage') {
-      if (brut === 'none') {
-        css = 'none';
-      } else {
-        const src = safeImageUrl(brut);
-        if (!src) continue;
-        css = 'url("' + src.replace(/"/g, '%22') + '")';
-      }
-    } else if (!isColor(brut)) {
-      continue;
-    }
-
-    if (el.style[propriete] !== css) { el.style[propriete] = css; changed = true; }
-  }
-  return changed;
+  return applyStyleObject(el, value);
 }
 
-/** N'accepte qu'une couleur CSS reconnue : rien d'autre n'entre dans style. */
-function isColor(value) {
-  if (/^#[0-9a-f]{3,8}$/i.test(value)) return true;
-  if (/^(rgb|hsl)a?\([\d\s.,%/-]+\)$/i.test(value)) return true;
-  return /^[a-z]{3,20}$/i.test(value) && CSS.supports && CSS.supports('color', value);
-}
-
-/** Valeurs de style effectives, pour préremplir les champs de l'éditeur. */
+/** Valeurs d'habillage effectives, pour préremplir le panneau. */
 export function readStyle(el) {
-  const view = el.ownerDocument.defaultView;
-  const calcule = view ? view.getComputedStyle(el) : null;
-  const fond = el.style.backgroundImage || (calcule ? calcule.backgroundImage : '');
-  const url = /url\((['"]?)(.*?)\1\)/.exec(fond);
-  return {
-    color: el.style.color || (calcule ? calcule.color : ''),
-    background: el.style.backgroundColor || (calcule ? calcule.backgroundColor : ''),
-    backgroundImage: url ? url[2] : '',
-  };
+  return readStyleValues(el);
 }
 
 /** Relit la valeur courante d'un élément (utilisé après édition en place). */

@@ -13,6 +13,7 @@ import {
   sectionFieldKey, ops as sectionOps,
 } from './sections.js';
 import { createWidget, renderWidget, findWidget, removeWidget, WIDGETS } from './widgets.js';
+import { compileCustomCss, writeCustomSheet } from './style.js';
 import { clone, equal } from './util.js';
 import { debug, safe } from './log.js';
 
@@ -176,6 +177,7 @@ export class PageModel {
       this.refresh();
     }
 
+    this.refreshCustomCss();
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
     return { applied, orphans: [...this.orphans.values()] };
   }
@@ -239,6 +241,13 @@ export class PageModel {
     return this.sections.lastKey;
   }
 
+  /** Ajoute une section construite depuis un modèle. */
+  addTemplateSection(id, afterRef) {
+    const avant = this.sections;
+    this.sections = sectionOps.addTemplate(this.sections, id, afterRef);
+    return this.sections === avant ? null : this.sections.lastKey;
+  }
+
   /**
    * Insère un widget dans un conteneur.
    * @param {string} type      type de widget
@@ -291,7 +300,9 @@ export class PageModel {
   setWidgetProps(key, patch) {
     const cible = this.findWidgetNode(key);
     if (!cible) return false;
-    cible.noeud.props = { ...cible.noeud.props, ...patch };
+    // L'habillage est un sous-objet : on le fusionne au lieu de l'écraser.
+    const style = patch.style ? { ...(cible.noeud.props.style || {}), ...patch.style } : cible.noeud.props.style;
+    cible.noeud.props = { ...cible.noeud.props, ...patch, ...(style ? { style } : {}) };
 
     // Changer le nombre de colonnes ajoute ou retire des colonnes, sans
     // perdre le contenu de celles qui restent.
@@ -304,6 +315,7 @@ export class PageModel {
     }
 
     this.rerenderSection(cible.record.key);
+    this.refreshCustomCss();
     return true;
   }
 
@@ -331,6 +343,27 @@ export class PageModel {
     return true;
   }
 
+  /**
+   * Réunit les CSS personnalisés de la page dans une feuille unique.
+   * Une règle a besoin d'un sélecteur — pour un `:hover` par exemple — donc
+   * elle ne peut pas vivre en style en ligne comme le reste.
+   */
+  refreshCustomCss() {
+    const morceaux = [];
+    for (const valeur of this.styles.values()) {
+      if (valeur.customCss) morceaux.push(compileCustomCss(valeur.customCss));
+    }
+    const parcourir = (noeuds) => {
+      for (const noeud of noeuds || []) {
+        const perso = noeud.props?.style?.customCss;
+        if (perso) morceaux.push(compileCustomCss(perso));
+        if (noeud.children) parcourir(noeud.children);
+      }
+    };
+    for (const record of this.widgetSections()) parcourir([record.tree]);
+    safe(() => writeCustomSheet(this.doc, morceaux), null, 'customCss');
+  }
+
   /** Déclare un élément comme cible de style et retourne son empreinte. */
   styleTarget(el) {
     for (const cible of this.styleTargets.values()) {
@@ -354,11 +387,12 @@ export class PageModel {
     const fusion = { ...courant, ...patch };
     // Une valeur vide n'est pas une surcharge : on rend la main au CSS.
     for (const [cle, valeur] of Object.entries(fusion)) {
-      if (valeur === '' || valeur == null) delete fusion[cle];
+      if ((valeur === '' || valeur == null) && cle !== 'customCss') delete fusion[cle];
     }
     if (Object.keys(fusion).length) this.styles.set(cible.print.id, fusion);
     else this.styles.delete(cible.print.id);
     applyValue(el, 'style', { ...patch });
+    if ('customCss' in patch) this.refreshCustomCss();
     return fusion;
   }
 

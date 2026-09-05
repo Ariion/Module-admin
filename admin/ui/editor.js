@@ -104,6 +104,7 @@ export async function startEditor(runtime) {
     createWidgetsPanel({
       vue: hoteBibliotheque, t,
       onInsert: (type) => insererWidget(type),
+      onTemplate: (id) => ajouterModele(id),
       onDragStart: (type) => overlay.beginDrag(type),
       onDragEnd: () => overlay.endDrag(),
     });
@@ -131,6 +132,7 @@ export async function startEditor(runtime) {
           apresStructure(key);
         },
         widgetOp: (key, op, arg) => widgetOp(key, op, arg),
+        widgetElement: (key) => model.doc.querySelector(`[data-admin-widget="${key}"]`),
       },
     });
 
@@ -260,7 +262,13 @@ export async function startEditor(runtime) {
   // ================================================================
   //  Aperçu et modèle
   // ================================================================
-  async function loadPage(url) {
+  async function loadPage(url, options = {}) {
+    // Recharger l'aperçu ramènerait le client en haut de page : après une
+    // opération de structure, il ne verrait rien de ce qu'il vient de faire.
+    const defilement = options.keepScroll === false
+      ? 0
+      : (shell.frame?.contentWindow?.scrollY || 0);
+
     const { doc } = await shell.load(url);
     doc.head.appendChild(h('style', { 'data-admin-ui': '' }, FRAME_CSS));
 
@@ -294,6 +302,7 @@ export async function startEditor(runtime) {
     navigator.render(model);
     inspector.render(null);
     surveillerNavigation(doc.location.href);
+    if (defilement) doc.defaultView.scrollTo({ top: defilement });
     render();
     debug('aperçu prêt —', state.pageId, model.entries.size, 'éléments');
   }
@@ -433,6 +442,19 @@ export async function startEditor(runtime) {
     inspector.showSections(ref);
   }
 
+  /** Insère une section construite depuis un modèle. */
+  async function ajouterModele(id) {
+    const ref = model.sectionList().slice(-1)[0]?.ref || null;
+    const key = model.addTemplateSection(id, ref);
+    if (!key) return;
+    markDirty();
+    await autosave.flush();
+    await loadPage(urlCourante());
+    const el = model.doc.querySelector(`[data-admin-section="${key}"]`);
+    if (el) { overlay.reveal(el); overlay.setActive(el); }
+    notify(t('templateAdded'));
+  }
+
   /** Crée une section vide, prête à recevoir des widgets. */
   async function ajouterSectionVide(afterRef, options = {}) {
     const ref = afterRef || model.sectionList().slice(-1)[0]?.ref || null;
@@ -475,7 +497,18 @@ export async function startEditor(runtime) {
     markDirty();
     await autosave.flush();
     await loadPage(urlCourante());
-    notify(t(op === 'hide' ? 'hideSection' : 'addSection'));
+
+    // Amener l'aperçu sur la section concernée : dupliquer une section en bas
+    // de page sans montrer le résultat donne l'impression que rien ne s'est
+    // passé — le panneau s'est juste refermé.
+    const cible = op === 'duplicate'
+      ? model.sectionList().find((x) => x.ref === 'ins:' + model.sections.add.slice(-1)[0]?.key)
+      : model.sectionList().find((x) => x.ref === ref);
+    if (cible) {
+      overlay.reveal(cible.el);
+      overlay.setActive(cible.el);
+    }
+    notify(t(op === 'hide' ? 'sectionRemoved' : op === 'duplicate' ? 'sectionDuplicated' : 'sectionMoved'));
   }
 
   function urlCourante() {

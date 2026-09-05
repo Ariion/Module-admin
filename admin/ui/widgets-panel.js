@@ -8,11 +8,12 @@
  */
 import { h, icon, clear } from './el.js';
 import { WIDGETS, CATEGORIES } from '../core/widgets.js';
+import { TEMPLATES } from '../core/templates.js';
 
 /** Type MIME maison, transporté dans le presse-papiers du glisser-déposer. */
 export const DRAG_PREFIX = 'admin-widget:';
 
-export function createWidgetsPanel({ vue, t, onInsert, onDragStart, onDragEnd }) {
+export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, onDragEnd }) {
   let filtre = '';
   const replies = new Set();
 
@@ -35,6 +36,27 @@ export function createWidgetsPanel({ vue, t, onInsert, onDragStart, onDragEnd })
     clear(corps);
     let total = 0;
 
+    // Les modèles viennent en premier : partir d'une mise en page toute faite
+    // est plus rapide que de poser les éléments un par un.
+    if (onTemplate) {
+      const modeles = TEMPLATES.filter((m) => !filtre || t('tpl_' + m.id).toLowerCase().includes(filtre));
+      if (modeles.length) {
+        total += modeles.length;
+        const liste = h('div', { class: 'tpls' }, modeles.map(carteModele));
+        const ouvert = filtre ? true : !replies.has('modeles');
+        corps.appendChild(h('div', { class: 'wcat', 'data-open': ouvert ? 'true' : 'false' },
+          h('button', {
+            class: 'wcat__head', type: 'button',
+            onclick: () => {
+              if (replies.has('modeles')) replies.delete('modeles'); else replies.add('modeles');
+              dessiner();
+            },
+          }, h('span', {}, t('cat_modeles')), icon('down', 12)),
+          liste,
+        ));
+      }
+    }
+
     for (const categorie of CATEGORIES) {
       const liste = widgetsDe(categorie);
       if (!liste.length) continue;
@@ -56,6 +78,20 @@ export function createWidgetsPanel({ vue, t, onInsert, onDragStart, onDragEnd })
     }
 
     if (!total) corps.appendChild(h('p', { class: 'empty' }, t('noWidget')));
+  }
+
+  /** Vignette d'un modèle : un aperçu schématique de sa mise en page. */
+  function carteModele(modele) {
+    const schema = h('span', { class: 'tpl__preview' },
+      h('span', { class: 'tpl__bar' }),
+      h('span', { class: 'tpl__cols' },
+        modele.colonnes.map(() => h('span', { class: 'tpl__col' })),
+      ),
+    );
+    return h('button', {
+      class: 'tpl', type: 'button', title: t('tpl_' + modele.id),
+      onclick: () => onTemplate(modele.id),
+    }, schema, h('span', { class: 'tpl__label' }, t('tpl_' + modele.id)));
   }
 
   function vignette(type) {
