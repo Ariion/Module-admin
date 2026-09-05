@@ -23,10 +23,11 @@ function download(filename, content, type) {
 /**
  * Sérialise la page courante en retirant toute trace du module.
  * @param {object} options
+ * @param {Document} options.doc document à figer (défaut : la page courante)
  * @param {string[]} options.scriptMarkers fragments d'URL des scripts à retirer
  */
-export function freezePage({ scriptMarkers = ['/admin/', 'admin-config', 'admin/runtime'] } = {}) {
-  const clone = document.documentElement.cloneNode(true);
+export function freezePage({ doc = document, scriptMarkers = ['/admin/', 'admin-config', 'admin/runtime'] } = {}) {
+  const clone = doc.documentElement.cloneNode(true);
 
   for (const node of clone.querySelectorAll('[data-admin-ui]')) node.remove();
   for (const node of clone.querySelectorAll('#admin-document-style')) node.remove();
@@ -57,7 +58,7 @@ export function freezePage({ scriptMarkers = ['/admin/', 'admin-config', 'admin/
   }
 
   // Un commentaire d'intégration laissé seul n'aurait plus de sens.
-  const walker = document.createTreeWalker(clone, NodeFilter.SHOW_COMMENT);
+  const walker = doc.createTreeWalker(clone, NodeFilter.SHOW_COMMENT);
   const stale = [];
   while (walker.nextNode()) {
     if (/admin/i.test(walker.currentNode.nodeValue || '')) stale.push(walker.currentNode);
@@ -71,7 +72,7 @@ export function freezePage({ scriptMarkers = ['/admin/', 'admin-config', 'admin/
   return '<!DOCTYPE html>\n' + clone.outerHTML + '\n';
 }
 
-export function openExport({ root, t, pageId, snapshot }) {
+export function openExport({ root, t, pageId, snapshot, doc }) {
   const body = h('div', {},
     h('p', { class: 'hint', style: { marginTop: '0' } }, t('exportHelp')),
     h('ul', { class: 'list' },
@@ -82,7 +83,7 @@ export function openExport({ root, t, pageId, snapshot }) {
         ),
         h('button', {
           class: 'btn btn--sm btn--primary',
-          onclick: () => download(pageId + '.html', freezePage(), 'text/html;charset=utf-8'),
+          onclick: () => download(pageId + '.html', freezePage({ doc }), 'text/html;charset=utf-8'),
         }, t('exportSite')),
       ),
       h('li', {},

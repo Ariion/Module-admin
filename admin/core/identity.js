@@ -124,6 +124,61 @@ export function fingerprint(el, role) {
 }
 
 /**
+ * Retrouve un élément à partir de son chemin seul, sans passer par le
+ * scanner. Sert aux éléments que la détection de contenu ne remonte pas —
+ * une section dont on ne change que la couleur de fond, par exemple — et de
+ * filet de sécurité pour les autres.
+ *
+ * @param {{anchor:string, path:string}} record
+ * @param {Document} doc
+ * @returns {Element|null}
+ */
+export function locate(record, doc = document) {
+  const [anchorKey, chemin] = String(record.path || '').split('|');
+  const anchor = resolveAnchor(anchorKey || record.anchor, doc);
+  if (!anchor) return null;
+  if (!chemin) return anchor;
+
+  let node = anchor;
+  for (const segment of chemin.split('>')) {
+    const match = segment.match(/^([a-z0-9-]+)\[(\d+)\]$/i);
+    if (!match) return null;
+    const [, tag, rang] = match;
+    node = nthChildOfType(node, tag.toUpperCase(), Number(rang));
+    if (!node) return null;
+  }
+  return node;
+}
+
+function resolveAnchor(key, doc) {
+  if (!key) return null;
+  if (key.startsWith('#')) {
+    try { return doc.querySelector('#' + CSS.escape(key.slice(1))); } catch { return null; }
+  }
+  if (key.startsWith('@')) {
+    try { return doc.querySelector('[' + ATTR_ANCHOR + '="' + CSS.escape(key.slice(1)) + '"]'); } catch { return null; }
+  }
+  if (key.startsWith('<')) {
+    const match = key.slice(1).match(/^([a-z]+)(\d*)$/i);
+    if (!match) return doc.body;
+    const [, tag, rang] = match;
+    if (tag === 'body') return doc.body;
+    const candidats = doc.getElementsByTagName(tag);
+    return candidats[(Number(rang) || 1) - 1] || null;
+  }
+  return doc.body;
+}
+
+function nthChildOfType(parent, tag, rang) {
+  let n = 0;
+  for (const child of parent.children) {
+    if (child.tagName !== tag) continue;
+    if (++n === rang) return child;
+  }
+  return null;
+}
+
+/**
  * Index des empreintes présentes dans la page, pour la résolution inverse.
  * @param {Array<{el:Element, print:object}>} entries
  */
@@ -146,7 +201,7 @@ export function buildIndex(entries) {
     push(byHash, p.role + '::' + p.ch, entry);
     push(bySig, p.role + '::' + p.anchor + '::' + p.sig, entry);
   }
-  return { byId, byPath, byHash, bySig, entries };
+  return { byId, byPath, byHash, bySig, entries, doc: entries[0]?.el.ownerDocument || document };
 }
 
 /**
@@ -207,6 +262,18 @@ export function resolveAll(records, index) {
       if (pass === 'strict' && hit.confidence < 0.8) continue;
       used.add(hit.el);
       matched.set(record.id, hit);
+    }
+  }
+
+  // Dernier recours : le chemin seul. Un élément que le scanner ne remonte
+  // pas — une section stylée, par exemple — se retrouve toujours ainsi.
+  const doc = index.doc || document;
+  for (const record of ordered) {
+    if (matched.has(record.id)) continue;
+    const el = locate(record, doc);
+    if (el && !used.has(el)) {
+      used.add(el);
+      matched.set(record.id, { el, via: 'path-direct', confidence: 0.7 });
     }
   }
 

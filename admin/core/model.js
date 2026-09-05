@@ -5,9 +5,9 @@
  * @module core/model
  */
 import { scan } from './scanner.js';
-import { buildIndex, resolveAll } from './identity.js';
+import { buildIndex, resolveAll, fingerprint } from './identity.js';
 import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, ops } from './collections.js';
-import { applyValue, readCurrent } from './binder.js';
+import { applyValue, readCurrent, readStyle } from './binder.js';
 import { clone, equal } from './util.js';
 import { debug, safe } from './log.js';
 
@@ -23,6 +23,7 @@ export class PageModel {
    */
   constructor(scanOptions = {}) {
     this.scanOptions = scanOptions;
+    this.doc = scanOptions.doc || document;
     /** @type {Map<string, {el:Element, role:string, print:object, value:object}>} */
     this.entries = new Map();
     /** @type {Array} collections détectées dans la page */
@@ -35,6 +36,10 @@ export class PageModel {
     this.meta = new Map();
     /** @type {Map<string, object>} enregistrements non rebranchés */
     this.orphans = new Map();
+    /** @type {Map<string, object>} surcharges de style (couleurs, fond) */
+    this.styles = new Map();
+    /** @type {Map<string, {el:Element, print:object}>} cibles de style */
+    this.styleTargets = new Map();
     this.collectionsById = new Map();
   }
 
@@ -89,6 +94,17 @@ export class PageModel {
     for (const record of records) {
       const hit = matched.get(record.id);
       if (!hit) continue;
+
+      // Les surcharges de style visent des éléments que la détection de
+      // contenu ne remonte pas (une section, un conteneur) : elles ont leur
+      // propre registre.
+      if (record.role === 'style') {
+        const cible = this.styleTarget(hit.el);
+        this.styles.set(cible.print.id, clone(record.value));
+        if (safe(() => applyValue(hit.el, 'style', record.value), false, 'applyStyle')) applied++;
+        continue;
+      }
+
       const entry = this.entryFor(hit.el, record.role);
       const id = entry ? entry.print.id : record.id;
       this.values.set(id, clone(record.value));
@@ -124,6 +140,44 @@ export class PageModel {
 
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
     return { applied, orphans: [...this.orphans.values()] };
+  }
+
+  /** Déclare un élément comme cible de style et retourne son empreinte. */
+  styleTarget(el) {
+    for (const cible of this.styleTargets.values()) {
+      if (cible.el === el) return cible;
+    }
+    const cible = { el, role: 'style', print: fingerprint(el, 'style') };
+    this.styleTargets.set(cible.print.id, cible);
+    return cible;
+  }
+
+  /** Style courant d'un élément : surcharge enregistrée, sinon le CSS du site. */
+  styleOf(el) {
+    const cible = this.styleTarget(el);
+    return { ...readStyle(el), ...(this.styles.get(cible.print.id) || {}) };
+  }
+
+  /** Écrit une surcharge de style et l'applique. */
+  setStyle(el, patch) {
+    const cible = this.styleTarget(el);
+    const courant = this.styles.get(cible.print.id) || {};
+    const fusion = { ...courant, ...patch };
+    // Une valeur vide n'est pas une surcharge : on rend la main au CSS.
+    for (const [cle, valeur] of Object.entries(fusion)) {
+      if (valeur === '' || valeur == null) delete fusion[cle];
+    }
+    if (Object.keys(fusion).length) this.styles.set(cible.print.id, fusion);
+    else this.styles.delete(cible.print.id);
+    applyValue(el, 'style', { ...patch });
+    return fusion;
+  }
+
+  /** Retire toute surcharge de style d'un élément. */
+  clearStyle(el) {
+    const cible = this.styleTarget(el);
+    this.styles.delete(cible.print.id);
+    applyValue(el, 'style', { color: '', background: '', backgroundImage: '' });
   }
 
   /** Entrée correspondant à un élément DOM (après ré-appariement). */
@@ -240,6 +294,20 @@ export class PageModel {
       };
     }
 
+    for (const [id, value] of this.styles) {
+      const cible = this.styleTargets.get(id);
+      if (!cible) continue;
+      content[id] = {
+        role: 'style',
+        anchor: cible.print.anchor,
+        path: cible.print.path,
+        sig: cible.print.sig,
+        ch: cible.print.ch,
+        sample: cible.print.sample || '',
+        value: clone(value),
+      };
+    }
+
     const collections = {};
     for (const [id, data] of this.collectionState) {
       const collection = this.collectionsById.get(id);
@@ -258,7 +326,7 @@ export class PageModel {
 
   /** Nombre de modifications par rapport au HTML d'origine. */
   get changeCount() {
-    return this.values.size + this.collectionState.size;
+    return this.values.size + this.collectionState.size + this.styles.size;
   }
 }
 

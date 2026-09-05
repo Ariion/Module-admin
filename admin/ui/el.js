@@ -52,6 +52,15 @@ export function icon(name, size = 14) {
     download: 'M12 4v12M6 10l6 6 6-6M4 20h16',
     folder: 'M3 6h6l2 2h10v10H3z',
     warn: 'M12 4 2 20h20zM12 10v4M12 17h.01',
+    desktop: 'M3 5h18v11H3zM8 20h8M12 16v4',
+    tablet: 'M6 3h12v18H6zM11 18h2',
+    mobile: 'M8 2h8v20H8zM11 19h2',
+    layers: 'M12 3 3 8l9 5 9-5zM3 14l9 5 9-5',
+    sliders: 'M4 8h10M18 8h2M4 16h4M12 16h8M15 5v6M8 13v6',
+    palette: 'M12 3a9 9 0 1 0 0 18h2a3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4h2a4 4 0 0 0-3-8zM7 10h.01M10 6h.01M16 8h.01',
+    plus: 'M12 5v14M5 12h14',
+    text: 'M5 5h14M12 5v14M9 19h6',
+    section: 'M3 4h18v6H3zM3 14h18v6H3',
   };
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');

@@ -20,6 +20,8 @@ export function readValue(el, role) {
       return { src: el.getAttribute('src') || '', alt: el.getAttribute('alt') || '' };
     case 'background':
       return { src: backgroundImage(el) || '' };
+    case 'style':
+      return { color: '', background: '', backgroundImage: '' };
     case 'link':
       return {
         href: el.getAttribute('href') || '',

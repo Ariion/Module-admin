@@ -116,6 +116,19 @@ export function resolveConfig(input = {}) {
  */
 export const BAKE_PARAM = 'admin-bake';
 
+/**
+ * Paramètre d'URL de l'aperçu : la page est affichée dans l'iframe de
+ * l'éditeur, qui pilote lui-même le contenu. Le module ne doit donc rien y
+ * appliquer ni y rouvrir une interface.
+ */
+export const PREVIEW_PARAM = 'admin-preview';
+
+/** L'URL courante demande-t-elle un chargement passif du module ? */
+export function isPassive(search = location.search) {
+  const params = new URLSearchParams(search);
+  return params.has(BAKE_PARAM) || params.has(PREVIEW_PARAM);
+}
+
 /** Clé de cache local du contenu publié. */
 export function cacheKey(config) {
   return `admin:content:${config.siteId}:${config.pageId}`;

@@ -16,6 +16,7 @@
  */
 import { PageModel } from './model.js';
 import { BAKE_PARAM } from './config.js';
+import { loadFrame } from './frame.js';
 import { debug, warn } from './log.js';
 
 /** Marqueur qui distingue un fichier régénéré du code source d'origine. */
@@ -26,103 +27,6 @@ export const BAKED_META = 'admin-baked';
  * L'iframe est rendue (hors écran) et non `display:none` : la mise en page
  * doit être calculée pour que les images de fond CSS soient détectables.
  */
-/** Nombre d'enfants d'un <body> qui portent du contenu (hors <script>). */
-function contentCount(body) {
-  let n = 0;
-  for (const child of body.children) if (child.tagName !== 'SCRIPT') n++;
-  return n;
-}
-
-/** Feuilles de style du site lui-même, qu'il faut avoir chargées. */
-function ownStylesheets(doc) {
-  let n = doc.querySelectorAll('style').length;
-  for (const link of doc.querySelectorAll('link[rel~="stylesheet"][href]')) {
-    try {
-      if (new URL(link.getAttribute('href'), doc.baseURI).origin === location.origin) n++;
-    } catch { /* href illisible */ }
-  }
-  return n;
-}
-
-/**
- * Charge la source dans une iframe cachée, rendue hors écran (et non
- * `display:none` : la mise en page doit être calculée pour que les images de
- * fond CSS soient détectables).
- *
- * Le point délicat est de savoir QUAND analyser. Attendre `readyState` n'est
- * pas tenable : un `<script src>` classique bloque l'analyseur tant qu'une
- * feuille de style distante n'a pas répondu, et une police de CDN lente fait
- * durer la publication dix secondes ou plus. Mais régénérer un document
- * analysé à moitié écraserait le fichier du site par une page tronquée.
- *
- * On tranche en comparant à la source, récupérée en parallèle : dès que
- * l'iframe contient tout le CONTENU annoncé, on peut analyser. La fin
- * éventuellement manquante — des balises <script> restées derrière le
- * blocage — est recollée telle quelle à la sérialisation.
- */
-function loadSource(url, timeout, settle) {
-  const separator = url.includes('?') ? '&' : '?';
-  const bakeUrl = url + separator + BAKE_PARAM + '=1';
-
-  const reference = fetch(bakeUrl, { cache: 'no-cache' })
-    .then((response) => response.text())
-    .then((text) => new DOMParser().parseFromString(text, 'text/html'))
-    .catch(() => null);
-
-  return new Promise((resolve, reject) => {
-    const frame = document.createElement('iframe');
-    frame.setAttribute('data-admin-ui', '');
-    frame.setAttribute('aria-hidden', 'true');
-    frame.setAttribute('tabindex', '-1');
-    frame.style.cssText = 'position:fixed;left:-20000px;top:0;width:1280px;height:900px;'
-      + 'opacity:0;pointer-events:none;border:0;';
-    frame.src = bakeUrl;
-
-    let sourceDoc = null;
-    let done = false;
-    let stableAt = 0;
-    let sheets = -1;
-
-    reference.then((parsed) => { sourceDoc = parsed; });
-
-    const finish = (error) => {
-      if (done) return;
-      done = true;
-      clearInterval(poll);
-      clearTimeout(timer);
-      if (error) { frame.remove(); reject(error); }
-      else resolve({ doc: frame.contentDocument, frame, sourceDoc });
-    };
-
-    const timer = setTimeout(
-      () => finish(new Error('La source du site n’a pas répondu à temps.')),
-      timeout,
-    );
-
-    const poll = setInterval(() => {
-      let doc;
-      try { doc = frame.contentDocument; } catch {
-        finish(new Error('Source illisible (origine différente ?).'));
-        return;
-      }
-      if (!doc || !doc.body || doc.location.href === 'about:blank') return;
-
-      const complete = doc.readyState !== 'loading'
-        || (sourceDoc && contentCount(doc.body) >= contentCount(sourceDoc.body));
-      if (!complete) return;
-
-      // Les styles du site doivent être appliqués pour que les images de fond
-      // CSS soient vues. Les feuilles tierces (polices) ne bloquent pas.
-      const loaded = doc.styleSheets.length;
-      if (loaded !== sheets) { sheets = loaded; stableAt = Date.now(); return; }
-      if (loaded >= ownStylesheets(doc) || Date.now() - stableAt >= settle) finish();
-    }, 40);
-
-    frame.addEventListener('error', () => finish(new Error('Source introuvable : ' + url)), { once: true });
-    document.body.appendChild(frame);
-  });
-}
-
 /** Retire du document régénéré tout ce que le module y a laissé. */
 function clean(doc, pageId) {
   for (const node of doc.querySelectorAll('[data-admin-ui]')) node.remove();
@@ -156,7 +60,14 @@ function clean(doc, pageId) {
  * @returns {Promise<{html:string, applied:number, orphans:object[]}>}
  */
 export async function bakePage({ sourceUrl, snapshot, scanOptions = {}, pageId, timeout = 20000, settle = 500 }) {
-  const { doc, frame, sourceDoc } = await loadSource(sourceUrl, timeout, settle);
+  const { doc, frame, sourceDoc } = await loadFrame({
+    url: sourceUrl,
+    param: BAKE_PARAM,
+    style: 'position:fixed;left:-20000px;top:0;width:1280px;height:900px;'
+      + 'opacity:0;pointer-events:none;border:0;',
+    timeout,
+    settle,
+  });
   if (!doc) throw new Error('Source illisible.');
   try {
     const model = new PageModel({ ...scanOptions, doc }).refresh();

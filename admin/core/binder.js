@@ -20,6 +20,7 @@ export function applyValue(el, role, value) {
     case 'image': return applyImage(el, value);
     case 'background': return applyBackground(el, value);
     case 'link': return applyLink(el, value);
+    case 'style': return applyStyle(el, value);
     default: return applyText(el, value);
   }
 }
@@ -92,6 +93,66 @@ function applyLink(el, value) {
     changed = true;
   }
   return changed;
+}
+
+/**
+ * Applique une surcharge de style. Volontairement limité aux couleurs et à
+ * l'image de fond : le client peut changer l'habillage, jamais les
+ * dimensions ni le positionnement — la mise en page reste au développeur.
+ */
+const STYLE_PROPS = {
+  color: 'color',
+  background: 'backgroundColor',
+  backgroundImage: 'backgroundImage',
+};
+
+function applyStyle(el, value) {
+  let changed = false;
+  for (const [cle, propriete] of Object.entries(STYLE_PROPS)) {
+    if (!(cle in value)) continue;
+    const brut = String(value[cle] ?? '').trim();
+
+    if (!brut) {
+      if (el.style[propriete]) { el.style[propriete] = ''; changed = true; }
+      continue;
+    }
+
+    let css = brut;
+    if (cle === 'backgroundImage') {
+      if (brut === 'none') {
+        css = 'none';
+      } else {
+        const src = safeImageUrl(brut);
+        if (!src) continue;
+        css = 'url("' + src.replace(/"/g, '%22') + '")';
+      }
+    } else if (!isColor(brut)) {
+      continue;
+    }
+
+    if (el.style[propriete] !== css) { el.style[propriete] = css; changed = true; }
+  }
+  return changed;
+}
+
+/** N'accepte qu'une couleur CSS reconnue : rien d'autre n'entre dans style. */
+function isColor(value) {
+  if (/^#[0-9a-f]{3,8}$/i.test(value)) return true;
+  if (/^(rgb|hsl)a?\([\d\s.,%/-]+\)$/i.test(value)) return true;
+  return /^[a-z]{3,20}$/i.test(value) && CSS.supports && CSS.supports('color', value);
+}
+
+/** Valeurs de style effectives, pour préremplir les champs de l'éditeur. */
+export function readStyle(el) {
+  const view = el.ownerDocument.defaultView;
+  const calcule = view ? view.getComputedStyle(el) : null;
+  const fond = el.style.backgroundImage || (calcule ? calcule.backgroundImage : '');
+  const url = /url\((['"]?)(.*?)\1\)/.exec(fond);
+  return {
+    color: el.style.color || (calcule ? calcule.color : ''),
+    background: el.style.backgroundColor || (calcule ? calcule.backgroundColor : ''),
+    backgroundImage: url ? url[2] : '',
+  };
 }
 
 /** Relit la valeur courante d'un élément (utilisé après édition en place). */
