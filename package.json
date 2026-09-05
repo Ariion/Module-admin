@@ -1,0 +1,18 @@
+{
+  "name": "module-admin",
+  "version": "0.1.0",
+  "description": "Interface d'édition visuelle pour sites statiques codés à la main. Firebase, aucun serveur, aucun build.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "http-server -p 8080 -c-1 .",
+    "demo": "http-server -p 8080 -c-1 . -o /demo/index.html",
+    "lint": "eslint admin"
+  },
+  "keywords": ["cms", "static-site", "firebase", "inline-editing", "no-build"],
+  "devDependencies": {
+    "eslint": "^10.0.0",
+    "http-server": "^14.1.1"
+  },
+  "files": ["admin", "firebase", "tools", "docs"]
+}

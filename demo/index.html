@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hôtel des Pins — démonstration du module d'administration</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="index.html">Hôtel des Pins</a>
+  <nav class="site-nav">
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="#chambres">Chambres</a></li>
+      <li><a href="#avis">Avis</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="hero__inner">
+    <h1>Une parenthèse au bord de la forêt</h1>
+    <p>Douze chambres, une table du marché et le silence des pins, à vingt minutes de la mer.</p>
+    <a class="button" href="contact.html">Réserver un séjour</a>
+  </div>
+</div>
+
+<section id="chambres" class="wrap">
+  <h2>Nos chambres</h2>
+  <p class="lead">Chaque chambre a été pensée comme une maison de famille : du bois, du lin, et de vraies fenêtres qui s'ouvrent.</p>
+
+  <div class="rooms">
+    <article class="room">
+      <img src="images/chambre-1.svg" alt="Chambre Cabane, lit double et poutres apparentes">
+      <div class="room__body">
+        <h3>Chambre Cabane</h3>
+        <p>18 m², lit double, vue sur la clairière. Idéale pour une première nuit sur place.</p>
+        <span class="price">À partir de 120 € la nuit</span>
+        <a href="contact.html">Demander cette chambre</a>
+      </div>
+    </article>
+    <article class="room">
+      <img src="images/chambre-2.svg" alt="Chambre Source, tons vert d'eau">
+      <div class="room__body">
+        <h3>Chambre Source</h3>
+        <p>24 m², salle d'eau en pierre, terrasse privative orientée à l'est.</p>
+        <span class="price">À partir de 155 € la nuit</span>
+        <a href="contact.html">Demander cette chambre</a>
+      </div>
+    </article>
+    <article class="room">
+      <img src="images/chambre-3.svg" alt="Suite Bruyère, coin salon">
+      <div class="room__body">
+        <h3>Suite Bruyère</h3>
+        <p>32 m², coin salon, baignoire îlot et cheminée pour les soirs d'hiver.</p>
+        <span class="price">À partir de 210 € la nuit</span>
+        <a href="contact.html">Demander cette chambre</a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="avis" class="reviews">
+  <div class="wrap">
+    <h2>Ce qu'en disent nos hôtes</h2>
+    <p class="lead">Quelques mots laissés dans le livre d'or de l'entrée.</p>
+    <ul>
+      <li class="review">
+        <blockquote>Le petit-déjeuner sous les arbres vaut à lui seul le détour.</blockquote>
+        <cite>Claire et Julien, mai</cite>
+      </li>
+      <li class="review">
+        <blockquote>On est arrivés fatigués, on est repartis reposés. C'est exactement ce qu'on cherchait.</blockquote>
+        <cite>Farid, août</cite>
+      </li>
+      <li class="review">
+        <blockquote>Accueil impeccable, chambre impeccable, silence total. Nous reviendrons.</blockquote>
+        <cite>Marta, octobre</cite>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Hôtel des Pins — 14 route de la Forêt, 40160 Parentis</p>
+    <p><a href="tel:+33500000000">05 00 00 00 00</a> · <a href="mailto:bonjour@hoteldespins.fr">bonjour@hoteldespins.fr</a></p>
+  </div>
+</footer>
+
+<!-- ------------------------------------------------------------------
+     Module d'administration : deux lignes, toujours en fin de <body>.
+     Retirez-les et le site fonctionne exactement comme avant.
+     ------------------------------------------------------------------ -->
+<script src="admin-config.js"></script>
+<script type="module" src="../admin/runtime.js"></script>
+
+</body>
+</html>

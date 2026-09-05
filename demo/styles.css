@@ -1,0 +1,68 @@
+/* Site de démonstration — CSS écrit à la main, aucune contrainte imposée
+   par le module d'administration. */
+:root {
+  --ink: #1c2530;
+  --muted: #5c6b7a;
+  --sand: #f6f2ec;
+  --accent: #b1855b;
+  --line: #e2dad0;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Iowan Old Style", Georgia, serif;
+  color: var(--ink);
+  background: #fff;
+  line-height: 1.6;
+}
+img { max-width: 100%; display: block; }
+a { color: var(--accent); }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+.site-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: #fff; z-index: 5;
+}
+.site-header .logo { font-size: 20px; font-weight: 700; letter-spacing: .5px; text-decoration: none; color: var(--ink); }
+.site-nav ul { display: flex; gap: 22px; list-style: none; margin: 0; padding: 0; }
+.site-nav a { text-decoration: none; color: var(--muted); font-size: 15px; }
+.site-nav a:hover { color: var(--accent); }
+
+.hero {
+  min-height: 460px; display: flex; align-items: center;
+  background-image: url("images/hero.svg");
+  background-size: cover; background-position: center;
+  color: #fff; text-align: center;
+}
+.hero__inner { max-width: 720px; margin: 0 auto; padding: 60px 24px; }
+.hero h1 { font-size: clamp(32px, 5vw, 52px); margin: 0 0 14px; }
+.hero p { font-size: 19px; opacity: .92; margin: 0 0 26px; }
+
+.button {
+  display: inline-block; padding: 12px 26px; border-radius: 2px;
+  background: var(--accent); color: #fff; text-decoration: none; font-size: 15px;
+  letter-spacing: .5px;
+}
+
+section { padding: 72px 0; }
+section h2 { font-size: 30px; margin: 0 0 10px; }
+.lead { color: var(--muted); max-width: 620px; margin: 0 0 40px; }
+
+.rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
+.room { border: 1px solid var(--line); background: #fff; }
+.room img { aspect-ratio: 4 / 3; object-fit: cover; }
+.room__body { padding: 20px 22px 26px; }
+.room h3 { margin: 0 0 8px; font-size: 21px; }
+.room p { margin: 0 0 16px; color: var(--muted); font-size: 15px; }
+.room .price { display: block; font-size: 14px; color: var(--accent); margin-bottom: 14px; }
+
+.reviews { background: var(--sand); }
+.reviews ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.review { background: #fff; padding: 24px; border-left: 3px solid var(--accent); }
+.review blockquote { margin: 0 0 12px; font-style: italic; }
+.review cite { font-style: normal; font-size: 14px; color: var(--muted); }
+
+.site-footer { padding: 40px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+.site-footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }

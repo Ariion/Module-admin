@@ -1,0 +1,84 @@
+rules_version = '2';
+
+// Règles de sécurité Firestore du module d'administration.
+//
+// Principe : le contenu PUBLIÉ est lisible par tout le monde (c'est ce que
+// voient les visiteurs du site), tout le reste demande un compte rattaché au
+// site. Le siteId est dans le chemin, donc un client ne peut jamais lire ni
+// écrire le contenu d'un autre site, même si les deux partagent le projet.
+//
+// Le prestataire se donne un accès global en créant un document
+// superadmins/{sonUid} depuis la console Firebase.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSuper() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/superadmins/$(request.auth.uid));
+    }
+
+    function isMember(siteId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/sites/$(siteId)/members/$(request.auth.uid));
+    }
+
+    function memberRole(siteId) {
+      return get(/databases/$(database)/documents/sites/$(siteId)/members/$(request.auth.uid)).data.role;
+    }
+
+    function canEdit(siteId) {
+      return isSuper() || (isMember(siteId) && memberRole(siteId) in ['owner', 'editor']);
+    }
+
+    match /sites/{siteId} {
+      allow read: if isMember(siteId) || isSuper();
+      allow write: if isSuper();
+
+      // Contenu publié — lecture publique, c'est le rendu du site.
+      match /pages/{pageId} {
+        allow read: if true;
+        allow write: if canEdit(siteId);
+      }
+
+      // Brouillon — visible des seuls éditeurs du site.
+      match /drafts/{pageId} {
+        allow read, write: if canEdit(siteId);
+      }
+
+      // Historique — on peut ajouter et relire, jamais réécrire.
+      match /revisions/{revisionId} {
+        allow read, create: if canEdit(siteId);
+        allow update: if false;
+        allow delete: if isSuper();
+      }
+
+      // Bibliothèque média (index des fichiers, pas les fichiers eux-mêmes).
+      match /media/{mediaId} {
+        allow read, write: if canEdit(siteId);
+      }
+
+      // Comptes ayant accès au site. Seul le prestataire les gère.
+      match /members/{uid} {
+        allow read: if isSuper() || (signedIn() && request.auth.uid == uid);
+        allow write: if isSuper();
+      }
+    }
+
+    // Chacun peut vérifier son propre statut ; personne ne peut se l'attribuer
+    // (la création se fait à la main dans la console Firebase).
+    match /superadmins/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Tout ce qui n'est pas explicitement autorisé est refusé.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
