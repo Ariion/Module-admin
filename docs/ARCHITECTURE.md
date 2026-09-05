@@ -68,6 +68,12 @@ entrée de menu supplémentaire, quatrième carte ajoutée à une liste,
 reformulation d'un texte non édité. Résultat : **tout le contenu retrouve sa
 place, zéro orphelin.**
 
+Vérifié aussi sur un site client réel de 960 lignes (voir
+[`essais/domaine-lamartine/`](../essais/domaine-lamartine/LISEZMOI.md)) : 56
+éléments et 6 listes répétables détectés sans configuration, puis section
+entière insérée, classe modifiée, entrée de menu et bloc ajoutés dans le code
+— **aucun orphelin, aucune erreur**.
+
 Ce qui casse quand même : renommer l'`id` qui sert d'ancre à une section,
 ou déplacer un élément dans une autre section **et** en changer le texte au
 même moment. Dans les deux cas l'élément devient orphelin — visible, jamais
@@ -96,7 +102,10 @@ Le scanner parcourt le DOM et classe chaque élément :
 
 - **texte** — élément dont tous les enfants sont du texte ou des balises inline
   (`<strong>`, `<em>`, `<br>`…). Le module ne descend pas plus bas : le
-  paragraphe entier est le champ.
+  paragraphe entier est le champ. Exception : une enveloppe sans texte propre
+  et à plusieurs enfants est éclatée en autant de champs — sinon
+  `<div><span class="num">43</span><span class="lbl">Couchages</span></div>`
+  se présenterait au client comme un seul bloc « 43Couchages ».
 - **lien** — `<a href>`. L'adresse et le libellé sont éditables ensemble.
 - **image** — `<img src>`, avec le texte alternatif.
 - **fond** — image de fond CSS, dès que l'élément dépasse une aire minimale.
@@ -300,6 +309,7 @@ clic, scripts du site inclus. Exporter juste après un rechargement de page.
 |---|---|
 | Contenu masqué au scan | Un menu mobile invisible sur grand écran n'est pas détecté depuis un grand écran. Passer `scan.visibleOnly: false` ou éditer depuis la largeur concernée. |
 | Listes appropriées par le client | Voir §2. Le bouton « revenir aux blocs du code » rend la main. |
+| Listes alternées | Une frise `date / texte / date / texte` n'est pas vue comme répétable : la détection cherche des frères consécutifs de **même** signature. Chaque cellule reste éditable ; envelopper chaque paire dans un `<div>` rend la liste extensible. |
 | Contenu généré par JavaScript | Ce que les scripts du site injectent après le scan n'est pas éditable. |
 | Une page = un document | Au-delà de ~1 Mo de contenu modifié sur une seule page, il faudrait découper. Très au-delà d'un site vitrine. |
 | Bref clignotement | Sur une page jamais visitée, le texte d'origine peut apparaître un instant avant le contenu publié. Le cache local supprime l'effet dès la deuxième visite ; l'export figé le supprime définitivement. |

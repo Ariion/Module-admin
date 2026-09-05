@@ -75,6 +75,27 @@ export function isSimpleText(el) {
   return hasText;
 }
 
+/**
+ * L'élément est-il une simple enveloppe autour de plusieurs champs distincts ?
+ *
+ * Cas typique d'un site écrit à la main :
+ *   <div><span class="num">43</span><span class="lbl">Couchages</span></div>
+ * Traité comme un seul texte, le client éditerait « 43Couchages » d'un bloc.
+ * Sans texte propre et avec plusieurs enfants, on descend : chaque morceau
+ * devient un champ à part.
+ */
+export function splitsIntoChildren(el) {
+  const ownText = Array.from(el.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.nodeValue.trim())
+    .join('');
+  if (ownText) return false;
+
+  const kids = children(el);
+  if (kids.length < 2) return false;
+  return kids.every((kid) => INLINE_TAGS.has(kid.tagName) && kid.textContent.trim());
+}
+
 /** true si le texte de l'élément contient au moins une balise inline. */
 export function hasInlineMarkup(el) {
   for (const node of el.childNodes) {

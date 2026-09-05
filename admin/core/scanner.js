@@ -7,7 +7,7 @@
  * (`scan.exclude`), mais rien n'est requis pour démarrer.
  * @module core/scanner
  */
-import { NEVER, isSimpleText, hasInlineMarkup, backgroundImage, isVisible, children } from './dom.js';
+import { NEVER, isSimpleText, splitsIntoChildren, hasInlineMarkup, backgroundImage, isVisible, children } from './dom.js';
 import { fingerprint } from './identity.js';
 
 const IGNORE_ATTR = 'data-admin-ignore';
@@ -110,7 +110,7 @@ export function scan(options = {}) {
       return;
     }
 
-    if (textAllowed && isSimpleText(el) && !wrapsSingleLink(el)) {
+    if (textAllowed && isSimpleText(el) && !wrapsSingleLink(el) && !splitsIntoChildren(el)) {
       add(el, 'text');
       return;
     }

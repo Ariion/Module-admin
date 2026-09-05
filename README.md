@@ -66,6 +66,7 @@ admin/                    le module (à copier tel quel sur un site)
 └── ui/                   éditeur (chargé uniquement pour les administrateurs)
 
 demo/                     site de démonstration complet
+essais/domaine-lamartine/ test sur un site client réel (code brut + module)
 firebase/                 règles de sécurité Firestore et Storage
 tools/admin-media.php     dépôt d'images sur l'hébergement du client
 docs/                     architecture et installation
