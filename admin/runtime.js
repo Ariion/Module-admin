@@ -34,8 +34,12 @@ function writeCache(config, snapshot) {
 
 function hasContent(snapshot) {
   if (!snapshot) return false;
+  const structure = snapshot.sections || {};
   return Object.keys(snapshot.content || {}).length > 0
-    || Object.keys(snapshot.collections || {}).length > 0;
+    || Object.keys(snapshot.collections || {}).length > 0
+    || (structure.add || []).length > 0
+    || (structure.hide || []).length > 0
+    || (structure.order || []).length > 0;
 }
 
 /** L'éditeur doit-il s'ouvrir ? (paramètre d'URL, ou session déjà ouverte) */
@@ -87,7 +91,12 @@ class AdminRuntime {
     if (!firebase?.projectId || !siteId) return null;
     const data = await getDocument(firebase, paths.page(siteId, pageId));
     if (!data) return null;
-    return { v: data.v || 1, content: data.content || {}, collections: data.collections || {} };
+    return {
+      v: data.v || 1,
+      content: data.content || {},
+      collections: data.collections || {},
+      sections: data.sections || null,
+    };
   }
 
   /** Charge le code de l'éditeur (uniquement pour les administrateurs). */
@@ -110,7 +119,13 @@ class AdminRuntime {
 async function loadDemoPublished(config) {
   const { MemoryBackend } = await import('./data/memory.js');
   const data = await new MemoryBackend(config).loadPublished(config.pageId);
-  return data ? { v: data.v || 1, content: data.content || {}, collections: data.collections || {} } : null;
+  if (!data) return null;
+  return {
+    v: data.v || 1,
+    content: data.content || {},
+    collections: data.collections || {},
+    sections: data.sections || null,
+  };
 }
 
 /**

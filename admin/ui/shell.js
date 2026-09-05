@@ -45,7 +45,9 @@ export function createShell({ root, t, config, onDevice }) {
   const boutonsAppareil = h('div', { class: 'devices', role: 'group' });
   const outilsScene = h('div', { class: 'stage__bar' }, nomPage, boutonsAppareil);
   const couche = h('div', { class: 'layer' });
-  const zoneFrame = h('div', { class: 'stage__frame', style: { position: 'relative' } }, couche);
+  const chargement = h('div', { class: 'loading' }, h('span', { class: 'spinner' }), t('loadingPreview'));
+  chargement.style.display = 'none';
+  const zoneFrame = h('div', { class: 'stage__frame', style: { position: 'relative' } }, couche, chargement);
   const stage = h('div', { class: 'stage' }, outilsScene, zoneFrame);
 
   root.appendChild(h('div', { class: 'shell' }, panel, stage));
@@ -100,6 +102,7 @@ export function createShell({ root, t, config, onDevice }) {
    * @returns {Promise<{doc:Document, frame:HTMLIFrameElement}>}
    */
   async function load(url) {
+    chargement.style.display = '';
     if (iframe) iframe.remove();
     const resultat = await loadFrame({
       url,
@@ -110,8 +113,9 @@ export function createShell({ root, t, config, onDevice }) {
     });
     iframe = resultat.frame;
     iframe.classList.add('viewport');
-    zoneFrame.appendChild(couche);
+    zoneFrame.append(couche, chargement);
     nomPage.textContent = pageLisible(resultat.doc);
+    chargement.style.display = 'none';
     return resultat;
   }
 

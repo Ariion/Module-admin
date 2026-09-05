@@ -43,7 +43,9 @@ export function freezePage({ doc = document, scriptMarkers = ['/admin/', 'admin-
     if (!node.getAttribute('style')) node.removeAttribute('style');
   }
 
-  for (const node of clone.querySelectorAll('*')) {
+  // `querySelectorAll('*')` ne renvoie pas l'élément racine : sans l'ajouter
+  // explicitement, les attributs posés sur <html> survivraient à l'export.
+  for (const node of [clone, ...clone.querySelectorAll('*')]) {
     for (const attr of Array.from(node.attributes)) {
       if (attr.name.startsWith('data-admin-')) node.removeAttribute(attr.name);
     }
@@ -65,7 +67,6 @@ export function freezePage({ doc = document, scriptMarkers = ['/admin/', 'admin-
   }
   for (const comment of stale) comment.remove();
 
-  clone.removeAttribute('data-admin-active');
   clone.style.removeProperty('--admin-bar-h');
   if (!clone.getAttribute('style')) clone.removeAttribute('style');
 

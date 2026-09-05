@@ -85,7 +85,9 @@ export function createTextEditor({ layer, origin, t, onCommit }) {
       plage.collapse(false);
       selection.addRange(plage);
     }
-    placerBarre(el);
+    // Donner le focus fait défiler l'aperçu : on place la barre au cadre
+    // suivant, sinon elle resterait à l'ancienne position de l'élément.
+    doc.defaultView.requestAnimationFrame(() => { if (courant) placerBarre(el); });
   }
 
   function demonter() {

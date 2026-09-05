@@ -152,6 +152,46 @@ restent accrochés. La reconstruction n'a lieu que si la structure change.
 Un bloc ajouté ensuite dans le code n'apparaîtra pas. Le bouton « revenir aux
 blocs du code » dans la barre d'outils du bloc rend la main au développeur.
 
+### Sections de page
+
+Un éditeur comme Elementor propose une bibliothèque de blocs génériques,
+parce qu'il possède le design du site. Ici c'est le développeur qui le
+possède : un bloc générique jurerait avec tout site écrit à la main. **La
+bibliothèque est donc constituée des sections déjà présentes dans la page** —
+ajouter une section, c'est en dupliquer une existante. Le rendu reste celui du
+développeur, quoi que fasse le client.
+
+Trois opérations : ajouter (copie d'une section), retirer, réordonner. Elles
+sont stockées à part du contenu :
+
+```json
+{ "sections": {
+  "add":  [ { "key": "s1", "from": "e_utvrr0", "after": "e_181fezc", "fields": {} } ],
+  "hide": [ { "ref": "e_9ka22p", "label": "Loisirs" } ],
+  "order": []
+} }
+```
+
+Elles sont appliquées **après** le contenu, et c'est essentiel : les
+empreintes sont calculées sur la page d'origine, donc insérer ou retirer une
+section ne décale l'identité d'aucun élément. Ce qui vit à l'intérieur d'une
+section ajoutée n'existe pas dans le code du site : ces éléments sont adressés
+par `fields`, relativement à la section, exactement comme les blocs
+répétables.
+
+Une section retirée reste listée dans l'onglet Structure avec son titre, pour
+pouvoir la remettre — sans cela le client n'aurait aucun moyen de revenir en
+arrière.
+
+### Habillage
+
+Couleur du texte, couleur de fond, image de fond, sur n'importe quel élément.
+Volontairement limité : pas de marges, pas de tailles, pas de positionnement.
+Le client habille, il ne redimensionne rien — la mise en page reste au
+développeur. Ces surcharges sont stockées comme le reste du contenu, avec le
+rôle `style`, et retrouvées par le chemin de l'élément : le scanner ne remonte
+pas les conteneurs, un résolveur direct par chemin prend le relais.
+
 ---
 
 ## 3. Deux chemins de chargement
@@ -173,10 +213,26 @@ Chargé par `import()` dynamique uniquement quand `?admin` est présent ou
 qu'une session d'édition est en cours. Il embarque le SDK Firebase (Auth,
 Firestore, Storage), l'interface et les panneaux.
 
-L'interface vit dans un **shadow DOM** : aucune règle CSS du site ne peut la
-casser, et elle ne déteint pas sur le site. Les contours de survol sont des
-boîtes dessinées par-dessus la page — aucun style n'est posé sur les éléments
-du site. Sortir du mode édition ne laisse aucune trace.
+Le site s'affiche **dans une iframe**, à côté du panneau de réglages. Ce n'est
+pas qu'une question d'aspect : plus d'en-tête collant à décaler ni de marge
+posée sur le corps du site, aucune règle CSS du site ne peut atteindre les
+panneaux, et l'aperçu par format d'écran devient une simple largeur d'iframe.
+Le client peut aussi naviguer dans son site : une page ouverte dans l'aperçu
+est rechargée dans l'éditeur, brouillon compris.
+
+L'interface elle-même vit dans un **shadow DOM**. Les contours de survol sont
+des boîtes dessinées par-dessus l'aperçu — aucun style n'est posé sur les
+éléments du site. Sortir de l'édition ne laisse aucune trace.
+
+Deux accents portent une information plutôt qu'une décoration : ce qui touche
+au **contenu** est bleu, ce qui touche à la **structure** est violet. Le client
+sait ce qu'il manipule.
+
+**Savoir quand l'aperçu est prêt** a demandé une mesure. Une feuille de style
+distante qui ne répond pas bloque le PREMIER RENDU, pas seulement l'analyse :
+l'aperçu restait blanc alors que son document était complet. Il attend donc la
+peinture et, passé deux secondes, se passe des feuilles tierces bloquantes —
+jamais de celles du site, jamais dans le fichier régénéré.
 
 ---
 
@@ -361,6 +417,8 @@ Le contenu est fidèle, l'indentation d'origine ne l'est pas.
 
 | Limite | Détail |
 |---|---|
+| Sections : copies uniquement | Ajouter une section, c'est dupliquer une section existante de la page. Il n'y a pas de bibliothèque de blocs génériques — un bloc générique jurerait avec un site écrit à la main. |
+| Habillage restreint | Couleurs et image de fond seulement. Ni marges, ni tailles, ni positionnement. |
 | Contenu masqué au scan | Un menu mobile invisible sur grand écran n'est pas détecté depuis un grand écran. Passer `scan.visibleOnly: false` ou éditer depuis la largeur concernée. |
 | Listes appropriées par le client | Voir §2. Le bouton « revenir aux blocs du code » rend la main. |
 | Listes alternées | Une frise `date / texte / date / texte` n'est pas vue comme répétable : la détection cherche des frères consécutifs de **même** signature. Chaque cellule reste éditable ; envelopper chaque paire dans un `<div>` rend la liste extensible. |

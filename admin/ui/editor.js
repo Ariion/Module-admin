@@ -95,6 +95,11 @@ export async function startEditor(runtime) {
         setStyle: (el, patch) => { model.setStyle(el, patch); markDirty(); overlay.reposition(); },
         resetStyle: (el) => { model.clearStyle(el); markDirty(); },
         collectionOp: (id, op, ...args) => collectionOp(id, op, ...args),
+        sections: () => model.sectionList(),
+        sectionIndex: (ref) => model.sectionList().findIndex((x) => x.ref === ref),
+        sectionCount: () => model.sectionList().length,
+        sectionOp: (ref, op, ...args) => sectionOp(ref, op, ...args),
+        addSection: (from, after) => sectionOp(from, 'add', after),
         pickMedia: (rappel) => { shell.showView('medias'); library.pick(rappel); },
         upload: (fichier, onProgress) => media.primary.upload(fichier, { onProgress }),
       },
@@ -104,6 +109,8 @@ export async function startEditor(runtime) {
       vue: vueStructure, t,
       onSelect: (sel) => { select(sel, { reveal: true }); },
       onHover: (el) => { if (el) overlay.setActive(el); },
+      onAddSection: (afterRef) => ouvrirSections(afterRef),
+      onRestoreSection: (ref) => sectionOp(ref, 'show'),
     });
 
     library = createLibrary({
@@ -115,6 +122,9 @@ export async function startEditor(runtime) {
       layer: shell.layer, origin: () => shell.origine(), t,
       onSelect: (sel) => select(sel),
       onCollectionOp: (id, op, ...args) => collectionOp(id, op, ...args),
+      onSectionOp: (ref, op, ...args) => sectionOp(ref, op, ...args),
+      onAddSection: (afterRef) => ouvrirSections(afterRef),
+      onReposition: () => textEditor?.reposition(),
     });
 
     textEditor = createTextEditor({
@@ -188,9 +198,18 @@ export async function startEditor(runtime) {
     return safe(() => pageKeyFromLocation(doc.location.pathname), 'home', 'pageId');
   }
 
+  /**
+   * Un instantané porte-t-il quelque chose ? La structure compte autant que
+   * le contenu : un brouillon qui n'ajoute qu'une section n'est pas vide.
+   */
   function aDuContenu(instantane) {
+    if (!instantane) return false;
+    const structure = instantane.sections || {};
     return Object.keys(instantane.content || {}).length > 0
-      || Object.keys(instantane.collections || {}).length > 0;
+      || Object.keys(instantane.collections || {}).length > 0
+      || (structure.add || []).length > 0
+      || (structure.hide || []).length > 0
+      || (structure.order || []).length > 0;
   }
 
   /** Le client peut se déplacer dans son site : on suit l'aperçu. */
@@ -217,9 +236,8 @@ export async function startEditor(runtime) {
     overlay.setActive(sel.el);
     if (options.reveal) overlay.reveal(sel.el);
 
-    const item = sel.collection
-      ? sel
-      : { ...sel, ...trouverBloc(sel.el) };
+    const section = model.sectionList().find((x) => x.el === sel.el) || null;
+    const item = { ...sel, ...(sel.collection ? {} : trouverBloc(sel.el)), section };
     inspector.render(item);
     shell.showView('contenu');
 
@@ -246,6 +264,12 @@ export async function startEditor(runtime) {
   }
 
   function setValue(entry, patch) {
+    if (entry.sectionKey != null) {
+      model.setSectionField(entry.sectionKey, entry.fieldKey, patch, entry.el, entry.role);
+      markDirty();
+      overlay.reposition();
+      return;
+    }
     if (entry.collectionId != null) {
       model.setCollectionField(entry.collectionId, entry.itemIndex, entry.fieldKey, patch, entry.el, entry.role);
     } else {
@@ -276,7 +300,7 @@ export async function startEditor(runtime) {
       if (!model.resetCollection(id)) return;
       markDirty();
       await autosave.flush();
-      await loadPage(shell.frame.contentDocument.location.href.split('?')[0]);
+      await loadPage(urlCourante());
       return;
     }
     if (!model.applyCollectionOp(id, op, ...args)) return;
@@ -284,6 +308,39 @@ export async function startEditor(runtime) {
     overlay.refresh(model);
     navigator.render(model);
     inspector.render(null);
+  }
+
+  function ouvrirSections(afterRef) {
+    const ref = afterRef || model.sectionList().slice(-1)[0]?.ref;
+    shell.showView('contenu');
+    inspector.showSections(ref);
+  }
+
+  /**
+   * Opérations de structure. Une section ajoutée, retirée ou déplacée change
+   * la page : on repart de la source et on réapplique tout, plutôt que
+   * d'empiler les transformations sur un DOM déjà modifié.
+   */
+  async function sectionOp(ref, op, ...args) {
+    let change = false;
+    if (op === 'add') change = model.sectionOp('add', ref, args[0] || ref);
+    else if (op === 'duplicate') change = model.sectionOp('add', ref, ref);
+    else if (op === 'hide') {
+      const section = model.sectionList().find((x) => x.ref === ref);
+      change = model.sectionOp('hide', ref, section ? section.label : '');
+    } else if (op === 'show') change = model.sectionOp('show', ref);
+    else if (op === 'move') change = model.sectionOp('move', ...args);
+    if (!change) return;
+
+    markDirty();
+    await autosave.flush();
+    await loadPage(urlCourante());
+    notify(t(op === 'hide' ? 'hideSection' : 'addSection'));
+  }
+
+  function urlCourante() {
+    const doc = shell.frame?.contentDocument;
+    return doc ? doc.location.href.split('?')[0] : location.pathname;
   }
 
   // ================================================================

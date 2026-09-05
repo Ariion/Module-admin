@@ -18,7 +18,10 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | | |
 |---|---|
 | **Détection automatique** | Le module analyse le DOM et repère seul les textes, images (y compris les fonds CSS), liens et blocs répétables. Rien à annoter dans le HTML. |
+| **Éditeur à panneau latéral** | Le site dans un aperçu, les réglages à gauche : contenu, structure de la page, bibliothèque média. Aperçu ordinateur / tablette / mobile. |
 | **Édition en place** | Survol = contour, clic sur un texte = édition directe, clic sur une image = panneau d'upload, clic sur un lien = champ d'adresse. |
+| **Sections de page** | Ajouter, retirer, réordonner une section. La bibliothèque est constituée des sections du site lui-même : une section ajoutée garde forcément le design du développeur. |
+| **Habillage** | Couleur du texte, couleur de fond, image de fond sur n'importe quel élément. Ni marges ni tailles : le client habille, il ne casse pas la mise en page. |
 | **Blocs répétables** | Dupliquer, réordonner, supprimer une carte de la liste — dans le gabarit prévu par le développeur, sans pouvoir casser la mise en page. |
 | **Brouillon puis publication** | Enregistrement automatique du brouillon, bouton « Publier », historique des versions et restauration. |
 | **Ne casse jamais le site** | Firebase injoignable, base vide, contenu illisible : la page s'affiche avec son HTML d'origine. Aucune exception ne remonte. |
@@ -59,6 +62,8 @@ admin/                    le module (à copier tel quel sur un site)
 │   ├── firebase.js       back-end éditeur (SDK chargé à la demande)
 │   └── memory.js         back-end de démonstration
 ├── core/bake.js          régénération du HTML avec le contenu publié
+├── core/sections.js      ajout, retrait et ordre des sections de page
+├── core/frame.js         chargement d'une page dans une iframe
 ├── data/host.js          dialogue avec l'hébergement (copie source, écriture)
 ├── media/
 │   ├── firebase-storage.js  Firebase Storage
@@ -66,6 +71,10 @@ admin/                    le module (à copier tel quel sur un site)
 │   ├── url.js               adresse saisie
 │   └── resize.js            recompression avant envoi
 └── ui/                   éditeur (chargé uniquement pour les administrateurs)
+    ├── shell.js          coque : panneau à gauche, aperçu à droite
+    ├── inspector.js      réglages de l'élément choisi
+    ├── navigator.js      structure de la page
+    └── library.js        bibliothèque média
 
 demo/                     site de démonstration complet
 essais/domaine-lamartine/ test sur un site client réel (code brut + module)

@@ -37,6 +37,73 @@ export function createInspector({ vue, t, actions }) {
     if (entry) vue.appendChild(groupe(t('content'), 'text', () => champsContenu(entry), true));
     vue.appendChild(groupe(t('style'), 'palette', () => champsStyle(el), !entry));
     if (collection) vue.appendChild(groupe(t('block'), 'layers', () => champsBloc(collection, itemIndex), true));
+    if (selection.section) {
+      vue.appendChild(groupe(t('sectionGroup'), 'section', () => champsSection(selection.section), !entry, true));
+    }
+  }
+
+  // ---------------------------------------------------------- structure
+  function champsSection(section) {
+    const index = actions.sectionIndex(section.ref);
+    const total = actions.sectionCount();
+    const bouton = (nomIcone, libelle, op, ...args) => h('button', {
+      class: 'btn', type: 'button',
+      onclick: () => actions.sectionOp(section.ref, op, ...args),
+    }, icon(nomIcone, 13), libelle);
+
+    return [
+      h('p', { class: 'hint', style: { marginTop: '0' } }, t('sectionPosition', index + 1, total)),
+      h('div', { class: 'row', style: { marginTop: '10px' } },
+        bouton('up', t('moveUp'), 'move', index, index - 1),
+        bouton('down', t('moveDown'), 'move', index, index + 1),
+      ),
+      h('div', { class: 'row', style: { marginTop: '7px' } },
+        bouton('copy', t('duplicate'), 'duplicate'),
+        h('button', {
+          class: 'btn btn--danger', type: 'button',
+          onclick: () => { if (confirm(t('hideSectionConfirm'))) actions.sectionOp(section.ref, 'hide'); },
+        }, icon('trash', 13), t('hideSection')),
+      ),
+      h('button', {
+        class: 'btn btn--wide btn--sect', type: 'button', style: { marginTop: '9px' },
+        onclick: () => showSections(section.ref),
+      }, icon('plus', 13), t('addSectionAfter')),
+    ];
+  }
+
+  /**
+   * Bibliothèque de sections : celles de la page elle-même.
+   * Ajouter une section, c'est dupliquer une section existante — le rendu
+   * reste donc celui écrit par le développeur.
+   */
+  function showSections(afterRef) {
+    clear(vue);
+    vue.append(
+      h('div', { class: 'field' },
+        h('span', { class: 'field__label' }, t('addSection')),
+        h('p', { class: 'hint', style: { marginTop: '0' } }, t('addSectionHint')),
+      ),
+    );
+
+    const liste = h('div', { class: 'sections' });
+    for (const section of actions.sections()) {
+      liste.appendChild(h('button', {
+        class: 'sectcard', type: 'button',
+        onclick: () => actions.addSection(section.ref, afterRef),
+      },
+        h('span', { class: 'sectcard__icon' }, icon('section', 16)),
+        h('span', { class: 'sectcard__main' },
+          h('span', { class: 'sectcard__title' }, section.label),
+          h('span', { class: 'sectcard__meta' }, t('sectionCopy')),
+        ),
+        icon('plus', 14),
+      ));
+    }
+    vue.appendChild(liste.children.length ? liste : h('p', { class: 'empty' }, t('emptyStructure')));
+    vue.appendChild(h('button', {
+      class: 'btn btn--wide', type: 'button', style: { marginTop: '12px' },
+      onclick: () => render(selection),
+    }, t('cancel')));
   }
 
   function iconeDe(role) {
@@ -46,9 +113,9 @@ export function createInspector({ vue, t, actions }) {
   }
 
   /** Section repliable. */
-  function groupe(titre, nomIcone, contenu, ouvert) {
+  function groupe(titre, nomIcone, contenu, ouvert, structure) {
     const corps = h('div', { class: 'group__body' }, contenu());
-    const bloc = h('div', { class: 'group', 'data-open': ouvert ? 'true' : 'false' },
+    const bloc = h('div', { class: 'group' + (structure ? ' group--sect' : ''), 'data-open': ouvert ? 'true' : 'false' },
       h('button', {
         class: 'group__head', type: 'button',
         onclick: () => bloc.setAttribute('data-open', bloc.getAttribute('data-open') === 'true' ? 'false' : 'true'),
@@ -271,5 +338,5 @@ export function createInspector({ vue, t, actions }) {
     return h('button', { class: 'btn btn--wide', type: 'button', onclick: onClick }, icon('history', 13), t('revert'));
   }
 
-  return { render, get selection() { return selection; } };
+  return { render, showSections, get selection() { return selection; } };
 }

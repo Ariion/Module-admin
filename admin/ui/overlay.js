@@ -10,7 +10,7 @@ import { h, icon, clear } from './el.js';
 
 const LABELS = { text: 'text', image: 'image', link: 'link', background: 'background' };
 
-export function createOverlay({ layer, origin, t, onSelect, onCollectionOp }) {
+export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSectionOp, onAddSection, onReposition }) {
   let doc = null;
   let win = null;
   let model = null;
@@ -25,8 +25,30 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp }) {
   cadre.appendChild(etiquette);
   const cadreActif = h('div', { class: 'hl hl--active' });
   const outilsBloc = h('div', { class: 'itembar' });
-  layer.append(cadre, cadreActif, outilsBloc);
-  cacher(cadre); cacher(cadreActif); cacher(outilsBloc);
+  const cadreSection = h('div', { class: 'sect' });
+  const outilsSection = h('div', { class: 'secttools' });
+  const pointAjout = h('div', { class: 'addhere' });
+  layer.append(cadreSection, cadre, cadreActif, outilsBloc, pointAjout, outilsSection);
+  for (const n of [cadre, cadreActif, outilsBloc, cadreSection, outilsSection, pointAjout]) cacher(n);
+
+  // Le pointeur qui passe sur une barre d'outils quitte l'iframe : sans ce
+  // délai, la barre disparaîtrait avant d'être cliquable.
+  let minuteurSection = null;
+  const garderSection = () => clearTimeout(minuteurSection);
+  const lacherSection = () => {
+    clearTimeout(minuteurSection);
+    minuteurSection = setTimeout(() => {
+      sectionSurvolee = null;
+      cacher(cadreSection); cacher(outilsSection); cacher(pointAjout);
+    }, 260);
+  };
+  for (const n of [outilsSection, pointAjout]) {
+    n.addEventListener('mouseenter', garderSection);
+    n.addEventListener('mouseleave', lacherSection);
+  }
+
+  let sections = [];
+  let sectionSurvolee = null;
 
   function cacher(n) { n.style.display = 'none'; }
   function montrer(n) { n.style.display = ''; }
@@ -34,14 +56,33 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp }) {
   /** Reconstruit les tables de correspondance après un scan. */
   function refresh(prochainModel) {
     if (prochainModel) {
-      model = prochainModel;
-      doc = model.doc;
-      win = doc.defaultView;
+      const nouveauDoc = prochainModel.doc;
+      // L'aperçu est rechargé à chaque changement de structure ou de page :
+      // sans rebrancher, les écouteurs resteraient sur le document détruit.
+      if (nouveauDoc !== doc) {
+        const etait = actif;
+        if (etait) debrancher();
+        model = prochainModel;
+        doc = nouveauDoc;
+        win = doc.defaultView;
+        if (etait) brancher();
+      } else {
+        model = prochainModel;
+      }
     }
     if (!model) return;
 
     parElement = new Map();
     for (const entry of model.entries.values()) parElement.set(entry.el, entry);
+
+    sections = model.sectionList ? model.sectionList() : [];
+
+    // Les champs des sections ajoutées sont éditables comme les autres.
+    for (const [cle, el] of model.insertedSections || []) {
+      for (const [champCle, champ] of model.sectionFieldsIn(el)) {
+        parElement.set(champ.el, { ...champ, sectionKey: cle, fieldKey: champCle });
+      }
+    }
 
     parItem = new Map();
     for (const collection of model.collections) {
@@ -128,14 +169,71 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp }) {
     montrer(outilsBloc);
   }
 
+  /** Section de premier niveau contenant un nœud. */
+  function sectionSous(noeud) {
+    for (const section of sections) {
+      if (section.el === noeud || section.el.contains(noeud)) return section;
+    }
+    return null;
+  }
+
+  function peindreSection(section) {
+    if (!section || !section.el.isConnected) {
+      cacher(cadreSection); cacher(outilsSection); cacher(pointAjout);
+      return;
+    }
+    placer(cadreSection, section.el);
+
+    const decalage = origin();
+    const rect = section.el.getBoundingClientRect();
+    const index = sections.indexOf(section);
+    const centre = decalage.x + rect.left + rect.width / 2;
+
+    clear(outilsSection);
+    const bouton = (nom, titre, action, danger) => h('button', {
+      class: 'btn btn--sm' + (danger ? ' btn--danger' : ''), type: 'button', title: titre,
+      onclick: (e) => { e.preventDefault(); e.stopPropagation(); action(); },
+    }, icon(nom, 13));
+
+    outilsSection.append(
+      h('span', { class: 'secttools__name' }, section.label),
+      bouton('up', t('moveUp'), () => onSectionOp(section.ref, 'move', index, index - 1)),
+      bouton('down', t('moveDown'), () => onSectionOp(section.ref, 'move', index, index + 1)),
+      bouton('copy', t('duplicateSection'), () => onSectionOp(section.ref, 'duplicate')),
+      bouton('trash', t('hideSection'), () => {
+        if (confirm(t('hideSectionConfirm'))) onSectionOp(section.ref, 'hide');
+      }, true),
+    );
+    outilsSection.style.left = centre + 'px';
+    outilsSection.style.top = (decalage.y + Math.max(rect.top + 10, 10)) + 'px';
+    montrer(outilsSection);
+
+    clear(pointAjout);
+    pointAjout.appendChild(h('button', {
+      type: 'button',
+      onclick: (e) => { e.preventDefault(); e.stopPropagation(); onAddSection(section.ref); },
+    }, icon('plus', 12), t('addSectionHere')));
+    pointAjout.style.left = (decalage.x + rect.left) + 'px';
+    pointAjout.style.width = rect.width + 'px';
+    pointAjout.style.top = (decalage.y + rect.bottom) + 'px';
+    montrer(pointAjout);
+  }
+
   const surMouvement = (event) => {
     if (!actif) return;
     const entry = entreeSous(event.target);
     if (entry !== survole) { survole = entry; peindreSurvol(entry); }
     peindreOutilsBloc(itemSous(event.target));
+
+    const section = sectionSous(event.target);
+    if (section !== sectionSurvolee) {
+      garderSection();
+      sectionSurvolee = section;
+      peindreSection(section);
+    }
   };
 
-  const surSortie = () => { survole = null; cacher(cadre); cacher(outilsBloc); };
+  const surSortie = () => { survole = null; cacher(cadre); cacher(outilsBloc); lacherSection(); };
 
   const surClic = (event) => {
     if (!actif) return;
@@ -150,10 +248,15 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp }) {
   };
 
   const reposition = () => {
-    if (!actif) { cacher(cadre); cacher(cadreActif); cacher(outilsBloc); return; }
+    if (!actif) {
+      for (const n of [cadre, cadreActif, outilsBloc, cadreSection, outilsSection, pointAjout]) cacher(n);
+      return;
+    }
     placer(cadre, survole?.el);
     placer(cadreActif, selectionne);
     cacher(outilsBloc);
+    if (sectionSurvolee) peindreSection(sectionSurvolee); else cacher(cadreSection);
+    onReposition?.();
   };
 
   function brancher() {
@@ -180,7 +283,9 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp }) {
     refresh,
     reposition,
     enable() { if (actif) return; actif = true; brancher(); reposition(); },
-    disable() { debrancher(); actif = false; survole = null; reposition(); },
+    disable() { debrancher(); actif = false; survole = null; sectionSurvolee = null; reposition(); },
+    /** Sections de la page, telles que l'aperçu les voit. */
+    get sections() { return sections; },
     setActive(el) { selectionne = el || null; placer(cadreActif, selectionne); },
     /** Fait défiler l'aperçu jusqu'à un élément et le met en évidence. */
     reveal(el) {

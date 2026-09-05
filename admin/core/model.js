@@ -8,6 +8,10 @@ import { scan } from './scanner.js';
 import { buildIndex, resolveAll, fingerprint } from './identity.js';
 import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, ops } from './collections.js';
 import { applyValue, readCurrent, readStyle } from './binder.js';
+import {
+  listSections, applySections, emptyState as emptySections, isEmpty as sectionsEmpty,
+  sectionFieldKey, ops as sectionOps,
+} from './sections.js';
 import { clone, equal } from './util.js';
 import { debug, safe } from './log.js';
 
@@ -40,13 +44,27 @@ export class PageModel {
     this.styles = new Map();
     /** @type {Map<string, {el:Element, print:object}>} cibles de style */
     this.styleTargets = new Map();
+    /** @type {{add:Array, hide:Array, order:Array}} structure de la page */
+    this.sections = emptySections();
+    /** @type {Map<string, Element>} sections ajoutées, par clé */
+    this.insertedSections = new Map();
     this.collectionsById = new Map();
   }
 
   /** Analyse la page. À rejouer après une reconstruction de collection. */
   refresh() {
     this.collections = safe(() => detectCollections(this.scanOptions), [], 'detectCollections');
-    this.collectionsById = new Map(this.collections.map((c) => [c.id, c]));
+
+    // Ce qui vit dans une section ajoutée est piloté par cette section : ces
+    // éléments n'existent pas dans le code du site, ils ne peuvent donc pas
+    // être adressés par une empreinte calculée sur lui.
+    this.insertedSections = new Map();
+    const inInserted = new Set();
+    for (const el of this.doc.querySelectorAll('[data-admin-section]')) {
+      this.insertedSections.set(el.getAttribute('data-admin-section'), el);
+      inInserted.add(el);
+      for (const noeud of el.querySelectorAll('*')) inInserted.add(noeud);
+    }
 
     const inCollection = new Set();
     for (const collection of this.collections) {
@@ -56,11 +74,15 @@ export class PageModel {
       }
     }
 
+    this.collections = this.collections.filter((c) => !inInserted.has(c.container));
+    this.collectionsById = new Map(this.collections.map((c) => [c.id, c]));
+
     const entries = safe(() => scan(this.scanOptions), [], 'scan');
     this.entries = new Map();
     for (const entry of entries) {
       // Ce qui vit dans un bloc répétable est géré par la collection.
       if (inCollection.has(entry.el)) continue;
+      if (inInserted.has(entry.el)) continue;
       this.entries.set(entry.print.id, entry);
     }
     this.index = buildIndex([...this.entries.values()]);
@@ -131,6 +153,21 @@ export class PageModel {
       }, null, 'applyCollection');
     }
 
+    // --- Structure de la page ------------------------------------------
+    // Appliquée en dernier : les empreintes du contenu ont été calculées sur
+    // la page d'origine, donc ajouter ou masquer une section ne décale
+    // l'identité de rien.
+    if (data.sections && !sectionsEmpty(data.sections)) {
+      this.sections = clone(data.sections);
+      safe(() => {
+        const bilan = applySections(this.doc, this.sections, (racine, champs) => {
+          this.applySectionFields(racine, champs);
+        });
+        applied += bilan.ajoutees + bilan.masquees;
+      }, null, 'applySections');
+      this.rebuilt = true;
+    }
+
     if (this.rebuilt) {
       // La structure a changé : on réanalyse pour que l'éditeur travaille
       // sur les nœuds réellement présents.
@@ -140,6 +177,48 @@ export class PageModel {
 
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
     return { applied, orphans: [...this.orphans.values()] };
+  }
+
+  /** Champs éditables d'une section ajoutée, indexés par clé relative. */
+  sectionFieldsIn(racine) {
+    const map = new Map();
+    const trouves = safe(() => scan({ ...this.scanOptions, nodes: [racine], visibleOnly: false }), [], 'sectionFields');
+    for (const entry of trouves) map.set(sectionFieldKey(racine, entry.el, entry.role), entry);
+    return map;
+  }
+
+  applySectionFields(racine, champs) {
+    const map = this.sectionFieldsIn(racine);
+    for (const [cle, valeur] of Object.entries(champs || {})) {
+      const cible = map.get(cle);
+      if (cible) applyValue(cible.el, cible.role, valeur);
+    }
+  }
+
+  /** Sections de premier niveau, telles qu'affichées. */
+  sectionList() {
+    return safe(() => listSections(this.doc), [], 'listSections');
+  }
+
+  /** Applique une opération de structure et réapplique la page. */
+  sectionOp(op, ...args) {
+    if (!sectionOps[op]) return false;
+    const suivant = op === 'move'
+      ? sectionOps.move(this.sections, this.sectionList().map((s) => s.ref), ...args)
+      : sectionOps[op](this.sections, ...args);
+    if (suivant === this.sections) return false;
+    this.sections = suivant;
+    return true;
+  }
+
+  /** Écrit la valeur d'un champ d'une section ajoutée. */
+  setSectionField(key, fieldKey, value, el, role) {
+    const record = this.sections.add.find((r) => r.key === key);
+    if (!record) return false;
+    record.fields = record.fields || {};
+    record.fields[fieldKey] = { ...(record.fields[fieldKey] || {}), ...value };
+    if (el) applyValue(el, role, record.fields[fieldKey]);
+    return true;
   }
 
   /** Déclare un élément comme cible de style et retourne son empreinte. */
@@ -321,12 +400,16 @@ export class PageModel {
       };
     }
 
-    return { v: SNAPSHOT_VERSION, content, collections };
+    const instantane = { v: SNAPSHOT_VERSION, content, collections };
+    if (!sectionsEmpty(this.sections)) instantane.sections = clone(this.sections);
+    return instantane;
   }
 
   /** Nombre de modifications par rapport au HTML d'origine. */
   get changeCount() {
-    return this.values.size + this.collectionState.size + this.styles.size;
+    const structure = this.sections.add.length + this.sections.hide.length
+      + (this.sections.order.length ? 1 : 0);
+    return this.values.size + this.collectionState.size + this.styles.size + structure;
   }
 }
 

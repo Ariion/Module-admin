@@ -11,7 +11,7 @@ import { h, icon, clear } from './el.js';
 
 const SECTIONS = ['SECTION', 'HEADER', 'FOOTER', 'MAIN', 'ASIDE', 'ARTICLE', 'NAV'];
 
-export function createNavigator({ vue, t, onSelect, onHover }) {
+export function createNavigator({ vue, t, onSelect, onHover, onAddSection, onRestoreSection }) {
   let courant = null;
 
   function render(model) {
@@ -24,12 +24,38 @@ export function createNavigator({ vue, t, onSelect, onHover }) {
     const parEnfant = new Map();
     for (const entry of model.entries.values()) parEnfant.set(entry.el, entry);
 
+    if (onAddSection) {
+      vue.appendChild(h('button', {
+        class: 'btn btn--wide btn--sect', type: 'button', style: { marginBottom: '13px' },
+        onclick: () => onAddSection(null),
+      }, icon('plus', 13), t('addSection')));
+    }
+
     const racine = h('ul', { class: 'tree' });
     for (const section of Array.from(model.doc.body.children)) {
       if (!estAffichable(section)) continue;
       racine.appendChild(noeudSection(section, model, parEnfant));
     }
     vue.appendChild(racine.children.length ? racine : h('p', { class: 'empty' }, t('emptyStructure')));
+
+    // Une section retirée n'est plus dans la page : sans cette liste, le
+    // client n'aurait aucun moyen de revenir en arrière.
+    const retirees = (model.sections?.hide || []);
+    if (retirees.length && onRestoreSection) {
+      vue.appendChild(h('div', { class: 'field', style: { marginTop: '18px' } },
+        h('span', { class: 'field__label' }, t('hiddenSections')),
+        h('ul', { class: 'list' }, retirees.map((entree) => {
+          const ref = typeof entree === 'string' ? entree : entree.ref;
+          const label = (typeof entree === 'string' ? '' : entree.label) || ref;
+          return h('li', {},
+            h('span', { class: 'list__main' }, label),
+            h('button', {
+              class: 'btn btn--sm', type: 'button', onclick: () => onRestoreSection(ref),
+            }, icon('history', 12), t('restoreSection')),
+          );
+        })),
+      ));
+    }
   }
 
   function estAffichable(el) {
