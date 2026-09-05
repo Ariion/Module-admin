@@ -289,31 +289,73 @@ de 6 Mo ne part pas telle quelle.
 
 ## 8. Réversibilité
 
-Le module ne doit jamais devenir un point de blocage. Deux sorties, à ne pas
-confondre.
+Le module ne doit jamais devenir un point de blocage. Le contenu ne doit donc
+pas vivre uniquement dans Firebase : il doit finir **dans le fichier HTML**.
 
-**Retirer les deux `<script>`.** Le site revient exactement à son état
-d'origine : rien n'a été écrit dans ses fichiers. Mais le contenu saisi par le
-client vit dans Firebase et était injecté à l'affichage — **il n'est donc plus
-là**. C'est le comportement attendu, pas un défaut : le code redevient la seule
-source de vérité.
+### Réécriture automatique à la publication
 
-**Exporter la page figée, puis retirer les `<script>`.** Le bouton d'export
-produit le HTML de la page **avec le contenu publié intégré**. Vérifié sur un
-site client réel (voir
-[`essais/domaine-lamartine/`](../essais/domaine-lamartine/LISEZMOI.md)) : le
-fichier produit ne contient plus une seule occurrence du mot « admin », aucune
-balise `<script>`, aucun attribut `data-admin-*`, ne déclenche aucune requête
-vers le module, et rend leur position d'origine aux éléments fixes que
-l'éditeur avait décalés. CSS, sections et SVG intacts.
+À chaque clic sur « Publier », après l'écriture dans Firestore :
 
-Le contenu est aussi exportable en JSON, pour être réimporté ailleurs.
+1. le module demande à l'hébergement l'URL du **code d'origine** de la page
+   (`page.src.html`, copie conservée à l'installation) ;
+2. il charge cette source dans une **iframe cachée**, rendue hors écran — pas
+   `display:none`, la mise en page doit être calculée pour que les images de
+   fond CSS soient détectables ;
+3. il y applique l'instantané publié avec le même moteur qu'en édition ;
+4. il sérialise le résultat et le repose sur l'hébergement à la place du
+   fichier publié.
 
-*Nuance à connaître :* l'export est une re-sérialisation du DOM au moment du
-clic, scripts du site inclus. Le contenu est fidèle, l'indentation d'origine
-ne l'est pas. Exporter juste après un rechargement de page.
+Le site n'a alors plus besoin du module pour afficher son contenu. Supprimer
+le dossier `admin/` ne fait rien perdre : le HTML porte tout.
 
----
+**Pourquoi repartir de la source et non du DOM affiché.** Le DOM courant a
+déjà subi une application de contenu, et parfois les scripts du site. Le
+sérialiser reviendrait à photographier un état dérivé, et chaque publication
+empilerait sa dérive sur la précédente. En repartant du code du développeur à
+chaque fois, la chaîne reste courte : **code d'origine + contenu publié**.
+
+**Le code reste maître.** Le fichier régénéré porte un
+`<meta name="admin-baked">`. Quand le développeur redéploie sa page, le
+fichier en ligne n'a plus ce marqueur : l'hébergement le détecte et remplace
+la copie de référence par la nouvelle version. Le design et la structure
+reviennent donc du code, le contenu de Firebase.
+
+### Savoir quand analyser
+
+Point délicat, et source d'un défaut corrigé après mesure. Attendre
+`readyState` n'est pas tenable : un `<script src>` classique bloque
+l'analyseur tant qu'une feuille de style distante n'a pas répondu. Sur un site
+chargeant Google Fonts depuis un réseau lent, la publication prenait **13
+secondes**. Mais régénérer un document analysé à moitié écraserait le fichier
+du site par une page tronquée — inacceptable.
+
+La source est donc récupérée en parallèle par `fetch` et sert de référence :
+dès que l'iframe contient tout le **contenu** annoncé, on analyse. La fin
+éventuellement manquante — des `<script>` restés derrière le blocage — est
+recollée telle quelle à la sérialisation, ce qui préserve les balises du
+module et donc la capacité du client à continuer d'éditer. Les feuilles de
+style du site (même origine) sont attendues ; celles des CDN tiers ne bloquent
+pas. Mesure après correction : **0,3 seconde**.
+
+### Sans hébergement inscriptible
+
+La réécriture demande un hébergement capable d'écrire un fichier — donc PHP
+(OVH, o2switch, tout mutualisé). Sur un statique pur comme Netlify, elle est
+inopérante : le module fonctionne normalement, mais le contenu reste servi au
+chargement. Le bouton d'export manuel reste alors la porte de sortie, et
+produit le même fichier autonome.
+
+### Export manuel
+
+Le bouton d'export produit à la demande le HTML de la page courante avec le
+contenu intégré, plus une sauvegarde JSON du contenu. Vérifié sur un site
+client réel : le fichier produit ne contient plus une seule occurrence du mot
+« admin », aucune balise `<script>` du module, aucun attribut `data-admin-*`,
+et rend leur position d'origine aux éléments fixes que l'éditeur avait
+décalés.
+
+*Nuance :* l'export manuel est une re-sérialisation du DOM au moment du clic.
+Le contenu est fidèle, l'indentation d'origine ne l'est pas.
 
 ## Limites connues
 
@@ -324,4 +366,6 @@ ne l'est pas. Exporter juste après un rechargement de page.
 | Listes alternées | Une frise `date / texte / date / texte` n'est pas vue comme répétable : la détection cherche des frères consécutifs de **même** signature. Chaque cellule reste éditable ; envelopper chaque paire dans un `<div>` rend la liste extensible. |
 | Contenu généré par JavaScript | Ce que les scripts du site injectent après le scan n'est pas éditable. |
 | Une page = un document | Au-delà de ~1 Mo de contenu modifié sur une seule page, il faudrait découper. Très au-delà d'un site vitrine. |
-| Bref clignotement | Sur une page jamais visitée, le texte d'origine peut apparaître un instant avant le contenu publié. Le cache local supprime l'effet dès la deuxième visite ; l'export figé le supprime définitivement. |
+| Bref clignotement | Sans réécriture du HTML, le texte d'origine peut apparaître un instant avant le contenu publié sur une page jamais visitée. Le cache local supprime l'effet dès la deuxième visite ; la réécriture le supprime définitivement. |
+| Réécriture et hébergement | La réécriture automatique demande PHP. Sur un statique pur (Netlify), seul l'export manuel est disponible. |
+| Copie de référence publique | `page.src.html` est lisible par quiconque connaît l'URL. Elle ne contient que le code du site, déjà public — mais aussi le contenu d'avant les modifications du client. |

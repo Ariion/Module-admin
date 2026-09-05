@@ -17,6 +17,8 @@ import { openMediaLibrary } from './media-library.js';
 import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { createMedia } from '../media/index.js';
+import { createHost } from '../data/host.js';
+import { bakePage } from '../core/bake.js';
 import { cacheKey } from '../core/config.js';
 import { debounce, timeAgo } from '../core/util.js';
 import { debug, safe } from '../core/log.js';
@@ -43,6 +45,7 @@ export async function startEditor(runtime) {
   // --- Back-end ------------------------------------------------------
   const backend = await createBackend(config);
   const media = createMedia(config, backend);
+  const hosting = createHost(config, backend);
 
   const state = {
     editing: false,
@@ -50,6 +53,7 @@ export async function startEditor(runtime) {
     savedAt: null,
     saving: false,
     hasDraft: false,
+    baked: null,
     user: null,
     access: null,
   };
@@ -210,10 +214,46 @@ export async function startEditor(runtime) {
       notify(t('published'));
     } catch (err) {
       notify(String(err.message || err), true);
-    } finally {
       publishButton.disabled = false;
       render();
+      return;
     }
+
+    // Le contenu est publié ; on l'inscrit maintenant DANS le fichier HTML de
+    // l'hébergement. Un échec ici ne remet pas la publication en cause : le
+    // site reste à jour, il dépend simplement encore du module.
+    if (hosting.enabled) {
+      statusText.textContent = t('baking');
+      try {
+        await bakeIntoHost();
+        state.baked = Date.now();
+        notify(t('bakedOk'));
+      } catch (err) {
+        state.baked = null;
+        notify(t('bakedFail') + ' ' + String(err.message || err), true);
+      }
+    }
+    publishButton.disabled = false;
+    render();
+  }
+
+  /** Réécrit le fichier .html publié avec le contenu à l'intérieur. */
+  async function bakeIntoHost() {
+    const { sourceUrl } = await hosting.ensureSource();
+    const model = runtime.getModel();
+    const scanOptions = { ...model.scanOptions };
+    delete scanOptions.doc;
+
+    const { html, orphans } = await bakePage({
+      sourceUrl,
+      snapshot: model.toSnapshot(),
+      scanOptions,
+      pageId: config.pageId,
+    });
+    if (orphans.length) {
+      notify(t('orphans', orphans.length), true);
+    }
+    await hosting.writePage(html);
   }
 
   function history() {
@@ -269,6 +309,9 @@ export async function startEditor(runtime) {
     } else if (state.dirty || state.hasDraft) {
       statusPill.className = 'pill pill--warn';
       statusPill.append(icon('warn', 11), t('unpublished'));
+    } else if (hosting.enabled && state.baked) {
+      statusPill.className = 'pill pill--ok';
+      statusPill.append(icon('check', 11), t('bakedPill'));
     } else {
       statusPill.className = 'pill pill--ok';
       statusPill.append(icon('check', 11), t('published'));
@@ -356,7 +399,7 @@ export async function startEditor(runtime) {
       await enterEditMode();
       // Exposé pour permettre à un site d'ajouter ses propres commandes
       // (bouton « publier » maison, intégration dans un back-office…).
-      resolve({ backend, media, teardown, render, notify, publish, markDirty, select });
+      resolve({ backend, media, hosting, teardown, render, notify, publish, markDirty, select, bakeIntoHost });
     });
   });
 }

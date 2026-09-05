@@ -24,7 +24,7 @@ const NO_COLLECTION_ATTR = 'data-admin-no-repeat';
  * @returns {Array<{id:string, print:object, container:Element, items:Element[], itemSig:string}>}
  */
 export function detectCollections(options = {}) {
-  const { roots = ['body'], minItems = 2, exclude = [], requireClass = true } = options;
+  const { roots = ['body'], minItems = 2, exclude = [], requireClass = true, doc = document } = options;
   const excludeSelector = exclude.filter(Boolean).join(',');
   const collections = [];
   const claimed = new Set();
@@ -32,7 +32,7 @@ export function detectCollections(options = {}) {
   const containers = [];
   for (const selector of roots) {
     let nodes = [];
-    try { nodes = Array.from(document.querySelectorAll(selector)); } catch { nodes = []; }
+    try { nodes = Array.from(doc.querySelectorAll(selector)); } catch { nodes = []; }
     for (const node of nodes) {
       containers.push(node, ...node.querySelectorAll('*'));
     }
@@ -157,7 +157,7 @@ export function applyCollection(collection, data, applyFields) {
   // édité reparte d'une base propre.
   const templates = originals.map((node) => node.cloneNode(true));
   const anchorNode = originals[0];
-  const fragment = document.createDocumentFragment();
+  const fragment = container.ownerDocument.createDocumentFragment();
   const rendered = [];
 
   for (const entry of data.items) {

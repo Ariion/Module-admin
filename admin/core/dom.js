@@ -1,5 +1,10 @@
 /**
  * Helpers DOM partagés par le scanner, l'identité et l'éditeur.
+ *
+ * Tout est dérivé de `el.ownerDocument` plutôt que du document global : le
+ * moteur peut ainsi travailler sur une AUTRE page que celle affichée — par
+ * exemple la source d'origine chargée dans une iframe cachée, ce qui permet
+ * de reconstruire un fichier HTML complet sans partir du DOM déjà modifié.
  * @module core/dom
  */
 
@@ -41,14 +46,18 @@ export function nthOfType(el) {
 /** Un élément est-il rendu ? Sert à ne pas proposer du contenu invisible. */
 export function isVisible(el) {
   if (!el.isConnected) return false;
-  const style = getComputedStyle(el);
+  const view = el.ownerDocument.defaultView;
+  if (!view) return true;
+  const style = view.getComputedStyle(el);
   if (style.display === 'none' || style.visibility === 'hidden') return false;
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
 }
 
 /** URL de background-image résolue, ou null. */
 export function backgroundImage(el) {
-  const raw = getComputedStyle(el).backgroundImage;
+  const view = el.ownerDocument.defaultView;
+  if (!view) return null;
+  const raw = view.getComputedStyle(el).backgroundImage;
   if (!raw || raw === 'none') return null;
   const m = raw.match(/url\((['"]?)(.*?)\1\)/);
   return m && m[2] ? m[2] : null;
@@ -143,8 +152,9 @@ export function rectOf(el) {
 
 /** Remonte jusqu'au premier ancêtre satisfaisant le prédicat (self inclus). */
 export function closestBy(el, predicate) {
+  const root = el.ownerDocument.documentElement;
   let node = el;
-  while (node && node !== document.documentElement) {
+  while (node && node !== root) {
     if (predicate(node)) return node;
     node = node.parentElement;
   }

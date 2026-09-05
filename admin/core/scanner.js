@@ -53,6 +53,7 @@ function wrapsSingleLink(el) {
  * @param {object} options
  * @param {string[]} options.roots      sélecteurs des zones à scanner
  * @param {Element[]} options.nodes     éléments racines (prioritaire sur roots)
+ * @param {Document} options.doc        document analysé (défaut : la page courante)
  * @param {string[]} options.exclude    sélecteurs à ignorer
  * @param {boolean}  options.backgrounds détecter les images de fond CSS
  * @param {number}   options.minBackgroundArea aire minimale d'un fond éditable
@@ -63,6 +64,7 @@ export function scan(options = {}) {
   const {
     roots = ['body'],
     nodes = null,
+    doc = document,
     exclude = [],
     backgrounds = true,
     minBackgroundArea = 12000,
@@ -119,7 +121,7 @@ export function scan(options = {}) {
   };
 
   const targets = nodes || roots.flatMap((selector) => {
-    try { return Array.from(document.querySelectorAll(selector)); } catch { return []; }
+    try { return Array.from(doc.querySelectorAll(selector)); } catch { return []; }
   });
   for (const node of targets) walk(node, true);
 

@@ -10,7 +10,7 @@
  *
  * @module runtime
  */
-import { resolveConfig, cacheKey } from './core/config.js';
+import { resolveConfig, cacheKey, BAKE_PARAM } from './core/config.js';
 import { PageModel } from './core/model.js';
 import { getDocument } from './data/rest.js';
 import { paths } from './data/schema.js';
@@ -132,6 +132,14 @@ function tagOwnScripts() {
 async function boot() {
   const config = resolveConfig(window.ADMIN_CONFIG || {});
   setDebug(config.debug);
+
+  // Régénération en cours : cette page est chargée dans une iframe cachée
+  // pour servir de base au nouveau fichier HTML. Elle doit rester exactement
+  // telle que le développeur l'a écrite — le module ne fait rien ici.
+  if (new URLSearchParams(location.search).has(BAKE_PARAM)) {
+    debug('mode régénération : module neutralisé');
+    return;
+  }
 
   const runtime = new AdminRuntime(config);
   window.Admin = runtime;

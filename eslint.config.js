@@ -8,7 +8,7 @@ export default [
         window: 'readonly', document: 'readonly', location: 'readonly',
         localStorage: 'readonly', sessionStorage: 'readonly', navigator: 'readonly',
         console: 'readonly', fetch: 'readonly', setTimeout: 'readonly',
-        clearTimeout: 'readonly', URL: 'readonly', Blob: 'readonly', File: 'readonly',
+        clearTimeout: 'readonly', setInterval: 'readonly', clearInterval: 'readonly', URL: 'readonly', Blob: 'readonly', File: 'readonly',
         FormData: 'readonly', Node: 'readonly', Element: 'readonly', CSS: 'readonly',
         DOMParser: 'readonly', NodeFilter: 'readonly', getComputedStyle: 'readonly', createImageBitmap: 'readonly',
         alert: 'readonly', confirm: 'readonly', prompt: 'readonly',

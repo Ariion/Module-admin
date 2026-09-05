@@ -26,9 +26,14 @@ window.ADMIN_CONFIG = {
     exclude: ['.site-nav a'],
   },
 
+  // Réécriture du HTML à chaque publication (demande PHP sur l'hébergement).
+  // Renseignez-la en production pour que le site garde son contenu même si le
+  // module est retiré un jour.
+  // host: { endpoint: '/admin-endpoint.php' },
+
   media: {
     // 'firebase'  → Firebase Storage (plan Blaze)
-    // 'endpoint'  → dossier hébergé chez le client (voir tools/admin-media.php)
+    // 'endpoint'  → dossier chez le client (voir tools/admin-endpoint.php)
     // 'url'       → saisie d'une adresse d'image uniquement
     adapter: 'url',
   },

@@ -1,12 +1,22 @@
 <?php
 /**
- * Dépôt d'images sur l'hébergement du client (OVH, o2switch, tout hébergeur
- * mutualisé avec PHP).
+ * Script serveur du module d'administration.
  *
- * Pourquoi ce fichier : Firebase Storage impose le plan Blaze, donc une carte
- * bancaire par projet. Ici, les images restent chez le client, dans un simple
- * dossier servi par son propre domaine. Aucun abonnement supplémentaire, et
- * la bibliothèque reste consultable en FTP.
+ * Un seul fichier à déposer à la racine du site. Il rend deux services :
+ *
+ *   1. BIBLIOTHÈQUE MÉDIA — les images du client restent sur SON hébergement,
+ *      dans un dossier /medias, sans abonnement supplémentaire.
+ *
+ *   2. RÉGÉNÉRATION DU HTML — à chaque publication, le fichier .html du site
+ *      est réécrit avec le contenu à l'intérieur. C'est ce qui rend le module
+ *      réellement optionnel : le client peut le supprimer quand il veut, son
+ *      site garde tout ce qu'il a saisi.
+ *
+ * Une copie intacte du code d'origine (`page.src.html`) est conservée à côté
+ * de chaque page, et chaque régénération repart de cette copie — jamais du
+ * fichier déjà régénéré. Aucune dérive ne s'accumule. Si le développeur
+ * redéploie sa page, le script s'en aperçoit (absence du marqueur
+ * `admin-baked`) et rafraîchit la copie : le code reste maître.
  *
  * Sécurité : seul un utilisateur authentifié sur VOTRE projet Firebase peut
  * écrire. Le script vérifie la signature du jeton d'identité (RS256) contre
@@ -14,10 +24,12 @@
  *
  * INSTALLATION
  *   1. Renseignez $PROJECT_ID ci-dessous (identifiant du projet Firebase).
- *   2. Déposez ce fichier à la racine du site, par exemple /admin-media.php
+ *   2. Déposez ce fichier à la racine du site : /admin-endpoint.php
  *   3. Créez le dossier /medias (chmod 755) à côté.
  *   4. Dans admin-config.js :
- *        media: { adapter: 'endpoint', endpoint: '/admin-media.php' }
+ *        host:  { endpoint: '/admin-endpoint.php' },
+ *        media: { adapter: 'endpoint', endpoint: '/admin-endpoint.php' }
+ *   5. Le dossier du site doit être accessible en écriture par PHP.
  */
 
 // ---------------------------------------------------------------- réglages
@@ -27,6 +39,11 @@ $MEDIA_URL    = '/medias';               // URL publique de ce dossier
 $MAX_BYTES    = 8 * 1024 * 1024;         // 8 Mo
 $ALLOWED_UIDS = [];                      // vide = tout compte du projet
 $ALLOWED_ORIGINS = [];                   // vide = même origine uniquement
+
+$SITE_ROOT    = __DIR__;                 // racine du site (ce dossier)
+$ALLOW_BAKE   = true;                    // autoriser la réécriture des .html
+$MAX_HTML     = 4 * 1024 * 1024;         // 4 Mo par page
+$BAKED_MARKER = 'name="admin-baked"';    // marque une page déjà régénérée
 
 $ALLOWED_TYPES = [
     'image/jpeg' => 'jpg',
@@ -149,9 +166,32 @@ function verifyIdToken(string $token, string $projectId): string
     return (string) $payload['sub'];
 }
 
+/**
+ * Récupère l'en-tête Authorization.
+ * Apache en CGI/FastCGI le supprime silencieusement : on passe alors par
+ * getallheaders(). Si rien ne remonte, ajoutez dans le .htaccess du site :
+ *   SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+ */
+function authorizationHeader(): string
+{
+    foreach (['HTTP_AUTHORIZATION', 'REDIRECT_HTTP_AUTHORIZATION'] as $key) {
+        if (!empty($_SERVER[$key])) {
+            return (string) $_SERVER[$key];
+        }
+    }
+    if (function_exists('getallheaders')) {
+        foreach (getallheaders() as $name => $value) {
+            if (strcasecmp($name, 'Authorization') === 0) {
+                return (string) $value;
+            }
+        }
+    }
+    return '';
+}
+
 function currentUid(string $projectId, array $allowedUids): string
 {
-    $header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+    $header = authorizationHeader();
     if (!preg_match('/^Bearer\s+(.+)$/i', trim($header), $matches)) {
         fail('Authentification requise.', 401);
     }
@@ -256,6 +296,110 @@ if ($action === 'delete') {
     }
     @unlink($real);
     ok(['deleted' => $name]);
+}
+
+// ------------------------------------------------- régénération des pages
+/**
+ * Résout un chemin de page relatif en chemin absolu, en refusant tout ce qui
+ * sort de la racine du site.
+ */
+function resolvePagePath(string $relative, string $root): array
+{
+    $relative = str_replace('\\', '/', trim($relative));
+    if ($relative === '' || $relative[0] === '/' || strpos($relative, '..') !== false) {
+        fail('Chemin de page invalide.');
+    }
+    if (!preg_match('/\.html?$/i', $relative)) {
+        fail('Seuls les fichiers .html peuvent être réécrits.');
+    }
+
+    $target = $root . '/' . $relative;
+    $dir = realpath(dirname($target));
+    $rootReal = realpath($root);
+    if (!$dir || !$rootReal || strpos($dir . DIRECTORY_SEPARATOR, $rootReal . DIRECTORY_SEPARATOR) !== 0) {
+        fail('Chemin de page hors du site.');
+    }
+
+    $name = basename($target);
+    $source = $dir . '/' . preg_replace('/\.html?$/i', '', $name) . '.src.html';
+    return [
+        'file'      => $dir . '/' . $name,
+        'source'    => $source,
+        'sourceUrl' => dirname('/' . $relative) === '/'
+            ? '/' . basename($source)
+            : rtrim(dirname('/' . $relative), '/') . '/' . basename($source),
+    ];
+}
+
+if ($action === 'check') {
+    currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+    $paths = resolvePagePath((string) ($body['path'] ?? 'index.html'), $SITE_ROOT);
+    ok([
+        'bake'       => $ALLOW_BAKE,
+        'pageExists' => is_file($paths['file']),
+        'writable'   => is_writable(dirname($paths['file'])) && (!is_file($paths['file']) || is_writable($paths['file'])),
+        'media'      => is_dir($MEDIA_DIR) && is_writable($MEDIA_DIR),
+    ]);
+}
+
+if ($action === 'source') {
+    currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    if (!$ALLOW_BAKE) {
+        fail('La réécriture des pages est désactivée sur ce site.', 403);
+    }
+    $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+    $paths = resolvePagePath((string) ($body['path'] ?? ''), $SITE_ROOT);
+
+    if (!is_file($paths['file'])) {
+        fail('Page introuvable : ' . basename($paths['file']), 404);
+    }
+
+    $current = (string) file_get_contents($paths['file']);
+    $isBaked = strpos($current, $BAKED_MARKER) !== false;
+    $refreshed = false;
+
+    // Le fichier en ligne n'a pas été produit par le module : c'est le code
+    // du développeur, il devient la nouvelle référence.
+    if (!$isBaked || !is_file($paths['source'])) {
+        if (!@file_put_contents($paths['source'], $current)) {
+            fail('Impossible d’écrire la copie du code d’origine.', 500);
+        }
+        @chmod($paths['source'], 0644);
+        $refreshed = true;
+    }
+
+    ok(['sourceUrl' => $paths['sourceUrl'], 'refreshed' => $refreshed]);
+}
+
+if ($action === 'page') {
+    currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    if (!$ALLOW_BAKE) {
+        fail('La réécriture des pages est désactivée sur ce site.', 403);
+    }
+    $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+    $paths = resolvePagePath((string) ($body['path'] ?? ''), $SITE_ROOT);
+    $html = (string) ($body['html'] ?? '');
+
+    if ($html === '' || strlen($html) > $MAX_HTML) {
+        fail('Contenu HTML absent ou trop volumineux.');
+    }
+    // Garde-fou : on n'écrase une page qu'avec un rendu produit par le module.
+    if (strpos($html, $BAKED_MARKER) === false) {
+        fail('Le HTML reçu ne porte pas la marque du module.');
+    }
+    if (!is_file($paths['source'])) {
+        fail('Aucune copie du code d’origine : appelez d’abord action=source.', 409);
+    }
+
+    $temp = $paths['file'] . '.tmp';
+    if (@file_put_contents($temp, $html) === false || !@rename($temp, $paths['file'])) {
+        @unlink($temp);
+        fail('Écriture impossible : vérifiez les droits du dossier.', 500);
+    }
+    @chmod($paths['file'], 0644);
+
+    ok(['written' => true, 'bytes' => strlen($html), 'path' => basename($paths['file'])]);
 }
 
 fail('Action inconnue.', 404);

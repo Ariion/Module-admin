@@ -22,7 +22,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Blocs répétables** | Dupliquer, réordonner, supprimer une carte de la liste — dans le gabarit prévu par le développeur, sans pouvoir casser la mise en page. |
 | **Brouillon puis publication** | Enregistrement automatique du brouillon, bouton « Publier », historique des versions et restauration. |
 | **Ne casse jamais le site** | Firebase injoignable, base vide, contenu illisible : la page s'affiche avec son HTML d'origine. Aucune exception ne remonte. |
-| **Réversible** | Un bouton exporte la page avec le contenu publié **intégré dans le HTML** : fichier autonome, zéro script, zéro trace. Sans cet export, retirer le module rend au site le contenu écrit dans le code. |
+| **Le module reste optionnel** | À chaque publication, le fichier `.html` de l'hébergement est **réécrit avec le contenu à l'intérieur**. Le client peut supprimer le module quand il veut : son site garde tout, sans aucune manipulation. |
 | **Images sans abonnement** | Firebase Storage, ou un simple dossier sur l'hébergement du client (script PHP fourni), ou une adresse saisie à la main. |
 
 ## Essayer en trois minutes
@@ -58,6 +58,8 @@ admin/                    le module (à copier tel quel sur un site)
 │   ├── rest.js           lecture publique sans SDK
 │   ├── firebase.js       back-end éditeur (SDK chargé à la demande)
 │   └── memory.js         back-end de démonstration
+├── core/bake.js          régénération du HTML avec le contenu publié
+├── data/host.js          dialogue avec l'hébergement (copie source, écriture)
 ├── media/
 │   ├── firebase-storage.js  Firebase Storage
 │   ├── endpoint.js          dossier chez le client
@@ -68,7 +70,7 @@ admin/                    le module (à copier tel quel sur un site)
 demo/                     site de démonstration complet
 essais/domaine-lamartine/ test sur un site client réel (code brut + module)
 firebase/                 règles de sécurité Firestore et Storage
-tools/admin-media.php     dépôt d'images sur l'hébergement du client
+tools/admin-endpoint.php  script serveur : médias + réécriture du HTML
 docs/                     architecture et installation
 ```
 
@@ -84,6 +86,10 @@ Les deux décisions structurantes sont détaillées dans
 2. **Le visiteur ne charge presque rien.** Le contenu publié est lu par une
    requête REST, sans SDK Firebase. L'éditeur — interface, authentification,
    stockage — n'est téléchargé que pour les personnes connectées.
+3. **Le HTML est réécrit à chaque publication.** Le module recharge le code
+   d'origine de la page dans une iframe cachée, lui applique le contenu publié
+   et repose le fichier sur l'hébergement. Le site n'a donc jamais besoin du
+   module pour afficher son contenu — le module ne sert qu'à le modifier.
 
 ## Licence
 

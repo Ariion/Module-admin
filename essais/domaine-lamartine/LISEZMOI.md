@@ -112,45 +112,63 @@ code se voit en ligne.
 client qui s'affiche, « Canoë » n'apparaît pas. Le bouton *« revenir aux blocs
 du code »*, dans la barre d'outils du bloc, rend la main au développeur.
 
-## Et si on retire le module ?
+## Et si le client retire le module ?
 
-Question posée, test joué. Le contenu modifié vit dans Firebase et est injecté
-à l'affichage : **retirer les deux `<script>` ne suffit pas à le conserver.**
-Il faut d'abord cliquer sur *Exporter la page figée*.
+**Son site garde tout, sans qu'il ait rien à faire.** À chaque publication, le
+fichier `.html` de l'hébergement est réécrit avec le contenu à l'intérieur.
 
-Scénario : le propriétaire publie 4 modifications (titre, 43 → 47 couchages,
-adresse du bouton Réserver, nom d'un gîte dans un bloc répétable), puis on
-retire le module des deux façons.
+Test joué avec un vrai serveur PHP et une vraie vérification de jeton. Le
+propriétaire publie 5 modifications (titre, 43 → 47 couchages, adresse du
+bouton Réserver, gîte renommé dans un bloc répétable, activité dupliquée),
+puis **le dossier `admin/` est supprimé du serveur** :
 
-| Après retrait du module | Titre | Couchages | Gîte | Réserver |
-|---|---|---|---|---|
-| **Sans export** (`source-client/`) | Domaine de Lamartine | 43 | La Noria | `#` |
-| **Avec export** (`site-fige/`) | Domaine de Lamartine — Gard | **47** | **La Noria (rénovée 2026)** | **reservation.lamartine.fr** |
+```
+h1        : "Domaine de Lamartine — Provence"
+couchages : "47"
+gîte      : "La Noria (rénovée 2026)"
+réserver  : "https://reservation.lamartine.fr"
+activités : 5
+module    : absent          erreurs : aucune
+```
 
-Sans export, le site fonctionne parfaitement — mais il revient au contenu écrit
-dans le code. Avec l'export, il garde tout.
-
-`site-fige/index.html` est le fichier réellement produit par le bouton, joint
-au dépôt. Contrôles effectués dessus :
+Contrôles sur le fichier réellement écrit par le serveur :
 
 | Contrôle | Résultat |
 |---|---|
-| Occurrences du mot « admin » dans le fichier | **0** |
-| Balises `<script>` | **0** |
-| Attributs `data-admin-*` | **0** |
-| Requêtes réseau vers le module | **aucune** |
-| `window.Admin` | absent |
-| CSS du site, 9 sections, SVG du hero | intacts |
-| `header.nav` — décalage de 48 px de l'éditeur | annulé, `top: 0` |
-| Erreurs JavaScript | aucune |
+| `index.src.html` (copie du code d'origine) créée | oui |
+| Cette copie reste le code du développeur (43, pas 47) | oui |
+| `index.html` porte la marque `admin-baked` | oui |
+| Les 5 modifications sont dans le HTML | oui |
+| Résidus `data-admin-*` | **0** |
+| Balises `<script>` du module conservées (le client peut continuer d'éditer) | oui |
+| 2ᵉ publication : la source reste le code d'origine, aucune dérive | oui |
+| Durée publication + réécriture | **0,3 s** |
 
-Un fichier HTML autonome, à déposer sur l'hébergement. Ni Firebase, ni module,
-ni compte.
+Le point important : chaque régénération repart du **code d'origine**, jamais
+du fichier déjà réécrit. La chaîne reste courte — code du développeur +
+contenu publié — et rien ne s'empile au fil des publications.
 
-**À savoir :** l'export est une re-sérialisation du DOM. Le contenu et le CSS
-sont identiques, mais l'indentation d'origine n'est pas préservée — ce n'est
-pas un patch de ton fichier, c'est une photo de la page. Exporte de préférence
-juste après un rechargement.
+### Authentification du serveur, vérifiée
+
+Le script PHP ne se contente pas de décoder le jeton Firebase, il en vérifie
+la signature RS256 contre les certificats publics de Google. Testé avec des
+jetons forgés :
+
+| Jeton | Réponse |
+|---|---|
+| valide | **200** |
+| signé avec une autre clé | **401** |
+| expiré | **401** |
+| émis pour un autre projet Firebase | **401** |
+| absent | **401** |
+
+### Sans hébergement inscriptible
+
+La réécriture demande PHP. Sur un statique pur (Netlify), le module fonctionne
+normalement mais le contenu reste servi au chargement ; le bouton d'export
+manuel produit alors le même fichier autonome —
+`site-fige/index.html` dans ce dossier en est un exemple, obtenu par ce
+chemin.
 
 ## Une limite rencontrée sur ce code
 

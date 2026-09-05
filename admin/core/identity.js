@@ -70,14 +70,15 @@ export function anchorOf(el) {
   const landmark = closestBy(el, (n) => ['MAIN', 'HEADER', 'FOOTER', 'NAV', 'ASIDE'].includes(n.tagName));
   if (landmark) return { node: landmark, key: '<' + landmark.tagName.toLowerCase() + nthOfType(landmark) };
 
-  return { node: document.body, key: '<body' };
+  return { node: el.ownerDocument.body, key: '<body' };
 }
 
 /** Chemin `section[2]>div[1]>h2[1]` entre une ancre et un descendant. */
 export function pathBetween(anchor, el) {
   const parts = [];
+  const root = el.ownerDocument.documentElement;
   let node = el;
-  while (node && node !== anchor && node !== document.documentElement) {
+  while (node && node !== anchor && node !== root) {
     parts.push(node.tagName.toLowerCase() + '[' + nthOfType(node) + ']');
     node = node.parentElement;
   }

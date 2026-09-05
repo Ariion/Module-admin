@@ -48,6 +48,21 @@ export const DEFAULTS = {
     requireClass: true,
   },
 
+  /**
+   * Hébergement du client. Renseigné, le module réécrit le fichier .html à
+   * chaque publication : le contenu est alors DANS le HTML, et retirer le
+   * module ne fait rien perdre. Laissé vide (Netlify, hébergement statique
+   * pur), le contenu reste servi par le module au chargement.
+   */
+  host: {
+    /** URL du script déposé sur l'hébergement (tools/admin-endpoint.php). */
+    endpoint: '',
+    /** Réécrire le HTML à chaque publication. */
+    autoBake: true,
+    /** Fichier à réécrire. Par défaut déduit de l'URL. */
+    pagePath: '',
+  },
+
   media: {
     /** 'firebase' | 'endpoint' | 'url' */
     adapter: 'firebase',
@@ -88,8 +103,18 @@ export function resolveConfig(input = {}) {
   if (config.media.adapter === 'endpoint' && !config.media.endpoint) {
     warn('media.adapter = "endpoint" mais media.endpoint n’est pas renseigné.');
   }
+  // Un seul script sert le média et la régénération : on relie les deux si
+  // l'intégrateur n'en a renseigné qu'un.
+  if (!config.host.endpoint && config.media.endpoint) config.host.endpoint = config.media.endpoint;
+  if (!config.media.endpoint && config.host.endpoint) config.media.endpoint = config.host.endpoint;
   return config;
 }
+
+/**
+ * Paramètre d'URL qui neutralise le module : utilisé par l'iframe de
+ * régénération, qui a besoin de la page NUE pour repartir du code d'origine.
+ */
+export const BAKE_PARAM = 'admin-bake';
 
 /** Clé de cache local du contenu publié. */
 export function cacheKey(config) {

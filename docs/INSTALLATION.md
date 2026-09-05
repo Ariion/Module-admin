@@ -129,7 +129,49 @@ pouvez aussi le déclarer d'avance :
 
 ---
 
-## C. Choisir le stockage des images
+## C. Rendre le module optionnel (recommandé)
+
+C'est l'étape qui fait que le client n'est jamais prisonnier : à chaque
+publication, le fichier `.html` de son hébergement est réécrit avec le contenu
+à l'intérieur. Il peut supprimer le module quand il veut, son site garde tout.
+
+Demande un hébergement capable d'écrire un fichier — donc PHP. C'est le cas
+d'OVH, o2switch et de tout hébergement mutualisé. Sur un statique pur
+(Netlify), sautez cette étape : le module fonctionne normalement, mais le
+contenu reste servi au chargement et seul l'export manuel est disponible.
+
+1. Ouvrez `tools/admin-endpoint.php` et renseignez `$PROJECT_ID` avec
+   l'identifiant de votre projet Firebase.
+2. Déposez-le à la racine du site : `monsite.fr/admin-endpoint.php`.
+3. Le dossier du site doit être accessible en écriture par PHP.
+4. Dans la configuration :
+
+```js
+host: { endpoint: '/admin-endpoint.php' },
+```
+
+À la première publication, le script met de côté une copie intacte du code de
+chaque page (`index.src.html` à côté de `index.html`). Chaque régénération
+repart de cette copie, jamais du fichier déjà réécrit : aucune dérive ne
+s'accumule.
+
+> **Si vous redéployez la page**, le script s'en aperçoit — le fichier que vous
+> venez d'envoyer ne porte pas la marque `admin-baked` — et prend votre
+> nouvelle version comme référence. Votre code reste maître de la structure,
+> Firebase du contenu.
+
+> **Apache en CGI/FastCGI** supprime l'en-tête `Authorization`, ce qui ferait
+> échouer l'authentification. Si c'est le cas, ajoutez au `.htaccess` :
+> `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1`
+
+> **À savoir :** `index.src.html` est accessible publiquement. Elle ne contient
+> que le code du site, déjà public — mais dans sa version d'avant les
+> modifications du client.
+
+Pour vérifier que tout est en place, ouvrez la console avec `debug: true` :
+la publication doit afficher « page réécrite » suivi d'une taille en octets.
+
+## D. Choisir le stockage des images
 
 Trois modes, dans `admin-config.js`.
 
@@ -145,15 +187,13 @@ Il ne peut pas téléverser depuis son ordinateur.
 ### `endpoint` — un dossier chez le client (aucun abonnement)
 
 Le mode recommandé sur un hébergement mutualisé avec PHP (OVH, o2switch).
+C'est le **même fichier** qu'à l'étape C : rien de plus à déposer.
 
-1. Ouvrez `tools/admin-media.php`, renseignez `$PROJECT_ID` avec l'identifiant
-   de votre projet Firebase.
-2. Déposez-le à la racine du site : `monsite.fr/admin-media.php`.
-3. Créez à côté un dossier `medias/` accessible en écriture (`chmod 755`).
-4. Dans la configuration :
+1. Créez un dossier `medias/` à la racine, accessible en écriture (`chmod 755`).
+2. Dans la configuration :
 
 ```js
-media: { adapter: 'endpoint', endpoint: '/admin-media.php' }
+media: { adapter: 'endpoint', endpoint: '/admin-endpoint.php' }
 ```
 
 Les images restent chez le client, servies par son propre domaine, visibles en
@@ -172,13 +212,15 @@ très largement un site vitrine). Activez Storage dans la console et publiez
 
 ---
 
-## D. Vérifier
+## E. Vérifier
 
 1. Ouvrez `https://monsite.fr/` — le site doit s'afficher normalement.
 2. Ouvrez `https://monsite.fr/?admin` — l'écran de connexion apparaît.
 3. Connectez-vous avec le compte du client.
 4. Survolez un titre : un contour bleu doit apparaître. Cliquez, modifiez.
 5. **Publier**, puis rechargez sans `?admin` : la modification est en ligne.
+6. Si vous avez fait l'étape C, ouvrez le fichier `index.html` en FTP : la
+   modification doit s'y trouver, en clair, dans le HTML.
 
 Rien ne se passe ? Ajoutez `debug: true` à la configuration et ouvrez la
 console du navigateur : le module y trace le nombre d'éléments détectés et
@@ -186,7 +228,7 @@ chaque application de contenu.
 
 ---
 
-## E. Affiner la détection
+## F. Affiner la détection
 
 Par défaut, tout est analysé. Deux réglages suffisent en général.
 
@@ -216,17 +258,19 @@ Aucun n'est obligatoire.
 
 ---
 
-## F. Ce qu'il faut expliquer au client
+## G. Ce qu'il faut expliquer au client
 
 - **Survolez, cliquez, écrivez.** `Échap` annule, `Entrée` valide.
 - Les modifications sont enregistrées en brouillon : **le site public ne change
   pas tant que vous n'avez pas cliqué sur « Publier »**.
 - **Historique** permet de revenir à une version précédente.
+- Le site garde son contenu même si le module est retiré un jour : il est
+  réécrit dans les fichiers à chaque publication.
 - **Aperçu** désactive l'édition pour voir la page comme un visiteur.
 
 ---
 
-## G. Un projet Firebase, ou un par client ?
+## H. Un projet Firebase, ou un par client ?
 
 Le code est identique dans les deux cas — le `siteId` est toujours dans le
 chemin des données.
