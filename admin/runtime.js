@@ -113,12 +113,29 @@ async function loadDemoPublished(config) {
   return data ? { v: data.v || 1, content: data.content || {}, collections: data.collections || {} } : null;
 }
 
+/**
+ * Marque les balises <script> du module pour que l'export puisse les retirer,
+ * quel que soit le chemin choisi par l'intégrateur.
+ */
+function tagOwnScripts() {
+  safe(() => {
+    const self = new URL(import.meta.url).href;
+    for (const script of document.querySelectorAll('script[src]')) {
+      const href = new URL(script.getAttribute('src'), document.baseURI).href;
+      if (href === self || /admin-config\.js$/.test(href)) {
+        script.setAttribute('data-admin-script', '');
+      }
+    }
+  }, null, 'tagOwnScripts');
+}
+
 async function boot() {
   const config = resolveConfig(window.ADMIN_CONFIG || {});
   setDebug(config.debug);
 
   const runtime = new AdminRuntime(config);
   window.Admin = runtime;
+  tagOwnScripts();
 
   // 1. Cache local : le contenu déjà connu est appliqué sans attendre le
   //    réseau, ce qui évite de voir l'ancien texte pendant un instant.

@@ -10,7 +10,7 @@ export default [
         console: 'readonly', fetch: 'readonly', setTimeout: 'readonly',
         clearTimeout: 'readonly', URL: 'readonly', Blob: 'readonly', File: 'readonly',
         FormData: 'readonly', Node: 'readonly', Element: 'readonly', CSS: 'readonly',
-        DOMParser: 'readonly', getComputedStyle: 'readonly', createImageBitmap: 'readonly',
+        DOMParser: 'readonly', NodeFilter: 'readonly', getComputedStyle: 'readonly', createImageBitmap: 'readonly',
         alert: 'readonly', confirm: 'readonly', prompt: 'readonly',
         URLSearchParams: 'readonly', AbortController: 'readonly',
       },

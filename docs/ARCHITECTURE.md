@@ -289,17 +289,29 @@ de 6 Mo ne part pas telle quelle.
 
 ## 8. Réversibilité
 
-Le module ne doit jamais devenir un point de blocage.
+Le module ne doit jamais devenir un point de blocage. Deux sorties, à ne pas
+confondre.
 
-- Il n'écrit rien dans les fichiers du site. Retirer les deux `<script>` suffit
-  à revenir exactement à l'état d'origine.
-- Le bouton d'export produit le HTML de la page **avec le contenu publié
-  intégré**, prêt à être déposé sur l'hébergement. Le site vit alors sans
-  Firebase et sans le module.
-- Le contenu est aussi exportable en JSON.
+**Retirer les deux `<script>`.** Le site revient exactement à son état
+d'origine : rien n'a été écrit dans ses fichiers. Mais le contenu saisi par le
+client vit dans Firebase et était injecté à l'affichage — **il n'est donc plus
+là**. C'est le comportement attendu, pas un défaut : le code redevient la seule
+source de vérité.
 
-*Nuance à connaître :* l'export sérialise le DOM tel qu'il est au moment du
-clic, scripts du site inclus. Exporter juste après un rechargement de page.
+**Exporter la page figée, puis retirer les `<script>`.** Le bouton d'export
+produit le HTML de la page **avec le contenu publié intégré**. Vérifié sur un
+site client réel (voir
+[`essais/domaine-lamartine/`](../essais/domaine-lamartine/LISEZMOI.md)) : le
+fichier produit ne contient plus une seule occurrence du mot « admin », aucune
+balise `<script>`, aucun attribut `data-admin-*`, ne déclenche aucune requête
+vers le module, et rend leur position d'origine aux éléments fixes que
+l'éditeur avait décalés. CSS, sections et SVG intacts.
+
+Le contenu est aussi exportable en JSON, pour être réimporté ailleurs.
+
+*Nuance à connaître :* l'export est une re-sérialisation du DOM au moment du
+clic, scripts du site inclus. Le contenu est fidèle, l'indentation d'origine
+ne l'est pas. Exporter juste après un rechargement de page.
 
 ---
 

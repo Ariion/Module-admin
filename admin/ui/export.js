@@ -25,12 +25,22 @@ function download(filename, content, type) {
  * @param {object} options
  * @param {string[]} options.scriptMarkers fragments d'URL des scripts à retirer
  */
-export function freezePage({ scriptMarkers = ['/admin/'] } = {}) {
+export function freezePage({ scriptMarkers = ['/admin/', 'admin-config', 'admin/runtime'] } = {}) {
   const clone = document.documentElement.cloneNode(true);
 
   for (const node of clone.querySelectorAll('[data-admin-ui]')) node.remove();
   for (const node of clone.querySelectorAll('#admin-document-style')) node.remove();
   for (const node of clone.querySelectorAll('[contenteditable]')) node.removeAttribute('contenteditable');
+
+  // Les éléments fixes du site ont été décalés sous la barre d'administration.
+  // On leur rend leur position d'origine, sinon l'export garderait un en-tête
+  // collé 48 px trop bas.
+  for (const node of clone.querySelectorAll('[data-admin-shifted]')) {
+    const original = node.getAttribute('data-admin-shifted');
+    if (original) node.style.top = original;
+    else node.style.removeProperty('top');
+    if (!node.getAttribute('style')) node.removeAttribute('style');
+  }
 
   for (const node of clone.querySelectorAll('*')) {
     for (const attr of Array.from(node.attributes)) {
@@ -41,11 +51,23 @@ export function freezePage({ scriptMarkers = ['/admin/'] } = {}) {
   for (const script of Array.from(clone.querySelectorAll('script'))) {
     const src = script.getAttribute('src') || '';
     const inline = script.textContent || '';
-    if (scriptMarkers.some((marker) => src.includes(marker))
+    if (script.hasAttribute('data-admin-script')
+      || scriptMarkers.some((marker) => src.includes(marker))
       || /ADMIN_CONFIG/.test(inline)) script.remove();
   }
 
+  // Un commentaire d'intégration laissé seul n'aurait plus de sens.
+  const walker = document.createTreeWalker(clone, NodeFilter.SHOW_COMMENT);
+  const stale = [];
+  while (walker.nextNode()) {
+    if (/admin/i.test(walker.currentNode.nodeValue || '')) stale.push(walker.currentNode);
+  }
+  for (const comment of stale) comment.remove();
+
   clone.removeAttribute('data-admin-active');
+  clone.style.removeProperty('--admin-bar-h');
+  if (!clone.getAttribute('style')) clone.removeAttribute('style');
+
   return '<!DOCTYPE html>\n' + clone.outerHTML + '\n';
 }
 

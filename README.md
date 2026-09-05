@@ -22,7 +22,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Blocs répétables** | Dupliquer, réordonner, supprimer une carte de la liste — dans le gabarit prévu par le développeur, sans pouvoir casser la mise en page. |
 | **Brouillon puis publication** | Enregistrement automatique du brouillon, bouton « Publier », historique des versions et restauration. |
 | **Ne casse jamais le site** | Firebase injoignable, base vide, contenu illisible : la page s'affiche avec son HTML d'origine. Aucune exception ne remonte. |
-| **Réversible** | Un bouton exporte la page avec le contenu publié intégré dans le HTML. Le module se retire sans rien emporter. |
+| **Réversible** | Un bouton exporte la page avec le contenu publié **intégré dans le HTML** : fichier autonome, zéro script, zéro trace. Sans cet export, retirer le module rend au site le contenu écrit dans le code. |
 | **Images sans abonnement** | Firebase Storage, ou un simple dossier sur l'hébergement du client (script PHP fourni), ou une adresse saisie à la main. |
 
 ## Essayer en trois minutes

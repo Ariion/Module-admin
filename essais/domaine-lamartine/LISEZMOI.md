@@ -112,6 +112,46 @@ code se voit en ligne.
 client qui s'affiche, « Canoë » n'apparaît pas. Le bouton *« revenir aux blocs
 du code »*, dans la barre d'outils du bloc, rend la main au développeur.
 
+## Et si on retire le module ?
+
+Question posée, test joué. Le contenu modifié vit dans Firebase et est injecté
+à l'affichage : **retirer les deux `<script>` ne suffit pas à le conserver.**
+Il faut d'abord cliquer sur *Exporter la page figée*.
+
+Scénario : le propriétaire publie 4 modifications (titre, 43 → 47 couchages,
+adresse du bouton Réserver, nom d'un gîte dans un bloc répétable), puis on
+retire le module des deux façons.
+
+| Après retrait du module | Titre | Couchages | Gîte | Réserver |
+|---|---|---|---|---|
+| **Sans export** (`source-client/`) | Domaine de Lamartine | 43 | La Noria | `#` |
+| **Avec export** (`site-fige/`) | Domaine de Lamartine — Gard | **47** | **La Noria (rénovée 2026)** | **reservation.lamartine.fr** |
+
+Sans export, le site fonctionne parfaitement — mais il revient au contenu écrit
+dans le code. Avec l'export, il garde tout.
+
+`site-fige/index.html` est le fichier réellement produit par le bouton, joint
+au dépôt. Contrôles effectués dessus :
+
+| Contrôle | Résultat |
+|---|---|
+| Occurrences du mot « admin » dans le fichier | **0** |
+| Balises `<script>` | **0** |
+| Attributs `data-admin-*` | **0** |
+| Requêtes réseau vers le module | **aucune** |
+| `window.Admin` | absent |
+| CSS du site, 9 sections, SVG du hero | intacts |
+| `header.nav` — décalage de 48 px de l'éditeur | annulé, `top: 0` |
+| Erreurs JavaScript | aucune |
+
+Un fichier HTML autonome, à déposer sur l'hébergement. Ni Firebase, ni module,
+ni compte.
+
+**À savoir :** l'export est une re-sérialisation du DOM. Le contenu et le CSS
+sont identiques, mais l'indentation d'origine n'est pas préservée — ce n'est
+pas un patch de ton fichier, c'est une photo de la page. Exporte de préférence
+juste après un rechargement.
+
 ## Une limite rencontrée sur ce code
 
 La frise « Histoire » alterne `<div class="date">` et `<div class="entry">`.

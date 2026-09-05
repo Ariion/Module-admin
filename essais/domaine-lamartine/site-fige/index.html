@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="fr"><head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Domaine de Lamartine — Château, chambres d'hôtes et gîtes en Provence</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&amp;family=Work+Sans:wght@300;400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+
+<style>
+
+  :root{
+
+    --stone:      #E7E0CC;
+
+    --stone-dark: #D5C9A8;
+
+    --ink:        #2A2618;
+
+    --cypress:    #37452F;
+
+    --cypress-dk: #232B1E;
+
+    --wine:       #6C2C34;
+
+    --gold:       #A9803F;
+
+    --paper:      #F1ECDD;
+
+    --rule: rgba(42,38,24,0.18);
+
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+
+    background:var(--stone);
+
+    color:var(--ink);
+
+    font-family:'Work Sans', sans-serif;
+
+    font-weight:400;
+
+    line-height:1.6;
+
+  }
+
+  h1,h2,h3{
+
+    font-family:'Fraunces', serif;
+
+    font-weight:500;
+
+    letter-spacing:-0.01em;
+
+  }
+
+  .eyebrow{
+
+    font-family:'IBM Plex Mono', monospace;
+
+    font-size:0.72rem;
+
+    letter-spacing:0.14em;
+
+    text-transform:uppercase;
+
+    opacity:0.75;
+
+  }
+
+  a{color:inherit; text-decoration:none;}
+
+  img{max-width:100%; display:block;}
+
+ 
+
+  /* ---------- NAV ---------- */
+
+  header.nav{
+
+    position:sticky; top:0; z-index:50;
+
+    background:rgba(231,224,204,0.92);
+
+    backdrop-filter:blur(6px);
+
+    border-bottom:1px solid var(--rule);
+
+  }
+
+  .nav-inner{
+
+    max-width:1180px; margin:0 auto;
+
+    display:flex; align-items:center; justify-content:space-between;
+
+    padding:16px 28px;
+
+  }
+
+  .nav-brand{
+
+    font-family:'Fraunces', serif; font-size:1.15rem; font-weight:500;
+
+  }
+
+  .nav-links{display:flex; gap:28px; font-size:0.88rem;}
+
+  .nav-links a{opacity:0.8; transition:opacity 0.2s;}
+
+  .nav-links a:hover{opacity:1;}
+
+  .nav-cta{
+
+    font-family:'IBM Plex Mono', monospace; font-size:0.75rem;
+
+    letter-spacing:0.05em; text-transform:uppercase;
+
+    border:1px solid var(--ink); padding:8px 16px; border-radius:2px;
+
+    transition:background 0.2s, color 0.2s;
+
+  }
+
+  .nav-cta:hover{background:var(--ink); color:var(--stone);}
+
+  @media(max-width:820px){ .nav-links{display:none;} }
+
+ 
+
+  /* ---------- HERO ---------- */
+
+  .hero{
+
+    background:var(--cypress-dk);
+
+    color:var(--paper);
+
+    position:relative;
+
+    padding:120px 28px 90px;
+
+    overflow:hidden;
+
+  }
+
+  .hero-inner{max-width:780px; margin:0 auto; text-align:center; position:relative; z-index:2;}
+
+  .hero .eyebrow{color:var(--gold); margin-bottom:22px; display:inline-block;}
+
+  .hero h1{
+
+    font-size:clamp(2.6rem, 6vw, 4.6rem);
+
+    color:var(--paper);
+
+    margin-bottom:22px;
+
+  }
+
+  .hero p.lede{
+
+    font-size:1.15rem; font-weight:300; opacity:0.88;
+
+    max-width:560px; margin:0 auto 40px;
+
+  }
+
+  .hero-motif{
+
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-46%);
+
+    width:min(900px, 140vw); opacity:0.16; z-index:1;
+
+  }
+
+  .btn-seal{
+
+    display:inline-flex; align-items:center; gap:12px;
+
+    background:var(--gold); color:var(--cypress-dk);
+
+    font-family:'IBM Plex Mono', monospace; font-size:0.8rem;
+
+    letter-spacing:0.06em; text-transform:uppercase;
+
+    padding:14px 26px; border-radius:999px;
+
+    transition:transform 0.2s, box-shadow 0.2s;
+
+  }
+
+  .btn-seal:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.25);}
+
+  .btn-seal .dot{
+
+    width:8px; height:8px; border-radius:50%; background:var(--cypress-dk);
+
+  }
+
+ 
+
+  /* ---------- DIVIDER MOTIF ---------- */
+
+  .divider{
+
+    display:flex; align-items:center; justify-content:center;
+
+    padding:34px 0; opacity:0.5;
+
+  }
+
+  .divider svg{width:120px; height:22px;}
+
+ 
+
+  /* ---------- SECTION SHELL ---------- */
+
+  section{padding:88px 28px;}
+
+  .section-inner{max-width:1000px; margin:0 auto;}
+
+  .section-head{max-width:640px; margin-bottom:48px;}
+
+  .section-head .eyebrow{color:var(--wine); margin-bottom:14px; display:block;}
+
+  .section-head h2{font-size:clamp(1.8rem, 3.4vw, 2.6rem);}
+
+  .lede-text{font-size:1.05rem; max-width:640px; margin-top:16px; opacity:0.9;}
+
+ 
+
+  /* ---------- INTRO ---------- */
+
+  .intro{background:var(--stone);}
+
+  .intro-grid{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start;}
+
+  .intro-grid p{font-size:1.05rem; opacity:0.9;}
+
+  @media(max-width:760px){ .intro-grid{grid-template-columns:1fr;} }
+
+ 
+
+  /* ---------- HEBERGEMENTS ---------- */
+
+  .heberg{background:var(--paper); border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);}
+
+  .card-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:2px; background:var(--rule); border:1px solid var(--rule);}
+
+  .card{background:var(--paper); padding:36px 32px;}
+
+  .card .eyebrow{color:var(--gold);}
+
+  .card h3{font-size:1.35rem; margin:12px 0 12px;}
+
+  .card p{font-size:0.96rem; opacity:0.88;}
+
+  @media(max-width:760px){ .card-grid{grid-template-columns:1fr;} }
+
+ 
+
+  /* ---------- HISTOIRE ---------- */
+
+  .histoire{background:var(--cypress); color:var(--paper);}
+
+  .histoire .section-head .eyebrow{color:var(--gold);}
+
+  .histoire h2{color:var(--paper);}
+
+  .ledger{
+
+    display:grid; grid-template-columns:120px 1fr; gap:28px 32px;
+
+    border-top:1px solid rgba(241,236,221,0.25);
+
+  }
+
+  .ledger .date{
+
+    font-family:'IBM Plex Mono', monospace; font-size:0.82rem;
+
+    padding-top:22px; opacity:0.75;
+
+  }
+
+  .ledger .entry{
+
+    padding:22px 0; border-bottom:1px solid rgba(241,236,221,0.2);
+
+    font-size:1rem; opacity:0.92;
+
+  }
+
+  .ledger .entry:last-child{border-bottom:none;}
+
+  @media(max-width:600px){ .ledger{grid-template-columns:1fr;} .ledger .date{padding-top:0;} }
+
+ 
+
+  /* ---------- VIE SUR PLACE ---------- */
+
+  .vie{background:var(--stone);}
+
+  .vie-list{display:grid; grid-template-columns:1fr 1fr; gap:0;}
+
+  .vie-item{padding:26px 0; border-top:1px solid var(--rule);}
+
+  .vie-item:nth-child(odd){padding-right:32px;}
+
+  .vie-item:nth-child(even){padding-left:32px;}
+
+  .vie-item h3{font-size:1.1rem; margin-bottom:8px;}
+
+  .vie-item p{font-size:0.94rem; opacity:0.85;}
+
+  @media(max-width:700px){
+
+    .vie-list{grid-template-columns:1fr;}
+
+    .vie-item:nth-child(even){padding-left:0;}
+
+  }
+
+ 
+
+  /* ---------- MARIAGES ---------- */
+
+  .mariages{background:var(--wine); color:var(--paper);}
+
+  .mariages .section-head .eyebrow{color:var(--gold);}
+
+  .mariages h2{color:var(--paper);}
+
+  .mariages .lede-text{opacity:0.92;}
+
+  .ecrins{display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:44px;}
+
+  .ecrin h3{font-size:1.2rem; margin-bottom:10px; color:var(--gold);}
+
+  .ecrin p{font-size:0.96rem; opacity:0.9;}
+
+  .capacity-row{
+
+    display:flex; gap:40px; margin-top:48px; flex-wrap:wrap;
+
+    border-top:1px solid rgba(241,236,221,0.25); padding-top:32px;
+
+  }
+
+  .capacity-row .num{font-family:'Fraunces', serif; font-size:2.4rem; display:block;}
+
+  .capacity-row .lbl{font-family:'IBM Plex Mono', monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; opacity:0.75;}
+
+  @media(max-width:700px){ .ecrins{grid-template-columns:1fr;} }
+
+ 
+
+  /* ---------- LOISIRS ---------- */
+
+  .loisirs{background:var(--paper);}
+
+  .activites-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:var(--rule); border:1px solid var(--rule); margin-bottom:56px;}
+
+  .activite{background:var(--paper); padding:28px 22px;}
+
+  .activite .eyebrow{color:var(--wine); margin-bottom:10px; display:block;}
+
+  .activite p{font-size:0.9rem; opacity:0.88;}
+
+  @media(max-width:820px){ .activites-grid{grid-template-columns:1fr 1fr;} }
+
+  @media(max-width:520px){ .activites-grid{grid-template-columns:1fr;} }
+
+ 
+
+  .alentours{display:grid; grid-template-columns:1fr 1fr; gap:8px 40px;}
+
+  .alentour-row{
+
+    display:flex; justify-content:space-between; padding:12px 0;
+
+    border-bottom:1px solid var(--rule); font-size:0.94rem;
+
+  }
+
+  .alentour-row span:last-child{font-family:'IBM Plex Mono', monospace; font-size:0.8rem; opacity:0.6;}
+
+  @media(max-width:700px){ .alentours{grid-template-columns:1fr;} }
+
+ 
+
+  /* ---------- PRATIQUE ---------- */
+
+  .pratique{background:var(--stone);}
+
+  .pratique-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:32px;}
+
+  .pratique-item .eyebrow{color:var(--gold); display:block; margin-bottom:10px;}
+
+  .pratique-item p{font-size:0.94rem;}
+
+  @media(max-width:820px){ .pratique-grid{grid-template-columns:1fr 1fr;} }
+
+  @media(max-width:480px){ .pratique-grid{grid-template-columns:1fr;} }
+
+ 
+
+  /* ---------- CTA FINAL ---------- */
+
+  .cta-final{
+
+    background:var(--cypress-dk); color:var(--paper);
+
+    text-align:center; padding:110px 28px;
+
+  }
+
+  .cta-final h2{color:var(--paper); font-size:clamp(1.8rem,4vw,2.8rem); margin-bottom:20px;}
+
+  .cta-final p{opacity:0.85; max-width:520px; margin:0 auto 36px;}
+
+ 
+
+  /* ---------- FOOTER ---------- */
+
+  footer{
+
+    background:var(--ink); color:var(--stone);
+
+    padding:56px 28px 32px; font-size:0.88rem;
+
+  }
+
+  .footer-inner{max-width:1000px; margin:0 auto; display:flex; justify-content:space-between; flex-wrap:wrap; gap:24px;}
+
+  .footer-links{display:flex; gap:22px; flex-wrap:wrap; opacity:0.75;}
+
+  .footer-links a:hover{opacity:1;}
+
+  .footer-bottom{
+
+    max-width:1000px; margin:36px auto 0; padding-top:20px;
+
+    border-top:1px solid rgba(231,224,204,0.15);
+
+    opacity:0.5; font-family:'IBM Plex Mono', monospace; font-size:0.72rem;
+
+  }
+
+</style>
+
+</head>
+
+<body>
+
+ 
+
+<header class="nav">
+
+  <div class="nav-inner">
+
+    <div class="nav-brand">Domaine de Lamartine</div>
+
+    <nav class="nav-links">
+
+      <a href="#hebergements">Hébergements</a>
+
+      <a href="#histoire">Histoire</a>
+
+      <a href="#mariages">Mariages</a>
+
+      <a href="#loisirs">Loisirs</a>
+
+      <a href="#pratique">Infos</a>
+
+    </nav>
+
+    <a href="https://reservation.lamartine.fr" class="nav-cta">Réserver</a>
+
+  </div>
+
+</header>
+
+ 
+
+<section class="hero">
+
+  <svg class="hero-motif" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+    <rect x="60" y="70" width="30" height="90" stroke="#F1ECDD" stroke-width="1.4"></rect>
+
+    <polygon points="75,40 60,70 90,70" stroke="#F1ECDD" stroke-width="1.4" fill="none"></polygon>
+
+    <rect x="150" y="45" width="300" height="115" stroke="#F1ECDD" stroke-width="1.4"></rect>
+
+    <rect x="510" y="70" width="30" height="90" stroke="#F1ECDD" stroke-width="1.4"></rect>
+
+    <polygon points="525,40 510,70 540,70" stroke="#F1ECDD" stroke-width="1.4" fill="none"></polygon>
+
+    <line x1="185" y1="70" x2="185" y2="100" stroke="#F1ECDD" stroke-width="1.2"></line>
+
+    <line x1="230" y1="70" x2="230" y2="100" stroke="#F1ECDD" stroke-width="1.2"></line>
+
+    <line x1="275" y1="70" x2="275" y2="100" stroke="#F1ECDD" stroke-width="1.2"></line>
+
+    <rect x="290" y="115" width="20" height="45" stroke="#F1ECDD" stroke-width="1.2"></rect>
+
+    <line x1="340" y1="70" x2="340" y2="100" stroke="#F1ECDD" stroke-width="1.2"></line>
+
+    <line x1="385" y1="70" x2="385" y2="100" stroke="#F1ECDD" stroke-width="1.2"></line>
+
+    <line x1="60" y1="160" x2="540" y2="160" stroke="#F1ECDD" stroke-width="1.4"></line>
+
+  </svg>
+
+  <div class="hero-inner">
+
+    <span class="eyebrow">Pont-Saint-Esprit · Gard · depuis 1824</span>
+
+    <h1>Domaine de Lamartine — Gard</h1>
+
+    <p class="lede">Un château familial, ses chambres d'hôtes et ses gîtes, aux portes de la Provence — pour un séjour au rythme des platanes centenaires.</p>
+
+    <a href="#" class="btn-seal"><span class="dot"></span> Réserver mon séjour</a>
+
+  </div>
+
+</section>
+
+ 
+
+<section class="intro">
+
+  <div class="section-inner intro-grid">
+
+    <div>
+
+      <span class="eyebrow" style="color:var(--wine);">L'expérience</span>
+
+      <h2 style="font-size:1.9rem; margin-top:12px;">Le calme d'un lieu que rien ne presse</h2>
+
+    </div>
+
+    <div>
+
+      <p>Posez vos valises — ou vos vélos — à partir de 16h, et laissez le domaine faire le reste : l'ombre des platanes séculaires, une piscine alimentée en eau de source, des murs centenaires qui gardent la fraîcheur, et tout le charme de la Provence et des Côtes du Rhône à quelques minutes.</p>
+
+      <p style="margin-top:16px;">En couple, en famille ou entre amis, vous trouverez ici l'hébergement qui vous correspond.</p>
+
+    </div>
+
+  </div>
+
+</section>
+
+ 
+
+<section class="heberg" id="hebergements">
+
+  <div class="section-inner">
+
+    <div class="section-head">
+
+      <span class="eyebrow">Chambres et gîtes</span>
+
+      <h2>Un hébergement pour chaque séjour</h2>
+
+    </div>
+
+    <div class="card-grid">
+
+      <div class="card">
+
+        <span class="eyebrow">Gîte · 2 à 5 pers.</span>
+
+        <h3>Ramona</h3>
+
+        <p>Indépendant et climatisé. Un cocon au calme, idéal pour un séjour en amoureux ou une famille avec enfants.</p>
+
+      </div>
+
+      <div class="card">
+
+        <span class="eyebrow">Gîte · jusqu'à 8 pers.</span>
+
+        <h3>La Noria (rénovée 2026)</h3>
+
+        <p>Climatisé, cuisine équipée. Pensé pour les familles ou les groupes d'amis en quête d'autonomie.</p>
+
+      </div>
+
+      <div class="card">
+
+        <span class="eyebrow">Chambres d'hôtes</span>
+
+        <h3>La Tante, Grand-mère, La Tour, Antoinette</h3>
+
+        <p>Quatre chambres au caractère propre, entre papier peint d'époque, pierre apparente et vue sur le jardin.</p>
+
+      </div>
+
+      <div class="card">
+
+        <span class="eyebrow">Accueil Vélo</span>
+
+        <h3>Une étape pour cyclistes</h3>
+
+        <p>Abri sécurisé, matériel de réparation et de lavage, et nos conseils pour les plus beaux itinéraires — vos chiens et chats sont aussi les bienvenus dans les gîtes, sous réserve d'accord préalable.</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+ 
+
+<section class="histoire" id="histoire">
+
+  <div class="section-inner">
+
+    <div class="section-head">
+
+      <span class="eyebrow">Depuis 1824</span>
+
+      <h2>Une maison de famille, pas un hôtel</h2>
+
+      <p class="lede-text">Le domaine appartient à la même famille depuis plusieurs siècles, et ouvre ses portes aux hôtes depuis plus de quarante ans.</p>
+
+    </div>
+
+    <div class="ledger">
+
+      <div class="date">1824 – 1830</div>
+
+      <div class="entry">L'architecture actuelle du château, à l'extérieur comme à l'intérieur, date du règne de Charles X.</div>
+
+      <div class="date">XVᵉ siècle</div>
+
+      <div class="entry">Dans l'une des tours, l'escalier à vis serait, selon les archives familiales, contemporain de Jeanne d'Arc — qui n'est pourtant jamais descendue jusqu'ici.</div>
+
+      <div class="date">XIXᵉ siècle</div>
+
+      <div class="entry">Alphonse de Lamartine, lui, s'y est peut-être arrêté lors d'une halte fluviale à Pont-Saint-Esprit, sur la route qu'il empruntait souvent vers l'Italie — l'occasion, peut-être, de rendre visite à la famille Digoine du Palais, ancêtres de l'actuelle propriétaire.</div>
+
+      <div class="date">Aujourd'hui</div>
+
+      <div class="entry">C'est dans ce cadre chargé d'histoire que nous continuons de recevoir, en chambres d'hôtes comme en gîtes.</div>
+
+    </div>
+
+  </div>
+
+</section>
+
+ 
+
+<section class="vie">
+
+  <div class="section-inner">
+
+    <div class="section-head">
+
+      <span class="eyebrow" style="color:var(--wine);">La vie sur place</span>
+
+      <h2>Rien à organiser, tout est déjà là</h2>
+
+    </div>
+
+    <div class="vie-list">
+
+      <div class="vie-item">
+
+        <h3>La piscine et les jardins</h3>
+
+        <p>Une grande piscine à l'eau de source, avec pataugeoire pour les enfants, au cœur de jardins arborés. Ouverte de mi-mai à fin septembre.</p>
+
+      </div>
+
+      <div class="vie-item">
+
+        <h3>Vos repas</h3>
+
+        <p>Nous n'assurons plus de table d'hôtes de façon systématique : cela dépend du potager et de l'inspiration du moment. À défaut, de bons restaurants et guinguettes se trouvent à moins de 5 minutes.</p>
+
+      </div>
+
+      <div class="vie-item">
+
+        <h3>Vos événements</h3>
+
+        <p>Anniversaire, fête de famille ou réunion : notre salle de 90 m², poutres apparentes et murs en pierre, se prête à vos moments à partager.</p>
+
+      </div>
+
+      <div class="vie-item">
+
+        <h3>Réserver en direct</h3>
+
+        <p>Réservez sur notre site pour bénéficier de notre meilleur tarif, sans passer par les plateformes.</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+ 
+
+<section class="mariages" id="mariages">
+
+  <div class="section-inner">
+
+    <div class="section-head">
+
+      <span class="eyebrow">Mariages &amp; événements</span>
+
+      <h2>Célébrez vos moments d'exception</h2>
+
+      <p class="lede-text">Mariage, réception privée, séminaire, anniversaire ou réunion de famille : le domaine offre un cadre authentique et préservé pour des événements à votre image. Détails et formules complètes sur <a href="https://www.evenements-lamartine.com" style="text-decoration:underline;">evenements-lamartine.com</a>.</p>
+
+    </div>
+
+    <div class="ecrins">
+
+      <div class="ecrin">
+
+        <h3>La Cour du Château</h3>
+
+        <p>Pierres dorées, deux tours et bâtiment central en toile de fond : une arrivée pleine de caractère pour un vin d'honneur ou une soirée qui se prolonge.</p>
+
+      </div>
+
+      <div class="ecrin">
+
+        <h3>Les Terrasses</h3>
+
+        <p>Vue dégagée sur les champs, les allées de platanes centenaires et le bassin-piscine — un cadre privilégié pour vos réceptions en plein air.</p>
+
+      </div>
+
+    </div>
+
+    <div class="capacity-row">
+
+      <div><span class="num">47</span><span class="lbl">Couchages sur le domaine</span></div>
+
+      <div><span class="num">90</span><span class="lbl">Personnes à La Bergerie</span></div>
+
+      <div><span class="num">90 m²</span><span class="lbl">Salle de réception équipée</span></div>
+
+    </div>
+
+  </div>
+
+</section>
+
+ 
+
+<section class="loisirs" id="loisirs">
+
+  <div class="section-inner">
+
+    <div class="section-head">
+
+      <span class="eyebrow">Loisirs et activités</span>
+
+      <h2>Le domaine comme point de départ</h2>
+
+    </div>
+
+    <div class="activites-grid">
+
+      <div class="activite">
+
+        <span class="eyebrow">Rando</span>
+
+        <p>À deux pas des GR 4 et GR 4/42, avec de nombreux circuits sur l'Ardèche toute proche — cartes disponibles sur place.</p>
+
+      </div>
+
+      <div class="activite">
+
+        <span class="eyebrow">Vélo</span>
+
+        <p>Sur le tracé de la ViaRhôna : cour fermée, remise sécurisée et petit matériel mis à disposition.</p>
+
+      </div>
+
+      <div class="activite">
+
+        <span class="eyebrow">Accrobranche</span>
+
+        <p>Un parcours à moins de 5 minutes du domaine pour les amateurs de sensations.</p>
+
+      </div>
+
+      <div class="activite">
+
+        <span class="eyebrow">Moto</span>
+
+        <p>Au débouché des Gorges de l'Ardèche, cour fermée et cales pour béquilles — le propriétaire est motard lui-même.</p>
+
+      </div>
+
+    </div>
+
+    <div class="section-head" style="margin-bottom:24px;">
+
+      <span class="eyebrow">À découvrir aux alentours</span>
+
+    </div>
+
+    <div class="alentours">
+
+      <div class="alentour-row"><span>Gorges et grottes de l'Ardèche, canoë-kayak</span><span>15 min</span></div>
+
+      <div class="alentour-row"><span>Orange — théâtre antique et arc de triomphe</span><span>20 min</span></div>
+
+      <div class="alentour-row"><span>Duché d'Uzès</span><span>30 min</span></div>
+
+      <div class="alentour-row"><span>Pont du Gard</span><span>30 min</span></div>
+
+      <div class="alentour-row"><span>Avignon — Palais des Papes</span><span>45 min</span></div>
+
+      <div class="alentour-row"><span>Vaison-la-Romaine — vestiges romains</span><span>45 min</span></div>
+
+      <div class="alentour-row"><span>Nîmes — arènes et Maison Carrée</span><span>1 h</span></div>
+
+      <div class="alentour-row"><span>Arles — arènes et musée Arlaten</span><span>1 h</span></div>
+
+    </div>
+
+  </div>
+
+</section>
+
+ 
+
+<section class="pratique" id="pratique">
+
+  <div class="section-inner">
+
+    <div class="section-head">
+
+      <span class="eyebrow" style="color:var(--wine);">Informations pratiques</span>
+
+      <h2>Ce qu'il faut savoir avant de venir</h2>
+
+    </div>
+
+    <div class="pratique-grid">
+
+      <div class="pratique-item">
+
+        <span class="eyebrow">Arrivée</span>
+
+        <p>À partir de 16h, pour préparer votre hébergement sereinement après le départ de nos précédents hôtes.</p>
+
+      </div>
+
+      <div class="pratique-item">
+
+        <span class="eyebrow">Piscine</span>
+
+        <p>Ouverte de mi-mai à fin septembre.</p>
+
+      </div>
+
+      <div class="pratique-item">
+
+        <span class="eyebrow">Animaux</span>
+
+        <p>Chiens et chats acceptés dans les gîtes Ramona et La Noria, sur accord préalable.</p>
+
+      </div>
+
+      <div class="pratique-item">
+
+        <span class="eyebrow">Réservation</span>
+
+        <p>En direct sur notre site : meilleur tarif garanti, sans commission de plateforme.</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+ 
+
+<section class="cta-final">
+
+  <h2>À très bientôt, nous l'espérons</h2>
+
+  <p>Villages, marchés, gastronomie et vins des Côtes du Rhône et de Provence n'attendent que vous — et le domaine reste le meilleur point de chute pour tout découvrir.</p>
+
+  <a href="#" class="btn-seal"><span class="dot"></span> Réserver mon séjour</a>
+
+</section>
+
+ 
+
+<footer>
+
+  <div class="footer-inner">
+
+    <div>
+
+      <div style="font-family:'Fraunces', serif; font-size:1.1rem; margin-bottom:8px;">Domaine de Lamartine</div>
+
+      <div style="opacity:0.6;">Pont-Saint-Esprit, Gard</div>
+
+    </div>
+
+    <div class="footer-links">
+
+      <a href="#hebergements">Hébergements</a>
+
+      <a href="#mariages">Mariages</a>
+
+      <a href="#loisirs">Loisirs</a>
+
+      <a href="#pratique">Contact</a>
+
+      <a href="https://www.instagram.com/domainelamartine/">Instagram</a>
+
+      <a href="https://www.facebook.com/domainedelamartine/">Facebook</a>
+
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">Créé par Amenitiz — Mentions légales — CGV</div>
+
+</footer>
+
+ 
+
+
+
+
+
+
+
+</body></html>

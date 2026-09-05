@@ -299,11 +299,18 @@ export async function startEditor(runtime) {
       const top = parseFloat(style.top);
       if (Number.isNaN(top) || top >= BAR_HEIGHT) continue;
       shifted.push([el, el.style.top]);
+      // Mémorisé aussi dans le DOM : l'export doit pouvoir défaire ce décalage
+      // sans rien savoir de l'éditeur.
+      el.setAttribute('data-admin-shifted', el.style.top);
       el.style.top = (top + BAR_HEIGHT) + 'px';
     }
   }
   function restoreFixed() {
-    for (const [el, value] of shifted) el.style.top = value;
+    for (const [el, value] of shifted) {
+      el.style.top = value;
+      el.removeAttribute('data-admin-shifted');
+      if (!el.getAttribute('style')) el.removeAttribute('style');
+    }
     shifted.length = 0;
   }
 
