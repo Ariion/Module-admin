@@ -1,0 +1,7 @@
+docs/
+tools/
+firebase/
+essais/domaine-lamartine/
+demo/
+node_modules/
+*.md

@@ -7,12 +7,24 @@
   "scripts": {
     "start": "http-server -p 8080 -c-1 .",
     "demo": "http-server -p 8080 -c-1 . -o /demo/index.html",
-    "lint": "eslint admin"
+    "lint": "eslint admin",
+    "essai-local": "node tools/essai-local.mjs"
   },
-  "keywords": ["cms", "static-site", "firebase", "inline-editing", "no-build"],
+  "keywords": [
+    "cms",
+    "static-site",
+    "firebase",
+    "inline-editing",
+    "no-build"
+  ],
   "devDependencies": {
     "eslint": "^10.0.0",
     "http-server": "^14.1.1"
   },
-  "files": ["admin", "firebase", "tools", "docs"]
+  "files": [
+    "admin",
+    "firebase",
+    "tools",
+    "docs"
+  ]
 }
