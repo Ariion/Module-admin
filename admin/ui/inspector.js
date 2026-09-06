@@ -11,6 +11,8 @@ import { h, icon, clear } from './el.js';
 import { safeImageUrl } from '../core/sanitize.js';
 import { WIDGETS } from '../core/widgets.js';
 import { STYLE_FIELDS, STYLE_GROUPS, readStyleValues } from '../core/style.js';
+import { TEMPLATES } from '../core/templates.js';
+import { FONTS } from '../core/fonts.js';
 
 const TITRES = { text: 'text', link: 'link', image: 'image', background: 'background' };
 
@@ -123,6 +125,18 @@ export function createInspector({ vue, t, actions }) {
           oninput: (e) => ecrire(e.target.value.replace(/\n/g, '<br>')),
         }));
 
+      case 'audio':
+        return champ(t(f.label), h('div', { class: 'row' },
+          h('input', {
+            class: 'input', type: 'text', value: valeur ?? '', placeholder: '/medias/musique.mp3',
+            onchange: (e) => ecrire({ [f.key]: e.target.value }),
+          }),
+          h('button', {
+            class: 'btn btn--icon', type: 'button', title: t('library'),
+            onclick: () => actions.pickMedia((item) => { ecrire({ [f.key]: item.url }); render(selection); }),
+          }, icon('folder', 13)),
+        ));
+
       case 'image': {
         const image = h('img', { alt: '' });
         const apercu = h('div', { class: 'preview' }, image);
@@ -200,28 +214,44 @@ export function createInspector({ vue, t, actions }) {
       ),
       h('button', {
         class: 'btn btn--wide btn--sect', type: 'button', style: { marginTop: '9px' },
-        onclick: () => showSections(section.ref),
+        onclick: () => showNewSection(section.ref),
       }, icon('plus', 13), t('addSectionAfter')),
     ];
   }
 
   /**
-   * Bibliothèque de sections : celles de la page elle-même.
-   * Ajouter une section, c'est dupliquer une section existante — le rendu
-   * reste donc celui écrit par le développeur.
+   * Création d'une section : le choix du modèle vient AVANT l'insertion.
+   * Créer une section vide puis aller chercher un modèle ailleurs faisait
+   * parcourir deux fois le même chemin.
    */
-  function showSections(afterRef) {
+  function showNewSection(afterRef) {
     clear(vue);
-    vue.append(
-      h('div', { class: 'field' },
-        h('span', { class: 'field__label' }, t('addSection')),
-        h('p', { class: 'hint', style: { marginTop: '0' } }, t('addSectionHint')),
-      ),
-    );
+    vue.appendChild(h('div', { class: 'field' },
+      h('span', { class: 'field__label' }, t('newSection')),
+      h('p', { class: 'hint', style: { marginTop: '0' } }, t('newSectionHint')),
+    ));
 
-    const liste = h('div', { class: 'sections' });
-    for (const section of actions.sections()) {
-      liste.appendChild(h('button', {
+    vue.appendChild(h('button', {
+      class: 'btn btn--wide btn--sect', type: 'button', style: { marginBottom: '14px' },
+      onclick: () => actions.addBlankSection(afterRef),
+    }, icon('plus', 13), t('addBlankSection')));
+
+    vue.appendChild(h('div', { class: 'field__label', style: { marginBottom: '7px' } }, t('orFromTemplate')));
+    vue.appendChild(h('div', { class: 'tpls' }, TEMPLATES.map((modele) => h('button', {
+      class: 'tpl', type: 'button',
+      onclick: () => actions.addTemplateSection(modele.id, afterRef),
+    },
+      h('span', { class: 'tpl__preview' },
+        h('span', { class: 'tpl__bar' }),
+        h('span', { class: 'tpl__cols' }, modele.colonnes.map(() => h('span', { class: 'tpl__col' }))),
+      ),
+      h('span', { class: 'tpl__label' }, t('tpl_' + modele.id)),
+    ))));
+
+    const copiables = actions.sections();
+    if (copiables.length) {
+      vue.appendChild(h('div', { class: 'field__label', style: { margin: '16px 0 7px' } }, t('orCopySection')));
+      vue.appendChild(h('div', { class: 'sections' }, copiables.map((section) => h('button', {
         class: 'sectcard', type: 'button',
         onclick: () => actions.addSection(section.ref, afterRef),
       },
@@ -231,13 +261,184 @@ export function createInspector({ vue, t, actions }) {
           h('span', { class: 'sectcard__meta' }, t('sectionCopy')),
         ),
         icon('plus', 14),
-      ));
+      ))));
     }
-    vue.appendChild(liste.children.length ? liste : h('p', { class: 'empty' }, t('emptyStructure')));
+
     vue.appendChild(h('button', {
-      class: 'btn btn--wide', type: 'button', style: { marginTop: '12px' },
+      class: 'btn btn--wide', type: 'button', style: { marginTop: '14px' },
       onclick: () => render(selection),
     }, t('cancel')));
+  }
+
+  // ------------------------------------------------------------ widgets
+  /** Réglages d'un widget, décrits par son entrée du catalogue. */
+  function renderWidgetFields(noeud) {
+    const def = WIDGETS[noeud.type];
+    if (!def) { vue.appendChild(h('p', { class: 'empty' }, t('selectHint'))); return; }
+
+    vue.appendChild(h('div', { class: 'field', style: { marginBottom: '4px' } },
+      h('span', { class: 'field__label' }, t('selection')),
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: '7px' } },
+        icon(def.icon, 13), h('strong', {}, t('w_' + noeud.type)),
+      ),
+    ));
+
+    if (def.fields.length) {
+      vue.appendChild(groupe(t('content'), def.icon, () => def.fields.map((f) => champWidget(noeud, f)), true));
+    }
+    for (const bloc of champsStyleWidget(noeud)) vue.appendChild(bloc);
+
+    vue.appendChild(h('div', { class: 'row', style: { marginTop: '4px' } },
+      h('button', {
+        class: 'btn', type: 'button',
+        onclick: () => actions.widgetOp(noeud.key, 'move', -1),
+      }, icon('up', 13), t('moveUp')),
+      h('button', {
+        class: 'btn', type: 'button',
+        onclick: () => actions.widgetOp(noeud.key, 'move', 1),
+      }, icon('down', 13), t('moveDown')),
+    ));
+    vue.appendChild(h('button', {
+      class: 'btn btn--wide btn--danger', type: 'button', style: { marginTop: '7px' },
+      onclick: () => actions.widgetOp(noeud.key, 'remove'),
+    }, icon('trash', 13), t('remove')));
+  }
+
+  function champWidget(noeud, f) {
+    const valeur = noeud.props[f.key];
+    const ecrire = (v) => actions.setWidgetProps(noeud.key, { [f.key]: v });
+
+    switch (f.type) {
+      case 'select':
+        return champ(t(f.label), h('select', {
+          class: 'input', onchange: (e) => ecrire(e.target.value),
+        }, f.options.map((o) => h('option', { value: o, selected: String(o) === String(valeur) }, String(o)))));
+
+      case 'number':
+        return champ(t(f.label), h('input', {
+          class: 'input', type: 'number', value: valeur ?? '',
+          min: f.min, max: f.max, step: f.step,
+          oninput: (e) => ecrire(Number(e.target.value)),
+        }));
+
+      case 'checkbox':
+        return h('label', { class: 'check' },
+          h('input', {
+            type: 'checkbox', checked: valeur === f.on,
+            onchange: (e) => ecrire(e.target.checked ? f.on : ''),
+          }), t(f.label));
+
+      case 'align':
+        return champ(t(f.label), h('div', { class: 'seg' },
+          ['left', 'center', 'right'].map((a) => h('button', {
+            class: 'seg__btn', type: 'button', 'aria-pressed': valeur === a ? 'true' : 'false',
+            onclick: () => { ecrire(a); render(selection); },
+          }, t('align_' + a)))));
+
+      case 'lines':
+        return champ(t(f.label), h('textarea', {
+          class: 'textarea', value: valeur ?? '',
+          oninput: (e) => ecrire(e.target.value),
+        }));
+
+      case 'richtext':
+        return champ(t(f.label), h('textarea', {
+          class: 'textarea', value: String(valeur ?? '').replace(/<br\s*\/?>/gi, '\n'),
+          oninput: (e) => ecrire(e.target.value.replace(/\n/g, '<br>')),
+        }));
+
+      case 'audio':
+        return champ(t(f.label), h('div', { class: 'row' },
+          h('input', {
+            class: 'input', type: 'text', value: valeur ?? '', placeholder: '/medias/musique.mp3',
+            onchange: (e) => ecrire({ [f.key]: e.target.value }),
+          }),
+          h('button', {
+            class: 'btn btn--icon', type: 'button', title: t('library'),
+            onclick: () => actions.pickMedia((item) => { ecrire({ [f.key]: item.url }); render(selection); }),
+          }, icon('folder', 13)),
+        ));
+
+      case 'image': {
+        const image = h('img', { alt: '' });
+        const apercu = h('div', { class: 'preview' }, image);
+        const montrer = (src) => {
+          const sur = safeImageUrl(src);
+          if (sur) image.setAttribute('src', sur); else image.removeAttribute('src');
+        };
+        montrer(valeur);
+        const adresse = h('input', {
+          class: 'input', type: 'text', value: valeur ?? '', placeholder: '/images/photo.jpg',
+          onchange: (e) => { montrer(e.target.value); ecrire(e.target.value); },
+        });
+        const fichier = h('input', {
+          type: 'file', accept: 'image/*', style: { display: 'none' },
+          onchange: async (e) => {
+            const f2 = e.target.files?.[0];
+            e.target.value = '';
+            if (!f2) return;
+            const r = await actions.upload(f2);
+            adresse.value = r.url; montrer(r.url); ecrire(r.url);
+          },
+        });
+        return h('div', {}, apercu,
+          h('div', { class: 'row', style: { marginBottom: '11px' } },
+            h('button', { class: 'btn', type: 'button', onclick: () => fichier.click() }, icon('upload', 13), t('chooseFile')),
+            h('button', {
+              class: 'btn', type: 'button',
+              onclick: () => actions.pickMedia((item) => { adresse.value = item.url; montrer(item.url); ecrire(item.url); }),
+            }, icon('folder', 13), t('library')),
+          ),
+          fichier, champ(t(f.label), adresse));
+      }
+
+      default:
+        return champ(t(f.label), h('input', {
+          class: 'input', type: 'text', value: valeur ?? '', placeholder: f.placeholder || '',
+          oninput: (e) => ecrire(e.target.value),
+        }));
+    }
+  }
+
+  /** Habillage d'un widget : même panneau, stocké dans ses propriétés. */
+  function champsStyleWidget(noeud) {
+    return panneauStyle(
+      () => {
+        const el = actions.widgetElement?.(noeud.key);
+        const effectifs = el ? readStyleValues(el) : {};
+        return { ...effectifs, ...(noeud.props.style || {}) };
+      },
+      (patch) => actions.setWidgetProps(noeud.key, { style: patch }),
+    );
+  }
+
+  // ---------------------------------------------------------- structure
+  function champsSection(section) {
+    const index = actions.sectionIndex(section.ref);
+    const total = actions.sectionCount();
+    const bouton = (nomIcone, libelle, op, ...args) => h('button', {
+      class: 'btn', type: 'button',
+      onclick: () => actions.sectionOp(section.ref, op, ...args),
+    }, icon(nomIcone, 13), libelle);
+
+    return [
+      h('p', { class: 'hint', style: { marginTop: '0' } }, t('sectionPosition', index + 1, total)),
+      h('div', { class: 'row', style: { marginTop: '10px' } },
+        bouton('up', t('moveUp'), 'move', index, index - 1),
+        bouton('down', t('moveDown'), 'move', index, index + 1),
+      ),
+      h('div', { class: 'row', style: { marginTop: '7px' } },
+        bouton('copy', t('duplicate'), 'duplicate'),
+        h('button', {
+          class: 'btn btn--danger', type: 'button',
+          onclick: () => { if (confirm(t('hideSectionConfirm'))) actions.sectionOp(section.ref, 'hide'); },
+        }, icon('trash', 13), t('hideSection')),
+      ),
+      h('button', {
+        class: 'btn btn--wide btn--sect', type: 'button', style: { marginTop: '9px' },
+        onclick: () => showNewSection(section.ref),
+      }, icon('plus', 13), t('addSectionAfter')),
+    ];
   }
 
   function iconeDe(role) {
@@ -425,6 +626,16 @@ export function createInspector({ vue, t, actions }) {
     switch (f.type) {
       case 'color':
         return champ(t(f.label), couleur(valeur, ecrit));
+      case 'font':
+        return champ(t(f.label), h('select', {
+          class: 'input', onchange: (e) => { ecrit(e.target.value); render(selection); },
+        }, [
+          h('option', { value: '', selected: !valeur }, t('siteFont')),
+          ...FONTS.map((police) => h('option', {
+            value: police.name, selected: police.name === valeur,
+            style: { fontFamily: `"${police.name}", ${police.stack}` },
+          }, police.name)),
+        ]));
       case 'select':
         return champ(t(f.label), h('select', {
           class: 'input', onchange: (e) => ecrit(e.target.value),
@@ -533,5 +744,5 @@ export function createInspector({ vue, t, actions }) {
     return h('button', { class: 'btn btn--wide', type: 'button', onclick: onClick }, icon('history', 13), t('revert'));
   }
 
-  return { render, showSections, get selection() { return selection; } };
+  return { render, showNewSection, get selection() { return selection; } };
 }

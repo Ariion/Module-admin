@@ -20,6 +20,7 @@ import { createLibrary } from './library.js';
 import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
+import { openPageTemplates } from './page-templates-panel.js';
 import { createMedia } from '../media/index.js';
 import { createHost } from '../data/host.js';
 import { bakePage } from '../core/bake.js';
@@ -124,6 +125,8 @@ export async function startEditor(runtime) {
         sectionCount: () => model.sectionList().length,
         sectionOp: (ref, op, ...args) => sectionOp(ref, op, ...args),
         addSection: (from, after) => sectionOp(from, 'add', after),
+        addBlankSection: (after) => ajouterSectionVide(after),
+        addTemplateSection: (id, after) => ajouterModele(id, after),
         pickMedia: (rappel) => { shell.showView('medias'); library.pick(rappel); },
         upload: (fichier, onProgress) => media.primary.upload(fichier, { onProgress }),
         setWidgetProps: (key, patch) => {
@@ -140,7 +143,7 @@ export async function startEditor(runtime) {
       vue: vueStructure, t,
       onSelect: (sel) => { select(sel, { reveal: true }); },
       onHover: (el) => { if (el) overlay.setActive(el); },
-      onAddSection: (afterRef, mode) => (mode === 'copy' ? ouvrirSections(afterRef) : ajouterSectionVide(afterRef)),
+      onAddSection: (afterRef) => ouvrirNouvelleSection(afterRef),
       onRestoreSection: (ref) => sectionOp(ref, 'show'),
     });
 
@@ -154,7 +157,7 @@ export async function startEditor(runtime) {
       onSelect: (sel) => select(sel),
       onCollectionOp: (id, op, ...args) => collectionOp(id, op, ...args),
       onSectionOp: (ref, op, ...args) => sectionOp(ref, op, ...args),
-      onAddSection: (afterRef) => ajouterSectionVide(afterRef),
+      onAddSection: (afterRef) => ouvrirNouvelleSection(afterRef),
       onReposition: () => textEditor?.reposition(),
       onWidgetSelect: (key) => selectWidget(key),
       onWidgetOp: (key, op, arg) => widgetOp(key, op, arg),
@@ -170,6 +173,16 @@ export async function startEditor(runtime) {
       layer: shell.layer, origin: () => shell.origine(), t,
       onCommit: (entry, valeur) => setValue(entry, valeur),
     });
+
+    // Les modèles de page vivent dans le pied du panneau : ils portent sur
+    // toute la page, pas sur la sélection courante.
+    shell.setFootExtra([h('button', {
+      class: 'btn btn--wide btn--sect', type: 'button', style: { marginBottom: '10px' },
+      onclick: () => openPageTemplates({
+        root, t,
+        onApply: (id, remplacer) => appliquerModelePage(id, remplacer),
+      }),
+    }, icon('pages', 13), t('pageTemplates'))]);
 
     shell.setActions([
       publishButton,
@@ -436,15 +449,26 @@ export async function startEditor(runtime) {
     inspector.render(null);
   }
 
-  function ouvrirSections(afterRef) {
-    const ref = afterRef || model.sectionList().slice(-1)[0]?.ref;
+  /** Ouvre le choix du modèle avant de créer la section. */
+  function ouvrirNouvelleSection(afterRef) {
+    const ref = afterRef || model.sectionList().slice(-1)[0]?.ref || null;
     showInspector();
-    inspector.showSections(ref);
+    inspector.showNewSection(ref);
+  }
+
+  /** Pose la trame d'une page entière. */
+  async function appliquerModelePage(id, remplacer) {
+    if (!model.applyPageTemplate(id, remplacer)) return;
+    markDirty();
+    await autosave.flush();
+    await loadPage(urlCourante(), { keepScroll: false });
+    showLibrary();
+    notify(t('pageTplApplied'));
   }
 
   /** Insère une section construite depuis un modèle. */
-  async function ajouterModele(id) {
-    const ref = model.sectionList().slice(-1)[0]?.ref || null;
+  async function ajouterModele(id, afterRef) {
+    const ref = afterRef || model.sectionList().slice(-1)[0]?.ref || null;
     const key = model.addTemplateSection(id, ref);
     if (!key) return;
     markDirty();

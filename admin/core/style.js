@@ -13,6 +13,7 @@
  */
 import { hash } from './util.js';
 import { safeImageUrl } from './sanitize.js';
+import { fontStack, fontName } from './fonts.js';
 
 export const CUSTOM_STYLE_ID = 'admin-custom-css';
 const CLASS_PREFIX = 'admin-c-';
@@ -26,6 +27,7 @@ export const STYLE_FIELDS = [
   { group: 'colors', key: 'background', css: 'backgroundColor', type: 'color', label: 'bgColor' },
   { group: 'colors', key: 'backgroundImage', css: 'backgroundImage', type: 'image', label: 'bgImage' },
 
+  { group: 'type', key: 'fontFamily', css: 'fontFamily', type: 'font', label: 'fontFamily' },
   { group: 'type', key: 'fontSize', css: 'fontSize', type: 'number', unit: 'px', label: 'fontSize', min: 8, max: 160, step: 1 },
   { group: 'type', key: 'fontWeight', css: 'fontWeight', type: 'select', label: 'fontWeight', options: ['', '300', '400', '500', '600', '700', '800'] },
   { group: 'type', key: 'lineHeight', css: 'lineHeight', type: 'number', label: 'lineHeight', min: 0.8, max: 3, step: 0.05 },
@@ -77,6 +79,8 @@ function versCss(champ, brut) {
       if (!Number.isFinite(n)) return null;
       return champ.unit ? n + champ.unit : String(n);
     }
+    case 'font':
+      return fontStack(valeur);
     case 'select':
       return champ.options.includes(valeur) ? valeur : null;
     case 'align':
@@ -190,6 +194,7 @@ export function readStyleValues(el) {
       lu[champ.key] = '';
     }
   }
+  lu.fontFamily = fontName(el.style.fontFamily);
   const fond = el.style.backgroundImage || (calcule ? calcule.backgroundImage : '');
   const url = /url\((['"]?)(.*?)\1\)/.exec(fond);
   lu.backgroundImage = url ? url[2] : '';

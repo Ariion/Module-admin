@@ -201,12 +201,26 @@ Une section retirée reste listée dans l'onglet Structure avec son titre, pour
 pouvoir la remettre — sans cela le client n'aurait aucun moyen de revenir en
 arrière.
 
+### Modèles de page et de section
+
+Cinq **trames de page** — accueil une page, page de vente, portfolio, contact,
+à propos — posées depuis le pied du panneau, à ajouter à la suite ou à
+substituer à la page. Les sections du site sont alors retirées, pas
+supprimées : elles restent récupérables depuis l'onglet Structure.
+
 ### Modèles de section
 
 Huit mises en page prêtes à l'emploi — trois colonnes, image et texte, appel à
 l'action, galerie, contact… Ce sont de simples arbres de widgets : un modèle
 inséré n'apporte que la **structure**, jamais un style qui jurerait avec le
 site. La typographie et les couleurs viennent de la feuille du site.
+
+### Polices
+
+Seize familles Google Fonts, réglables par élément. Seules celles réellement
+employées dans la page produisent une balise `<link>`, écrite au moment de
+l'application et conservée à la régénération du HTML : le site garde ses
+polices une fois le module retiré — vérifié.
 
 ### Habillage
 

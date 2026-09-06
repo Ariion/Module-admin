@@ -31,22 +31,6 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
   layer.append(cadreSection, cadre, cadreActif, outilsBloc, pointAjout, outilsSection);
   for (const n of [cadre, cadreActif, outilsBloc, cadreSection, outilsSection, pointAjout]) cacher(n);
 
-  // Le pointeur qui passe sur une barre d'outils quitte l'iframe : sans ce
-  // délai, la barre disparaîtrait avant d'être cliquable.
-  let minuteurSection = null;
-  const garderSection = () => clearTimeout(minuteurSection);
-  const lacherSection = () => {
-    clearTimeout(minuteurSection);
-    minuteurSection = setTimeout(() => {
-      sectionSurvolee = null;
-      cacher(cadreSection); cacher(outilsSection); cacher(pointAjout);
-    }, 260);
-  };
-  for (const n of [outilsSection, pointAjout]) {
-    n.addEventListener('mouseenter', garderSection);
-    n.addEventListener('mouseleave', lacherSection);
-  }
-
   let sections = [];
   let sectionSurvolee = null;
 
@@ -62,6 +46,37 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
   let typeEnCours = null;
 
   const CONTENEURS = new Set(['section', 'columns', 'column']);
+
+  /**
+   * Maintien du chrome flottant.
+   *
+   * Les barres d'outils sont dessinées dans le document de l'éditeur, au-dessus
+   * de l'iframe. Aller les cliquer fait donc SORTIR le pointeur de l'aperçu, ce
+   * qui masquait la barre juste avant qu'on l'atteigne. Toutes les barres
+   * annulent donc le masquage quand on entre dedans, et le reprogramment quand
+   * on en sort.
+   */
+  const FLOTTANTS = [outilsBloc, outilsSection, outilsWidget, pointAjout];
+  let minuteurMasquage = null;
+
+  const garder = () => clearTimeout(minuteurMasquage);
+  const programmerMasquage = () => {
+    clearTimeout(minuteurMasquage);
+    minuteurMasquage = setTimeout(() => {
+      survole = null;
+      widgetSurvole = null;
+      sectionSurvolee = null;
+      itemSurvole = null;
+      for (const n of [cadre, cadreWidget, cadreSection, ...FLOTTANTS]) cacher(n);
+    }, 400);
+  };
+
+  for (const noeud of FLOTTANTS) {
+    noeud.addEventListener('mouseenter', garder);
+    noeud.addEventListener('mouseleave', programmerMasquage);
+  }
+
+  let itemSurvole = null;
 
   function cacher(n) { n.style.display = 'none'; }
   function montrer(n) { n.style.display = ''; }
@@ -177,8 +192,8 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
         },
       }, icon('trash', 13)),
     );
-    outilsBloc.style.left = (decalage.x + Math.max(rect.left, rect.right - 128)) + 'px';
-    outilsBloc.style.top = (decalage.y + rect.top + 5) + 'px';
+    outilsBloc.style.left = (decalage.x + Math.max(rect.left, rect.right - 132)) + 'px';
+    outilsBloc.style.top = (decalage.y + Math.max(rect.top + 5, 4)) + 'px';
     montrer(outilsBloc);
   }
 
@@ -325,27 +340,47 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     montrer(pointAjout);
   }
 
+  /**
+   * Décide ce qu'il faut montrer sous le pointeur.
+   *
+   * Une seule barre à la fois, du plus précis au plus large : un widget, sinon
+   * un bloc répétable, sinon la section. Sans cette règle, la racine d'une
+   * section ajoutée affichait deux barres superposées — celle du widget et
+   * celle de la section — et on ne savait plus laquelle agissait sur quoi.
+   */
   const surMouvement = (event) => {
     if (!actif) return;
+    garder();
+
+    const cibleWidget = widgetSous(event.target);
+    // La racine d'une section ajoutée est gérée comme une section, pas comme
+    // un widget : c'est la même chose vue de deux endroits.
+    const widget = cibleWidget && !cibleWidget.hasAttribute('data-admin-section') ? cibleWidget : null;
+    const item = widget ? null : itemSous(event.target);
+    const section = sectionSous(event.target);
+
     const entry = entreeSous(event.target);
     if (entry !== survole) { survole = entry; peindreSurvol(entry); }
-    peindreOutilsBloc(itemSous(event.target));
 
-    const widget = widgetSous(event.target);
     if (widget !== widgetSurvole) {
       widgetSurvole = widget;
       peindreWidget(widget);
     }
 
-    const section = sectionSous(event.target);
+    if (item !== itemSurvole) {
+      itemSurvole = item;
+      peindreOutilsBloc(item);
+    }
+
     if (section !== sectionSurvolee) {
-      garderSection();
       sectionSurvolee = section;
       peindreSection(section);
     }
   };
 
-  const surSortie = () => { survole = null; cacher(cadre); cacher(outilsBloc); lacherSection(); };
+  // Sortir de l'aperçu ne masque pas tout de suite : le pointeur est
+  // peut-être en route vers une barre d'outils.
+  const surSortie = () => programmerMasquage();
 
   const surClic = (event) => {
     if (!actif) return;
@@ -368,14 +403,14 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
 
   const reposition = () => {
     if (!actif) {
-      for (const n of [cadre, cadreActif, outilsBloc, cadreSection, outilsSection, pointAjout]) cacher(n);
+      for (const n of [cadre, cadreActif, cadreWidget, cadreSection, ...FLOTTANTS]) cacher(n);
       return;
     }
     placer(cadre, survole?.el);
     placer(cadreActif, selectionne);
-    cacher(outilsBloc);
+    if (itemSurvole) peindreOutilsBloc(itemSurvole); else cacher(outilsBloc);
     if (widgetSurvole) peindreWidget(widgetSurvole); else { cacher(cadreWidget); cacher(outilsWidget); }
-    if (sectionSurvolee) peindreSection(sectionSurvolee); else cacher(cadreSection);
+    if (sectionSurvolee) peindreSection(sectionSurvolee); else { cacher(cadreSection); cacher(outilsSection); cacher(pointAjout); }
     peindreZonesVides();
     onReposition?.();
   };

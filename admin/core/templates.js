@@ -10,7 +10,7 @@
 import { createWidget } from './widgets.js';
 
 /** Fabrique un widget avec des propriétés initiales. */
-function w(type, props = {}, enfants = null) {
+export function w(type, props = {}, enfants = null) {
   const noeud = createWidget(type);
   noeud.props = { ...noeud.props, ...props };
   if (enfants) {
@@ -28,7 +28,7 @@ function w(type, props = {}, enfants = null) {
   return noeud;
 }
 
-function section(enfants, props = {}) {
+export function section(enfants, props = {}) {
   const racine = createWidget('section');
   racine.props = { ...racine.props, ...props };
   racine.children = enfants;

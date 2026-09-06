@@ -95,7 +95,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .view--on { display: block; }
 
 .panel__foot {
-  flex: none; border-top: 1px solid var(--line); padding: 12px 16px;
+  flex: none; border-top: 1px solid var(--line); padding: 10px 16px 12px;
   background: linear-gradient(0deg, var(--bg-soft), var(--bg));
 }
 .panel__state {
@@ -354,6 +354,30 @@ select.input { appearance: none; cursor: pointer; }
 .tpl__col { flex: 1; border-radius: 2px; background: var(--line); }
 .tpl:hover .tpl__col { background: #3b4351; }
 .tpl__label { font-size: 12px; line-height: 1.3; }
+
+/* ---- Modèles de page entière ---- */
+.pagetpls { display: grid; gap: 10px; }
+.pagetpl {
+  display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+  background: var(--bg-soft); border: 1px solid var(--line-soft); border-radius: var(--radius);
+}
+.pagetpl:hover { border-color: var(--sect); }
+.pagetpl__preview {
+  width: 58px; flex: none; display: flex; flex-direction: column; gap: 3px; padding: 5px;
+  background: var(--bg-sunk); border: 1px solid var(--line); border-radius: 4px;
+}
+.pagetpl__band { height: 7px; border-radius: 2px; background: var(--sect); opacity: .8; }
+.pagetpl__row { display: flex; gap: 3px; }
+.pagetpl__cell { flex: 1; height: 11px; border-radius: 2px; background: var(--line); }
+.pagetpl__main { flex: 1; min-width: 0; }
+.pagetpl__title { font-weight: 600; }
+.pagetpl__meta { color: var(--faint); font-size: 11.5px; }
+.pagetpl__actions { display: flex; gap: 6px; flex: none; }
+@media (max-width: 620px) {
+  .pagetpl { flex-wrap: wrap; }
+  .pagetpl__actions { width: 100%; }
+  .pagetpl__actions .btn { flex: 1; justify-content: center; }
+}
 
 /* ---- Zones de dépôt dans l'aperçu ---- */
 .drop {

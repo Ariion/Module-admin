@@ -113,6 +113,15 @@ export const WIDGETS = {
     fields: [{ key: 'url', type: 'text', label: 'videoUrl', placeholder: 'https://www.youtube.com/watch?v=…' }],
   },
 
+  audio: {
+    category: 'media', icon: 'music',
+    defaults: () => ({ src: '', title: '' }),
+    fields: [
+      { key: 'src', type: 'audio', label: 'audioUrl' },
+      { key: 'title', type: 'text', label: 'audioTitle' },
+    ],
+  },
+
   map: {
     category: 'media', icon: 'map',
     defaults: () => ({ query: '', height: 340 }),
@@ -262,6 +271,26 @@ export function renderWidget(noeud, doc) {
         el.appendChild(cadre);
       } else {
         el.appendChild(placeholder(doc, 'Ajoutez l’adresse d’une vidéo YouTube ou Vimeo.'));
+      }
+      break;
+    }
+
+    case 'audio': {
+      el = doc.createElement('div');
+      const source = safeImageUrl(p.src) || (/^(https?:|\/|\.\/)/i.test(String(p.src || '')) ? String(p.src) : '');
+      if (p.title) {
+        const legende = doc.createElement('p');
+        legende.textContent = String(p.title);
+        el.appendChild(legende);
+      }
+      if (source) {
+        const lecteur = doc.createElement('audio');
+        lecteur.setAttribute('controls', '');
+        lecteur.setAttribute('src', source);
+        lecteur.style.width = '100%';
+        el.appendChild(lecteur);
+      } else {
+        el.appendChild(placeholder(doc, 'Indiquez l’adresse d’un fichier audio (MP3, OGG).'));
       }
       break;
     }

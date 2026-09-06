@@ -14,7 +14,9 @@ import {
 } from './sections.js';
 import { createWidget, renderWidget, findWidget, removeWidget, WIDGETS } from './widgets.js';
 import { compileCustomCss, writeCustomSheet } from './style.js';
-import { clone, equal } from './util.js';
+import { writeFontLink } from './fonts.js';
+import { findPageTemplate } from './page-templates.js';
+import { clone, equal, uid } from './util.js';
 import { debug, safe } from './log.js';
 
 export const SNAPSHOT_VERSION = 1;
@@ -178,6 +180,7 @@ export class PageModel {
     }
 
     this.refreshCustomCss();
+    this.refreshFonts();
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
     return { applied, orphans: [...this.orphans.values()] };
   }
@@ -239,6 +242,32 @@ export class PageModel {
   addBlankSection(afterRef) {
     this.sections = sectionOps.addBlank(this.sections, afterRef);
     return this.sections.lastKey;
+  }
+
+  /**
+   * Pose la trame d'une page entière.
+   * @param {string} id
+   * @param {boolean} remplacer masquer les sections existantes du site
+   */
+  applyPageTemplate(id, remplacer) {
+    const modele = findPageTemplate(id);
+    if (!modele) return false;
+
+    if (remplacer) {
+      for (const section of this.sectionList()) {
+        if (section.ref.startsWith('ins:')) continue;
+        this.sections = sectionOps.hide(this.sections, section.ref, section.label);
+      }
+    }
+
+    // Chaque section vient après la précédente : la trame garde son ordre.
+    let apres = remplacer ? null : (this.sectionList().slice(-1)[0]?.ref || null);
+    for (const tree of modele.build()) {
+      const record = { kind: 'widgets', key: uid('s'), after: apres, tree };
+      this.sections = { ...this.sections, add: [...this.sections.add, record] };
+      apres = 'ins:' + record.key;
+    }
+    return true;
   }
 
   /** Ajoute une section construite depuis un modèle. */
@@ -316,6 +345,7 @@ export class PageModel {
 
     this.rerenderSection(cible.record.key);
     this.refreshCustomCss();
+    this.refreshFonts();
     return true;
   }
 
@@ -364,6 +394,27 @@ export class PageModel {
     safe(() => writeCustomSheet(this.doc, morceaux), null, 'customCss');
   }
 
+  /**
+   * Charge les polices réellement employées dans la page. La balise produite
+   * est conservée à la régénération du HTML : le site garde ses polices même
+   * une fois le module retiré.
+   */
+  refreshFonts() {
+    const noms = [];
+    for (const valeur of this.styles.values()) {
+      if (valeur.fontFamily) noms.push(valeur.fontFamily);
+    }
+    const parcourir = (noeuds) => {
+      for (const noeud of noeuds || []) {
+        const police = noeud.props?.style?.fontFamily;
+        if (police) noms.push(police);
+        if (noeud.children) parcourir(noeud.children);
+      }
+    };
+    for (const record of this.widgetSections()) parcourir([record.tree]);
+    safe(() => writeFontLink(this.doc, noms), null, 'fonts');
+  }
+
   /** Déclare un élément comme cible de style et retourne son empreinte. */
   styleTarget(el) {
     for (const cible of this.styleTargets.values()) {
@@ -393,6 +444,7 @@ export class PageModel {
     else this.styles.delete(cible.print.id);
     applyValue(el, 'style', { ...patch });
     if ('customCss' in patch) this.refreshCustomCss();
+    if ('fontFamily' in patch) this.refreshFonts();
     return fusion;
   }
 

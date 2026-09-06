@@ -74,6 +74,8 @@ export function icon(name, size = 14) {
     drag: 'M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01',
     code: 'M8 6l-5 6 5 6M16 6l5 6-5 6',
     template: 'M4 4h16v4H4zM4 11h7v9H4zM14 11h6v9h-6z',
+    music: 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+    pages: 'M8 3h9l4 4v14H8zM8 7H4v14h9',
   };
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');

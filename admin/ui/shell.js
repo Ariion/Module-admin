@@ -28,6 +28,7 @@ export function createShell({ root, t, config, onDevice }) {
   const conteneurVues = h('div', { class: 'views' });
   const etat = h('div', { class: 'panel__state' });
   const actions = h('div', { class: 'panel__actions' });
+  const avantEtat = h('div', {});
 
   const panel = h('div', { class: 'panel' },
     h('div', { class: 'panel__head' },
@@ -37,7 +38,7 @@ export function createShell({ root, t, config, onDevice }) {
     ),
     onglets,
     conteneurVues,
-    h('div', { class: 'panel__foot' }, etat, actions),
+    h('div', { class: 'panel__foot' }, avantEtat, etat, actions),
   );
 
   // --- Scène ---------------------------------------------------------
@@ -143,6 +144,7 @@ export function createShell({ root, t, config, onDevice }) {
     get frame() { return iframe; },
     get device() { return appareil; },
     setState(noeuds) { clear(etat); etat.append(...noeuds); },
+    setFootExtra(noeuds) { clear(avantEtat); avantEtat.append(...noeuds); },
     setActions(noeuds) { clear(actions); actions.append(...noeuds); },
     setPageLabel(texte) { nomPage.textContent = texte; },
     translate: t,
