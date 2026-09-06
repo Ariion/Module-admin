@@ -47,6 +47,8 @@ export const SHADOW_CSS = `
   -webkit-font-smoothing: antialiased;
 }
 * { box-sizing: border-box; }
+/* Une règle de composant ne doit jamais rendre visible un élément masqué. */
+[hidden] { display: none !important; }
 button, input, textarea, select { font: inherit; color: inherit; }
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-thumb { background: #333942; border-radius: 5px; }
@@ -262,15 +264,50 @@ select.input { appearance: none; cursor: pointer; }
 /* ================= Bibliothèque ================= */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 9px; }
 .tile {
+  position: relative;
   border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
-  cursor: pointer; background: var(--bg-sunk); padding: 0;
+  background: var(--bg-sunk); padding: 0;
 }
 .tile:hover { border-color: var(--accent); }
+.tile__pick {
+  display: block; width: 100%; padding: 0; border: 0; background: none;
+  cursor: pointer; text-align: left; color: inherit;
+}
 .tile img { width: 100%; height: 68px; object-fit: cover; display: block; }
+.tile__icon {
+  height: 68px; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); background: var(--bg-soft);
+}
 .tile__name {
   padding: 5px 6px; font-size: 11px; color: var(--muted);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.tile__acts {
+  position: absolute; top: 4px; right: 4px; display: none; gap: 3px;
+}
+.tile:hover .tile__acts, .tile:focus-within .tile__acts { display: flex; }
+.tile__acts .btn { background: rgba(16,19,24,.86); backdrop-filter: blur(2px); }
+
+/* Bibliothèque : barre de dépôt, filtres, ajout par adresse */
+.ml-filters { flex-wrap: wrap; margin-bottom: 9px; }
+.ml-filters .seg__btn { flex: 1 0 auto; padding: 0 9px; }
+.ml-drop {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 9px;
+  min-height: 62px; margin-bottom: 9px; padding: 10px 12px;
+  border: 1px dashed var(--line); border-radius: var(--radius);
+  background: var(--bg-sunk); color: var(--muted); font-size: 12px;
+  cursor: pointer; text-align: center;
+}
+.ml-drop:hover { border-color: var(--accent); color: var(--text); }
+.ml-drop--over { border: 2px dashed var(--accent); background: var(--accent-dim); color: var(--accent-hi); }
+.ml-add { flex: none; }
+.ml-pick {
+  display: flex; align-items: center; gap: 9px; margin-bottom: 9px;
+  padding: 8px 10px; border-radius: var(--radius);
+  background: var(--accent-dim); border: 1px solid rgba(77,139,245,.4);
+  color: #cfe0ff; font-size: 12px;
+}
+.ml-pick span { flex: 1; }
 
 /* ================= Listes ================= */
 .list { list-style: none; margin: 0; padding: 0; }

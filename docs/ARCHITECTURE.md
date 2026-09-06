@@ -384,10 +384,10 @@ Le fonctionnement d'Elementor, sans son poids :
 
 ---
 
-## 6. Images : trois stockages, une interface
+## 6. Médias : trois stockages, une interface
 
-Le stockage des images est un point d'extension (`media/`). Chaque adaptateur
-expose `upload(file)` et, s'il le peut, `list()`.
+Le stockage des médias est un point d'extension (`media/`). Chaque adaptateur
+expose `upload(file)` et, s'il le peut, `list()` et `remove(item)`.
 
 | Adaptateur | Où vont les images | Coût |
 |---|---|---|
@@ -397,13 +397,46 @@ expose `upload(file)` et, s'il le peut, `list()`.
 
 L'adaptateur `endpoint` est celui qui évite au client tout abonnement
 supplémentaire : les images restent chez lui, servies par son propre domaine,
-consultables en FTP. Le script PHP fourni (`tools/admin-media.php`) vérifie la
+consultables en FTP. Le script PHP fourni (`tools/admin-endpoint.php`) vérifie la
 **signature** du jeton Firebase contre les certificats publics de Google avant
 d'écrire quoi que ce soit — il ne se contente pas de le décoder.
 
 Dans tous les cas, l'image est redimensionnée et recompressée dans le
 navigateur avant l'envoi (WebP quand il est supporté). Une photo de téléphone
-de 6 Mo ne part pas telle quelle.
+de 6 Mo ne part pas telle quelle. L'audio et la vidéo passent tels quels : le
+script PHP les accepte jusqu'à 48 Mo, contre 8 Mo pour une image, et vérifie
+le type MIME réel du fichier reçu — une image doit en plus être décodable.
+
+### La bibliothèque interne
+
+`ui/library.js` est l'onglet « Médias ». Il fusionne trois sources, dédoublonnées
+par adresse (les champs manquants d'une source sont complétés par l'autre) :
+
+1. l'index des médias en base (`sites/{siteId}/media`) : ce que l'éditeur a
+   téléversé, et les adresses ajoutées à la main ;
+2. le contenu réel du dossier hébergé, quand l'adaptateur sait lister — ce qui
+   rend visibles les fichiers déposés en FTP par le développeur ;
+3. ce que le client dépose sur le panneau, par glisser-déposer.
+
+Deux façons d'alimenter la bibliothèque, pour ne dépendre d'aucun abonnement :
+
+- **le dépôt de fichiers** (clic ou glisser-déposer), quand le stockage le
+  permet — tout ce qui est téléversé depuis un réglage y atterrit aussi ;
+- **l'ajout par adresse**, toujours disponible, y compris avec l'adaptateur
+  `url` où rien ne peut être téléversé : une image déjà sur le site, une vidéo
+  YouTube, un MP3 hébergé ailleurs. L'adresse passe par `safeUrl` (et
+  `safeImageUrl` pour une image) : `javascript:` et consorts sont refusés.
+
+La famille d'un média (image, vidéo, audio, fichier) est déduite du type MIME
+puis de l'extension, avec un cas particulier pour les pages d'hébergeurs vidéo.
+Elle sert aux filtres, à l'aperçu (vignette ou icône) et à la sélection : quand
+un réglage demande un média, l'onglet s'ouvre en mode sélection, pré-filtré sur
+la famille attendue — images pour un fond, vidéos pour l'élément Vidéo, audio
+pour l'élément Audio.
+
+Une vidéo de la bibliothèque servie depuis le domaine du site (`.mp4`, `.webm`)
+est rendue par un lecteur `<video>` natif ; les adresses YouTube et Vimeo
+restent converties en URL d'intégration, seuls hébergeurs acceptés.
 
 ---
 

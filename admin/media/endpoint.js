@@ -4,7 +4,7 @@
  * C'est la réponse au « je ne veux pas d'abonnement en plus » : les images
  * restent sur l'hébergement du site (OVH, o2switch...), dans un dossier
  * `/medias`, servi par le même domaine. Le module dialogue avec un petit
- * script déposé à la racine (voir tools/admin-media.php), qui vérifie le
+ * script déposé à la racine (voir tools/admin-endpoint.php), qui vérifie le
  * jeton Firebase avant d'écrire quoi que ce soit.
  *
  * Avantages : zéro coût supplémentaire, bibliothèque consultable en FTP,

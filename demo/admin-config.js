@@ -34,7 +34,8 @@ window.ADMIN_CONFIG = {
   media: {
     // 'firebase'  → Firebase Storage (plan Blaze)
     // 'endpoint'  → dossier chez le client (voir tools/admin-endpoint.php)
-    // 'url'       → saisie d'une adresse d'image uniquement
+    // 'url'       → aucun téléversement : la bibliothèque se remplit par
+    //               adresse (image du site, vidéo YouTube, MP3 distant)
     adapter: 'url',
   },
 };

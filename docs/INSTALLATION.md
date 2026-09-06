@@ -177,9 +177,13 @@ la publication doit afficher « page réécrite » suivi d'une taille en octets.
 > hébergement inscriptible, la liste reste consultable mais la création est
 > indisponible.
 
-## D. Choisir le stockage des images
+## D. Choisir le stockage des médias
 
-Trois modes, dans `admin-config.js`.
+Trois modes, dans `admin-config.js`. Quel que soit le mode, l'onglet
+« Médias » de l'éditeur tient la bibliothèque interne du site : recherche,
+filtres par famille (images, vidéos, audio, fichiers), copie de l'adresse,
+suppression, et **ajout par adresse** — ce dernier fonctionne même sans
+stockage.
 
 ### `url` — aucun stockage (par défaut le plus simple)
 
@@ -187,8 +191,9 @@ Trois modes, dans `admin-config.js`.
 media: { adapter: 'url' }
 ```
 
-Le client saisit l'adresse d'une image, ou choisit parmi celles déjà en ligne.
-Il ne peut pas téléverser depuis son ordinateur.
+Le client saisit l'adresse d'un média (une image du site, une vidéo YouTube, un
+MP3 hébergé ailleurs) et la bibliothèque la garde en mémoire pour les autres
+pages. Il ne peut pas téléverser depuis son ordinateur.
 
 ### `endpoint` — un dossier chez le client (aucun abonnement)
 
@@ -202,9 +207,16 @@ C'est le **même fichier** qu'à l'étape C : rien de plus à déposer.
 media: { adapter: 'endpoint', endpoint: '/admin-endpoint.php' }
 ```
 
-Les images restent chez le client, servies par son propre domaine, visibles en
-FTP. Le script refuse toute écriture sans un jeton Firebase **dont il vérifie
-la signature** auprès de Google.
+Les fichiers restent chez le client, servis par son propre domaine, visibles en
+FTP. Le client dépose ses fichiers par glisser-déposer dans l'onglet « Médias ».
+Sont acceptés : images (JPEG, PNG, GIF, WebP, AVIF — 8 Mo), audio (MP3, OGG,
+WAV, M4A), vidéo (MP4, WebM, OGV, MOV) et PDF — 48 Mo pour ces derniers. Le SVG
+est refusé (il peut contenir du script). Le script refuse toute écriture sans un
+jeton Firebase **dont il vérifie la signature** auprès de Google.
+
+Pensez à `upload_max_filesize` et `post_max_size` dans le `php.ini` de
+l'hébergement si vous attendez des vidéos : la valeur par défaut est souvent de
+2 Mo.
 
 ### `firebase` — Firebase Storage
 

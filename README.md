@@ -30,7 +30,8 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Brouillon puis publication** | Enregistrement automatique du brouillon, bouton « Publier », historique des versions et restauration. |
 | **Ne casse jamais le site** | Firebase injoignable, base vide, contenu illisible : la page s'affiche avec son HTML d'origine. Aucune exception ne remonte. |
 | **Le module reste optionnel** | À chaque publication, le fichier `.html` de l'hébergement est **réécrit avec le contenu à l'intérieur**. Le client peut supprimer le module quand il veut : son site garde tout, sans aucune manipulation. |
-| **Images sans abonnement** | Firebase Storage, ou un simple dossier sur l'hébergement du client (script PHP fourni), ou une adresse saisie à la main. |
+| **Bibliothèque média interne** | Onglet « Médias » : glisser-déposer des fichiers, ajout par adresse (une image du site, une vidéo YouTube, un MP3 hébergé ailleurs), recherche, filtres par famille — images, vidéos, audio, fichiers — copie de l'adresse et suppression. Elle alimente tous les réglages qui demandent un média. |
+| **Images sans abonnement** | Firebase Storage, ou un simple dossier sur l'hébergement du client (script PHP fourni), ou une adresse saisie à la main. Le script PHP accepte aussi l'audio et la vidéo (48 Mo), servis depuis le domaine du site. |
 
 ## Essayer en trois minutes
 
@@ -85,7 +86,7 @@ admin/                    le module (à copier tel quel sur un site)
     ├── widgets-panel.js  bibliothèque d'éléments
     ├── inspector.js      réglages de l'élément choisi
     ├── navigator.js      structure de la page
-    └── library.js        bibliothèque média
+    └── library.js        bibliothèque média (dépôt, ajout par adresse, filtres)
 
 demo/                     site de démonstration complet
 essais/domaine-lamartine/ test sur un site client réel (code brut + module)

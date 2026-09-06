@@ -125,15 +125,16 @@ export function createInspector({ vue, t, actions }) {
           oninput: (e) => ecrire(e.target.value.replace(/\n/g, '<br>')),
         }));
 
+      case 'media':
       case 'audio':
         return champ(t(f.label), h('div', { class: 'row' },
           h('input', {
-            class: 'input', type: 'text', value: valeur ?? '', placeholder: '/medias/musique.mp3',
-            onchange: (e) => ecrire({ [f.key]: e.target.value }),
+            class: 'input', type: 'text', value: valeur ?? '', placeholder: f.placeholder || '/medias/musique.mp3',
+            onchange: (e) => ecrire(e.target.value),
           }),
           h('button', {
             class: 'btn btn--icon', type: 'button', title: t('library'),
-            onclick: () => actions.pickMedia((item) => { ecrire({ [f.key]: item.url }); render(selection); }),
+            onclick: () => actions.pickMedia((item) => { ecrire(item.url); render(selection); }, f.type === 'media' ? 'video' : 'audio'),
           }, icon('folder', 13)),
         ));
 
@@ -164,7 +165,7 @@ export function createInspector({ vue, t, actions }) {
             h('button', { class: 'btn', type: 'button', onclick: () => fichier.click() }, icon('upload', 13), t('chooseFile')),
             h('button', {
               class: 'btn', type: 'button',
-              onclick: () => actions.pickMedia((item) => { adresse.value = item.url; montrer(item.url); ecrire(item.url); }),
+              onclick: () => actions.pickMedia((item) => { adresse.value = item.url; montrer(item.url); ecrire(item.url); }, 'image'),
             }, icon('folder', 13), t('library')),
           ),
           fichier, champ(t(f.label), adresse));
@@ -347,15 +348,16 @@ export function createInspector({ vue, t, actions }) {
           oninput: (e) => ecrire(e.target.value.replace(/\n/g, '<br>')),
         }));
 
+      case 'media':
       case 'audio':
         return champ(t(f.label), h('div', { class: 'row' },
           h('input', {
-            class: 'input', type: 'text', value: valeur ?? '', placeholder: '/medias/musique.mp3',
-            onchange: (e) => ecrire({ [f.key]: e.target.value }),
+            class: 'input', type: 'text', value: valeur ?? '', placeholder: f.placeholder || '/medias/musique.mp3',
+            onchange: (e) => ecrire(e.target.value),
           }),
           h('button', {
             class: 'btn btn--icon', type: 'button', title: t('library'),
-            onclick: () => actions.pickMedia((item) => { ecrire({ [f.key]: item.url }); render(selection); }),
+            onclick: () => actions.pickMedia((item) => { ecrire(item.url); render(selection); }, f.type === 'media' ? 'video' : 'audio'),
           }, icon('folder', 13)),
         ));
 
@@ -386,7 +388,7 @@ export function createInspector({ vue, t, actions }) {
             h('button', { class: 'btn', type: 'button', onclick: () => fichier.click() }, icon('upload', 13), t('chooseFile')),
             h('button', {
               class: 'btn', type: 'button',
-              onclick: () => actions.pickMedia((item) => { adresse.value = item.url; montrer(item.url); ecrire(item.url); }),
+              onclick: () => actions.pickMedia((item) => { adresse.value = item.url; montrer(item.url); ecrire(item.url); }, 'image'),
             }, icon('folder', 13), t('library')),
           ),
           fichier, champ(t(f.label), adresse));
@@ -563,7 +565,7 @@ export function createInspector({ vue, t, actions }) {
             adresse.value = item.url;
             montrer(item.url);
             actions.setContent(entry, { src: item.url });
-          }),
+          }, 'image'),
         }, icon('folder', 13), t('library')),
       ),
       progression, message, fichier,
@@ -656,7 +658,7 @@ export function createInspector({ vue, t, actions }) {
           }),
           h('button', {
             class: 'btn btn--icon', type: 'button', title: t('library'),
-            onclick: () => actions.pickMedia((item) => { ecrit(item.url); render(selection); }),
+            onclick: () => actions.pickMedia((item) => { ecrit(item.url); render(selection); }, 'image'),
           }, icon('folder', 13)),
         ));
       default:

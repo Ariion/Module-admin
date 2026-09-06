@@ -36,7 +36,8 @@
 $PROJECT_ID   = 'mon-projet-firebase';   // OBLIGATOIRE
 $MEDIA_DIR    = __DIR__ . '/medias';     // dossier de destination
 $MEDIA_URL    = '/medias';               // URL publique de ce dossier
-$MAX_BYTES    = 8 * 1024 * 1024;         // 8 Mo
+$MAX_BYTES    = 8 * 1024 * 1024;         // 8 Mo (images)
+$MAX_AV_BYTES = 48 * 1024 * 1024;        // 48 Mo (audio et vidéo)
 $ALLOWED_UIDS = [];                      // vide = tout compte du projet
 $ALLOWED_ORIGINS = [];                   // vide = même origine uniquement
 
@@ -52,6 +53,17 @@ $ALLOWED_TYPES = [
     'image/webp' => 'webp',
     'image/avif' => 'avif',
     'image/svg+xml' => 'svg',
+    // Bibliothèque média : audio, vidéo et documents servis depuis le site.
+    'audio/mpeg' => 'mp3',
+    'audio/ogg'  => 'ogg',
+    'audio/wav'  => 'wav',
+    'audio/x-wav' => 'wav',
+    'audio/mp4'  => 'm4a',
+    'video/mp4'  => 'mp4',
+    'video/webm' => 'webm',
+    'video/ogg'  => 'ogv',
+    'video/quicktime' => 'mov',
+    'application/pdf' => 'pdf',
 ];
 
 // ------------------------------------------------------------------- socle
@@ -242,9 +254,6 @@ if ($action === 'upload') {
         fail('Aucun fichier reçu.');
     }
     $upload = $_FILES['file'];
-    if ($upload['size'] > $MAX_BYTES) {
-        fail('Fichier trop volumineux.');
-    }
 
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime = (string) $finfo->file($upload['tmp_name']);
@@ -255,7 +264,15 @@ if ($action === 'upload') {
     if ($mime === 'image/svg+xml') {
         fail('Les fichiers SVG ne sont pas acceptés.');
     }
-    if (@getimagesize($upload['tmp_name']) === false) {
+
+    $estImage = str_starts_with($mime, 'image/');
+    $plafond = $estImage ? $MAX_BYTES : $MAX_AV_BYTES;
+    if ($upload['size'] > $plafond) {
+        fail('Fichier trop volumineux (maximum ' . round($plafond / 1048576) . ' Mo).');
+    }
+    // Une image doit vraiment en être une ; pour l'audio et la vidéo, le
+    // type MIME réel relevé ci-dessus fait foi.
+    if ($estImage && @getimagesize($upload['tmp_name']) === false) {
         fail('Le fichier n’est pas une image valide.');
     }
 
@@ -263,7 +280,7 @@ if ($action === 'upload') {
     $base = strtolower(preg_replace('/[^A-Za-z0-9_-]+/', '-', $base) ?? '');
     $base = trim($base, '-');
     if ($base === '') {
-        $base = 'image';
+        $base = $estImage ? 'image' : 'media';
     }
     $name = substr($base, 0, 60) . '-' . bin2hex(random_bytes(4)) . '.' . $ALLOWED_TYPES[$mime];
     $target = $MEDIA_DIR . '/' . $name;
@@ -278,6 +295,7 @@ if ($action === 'upload') {
         'path' => $name,
         'name' => $name,
         'size' => filesize($target),
+        'type' => $mime,
     ]);
 }
 

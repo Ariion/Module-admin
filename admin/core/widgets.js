@@ -110,7 +110,7 @@ export const WIDGETS = {
   video: {
     category: 'media', icon: 'video',
     defaults: () => ({ url: '' }),
-    fields: [{ key: 'url', type: 'text', label: 'videoUrl', placeholder: 'https://www.youtube.com/watch?v=…' }],
+    fields: [{ key: 'url', type: 'media', label: 'videoUrl', placeholder: 'https://www.youtube.com/watch?v=…' }],
   },
 
   audio: {
@@ -259,7 +259,17 @@ export function renderWidget(noeud, doc) {
     case 'video': {
       el = doc.createElement('div');
       const src = urlIntegration(p.url);
-      if (src) {
+      const fichierVideo = src ? '' : fichierMedia(p.url, VIDEO_EXT);
+      if (fichierVideo) {
+        // Vidéo déposée dans la bibliothèque du site : lecteur natif.
+        const lecteur = doc.createElement('video');
+        lecteur.setAttribute('controls', '');
+        lecteur.setAttribute('playsinline', '');
+        lecteur.setAttribute('preload', 'metadata');
+        lecteur.setAttribute('src', fichierVideo);
+        lecteur.style.cssText = 'width:100%;height:auto;display:block;';
+        el.appendChild(lecteur);
+      } else if (src) {
         el.style.position = 'relative';
         el.style.paddingBottom = '56.25%';
         const cadre = doc.createElement('iframe');
@@ -270,7 +280,7 @@ export function renderWidget(noeud, doc) {
         cadre.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:0;';
         el.appendChild(cadre);
       } else {
-        el.appendChild(placeholder(doc, 'Ajoutez l’adresse d’une vidéo YouTube ou Vimeo.'));
+        el.appendChild(placeholder(doc, 'Ajoutez l’adresse d’une vidéo (YouTube, Vimeo ou fichier MP4).'));
       }
       break;
     }
@@ -336,6 +346,20 @@ function placeholder(doc, texte) {
   el.textContent = texte;
   el.style.cssText = 'padding:26px;border:1px dashed currentColor;opacity:.45;text-align:center;margin:0;';
   return el;
+}
+
+const VIDEO_EXT = /\.(mp4|webm|ogv|mov|m4v)$/i;
+
+/**
+ * Adresse d'un fichier média servi tel quel (bibliothèque du site ou lien
+ * direct), par opposition à une page d'hébergeur.
+ */
+function fichierMedia(url, extensions) {
+  const valeur = String(url || '').trim();
+  if (!valeur) return '';
+  const chemin = valeur.split(/[?#]/)[0];
+  if (!extensions.test(chemin)) return '';
+  return /^https?:/i.test(valeur) || /^[/.]/.test(valeur) ? valeur : '';
 }
 
 /** N'accepte que des hébergeurs vidéo connus, en URL d'intégration. */

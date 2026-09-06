@@ -128,8 +128,17 @@ export async function startEditor(runtime) {
         addSection: (from, after) => sectionOp(from, 'add', after),
         addBlankSection: (after) => ajouterSectionVide(after),
         addTemplateSection: (id, after) => ajouterModele(id, after),
-        pickMedia: (rappel) => { shell.showView('medias'); library.pick(rappel); },
-        upload: (fichier, onProgress) => media.primary.upload(fichier, { onProgress }),
+        pickMedia: (rappel, accept) => { shell.showView('medias'); library.pick(rappel, accept); },
+        upload: async (fichier, onProgress) => {
+          // Tout ce qui est téléversé depuis un réglage rejoint la
+          // bibliothèque : le client le retrouve pour une autre page.
+          const resultat = await media.primary.upload(fichier, { onProgress });
+          try {
+            await backend.addMedia(resultat);
+            library?.charger();
+          } catch { /* index média indisponible */ }
+          return resultat;
+        },
         setWidgetProps: (key, patch) => {
           if (!model.setWidgetProps(key, patch)) return;
           markDirty();
@@ -150,7 +159,7 @@ export async function startEditor(runtime) {
 
     library = createLibrary({
       vue: vueMedias, t, backend, media,
-      onPicked: () => shell.showView('contenu'),
+      onPicked: () => shell.showView('elements'),
     });
 
     overlay = createOverlay({
