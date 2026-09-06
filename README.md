@@ -20,6 +20,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Détection automatique** | Le module analyse le DOM et repère seul les textes, images (y compris les fonds CSS), liens et blocs répétables. Rien à annoter dans le HTML. |
 | **Éditeur à panneau latéral** | Le site dans un aperçu, les réglages à gauche : contenu, structure de la page, bibliothèque média. Aperçu ordinateur / tablette / mobile. |
 | **Édition en place** | Survol = contour, clic sur un texte = édition directe, clic sur une image = panneau d'upload, clic sur un lien = champ d'adresse. |
+| **Pages du site** | Le nom de la page, en haut de l'aperçu, ouvre la liste des pages — déduite des liens du site. On y change de page, et on en crée une nouvelle, copiée sur une page existante (demande un hébergement inscriptible). |
 | **Modèles de page** | Cinq trames complètes — accueil une page, page de vente, portfolio, contact, à propos. À ajouter à la suite ou à substituer à la page. |
 | **Modèles de section** | Huit mises en page prêtes à l'emploi, proposées au moment de créer la section : trois colonnes, image et texte, appel à l'action, galerie… |
 | **Bibliothèque d'éléments** | Titre, texte, bouton, liste, image, vidéo, carte, colonnes, séparateur, espaceur — recherche, catégories, glisser-déposer dans l'aperçu. Le balisage émis est sémantique et sans classes : la feuille de style du site s'y applique d'elle-même. |
@@ -70,6 +71,7 @@ admin/                    le module (à copier tel quel sur un site)
 ├── core/templates.js     modèles de section
 ├── core/page-templates.js modèles de page entière
 ├── core/fonts.js         polices et chargement à la demande
+├── core/pages.js         découverte des pages du site
 ├── core/style.js         schéma d'habillage et CSS personnalisé
 ├── core/frame.js         chargement d'une page dans une iframe
 ├── data/host.js          dialogue avec l'hébergement (copie source, écriture)

@@ -171,6 +171,12 @@ s'accumule.
 Pour vérifier que tout est en place, ouvrez la console avec `debug: true` :
 la publication doit afficher « page réécrite » suivi d'une taille en octets.
 
+> **Ce que cette étape débloque aussi :** la **création de pages** depuis
+> l'éditeur. Le nom de la page, en haut de l'aperçu, ouvre la liste des pages
+> du site ; on y crée une page en la copiant sur une existante. Sans
+> hébergement inscriptible, la liste reste consultable mais la création est
+> indisponible.
+
 ## D. Choisir le stockage des images
 
 Trois modes, dans `admin-config.js`.

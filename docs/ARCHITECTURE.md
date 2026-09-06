@@ -201,6 +201,32 @@ Une section retirée reste listée dans l'onglet Structure avec son titre, pour
 pouvoir la remettre — sans cela le client n'aurait aucun moyen de revenir en
 arrière.
 
+### Pages du site
+
+Un site statique n'a pas d'index de ses pages. Le module en **déduit** la
+liste à partir des liens de la page affichée — menu et pied de page pointent
+en pratique vers toutes les pages. C'est une découverte, pas une vérité : une
+page liée nulle part n'apparaîtra pas.
+
+Changer de page recharge l'aperçu et son brouillon. **Créer** une page copie le
+code d'origine d'une page existante, côté serveur : la nouvelle hérite de
+l'en-tête, du pied de page et du style, sans reprendre le contenu déjà saisi.
+Cela demande donc l'hébergement inscriptible ; sans lui, le panneau le dit au
+lieu de proposer un bouton qui échouerait.
+
+### Références de section
+
+Une section est identifiée par son empreinte, qui repose sur son rang parmi
+ses frères. Dès qu'une section est retirée ou ajoutée, les rangs suivants se
+décalent : une référence calculée sur le DOM **modifié** ne retrouve plus rien
+sur le DOM d'origine, où tout est réappliqué. Chaque section porte donc sa
+référence d'origine, posée avant toute modification.
+
+Sans cela, la deuxième suppression d'une section sans `id` était bien
+enregistrée mais restait sans effet — le défaut était invisible sur une
+première suppression, et sur toute section portant un `id`, dont l'empreinte
+ne dépend pas de ses frères.
+
 ### Modèles de page et de section
 
 Cinq **trames de page** — accueil une page, page de vente, portfolio, contact,

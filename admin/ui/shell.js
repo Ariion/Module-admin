@@ -42,7 +42,8 @@ export function createShell({ root, t, config, onDevice }) {
   );
 
   // --- Scène ---------------------------------------------------------
-  const nomPage = h('span', { class: 'stage__page' });
+  const nomPage = h('button', { class: 'stage__page', type: 'button', title: t('pages') },
+    icon('pages', 13), h('span', {}, ''));
   const boutonsAppareil = h('div', { class: 'devices', role: 'group' });
   const outilsScene = h('div', { class: 'stage__bar' }, nomPage, boutonsAppareil);
   const couche = h('div', { class: 'layer' });
@@ -115,7 +116,7 @@ export function createShell({ root, t, config, onDevice }) {
     iframe = resultat.frame;
     iframe.classList.add('viewport');
     zoneFrame.append(couche, chargement);
-    nomPage.textContent = pageLisible(resultat.doc);
+    nomPage.lastElementChild.textContent = pageLisible(resultat.doc);
     chargement.style.display = 'none';
     return resultat;
   }
@@ -146,7 +147,7 @@ export function createShell({ root, t, config, onDevice }) {
     setState(noeuds) { clear(etat); etat.append(...noeuds); },
     setFootExtra(noeuds) { clear(avantEtat); avantEtat.append(...noeuds); },
     setActions(noeuds) { clear(actions); actions.append(...noeuds); },
-    setPageLabel(texte) { nomPage.textContent = texte; },
+    onPageClick(fn) { nomPage.addEventListener('click', fn); },
     translate: t,
   };
 }

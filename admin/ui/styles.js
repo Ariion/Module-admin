@@ -112,7 +112,16 @@ button, input, textarea, select { font: inherit; color: inherit; }
   height: var(--topbar); flex: none; display: flex; align-items: center; gap: 8px;
   padding: 0 12px; background: var(--bg); border-bottom: 1px solid var(--line);
 }
-.stage__page { color: var(--muted); font-size: 12px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage__page {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+  height: 30px; padding: 0 11px; cursor: pointer;
+  background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  color: var(--muted); font-size: 12px; text-align: left;
+  transition: background .14s, border-color .14s, color .14s;
+}
+.stage__page:hover { background: var(--bg-raise); border-color: var(--accent); color: var(--text); }
+.stage__page > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage__page svg { flex: none; color: var(--accent); }
 .stage__frame {
   flex: 1; min-height: 0; display: flex; justify-content: center;
   background: var(--bg-sunk); padding: 0;

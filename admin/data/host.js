@@ -69,6 +69,18 @@ export function createHost(config, backend) {
       return result;
     },
 
+    /**
+     * Crée une page en copiant le code d'origine d'une autre.
+     * La nouvelle page hérite donc de l'en-tête, du pied de page et du style
+     * du site — c'est le seul moyen d'obtenir une page cohérente sans
+     * demander au client de toucher au HTML.
+     */
+    async createPage(chemin, depuis) {
+      const result = await call('create', { path: chemin, from: depuis || pagePath });
+      debug('page créée', result.path);
+      return result;
+    },
+
     /** Diagnostic : l'hébergement répond-il et sait-il écrire ? */
     async check() {
       try {

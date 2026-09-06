@@ -21,6 +21,7 @@ import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
+import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
 import { createHost } from '../data/host.js';
 import { bakePage } from '../core/bake.js';
@@ -176,6 +177,9 @@ export async function startEditor(runtime) {
 
     // Les modèles de page vivent dans le pied du panneau : ils portent sur
     // toute la page, pas sur la sélection courante.
+    // Le nom de la page ouvre la liste des pages du site.
+    shell.onPageClick(() => ouvrirPages());
+
     shell.setFootExtra([h('button', {
       class: 'btn btn--wide btn--sect', type: 'button', style: { marginBottom: '10px' },
       onclick: () => openPageTemplates({
@@ -456,6 +460,25 @@ export async function startEditor(runtime) {
     inspector.showNewSection(ref);
   }
 
+  /** Liste des pages du site : changer de page, ou en créer une. */
+  function ouvrirPages() {
+    openPages({
+      root, t, doc: model.doc, hosting,
+      onOpen: async (url) => {
+        await autosave.flush();
+        await loadPage(url, { keepScroll: false });
+        showLibrary();
+      },
+      onCreate: async (chemin, depuis) => {
+        await hosting.createPage(chemin, depuis);
+        const base = urlCourante().replace(/[^/]*$/, '');
+        await loadPage(base + chemin, { keepScroll: false });
+        showLibrary();
+        notify(t('pageCreated'));
+      },
+    });
+  }
+
   /** Pose la trame d'une page entière. */
   async function appliquerModelePage(id, remplacer) {
     if (!model.applyPageTemplate(id, remplacer)) return;
@@ -720,6 +743,7 @@ export async function startEditor(runtime) {
       resolve({
         backend, media, hosting, teardown, render, notify,
         publish, markDirty, select, bakeIntoHost,
+        sectionOp, widgetOp, appliquerModelePage,
         get model() { return model; },
         get shell() { return shell; },
       });

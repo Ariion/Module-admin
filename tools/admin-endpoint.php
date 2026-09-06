@@ -402,4 +402,31 @@ if ($action === 'page') {
     ok(['written' => true, 'bytes' => strlen($html), 'path' => basename($paths['file'])]);
 }
 
+if ($action === 'create') {
+    currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    if (!$ALLOW_BAKE) {
+        fail('La création de pages est désactivée sur ce site.', 403);
+    }
+    $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+    $cible = resolvePagePath((string) ($body['path'] ?? ''), $SITE_ROOT);
+    $source = resolvePagePath((string) ($body['from'] ?? 'index.html'), $SITE_ROOT);
+
+    if (is_file($cible['file'])) {
+        fail('Une page porte déjà ce nom.', 409);
+    }
+    // On part de la copie du code d'origine si elle existe : la nouvelle page
+    // hérite ainsi du site tel que le développeur l'a écrit, sans le contenu
+    // déjà saisi sur la page modèle.
+    $modele = is_file($source['source']) ? $source['source'] : $source['file'];
+    if (!is_file($modele)) {
+        fail('Page modèle introuvable.', 404);
+    }
+    if (!@copy($modele, $cible['file'])) {
+        fail('Écriture impossible : vérifiez les droits du dossier.', 500);
+    }
+    @chmod($cible['file'], 0644);
+
+    ok(['created' => true, 'path' => basename($cible['file'])]);
+}
+
 fail('Action inconnue.', 404);

@@ -38,12 +38,24 @@ export function listSections(doc = document) {
   return sections;
 }
 
-/** Référence stable d'une section : son empreinte, ou sa clé si elle est ajoutée. */
+/** Attribut portant la référence d'origine d'une section (voir applySections). */
+const ATTR_REF = 'data-admin-ref';
+
+/**
+ * Référence stable d'une section.
+ *
+ * L'empreinte d'une section repose sur son rang parmi ses frères. Or dès
+ * qu'une section est retirée ou ajoutée, les rangs suivants se décalent : une
+ * référence calculée sur le DOM MODIFIÉ ne retrouverait plus rien sur le DOM
+ * d'origine, où tout est réappliqué. Chaque section conserve donc sa référence
+ * d'origine, posée avant toute modification.
+ */
 export function refOf(el) {
   const ajoutee = el.getAttribute('data-admin-section');
   if (ajoutee) return 'ins:' + ajoutee;
-  const print = fingerprint(el, 'section');
-  return print.id;
+  const origine = el.getAttribute(ATTR_REF);
+  if (origine) return origine;
+  return fingerprint(el, 'section').id;
 }
 
 /** Chemin d'une section d'origine, pour la retrouver après republication. */
@@ -82,6 +94,11 @@ export function applySections(doc, state, applyFields) {
 
   const parRef = new Map();
   for (const section of listSections(doc)) parRef.set(section.ref, section.el);
+
+  // Chaque section porte sa référence d'ORIGINE, calculée avant toute
+  // modification. Sans cela, une seconde suppression enregistrerait une
+  // référence décalée par la première, et resterait sans effet.
+  for (const [ref, el] of parRef) el.setAttribute(ATTR_REF, ref);
 
   // --- Ajouts ---------------------------------------------------------
   for (const record of data.add) {
