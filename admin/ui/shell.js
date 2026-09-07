@@ -30,10 +30,22 @@ export function createShell({ root, t, config, onDevice }) {
   const actions = h('div', { class: 'panel__actions' });
   const avantEtat = h('div', {});
 
-  const panel = h('div', { class: 'panel' },
+  // Poignée de la feuille : visible seulement en mode compact (téléphone),
+  // où le panneau glisse par-dessus l'aperçu au lieu de lui voler la moitié
+  // de l'écran.
+  const poignee = h('button', {
+    class: 'panel__grab', type: 'button', onclick: () => setSheet(!ouverte),
+  },
+    h('span', { class: 'panel__grab-label' }, t('panelTitle')),
+    h('span', { class: 'panel__grab-hint' }, config.siteId),
+    icon('down', 15),
+  );
+
+  const panel = h('div', { class: 'panel', 'data-sheet': 'closed' },
+    poignee,
     h('div', { class: 'panel__head' },
       h('span', { class: 'panel__dot' }),
-      h('span', { class: 'panel__name' }, 'Admin'),
+      h('span', { class: 'panel__name' }, t('panelTitle')),
       h('span', { class: 'panel__site' }, config.siteId),
     ),
     onglets,
@@ -74,6 +86,22 @@ export function createShell({ root, t, config, onDevice }) {
     onDevice?.(cle);
   }
 
+  // --- Feuille (mode compact) -----------------------------------------
+  let ouverte = false;
+  const compact = () => root.ownerDocument.defaultView
+    .matchMedia('(max-width: 860px)').matches;
+
+  /** Ouvre ou referme la feuille. Sans effet sur grand écran. */
+  function setSheet(etatOuvert) {
+    ouverte = etatOuvert;
+    panel.setAttribute('data-sheet', ouverte ? 'open' : 'closed');
+  }
+
+  // Toucher l'aperçu referme la feuille : on veut revoir la page.
+  outilsScene.addEventListener('click', (e) => {
+    if (compact() && ouverte && e.target === outilsScene) setSheet(false);
+  });
+
   // --- Onglets --------------------------------------------------------
   function addView(id, label, nomIcone) {
     const vue = h('div', { class: 'view', id: 'vue-' + id, role: 'tabpanel' });
@@ -85,12 +113,16 @@ export function createShell({ root, t, config, onDevice }) {
     onglets.appendChild(onglet);
     conteneurVues.appendChild(vue);
     vues.set(id, { vue, onglet });
-    if (!vueActive) showView(id);
+    // Première vue : on l'active sans déplier la feuille — au démarrage, le
+    // client doit voir son site, pas un panneau qui le recouvre.
+    if (!vueActive) showView(id, { reveal: false });
     return vue;
   }
 
-  function showView(id) {
+  function showView(id, { reveal = true } = {}) {
     vueActive = id;
+    // Sur téléphone, demander une vue veut dire vouloir la voir.
+    if (reveal && compact()) setSheet(true);
     for (const [cle, { vue, onglet }] of vues) {
       const actif = cle === id;
       vue.classList.toggle('view--on', actif);
@@ -147,6 +179,7 @@ export function createShell({ root, t, config, onDevice }) {
     setState(noeuds) { clear(etat); etat.append(...noeuds); },
     setFootExtra(noeuds) { clear(avantEtat); avantEtat.append(...noeuds); },
     setActions(noeuds) { clear(actions); actions.append(...noeuds); },
+    setSheet, isCompact: compact,
     onPageClick(fn) { nomPage.addEventListener('click', fn); },
     translate: t,
   };

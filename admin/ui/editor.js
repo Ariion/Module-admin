@@ -387,6 +387,9 @@ export async function startEditor(runtime) {
     textEditor.commit();
     overlay.setActive(sel.el);
     if (options.reveal) overlay.reveal(sel.el);
+    // Sur téléphone, le panneau va recouvrir le bas de l'écran : on remonte
+    // l'élément choisi dans la bande qui reste visible.
+    else if (shell.isCompact()) overlay.reveal(sel.el, 'start');
     showInspector();
 
     const section = model.sectionList().find((x) => x.el === sel.el) || null;

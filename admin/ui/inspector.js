@@ -31,12 +31,11 @@ export function createInspector({ vue, t, actions }) {
 
     const { entry, collection, itemIndex, el } = selection;
 
-    vue.appendChild(h('div', { class: 'field', style: { marginBottom: '4px' } },
-      h('span', { class: 'field__label' }, t('selection')),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '7px' } },
-        icon(entry ? iconeDe(entry.role) : 'section', 13),
-        h('strong', {}, entry ? t(TITRES[entry.role] || 'text') : t('container')),
-        h('span', { class: 'hint', style: { margin: '0' } }, '<' + el.tagName.toLowerCase() + '>'),
+    vue.appendChild(h('div', { class: 'sel' },
+      h('span', { class: 'sel__icon' }, icon(entry ? iconeDe(entry.role) : 'section', 15)),
+      h('div', { class: 'sel__main' },
+        h('div', { class: 'sel__title' }, entry ? t(TITRES[entry.role] || 'text') : t('container')),
+        h('div', { class: 'sel__meta' }, '<' + el.tagName.toLowerCase() + '>'),
       ),
     ));
 
@@ -46,178 +45,6 @@ export function createInspector({ vue, t, actions }) {
     if (selection.section) {
       vue.appendChild(groupe(t('sectionGroup'), 'section', () => champsSection(selection.section), !entry, true));
     }
-  }
-
-  // ------------------------------------------------------------ widgets
-  /** Réglages d'un widget, décrits par son entrée du catalogue. */
-  function renderWidgetFields(noeud) {
-    const def = WIDGETS[noeud.type];
-    if (!def) { vue.appendChild(h('p', { class: 'empty' }, t('selectHint'))); return; }
-
-    vue.appendChild(h('div', { class: 'field', style: { marginBottom: '4px' } },
-      h('span', { class: 'field__label' }, t('selection')),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '7px' } },
-        icon(def.icon, 13), h('strong', {}, t('w_' + noeud.type)),
-      ),
-    ));
-
-    if (def.fields.length) {
-      vue.appendChild(groupe(t('content'), def.icon, () => def.fields.map((f) => champWidget(noeud, f)), true));
-    }
-    for (const bloc of champsStyleWidget(noeud)) vue.appendChild(bloc);
-
-    vue.appendChild(h('div', { class: 'row', style: { marginTop: '4px' } },
-      h('button', {
-        class: 'btn', type: 'button',
-        onclick: () => actions.widgetOp(noeud.key, 'move', -1),
-      }, icon('up', 13), t('moveUp')),
-      h('button', {
-        class: 'btn', type: 'button',
-        onclick: () => actions.widgetOp(noeud.key, 'move', 1),
-      }, icon('down', 13), t('moveDown')),
-    ));
-    vue.appendChild(h('button', {
-      class: 'btn btn--wide btn--danger', type: 'button', style: { marginTop: '7px' },
-      onclick: () => actions.widgetOp(noeud.key, 'remove'),
-    }, icon('trash', 13), t('remove')));
-  }
-
-  function champWidget(noeud, f) {
-    const valeur = noeud.props[f.key];
-    const ecrire = (v) => actions.setWidgetProps(noeud.key, { [f.key]: v });
-
-    switch (f.type) {
-      case 'select':
-        return champ(t(f.label), h('select', {
-          class: 'input', onchange: (e) => ecrire(e.target.value),
-        }, f.options.map((o) => h('option', { value: o, selected: String(o) === String(valeur) }, String(o)))));
-
-      case 'number':
-        return champ(t(f.label), h('input', {
-          class: 'input', type: 'number', value: valeur ?? '',
-          min: f.min, max: f.max, step: f.step,
-          oninput: (e) => ecrire(Number(e.target.value)),
-        }));
-
-      case 'checkbox':
-        return h('label', { class: 'check' },
-          h('input', {
-            type: 'checkbox', checked: valeur === f.on,
-            onchange: (e) => ecrire(e.target.checked ? f.on : ''),
-          }), t(f.label));
-
-      case 'align':
-        return champ(t(f.label), h('div', { class: 'seg' },
-          ['left', 'center', 'right'].map((a) => h('button', {
-            class: 'seg__btn', type: 'button', 'aria-pressed': valeur === a ? 'true' : 'false',
-            onclick: () => { ecrire(a); render(selection); },
-          }, t('align_' + a)))));
-
-      case 'lines':
-        return champ(t(f.label), h('textarea', {
-          class: 'textarea', value: valeur ?? '',
-          oninput: (e) => ecrire(e.target.value),
-        }));
-
-      case 'richtext':
-        return champ(t(f.label), h('textarea', {
-          class: 'textarea', value: String(valeur ?? '').replace(/<br\s*\/?>/gi, '\n'),
-          oninput: (e) => ecrire(e.target.value.replace(/\n/g, '<br>')),
-        }));
-
-      case 'media':
-      case 'audio':
-        return champ(t(f.label), h('div', { class: 'row' },
-          h('input', {
-            class: 'input', type: 'text', value: valeur ?? '', placeholder: f.placeholder || '/medias/musique.mp3',
-            onchange: (e) => ecrire(e.target.value),
-          }),
-          h('button', {
-            class: 'btn btn--icon', type: 'button', title: t('library'),
-            onclick: () => actions.pickMedia((item) => { ecrire(item.url); render(selection); }, f.type === 'media' ? 'video' : 'audio'),
-          }, icon('folder', 13)),
-        ));
-
-      case 'image': {
-        const image = h('img', { alt: '' });
-        const apercu = h('div', { class: 'preview' }, image);
-        const montrer = (src) => {
-          const sur = safeImageUrl(src);
-          if (sur) image.setAttribute('src', sur); else image.removeAttribute('src');
-        };
-        montrer(valeur);
-        const adresse = h('input', {
-          class: 'input', type: 'text', value: valeur ?? '', placeholder: '/images/photo.jpg',
-          onchange: (e) => { montrer(e.target.value); ecrire(e.target.value); },
-        });
-        const fichier = h('input', {
-          type: 'file', accept: 'image/*', style: { display: 'none' },
-          onchange: async (e) => {
-            const f2 = e.target.files?.[0];
-            e.target.value = '';
-            if (!f2) return;
-            const r = await actions.upload(f2);
-            adresse.value = r.url; montrer(r.url); ecrire(r.url);
-          },
-        });
-        return h('div', {}, apercu,
-          h('div', { class: 'row', style: { marginBottom: '11px' } },
-            h('button', { class: 'btn', type: 'button', onclick: () => fichier.click() }, icon('upload', 13), t('chooseFile')),
-            h('button', {
-              class: 'btn', type: 'button',
-              onclick: () => actions.pickMedia((item) => { adresse.value = item.url; montrer(item.url); ecrire(item.url); }, 'image'),
-            }, icon('folder', 13), t('library')),
-          ),
-          fichier, champ(t(f.label), adresse));
-      }
-
-      default:
-        return champ(t(f.label), h('input', {
-          class: 'input', type: 'text', value: valeur ?? '', placeholder: f.placeholder || '',
-          oninput: (e) => ecrire(e.target.value),
-        }));
-    }
-  }
-
-  /** Habillage d'un widget : même panneau, stocké dans ses propriétés. */
-  function champsStyleWidget(noeud) {
-    return panneauStyle(
-      () => {
-        const el = actions.widgetElement?.(noeud.key);
-        const effectifs = el ? readStyleValues(el) : {};
-        return { ...effectifs, ...(noeud.props.style || {}) };
-      },
-      (patch) => actions.setWidgetProps(noeud.key, { style: patch }),
-    );
-  }
-
-  // ---------------------------------------------------------- structure
-  function champsSection(section) {
-    const index = actions.sectionIndex(section.ref);
-    const total = actions.sectionCount();
-    const bouton = (nomIcone, libelle, op, ...args) => h('button', {
-      class: 'btn', type: 'button',
-      onclick: () => actions.sectionOp(section.ref, op, ...args),
-    }, icon(nomIcone, 13), libelle);
-
-    return [
-      h('p', { class: 'hint', style: { marginTop: '0' } }, t('sectionPosition', index + 1, total)),
-      h('div', { class: 'row', style: { marginTop: '10px' } },
-        bouton('up', t('moveUp'), 'move', index, index - 1),
-        bouton('down', t('moveDown'), 'move', index, index + 1),
-      ),
-      h('div', { class: 'row', style: { marginTop: '7px' } },
-        bouton('copy', t('duplicate'), 'duplicate'),
-        h('button', {
-          class: 'btn btn--danger', type: 'button',
-          onclick: () => { if (confirm(t('hideSectionConfirm'))) actions.sectionOp(section.ref, 'hide'); },
-        }, icon('trash', 13), t('hideSection')),
-      ),
-      h('button', {
-        class: 'btn btn--wide btn--sect', type: 'button', style: { marginTop: '9px' },
-        onclick: () => showNewSection(section.ref),
-      }, icon('plus', 13), t('addSectionAfter')),
-    ];
   }
 
   /**
@@ -277,10 +104,11 @@ export function createInspector({ vue, t, actions }) {
     const def = WIDGETS[noeud.type];
     if (!def) { vue.appendChild(h('p', { class: 'empty' }, t('selectHint'))); return; }
 
-    vue.appendChild(h('div', { class: 'field', style: { marginBottom: '4px' } },
-      h('span', { class: 'field__label' }, t('selection')),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: '7px' } },
-        icon(def.icon, 13), h('strong', {}, t('w_' + noeud.type)),
+    vue.appendChild(h('div', { class: 'sel' },
+      h('span', { class: 'sel__icon' }, icon(def.icon, 15)),
+      h('div', { class: 'sel__main' },
+        h('div', { class: 'sel__title' }, t('w_' + noeud.type)),
+        h('div', { class: 'sel__meta' }, t('selection')),
       ),
     ));
 

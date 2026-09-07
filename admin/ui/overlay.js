@@ -529,9 +529,9 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     get sections() { return sections; },
     setActive(el) { selectionne = el || null; placer(cadreActif, selectionne); },
     /** Fait défiler l'aperçu jusqu'à un élément et le met en évidence. */
-    reveal(el) {
+    reveal(el, block = 'center') {
       if (!el || !el.isConnected) return;
-      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      el.scrollIntoView({ block, behavior: 'smooth' });
       // Le défilement est animé : on repositionne pendant et après, sinon
       // les contours et les zones de dépôt resteraient à l'ancienne place.
       const debut = Date.now();
