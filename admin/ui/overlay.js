@@ -384,6 +384,9 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
 
   const surClic = (event) => {
     if (!actif) return;
+    // Ce qui appartient au module dans l'aperçu — la fenêtre d'un appel à
+    // l'action qu'on prévisualise — garde ses propres commandes.
+    if (event.target.closest?.('[data-admin-ui]')) return;
     const widget = widgetSous(event.target);
     if (widget) {
       event.preventDefault();

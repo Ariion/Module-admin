@@ -15,6 +15,7 @@ import { PageModel } from './core/model.js';
 import { getDocument } from './data/rest.js';
 import { paths } from './data/schema.js';
 import { setDebug, debug, safe } from './core/log.js';
+import { actionsDe, attacherActions } from './core/actions.js';
 import { ready, emitter } from './core/util.js';
 
 const EDITOR_SESSION_KEY = 'admin:editing';
@@ -78,6 +79,12 @@ class AdminRuntime {
   apply(snapshot, origin) {
     if (!hasContent(snapshot)) return null;
     const result = this.getModel().applySnapshot(snapshot);
+    // Les appels à l'action qui ouvrent une fenêtre : on rebranche à chaque
+    // application, les éléments ayant pu être reconstruits.
+    safe(() => {
+      this.detacherActions?.();
+      this.detacherActions = attacherActions(document, actionsDe(this.model));
+    }, null, 'actions');
     this.snapshot = snapshot;
     debug('contenu appliqué depuis', origin, result);
     this.events.emit('applied', { snapshot, origin, ...result });

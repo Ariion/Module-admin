@@ -22,6 +22,7 @@ import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
 import { openWizard } from './wizard.js';
+import { ouvrirAction } from '../core/actions.js';
 import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
 import { createHost } from '../data/host.js';
@@ -130,6 +131,8 @@ export async function startEditor(runtime) {
         addBlankSection: (after) => ajouterSectionVide(after),
         addTemplateSection: (id, after) => ajouterModele(id, after),
         pickMedia: (rappel, accept) => { shell.showView('medias'); library.pick(rappel, accept); },
+        // Voir la fenêtre telle que le visiteur la verra, dans l'aperçu.
+        previewAction: (action) => ouvrirAction(model.doc, action),
         upload: async (fichier, onProgress) => {
           // Tout ce qui est téléversé depuis un réglage rejoint la
           // bibliothèque : le client le retrouve pour une autre page.

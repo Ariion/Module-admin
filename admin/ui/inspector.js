@@ -10,9 +10,10 @@
 import { h, icon, clear } from './el.js';
 import { safeImageUrl } from '../core/sanitize.js';
 import { WIDGETS } from '../core/widgets.js';
+import { TYPES_ACTION, MODELES_ACTION, normaliserAction, actionActive } from '../core/actions.js';
 import { STYLE_FIELDS, STYLE_GROUPS, readStyleValues } from '../core/style.js';
 import { TEMPLATES } from '../core/templates.js';
-import { FONTS } from '../core/fonts.js';
+import { FONTS, GROUPES_POLICE } from '../core/fonts.js';
 
 const TITRES = { text: 'text', link: 'link', image: 'image', background: 'background' };
 
@@ -114,6 +115,14 @@ export function createInspector({ vue, t, actions }) {
 
     if (def.fields.length) {
       vue.appendChild(groupe(t('content'), def.icon, () => def.fields.map((f) => champWidget(noeud, f)), true));
+    }
+    // Un bouton inséré peut, lui aussi, ouvrir une fenêtre plutôt que partir.
+    if (noeud.type === 'button') {
+      vue.appendChild(groupe(t('actionGroup'), 'grid',
+        () => champsAction(
+          () => noeud.props.action,
+          (action) => actions.setWidgetProps(noeud.key, { action })),
+        actionActive(normaliserAction(noeud.props.action))));
     }
     for (const bloc of champsStyleWidget(noeud)) vue.appendChild(bloc);
 
@@ -331,7 +340,119 @@ export function createInspector({ vue, t, actions }) {
         t('linkTarget'),
       ),
       boutonRevert(() => actions.revertContent(entry)),
+      groupe(t('actionGroup'), 'grid',
+        () => champsAction(() => valeur.action, (action) => actions.setContent(entry, { action })),
+        actionActive(normaliserAction(valeur.action))),
     ];
+  }
+
+  /**
+   * Réglages d'un appel à l'action : ce qui se passe au clic.
+   *
+   * Le lien reste renseigné quoi qu'il arrive — c'est le repli quand le
+   * module n'est pas là — et la fenêtre vient par-dessus.
+   *
+   * @param {Function} lire renvoie l'action courante
+   * @param {Function} ecrire reçoit l'action complète à enregistrer
+   */
+  function champsAction(lire, ecrire) {
+    const action = normaliserAction(lire());
+    const maj = (patch) => { ecrire(normaliserAction({ ...action, ...patch })); render(selection); };
+
+    const blocs = [
+      champ(t('actionType'), h('select', {
+        class: 'input', onchange: (e) => maj({ type: e.target.value }),
+      }, TYPES_ACTION.map((type) => h('option', {
+        value: type, selected: type === action.type,
+      }, t('actionType_' + type))))),
+    ];
+
+    if (!actionActive(action)) {
+      blocs.push(h('p', { class: 'hint', style: { marginTop: '0' } }, t('actionHintLien')));
+      return blocs;
+    }
+
+    blocs.push(
+      h('p', { class: 'hint', style: { marginTop: '0' } }, t('actionHintFenetre')),
+      champ(t('actionModele'), h('div', { class: 'assist__coches' }, MODELES_ACTION.map((modele) => h('button', {
+        class: 'tpl', type: 'button',
+        style: modele.id === action.modele ? { borderColor: 'var(--accent)' } : null,
+        onclick: () => maj({ modele: modele.id, ...modele.contenu() }),
+      },
+        h('span', { class: 'tpl__label' },
+          h('strong', {}, t('actionModele_' + modele.id)),
+          h('span', { class: 'assist__cocheAide', style: { display: 'block' } },
+            t('actionModele_' + modele.id + '_aide')),
+        ),
+      )))),
+
+      champ(t('actionTitre'), h('input', {
+        class: 'input', type: 'text', value: action.titre,
+        onchange: (e) => ecrire(normaliserAction({ ...action, titre: e.target.value })),
+      })),
+      champ(t('actionTexte'), h('textarea', {
+        class: 'textarea', value: String(action.texte).replace(/<br\s*\/?>/gi, '\n'),
+        oninput: (e) => ecrire(normaliserAction({ ...action, texte: e.target.value.replace(/\n/g, '<br>') })),
+      })),
+      champ(t('actionImage'), h('div', { class: 'row' },
+        h('input', {
+          class: 'input', type: 'text', value: action.image, placeholder: t('noImage'),
+          onchange: (e) => ecrire(normaliserAction({ ...action, image: e.target.value })),
+        }),
+        h('button', {
+          class: 'btn btn--icon', type: 'button', title: t('library'),
+          onclick: () => actions.pickMedia((item) => maj({ image: item.url }), 'image'),
+        }, icon('folder', 13)),
+      )),
+      champ(t('actionIntegration'), h('input', {
+        class: 'input', type: 'text', value: action.integration,
+        placeholder: 'https://… (réservation, formulaire, carte, vidéo)',
+        onchange: (e) => ecrire(normaliserAction({ ...action, integration: e.target.value })),
+      })),
+      h('p', { class: 'hint', style: { marginTop: '-6px' } }, t('actionIntegrationHint')),
+    );
+
+    // Les boutons de la fenêtre.
+    const liste = h('div', {});
+    action.boutons.forEach((b, index) => {
+      const ecrireBouton = (patch) => {
+        const boutons = action.boutons.map((x, i) => (i === index ? { ...x, ...patch } : x));
+        ecrire(normaliserAction({ ...action, boutons }));
+      };
+      liste.appendChild(h('div', { class: 'row', style: { marginBottom: '7px' } },
+        h('input', {
+          class: 'input', type: 'text', value: b.texte, placeholder: t('actionBoutonTexte'),
+          onchange: (e) => ecrireBouton({ texte: e.target.value }),
+        }),
+        h('input', {
+          class: 'input', type: 'text', value: b.href, placeholder: 'https://…',
+          onchange: (e) => ecrireBouton({ href: e.target.value }),
+        }),
+        h('button', {
+          class: 'btn btn--icon btn--danger', type: 'button', title: t('remove'),
+          onclick: () => maj({ boutons: action.boutons.filter((x, i) => i !== index) }),
+        }, icon('trash', 12)),
+      ));
+    });
+    if (action.boutons.length < 4) {
+      liste.appendChild(h('button', {
+        class: 'btn btn--wide', type: 'button',
+        onclick: () => maj({ boutons: [...action.boutons, { texte: t('actionBoutonNouveau'), href: '' }] }),
+      }, icon('plus', 13), t('actionAjouterBouton')));
+    }
+    blocs.push(champ(t('actionBoutons'), liste));
+
+    blocs.push(champ(t('actionLargeur'), h('input', {
+      class: 'input', type: 'number', min: 280, max: 1200, step: 20, value: action.largeur,
+      onchange: (e) => ecrire(normaliserAction({ ...action, largeur: e.target.value })),
+    })));
+
+    blocs.push(h('button', {
+      class: 'btn btn--wide btn--primary', type: 'button', style: { marginTop: '4px' },
+      onclick: () => actions.previewAction(action),
+    }, icon('eye', 13), t('actionApercu')));
+
+    return blocs;
   }
 
   function champsImage(entry, valeur) {
@@ -461,10 +582,13 @@ export function createInspector({ vue, t, actions }) {
           class: 'input', onchange: (e) => { ecrit(e.target.value); render(selection); },
         }, [
           h('option', { value: '', selected: !valeur }, t('siteFont')),
-          ...FONTS.map((police) => h('option', {
-            value: police.name, selected: police.name === valeur,
-            style: { fontFamily: `"${police.name}", ${police.stack}` },
-          }, police.name)),
+          // Rangées par famille : à plus de quarante entrées, une liste à
+          // plat ne se parcourt plus.
+          ...GROUPES_POLICE.map((groupe) => h('optgroup', { label: t('fontGroup_' + groupe) },
+            FONTS.filter((police) => police.groupe === groupe).map((police) => h('option', {
+              value: police.name, selected: police.name === valeur,
+              style: { fontFamily: `"${police.name}", ${police.stack}` },
+            }, police.name)))),
         ]));
       case 'select':
         return champ(t(f.label), h('select', {
