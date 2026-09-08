@@ -72,6 +72,10 @@ export const DEFAULTS = {
     maxHeight: 1920,
     quality: 0.82,
     format: 'auto',
+    /** Clé d'API Pixabay, pour la banque d'images libres de droits. */
+    pixabay: '',
+    /** Point d'entrée de la banque, surchargeable pour les essais. */
+    banqueUrl: '',
   },
 
   /** Appelée après chaque application de contenu : réinitialiser un slider… */

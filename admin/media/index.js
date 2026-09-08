@@ -9,6 +9,7 @@
 import { createFirebaseStorageAdapter } from './firebase-storage.js';
 import { createEndpointAdapter } from './endpoint.js';
 import { createUrlAdapter } from './url.js';
+import { createBanque } from './banque.js';
 
 /**
  * @param {object} config configuration du site
@@ -28,5 +29,5 @@ export function createMedia(config, backend) {
   adapters.push(createUrlAdapter());
 
   const primary = adapters.find((a) => a.id === requested) || adapters[0];
-  return { primary, adapters };
+  return { primary, adapters, banque: createBanque(config, backend) };
 }

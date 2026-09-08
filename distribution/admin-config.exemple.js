@@ -33,7 +33,15 @@ window.ADMIN_CONFIG = {
   // 'endpoint' → dossier du site, via admin-endpoint.php (aucun abonnement)
   // 'firebase' → Firebase Storage (demande le plan Blaze)
   // 'url'      → aucun téléversement : la bibliothèque se remplit par adresse
-  media: { adapter: 'endpoint', endpoint: '/admin-endpoint.php' },
+  media: {
+    adapter: 'endpoint',
+    endpoint: '/admin-endpoint.php',
+
+    // Banque d'images libres de droits dans l'onglet Médias. La clé est
+    // gratuite : compte sur pixabay.com, puis pixabay.com/api/docs/.
+    // Sans elle, l'onglet explique la marche à suivre.
+    pixabay: '',
+  },
 
   // ------------------------------------------------- réécriture du HTML
   // Chaque publication réécrit le fichier .html du site avec le contenu à

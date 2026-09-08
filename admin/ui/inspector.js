@@ -541,7 +541,10 @@ export function createInspector({ vue, t, actions }) {
       const champs = STYLE_FIELDS.filter((f) => f.group === nom);
       if (!champs.length) continue;
       groupes.push(groupe(t('grp_' + nom), iconeGroupe(nom),
-        () => champs.map((f) => champStyle(f, valeurs[f.key], ecrire)),
+        () => [
+          nom === 'place' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('placeHint')) : null,
+          ...champs.map((f) => champStyle(f, valeurs[f.key], ecrire)),
+        ],
         nom === 'colors' ? ouvertPremier !== false : false));
     }
 
@@ -569,7 +572,7 @@ export function createInspector({ vue, t, actions }) {
   }
 
   function iconeGroupe(nom) {
-    return { colors: 'palette', type: 'heading', space: 'spacer', border: 'section' }[nom] || 'palette';
+    return { colors: 'palette', type: 'heading', space: 'spacer', border: 'section', place: 'drag' }[nom] || 'palette';
   }
 
   function champStyle(f, valeur, ecrire) {
@@ -623,6 +626,7 @@ export function createInspector({ vue, t, actions }) {
   }
 
   function etiquetteOption(o) {
+    if (['gauche', 'centre', 'droite'].includes(o)) return t('placement_' + o);
     const court = String(o);
     return court.length > 22 ? t('shadowPreset') : court;
   }

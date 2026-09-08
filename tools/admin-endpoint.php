@@ -46,6 +46,13 @@ $ALLOW_BAKE   = true;                    // autoriser la réécriture des .html
 $MAX_HTML     = 4 * 1024 * 1024;         // 4 Mo par page
 $BAKED_MARKER = 'name="admin-baked"';    // marque une page déjà régénérée
 
+// Hôtes d'où l'on accepte de rapatrier une image (action=import). Tout le
+// reste est refusé : ce script ne doit pas devenir un aspirateur à URL.
+$IMPORT_HOSTS = [
+    'pixabay.com',
+    'cdn.pixabay.com',
+];
+
 $ALLOWED_TYPES = [
     'image/jpeg' => 'jpg',
     'image/png'  => 'png',
@@ -295,6 +302,66 @@ if ($action === 'upload') {
         'path' => $name,
         'name' => $name,
         'size' => filesize($target),
+        'type' => $mime,
+    ]);
+}
+
+if ($action === 'import') {
+    currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    $entree = json_decode((string) file_get_contents('php://input'), true);
+    $source = is_array($entree) ? (string) ($entree['url'] ?? '') : '';
+
+    $parties = parse_url($source);
+    if (!$parties || ($parties['scheme'] ?? '') !== 'https' || empty($parties['host'])) {
+        fail('Adresse invalide.');
+    }
+    $hote = strtolower($parties['host']);
+    $autorise = false;
+    foreach ($IMPORT_HOSTS as $permis) {
+        if ($hote === $permis || str_ends_with($hote, '.' . $permis)) {
+            $autorise = true;
+            break;
+        }
+    }
+    if (!$autorise) {
+        fail('Cet hébergeur d’images n’est pas autorisé : ' . $hote);
+    }
+
+    $brut = @file_get_contents($source, false, stream_context_create([
+        'http' => ['timeout' => 15, 'follow_location' => 0,
+                   'header' => "User-Agent: module-admin\r\n"],
+        'ssl'  => ['verify_peer' => true, 'verify_peer_name' => true],
+    ]));
+    if ($brut === false || $brut === '') {
+        fail('Image introuvable chez ' . $hote, 502);
+    }
+    if (strlen($brut) > $MAX_BYTES) {
+        fail('Image trop volumineuse.');
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = (string) $finfo->buffer($brut);
+    if (!isset($ALLOWED_TYPES[$mime]) || !str_starts_with($mime, 'image/') || $mime === 'image/svg+xml') {
+        fail('Type de fichier refusé : ' . $mime);
+    }
+
+    $base = strtolower(preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) ($entree['name'] ?? 'image')) ?? '');
+    $base = trim($base, '-');
+    if ($base === '') {
+        $base = 'image';
+    }
+    $name = substr($base, 0, 60) . '-' . bin2hex(random_bytes(4)) . '.' . $ALLOWED_TYPES[$mime];
+    $target = $MEDIA_DIR . '/' . $name;
+    if (@file_put_contents($target, $brut) === false) {
+        fail('Écriture impossible : vérifiez les droits du dossier.', 500);
+    }
+    @chmod($target, 0644);
+
+    ok([
+        'url'  => rtrim($MEDIA_URL, '/') . '/' . rawurlencode($name),
+        'path' => $name,
+        'name' => $name,
+        'size' => strlen($brut),
         'type' => $mime,
     ]);
 }

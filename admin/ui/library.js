@@ -69,6 +69,10 @@ function nomDeplie(url) {
 }
 
 export function createLibrary({ vue, t, backend, media, onPicked }) {
+  const banque = media.banque;
+  let source = 'site';        // 'site' = la bibliothèque du client, 'banque' = les images libres
+  let resultats = [];
+  let chercheEnCours = false;
   let enAttente = null;
   let attendu = null;      // famille demandée par le réglage qui a ouvert la sélection
   let elements = [];
@@ -125,16 +129,41 @@ export function createLibrary({ vue, t, backend, media, onPicked }) {
   const message = h('p', { class: 'hint', style: { marginTop: '0' } });
   const grille = h('div', { class: 'grid' });
 
+  // Bascule entre la bibliothèque du site et la banque d'images libres.
+  const sources = h('div', { class: 'seg', style: { marginBottom: '10px' } },
+    ['site', 'banque'].map((id) => h('button', {
+      class: 'seg__btn', type: 'button', 'aria-pressed': id === source ? 'true' : 'false',
+      onclick: () => { source = id; dessiner(); },
+    }, t(id === 'site' ? 'sourceSite' : 'sourceBanque'))));
+
+  // Ce qui n'appartient qu'à la bibliothèque du site.
+  const blocSite = h('div', {}, zone, formulaireUrl);
+
+  const champBanque = h('input', {
+    class: 'input', type: 'search', placeholder: t('banquePlaceholder'),
+    onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); chercherBanque(); } },
+  });
+  const blocBanque = h('div', { hidden: true },
+    h('div', { class: 'row', style: { marginBottom: '9px' } },
+      champBanque,
+      h('button', { class: 'btn ml-add', type: 'button', onclick: () => chercherBanque() },
+        icon('search', 13), t('banqueChercher')),
+    ),
+    h('p', { class: 'hint', style: { margin: '0 0 10px' } }, t('banqueHint')),
+  );
+
   vue.append(
     barrePick,
+    sources,
     h('div', { class: 'row', style: { marginBottom: '9px' } }, champRecherche),
     filtres,
-    zone,
-    formulaireUrl,
+    blocSite,
+    blocBanque,
     message,
     grille,
     fichier,
   );
+  if (!banque) sources.remove();
 
   brancherDepot();
 
@@ -220,6 +249,42 @@ export function createLibrary({ vue, t, backend, media, onPicked }) {
     }
   }
 
+  async function chercherBanque() {
+    if (!banque?.disponible || chercheEnCours) return;
+    const requete = champBanque.value.trim();
+    if (!requete) return;
+    chercheEnCours = true;
+    message.textContent = t('banqueRecherche');
+    try {
+      const { images, total } = await banque.chercher(requete);
+      resultats = images;
+      message.textContent = images.length ? t('banqueResultats', total) : t('banqueRien');
+    } catch (err) {
+      resultats = [];
+      message.textContent = err.message || String(err);
+    } finally {
+      chercheEnCours = false;
+      dessiner();
+    }
+  }
+
+  /** Range une image de la banque dans la bibliothèque du site. */
+  async function prendreDansBanque(image) {
+    message.textContent = t('banqueImport');
+    try {
+      const item = await banque.importer(image);
+      await backend.addMedia(item);
+      await charger();
+      message.textContent = banque.peutImporter ? t('banqueImporte') : t('banqueLie');
+      if (enAttente) {
+        source = 'site';
+        choisir({ ...item, url: safeImageUrl(item.url) || item.url });
+      }
+    } catch (err) {
+      message.textContent = err.message || String(err);
+    }
+  }
+
   async function supprimer(item) {
     if (!confirm(t('deleteMediaConfirm'))) return;
     try {
@@ -293,13 +358,46 @@ export function createLibrary({ vue, t, backend, media, onPicked }) {
       );
     }
 
+    const dansBanque = source === 'banque' && banque;
+    blocSite.hidden = dansBanque;
+    blocBanque.hidden = !dansBanque;
+    champRecherche.parentElement.hidden = dansBanque;
+    filtres.hidden = dansBanque;
+    for (const bouton of sources.children) {
+      bouton.setAttribute('aria-pressed', bouton.textContent === t(source === 'site' ? 'sourceSite' : 'sourceBanque') ? 'true' : 'false');
+    }
+
+    clear(grille);
+
+    if (dansBanque) {
+      if (!banque.disponible) {
+        message.textContent = '';
+        grille.appendChild(h('p', { class: 'hint', style: { gridColumn: '1 / -1', margin: '0' } },
+          t('banqueSansCle')));
+        return;
+      }
+      for (const image of resultats) grille.appendChild(tuileBanque(image));
+      return;
+    }
+
     const liste = visibles();
     if (!elements.length) message.textContent = t('emptyLibrary');
     else if (!liste.length) message.textContent = t('noMatch');
     else if (message.textContent === '…') message.textContent = '';
 
-    clear(grille);
     for (const item of liste) grille.appendChild(tuile(item));
+  }
+
+  /** Une image de la banque : un clic la range dans la bibliothèque. */
+  function tuileBanque(image) {
+    return h('div', { class: 'tile', title: image.etiquettes },
+      h('button', {
+        class: 'tile__pick', type: 'button', onclick: () => prendreDansBanque(image),
+      },
+        h('img', { src: image.apercu, alt: '', loading: 'lazy' }),
+        h('div', { class: 'tile__name' }, image.auteur ? '© ' + image.auteur : image.etiquettes),
+      ),
+    );
   }
 
   function tuile(item) {

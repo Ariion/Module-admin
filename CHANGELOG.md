@@ -1,5 +1,26 @@
 # Journal des versions
 
+## 1.1.0
+
+**Appels à l'action**
+- Un bouton ou un lien peut ouvrir une fenêtre au lieu de quitter la page :
+  au centre, à droite, à gauche, en bas, en plein écran.
+- Six modèles de remplissage — réservation, contact, horaires, carte, vidéo,
+  libre — posent un titre, un texte et des boutons déjà écrits.
+- La fenêtre accepte une image, jusqu'à quatre boutons, une largeur, et un
+  contenu intégré : module de réservation, formulaire, plan, vidéo.
+- Le `href` reste renseigné : sans le module, le clic repart vers l'adresse.
+
+**Habillage**
+- 48 familles de polices, rangées par nature dans le panneau.
+- Style de contour, opacité.
+- Placement libre : largeur du bloc, alignement dans la section, décalage
+  horizontal et vertical, rotation.
+
+**Médias**
+- Banque d'images libres de droits (Pixabay, clé d'API gratuite). Sur un
+  hébergement PHP, l'image est rapatriée dans le dossier du site.
+
 ## 1.0.0
 
 Première version publiée.

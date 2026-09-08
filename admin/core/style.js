@@ -47,9 +47,21 @@ export const STYLE_FIELDS = [
   { group: 'border', key: 'borderColor', css: 'borderColor', type: 'color', label: 'borderColor' },
   { group: 'border', key: 'borderRadius', css: 'borderRadius', type: 'number', unit: 'px', label: 'borderRadius', min: 0, max: 200, step: 1 },
   { group: 'border', key: 'boxShadow', css: 'boxShadow', type: 'select', label: 'shadowLabel', options: ['', 'none', '0 2px 8px rgba(0,0,0,.10)', '0 8px 24px rgba(0,0,0,.14)', '0 18px 44px rgba(0,0,0,.20)'] },
+  { group: 'border', key: 'borderStyle', css: 'borderStyle', type: 'select', label: 'borderStyleLabel', options: ['', 'solid', 'dashed', 'dotted', 'double'] },
+  { group: 'border', key: 'opacity', css: 'opacity', type: 'number', label: 'opacityLabel', min: 0, max: 1, step: 0.05 },
+
+  // Placement du bloc dans sa section. Ces quatre-là ne s'écrivent pas
+  // directement : trois se combinent en une seule transformée, et le
+  // placement joue sur deux marges. Ils sont donc marqués « virtuels » et
+  // traités après la boucle générale.
+  { group: 'place', key: 'largeur', css: 'width', type: 'number', unit: '%', label: 'blockWidth', min: 10, max: 100, step: 1 },
+  { group: 'place', key: 'placement', virtuel: true, type: 'select', label: 'placementLabel', options: ['', 'gauche', 'centre', 'droite'] },
+  { group: 'place', key: 'decalageX', virtuel: true, type: 'number', unit: 'px', label: 'offsetX', min: -400, max: 400, step: 1 },
+  { group: 'place', key: 'decalageY', virtuel: true, type: 'number', unit: 'px', label: 'offsetY', min: -400, max: 400, step: 1 },
+  { group: 'place', key: 'rotation', virtuel: true, type: 'number', unit: 'deg', label: 'rotationLabel', min: -180, max: 180, step: 1 },
 ];
 
-export const STYLE_GROUPS = ['colors', 'type', 'space', 'border'];
+export const STYLE_GROUPS = ['colors', 'type', 'space', 'border', 'place'];
 
 const PAR_CLE = new Map(STYLE_FIELDS.map((f) => [f.key, f]));
 
@@ -100,7 +112,7 @@ export function applyStyleObject(el, style) {
 
   for (const [cle, brut] of Object.entries(style)) {
     const champ = PAR_CLE.get(cle);
-    if (!champ) continue;
+    if (!champ || champ.virtuel) continue;
 
     const css = versCss(champ, brut);
     if (css === null) continue;
@@ -114,7 +126,42 @@ export function applyStyleObject(el, style) {
     if (el.style[champ.css] !== css) { el.style[champ.css] = css; change = true; }
   }
 
+  if (COMPOSES.some((cle) => cle in style)) change = appliquerPlacement(el, style) || change;
   if ('customCss' in style) change = appliquerClassePerso(el, style.customCss) || change;
+  return change;
+}
+
+const COMPOSES = ['placement', 'decalageX', 'decalageY', 'rotation'];
+
+/**
+ * Placement libre : décalage, rotation, et alignement du bloc dans sa
+ * section. Les trois premiers se combinent en une seule `transform` — écrire
+ * l'un après l'autre effacerait le précédent. Le décalage est une
+ * transformée, pas une marge : rien ne bouge autour, et la mise en page du
+ * site reste intacte.
+ */
+function appliquerPlacement(el, style) {
+  let change = false;
+
+  const nombre = (cle) => {
+    const valeur = Number(style[cle]);
+    return Number.isFinite(valeur) && String(style[cle] ?? '') !== '' ? valeur : 0;
+  };
+  const morceaux = [];
+  const x = nombre('decalageX');
+  const y = nombre('decalageY');
+  const angle = nombre('rotation');
+  if (x || y) morceaux.push(`translate(${x}px, ${y}px)`);
+  if (angle) morceaux.push(`rotate(${angle}deg)`);
+  const transform = morceaux.join(' ');
+  if (el.style.transform !== transform) { el.style.transform = transform; change = true; }
+
+  if ('placement' in style) {
+    const marges = { gauche: ['0', 'auto'], centre: ['auto', 'auto'], droite: ['auto', '0'] }[style.placement];
+    const [gauche, droite] = marges || ['', ''];
+    if (el.style.marginLeft !== gauche) { el.style.marginLeft = gauche; change = true; }
+    if (el.style.marginRight !== droite) { el.style.marginRight = droite; change = true; }
+  }
   return change;
 }
 
