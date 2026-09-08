@@ -85,7 +85,11 @@ Champ           role   (chaîne)   =  owner
 ## 2. La configuration (1 min)
 
 Dans **`essais/vercel/admin-config.js`**, remplacez les 5 valeurs
-« À REMPLIR » par celles de l'étape (b), puis committez.
+« À REMPLIR » par celles de l'étape (b), puis committez. Vercel redéploie
+tout seul.
+
+Cette étape peut attendre : sans clés, les deux essais fonctionnent déjà en
+mode démonstration.
 
 ## 3. Le déploiement (3 min)
 
@@ -95,15 +99,24 @@ Sur [vercel.com/new](https://vercel.com/new) : importez le dépôt
 - Framework Preset : **Other**
 - Aucune commande de build, aucun dossier de sortie
 
-Déployez. Le `vercel.json` du dépôt sert la page de test à la racine :
+Déployez. Le `vercel.json` du dépôt sert trois adresses :
 
-```
-https://VOTRE-PROJET.vercel.app/
-```
+| Adresse | Ce qu'on y trouve |
+|---|---|
+| `https://VOTRE-PROJET.vercel.app/` | l'accueil des essais, avec les deux cas |
+| `…/site?admin` | **site existant** : le code du Domaine de Lamartine, inchangé, avec le module greffé |
+| `…/vierge?admin` | **sans site de base** : une page vide, l'assistant construit la mise en page |
 
-> Utilisez bien cette adresse-là, pas `/essais/vercel/index.html` : le module
-> identifie une page par son chemin, les deux adresses seraient donc deux
-> pages différentes dans la base.
+> Utilisez bien ces adresses-là, pas `/essais/vercel/index.html` : le module
+> identifie une page par son chemin, les deux formes seraient donc deux pages
+> différentes dans la base.
+
+**Tant que les clés ne sont pas renseignées**, les deux pages basculent d'
+elles-mêmes en mode démonstration : l'éditeur s'ouvre avec n'importe quel
+identifiant et tout reste dans le navigateur du visiteur. C'est ce qui permet
+de montrer l'outil à quelqu'un avant d'avoir configuré quoi que ce soit —
+l'accueil affiche un bandeau qui dit dans quel mode vous êtes. Dès que les
+cinq valeurs sont là, le même déploiement passe sur Firebase.
 
 ## 4. Autoriser le domaine dans Firebase (1 min) — étape oubliée neuf fois sur dix
 
@@ -114,7 +127,9 @@ Firebase Auth refuse toute connexion depuis un domaine inconnu.
 
 ## 5. Ce qu'il faut vérifier
 
-Ouvrez l'URL **sans rien ajouter** :
+### Le site existant — `…/site`
+
+Ouvrez l'adresse **sans rien ajouter** :
 
 - [ ] Le site s'affiche normalement, identique à l'original
 - [ ] Console du navigateur : aucune erreur
@@ -156,6 +171,20 @@ Ajoutez **`?admin`** à l'URL :
       page
 - [ ] Depuis un **téléphone** : le site occupe tout l'écran, une barre « Admin »
       en bas la déplie, un appui sur un élément ouvre ses réglages
+- [ ] **L'assistant ne s'ouvre jamais** sur cette page : le code du site est
+      intact, le module s'y accroche, rien n'est reconstruit
+
+### Sans site de base — `…/vierge`
+
+- [ ] La page affiche « Bonjour » et rien d'autre
+- [ ] Avec `?admin`, **l'assistant s'ouvre tout seul** : une page ou plusieurs,
+      puis les intentions en cases à cocher
+- [ ] Cochez-en plusieurs : les propositions changent, et le nombre de sections
+      annoncé avec elles
+- [ ] Validez : la page est construite, l'éditeur est à côté, tout est
+      modifiable
+- [ ] « Partir d'une page vide » referme l'assistant, qui ne revient pas au
+      rechargement — il se rouvre depuis **Modèles de page**
 
 Contrôle de robustesse, dans l'onglet *Network* des outils développeur :
 passez en mode **Offline** et rechargez. Le site doit s'afficher normalement,

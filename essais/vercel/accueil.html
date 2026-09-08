@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module Admin — les deux essais</title>
+<style>
+  :root{
+    --encre:#15181d; --doux:#5d6673; --pale:#8b94a1;
+    --trait:#e4e7ec; --fond:#fbfbfc; --carte:#fff;
+    --accent:#2563eb; --accent-doux:#eef4ff;
+    --sect:#7c3aed; --sect-doux:#f3eeff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--fond); color:var(--encre); line-height:1.6; font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.9em;
+       background:#eef0f4; padding:1px 6px; border-radius:5px}
+  .page{max-width:860px; margin:0 auto; padding:0 24px 80px}
+
+  header{padding:72px 0 44px}
+  .marque{
+    display:inline-flex; align-items:center; gap:9px; margin-bottom:20px;
+    font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--accent);
+  }
+  .marque .point{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  h1{font-size:clamp(2rem,4.4vw,2.8rem); line-height:1.12; letter-spacing:-.025em; margin-bottom:14px}
+  .chapo{color:var(--doux); font-size:1.08rem; max-width:620px}
+
+  .cartes{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:8px}
+  .carte{
+    display:flex; flex-direction:column; background:var(--carte);
+    border:1px solid var(--trait); border-radius:14px; padding:26px; text-decoration:none; color:inherit;
+    transition:border-color .16s, transform .16s, box-shadow .16s;
+  }
+  .carte:hover{border-color:var(--accent); transform:translateY(-2px);
+               box-shadow:0 10px 30px rgba(20,30,60,.08)}
+  .carte--vierge:hover{border-color:var(--sect)}
+  .etiquette{
+    display:inline-block; align-self:flex-start; margin-bottom:14px; padding:4px 11px;
+    border-radius:999px; font-size:11.5px; font-weight:600; letter-spacing:.04em;
+    background:var(--accent-doux); color:var(--accent);
+  }
+  .carte--vierge .etiquette{background:var(--sect-doux); color:var(--sect)}
+  .carte h2{font-size:1.25rem; letter-spacing:-.01em; margin-bottom:8px}
+  .carte p{color:var(--doux); font-size:.96rem; flex:1}
+  .carte .aller{margin-top:16px; font-weight:600; color:var(--accent)}
+  .carte--vierge .aller{color:var(--sect)}
+
+  .apres{margin-top:44px; padding-top:32px; border-top:1px solid var(--trait)}
+  .apres h3{font-size:1.05rem; margin-bottom:10px}
+  .apres p, .apres li{color:var(--doux); font-size:.95rem}
+  .apres ul{margin:0 0 0 20px}
+  .apres li{margin-bottom:6px}
+  .note{
+    margin-top:26px; padding:16px 18px; border-radius:12px;
+    background:var(--accent-doux); border:1px solid #d3e3ff; color:#1d4ed8; font-size:.93rem;
+  }
+  .etat{
+    display:inline-flex; align-items:center; gap:8px; margin-top:20px;
+    padding:7px 14px; border-radius:999px; font-size:.88rem; font-weight:500;
+  }
+  .etat--demo{background:#fdf3e4; color:#a35c00; border:1px solid #f2dcb8}
+  .etat--reel{background:#e9f7ef; color:#0f7b46; border:1px solid #bfe6cf}
+  .etat .pastille{width:7px;height:7px;border-radius:50%;background:currentColor}
+  @media (max-width:720px){ .cartes{grid-template-columns:1fr} header{padding:48px 0 32px} }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="marque"><span class="point"></span> Module Admin</div>
+  <h1>Deux essais, deux situations</h1>
+  <p class="chapo">Le module s'installe sur un site qui existe déjà, ou sert à
+     en construire un depuis une page vide. Voici les deux cas, côte à côte.
+     Ajoutez <code>?admin</code> à l'adresse pour ouvrir l'éditeur.</p>
+  <p class="etat" id="etat"></p>
+</header>
+
+<div class="cartes">
+  <a class="carte" href="/site?admin">
+    <span class="etiquette">Site existant</span>
+    <h2>Domaine de Lamartine</h2>
+    <p>Le code d'un vrai site client, inchangé. Le module s'y greffe et y
+       trouve seul 56 textes, images et liens, ainsi que les listes de cartes
+       répétables. Aucune ligne du site n'a été modifiée : deux balises
+       <code>&lt;script&gt;</code> ont été ajoutées, rien d'autre.</p>
+    <span class="aller">Ouvrir l'éditeur →</span>
+  </a>
+
+  <a class="carte carte--vierge" href="/vierge?admin">
+    <span class="etiquette">Sans site de base</span>
+    <h2>Page vierge</h2>
+    <p>Un titre, un pied de page, une feuille de style minimale. Un assistant
+       pose deux questions — une page ou plusieurs, à quoi elle sert — puis
+       propose des mises en page et construit celle que vous choisissez.</p>
+    <span class="aller">Lancer l'assistant →</span>
+  </a>
+</div>
+
+<div class="apres">
+  <h3>Ce qu'il faut regarder</h3>
+  <ul>
+    <li><strong>Sur le site existant</strong> : l'assistant ne s'ouvre jamais,
+        et le code reste tel quel. Survolez un titre, cliquez, écrivez.
+        Dupliquez une carte de gîte. Publiez, puis rechargez sans
+        <code>?admin</code>.</li>
+    <li><strong>Sur la page vierge</strong> : cochez plusieurs intentions pour
+        voir les propositions changer. Une fois la page construite, tout reste
+        modifiable, déplaçable et supprimable.</li>
+    <li><strong>Sur téléphone</strong> : le panneau devient une feuille qui se
+        replie en bas de l'écran.</li>
+  </ul>
+
+  <div class="note">
+    <strong>Hébergement statique.</strong> Sur Vercel, la réécriture du fichier
+    <code>.html</code> à la publication et le téléversement des médias ne sont
+    pas possibles : les fichiers y sont en lecture seule après déploiement. Le
+    contenu est servi au chargement, et l'éditeur propose un export manuel de
+    la page figée. Sur un hébergement PHP, ces deux limites disparaissent.
+  </div>
+</div>
+
+</div>
+
+<!-- La configuration des essais dit elle-même si Firebase est branché. -->
+<script src="/essais/vercel/admin-config.js"></script>
+<script>
+  (function () {
+    const etat = document.getElementById('etat');
+    const demo = (window.ADMIN_CONFIG || {}).backend !== 'firebase';
+    etat.className = 'etat ' + (demo ? 'etat--demo' : 'etat--reel');
+    etat.innerHTML = '<span class="pastille"></span>' + (demo
+      ? 'Mode démonstration — les clés Firebase ne sont pas renseignées : '
+        + 'l’éditeur s’ouvre avec n’importe quel identifiant, et tout reste dans ce navigateur.'
+      : 'Connecté à Firebase — connexion avec le compte créé dans la console, '
+        + 'et les publications sont visibles par tout le monde.');
+  })();
+</script>
+</body>
+</html>

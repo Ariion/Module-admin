@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page vierge — essai du module</title>
+<style>
+  /* Une base sobre, volontairement minimale : c'est le style que prendront
+     les sections ajoutées depuis l'éditeur. Modifiez ces valeurs pour donner
+     son identité au site — tout le reste s'y accorde. */
+  :root{
+    --encre:#15181d;
+    --doux:#5b6472;
+    --trait:#e5e8ec;
+    --fond:#ffffff;
+    --fond-doux:#f6f7f9;
+    --accent:#15181d;
+    --largeur:1060px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--fond); color:var(--encre); line-height:1.65; font-size:17px;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{line-height:1.2; font-weight:600; letter-spacing:-.02em; margin-bottom:.5em}
+  h1{font-size:clamp(2.1rem,5vw,3.2rem)}
+  h2{font-size:clamp(1.6rem,3.4vw,2.2rem)}
+  h3{font-size:1.2rem}
+  p{margin-bottom:1em; color:var(--doux)}
+  a{color:inherit}
+  img{max-width:100%; display:block; border-radius:8px; background:var(--fond-doux)}
+  ul,ol{margin:0 0 1em 1.2em; color:var(--doux)}
+  li{margin-bottom:.4em}
+  hr{border:0; border-top:1px solid var(--trait); margin:2em 0}
+
+  /* Les sections ajoutées depuis l'éditeur héritent de ceci. */
+  section{padding:72px 24px}
+  section > *{max-width:var(--largeur); margin-left:auto; margin-right:auto}
+  section:nth-of-type(even){background:var(--fond-doux)}
+
+  /* L'éditeur émet un bouton sous la forme d'un lien seul dans un bloc :
+     c'est ce qui lui donne son allure de bouton sur ce site. */
+  div > a:only-child:not(:has(img)), .bouton{
+    display:inline-block; padding:13px 26px; border-radius:999px;
+    background:var(--accent); color:#fff; text-decoration:none; font-weight:500;
+    transition:opacity .15s;
+  }
+  div > a:only-child:not(:has(img)):hover, .bouton:hover{ opacity:.85 }
+
+  /* Colonnes émises par l'éditeur : un peu d'air entre les blocs. */
+  section h3{margin-top:.2em}
+
+  .accueil{padding:96px 24px 84px; text-align:center}
+  .accueil > *{max-width:680px; margin-left:auto; margin-right:auto}
+  .pied{
+    border-top:1px solid var(--trait); padding:32px 24px;
+    text-align:center; color:var(--doux); font-size:.9rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="accueil">
+  <h1>Bonjour</h1>
+  <p>Cette page est vierge : rien qu’un titre, un pied de page et une feuille
+     de style minimale. Ajoutez <strong>?admin</strong> à la fin de l’adresse —
+     un assistant vous posera deux questions et construira la page à partir de
+     vos réponses.</p>
+</div>
+
+<footer class="pied">
+  <a href="/">← Revenir aux deux essais</a>
+</footer>
+
+<script src="/essais/vercel/admin-config.js"></script>
+<script type="module" src="/admin/runtime.js"></script>
+</body>
+</html>
