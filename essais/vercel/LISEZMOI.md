@@ -1,30 +1,48 @@
-# Test grandeur nature — variante statique (Vercel)
+# Test grandeur nature sur Vercel (gratuit)
 
-> **Pour un vrai test, préférez [`docs/MISE-EN-LIGNE.md`](../../docs/MISE-EN-LIGNE.md)**
-> : hébergement PHP (o2switch, OVH), donc réécriture du HTML, téléversement des
-> médias et création de pages. Cette page-ci reste utile pour juger l'éditeur
-> en vingt minutes sans hébergement sous la main.
+Vercel, Netlify et Cloudflare Pages hébergent un site statique sans payer.
+Tout le module fonctionne — sauf ce qui demande d'écrire un fichier sur
+l'hébergement.
 
-Deux tests complémentaires. Le premier suffit pour juger le module ; le second
-couvre la seule chose que Vercel ne permet pas.
-
-| | Test A — Vercel | Test B — local |
+| | Sur Vercel | Ce qu'il faut savoir |
 |---|---|---|
-| Détection automatique du contenu | ✅ | ✅ |
-| Connexion Firebase, édition, blocs répétables | ✅ | ✅ |
-| Brouillon, publication, historique | ✅ | ✅ |
-| **Réécriture du HTML à la publication** | ❌ impossible | ✅ |
-| Durée | ~20 min | +5 min |
+| Détection automatique du contenu | ✅ | |
+| Connexion, édition, blocs répétables | ✅ | |
+| Sections, éléments, modèles, polices | ✅ | |
+| Brouillon, publication, historique | ✅ | Firestore, plan gratuit |
+| Bibliothèque média | ⚠️ par adresse | pas de téléversement : le fichier doit déjà être en ligne |
+| **Réécriture du `.html` à la publication** | ❌ | le bouton **Exporter la page figée** reste disponible |
+| **Création de pages** depuis l'éditeur | ❌ | on ajoute la page dans le code, comme d'habitude |
+| Durée | ~25 min | |
 
-**Pourquoi Vercel ne peut pas réécrire le HTML :** après déploiement, ses
-fichiers sont en lecture seule. Même une fonction serverless n'y écrit pas —
-seul `/tmp` est accessible, et il disparaît à la fin de l'appel. Netlify a la
-même contrainte. La réécriture demande un hébergement qui accepte d'écrire un
-fichier : OVH, o2switch, tout mutualisé avec PHP.
+**Pourquoi la réécriture est impossible :** après déploiement, les fichiers de
+Vercel sont en lecture seule. Même une fonction serverless n'y écrit pas —
+seul `/tmp` est accessible, et il disparaît à la fin de l'appel. Netlify et
+Cloudflare Pages ont la même contrainte.
+
+Ce que ça change concrètement : si le module est retiré un jour, le site
+revient au contenu du code. Deux façons de récupérer la promesse « le client
+n'est jamais prisonnier », sans payer d'hébergement :
+
+- **à la main**, quand vous le décidez : l'icône ⤓ du panneau exporte la page
+  avec le contenu publié intégré et zéro trace du module. Vous remplacez le
+  `.html` du dépôt par ce fichier, vous poussez, c'est en ligne.
+- **automatiquement** : une petite fonction serverless (gratuite sur Vercel)
+  qui écrit le HTML régénéré dans le dépôt GitHub, ce qui déclenche un
+  redéploiement. Ce n'est pas écrit à ce jour — c'est le prolongement naturel
+  si le test vous convainc.
+
+> **Attention à l'usage commercial.** Le plan *Hobby* de Vercel est réservé aux
+> projets personnels : y héberger les sites de vos clients sort de ses
+> conditions. Pour de vrais sites clients gratuits, **Netlify** (Starter) et
+> **Cloudflare Pages** autorisent l'usage commercial. Le module s'y installe de
+> la même façon — un dossier statique, rien d'autre.
+
+Et pour vérifier la réécriture du HTML sans rien payer : `npm run essai-local`
+monte le site complet derrière un serveur PHP **sur votre machine** (test B, en
+bas de cette page).
 
 ---
-
-# Test A — sur Vercel
 
 ## 1. Le projet Firebase (10 min)
 
@@ -77,11 +95,15 @@ Sur [vercel.com/new](https://vercel.com/new) : importez le dépôt
 - Framework Preset : **Other**
 - Aucune commande de build, aucun dossier de sortie
 
-Déployez. Votre site est à :
+Déployez. Le `vercel.json` du dépôt sert la page de test à la racine :
 
 ```
-https://VOTRE-PROJET.vercel.app/essais/vercel/index.html
+https://VOTRE-PROJET.vercel.app/
 ```
+
+> Utilisez bien cette adresse-là, pas `/essais/vercel/index.html` : le module
+> identifie une page par son chemin, les deux adresses seraient donc deux
+> pages différentes dans la base.
 
 ## 4. Autoriser le domaine dans Firebase (1 min) — étape oubliée neuf fois sur dix
 
@@ -162,17 +184,17 @@ Attendu :
 
 ---
 
-# Test B — la réécriture du HTML, en local
+# En complément : la réécriture du HTML, sur votre machine
 
-Ce que Vercel ne peut pas faire. Nécessite **PHP** (préinstallé sur macOS ;
-`sudo apt install php-cli` sur Ubuntu).
+Ce que Vercel ne peut pas faire, vérifiable gratuitement en local. Nécessite
+**PHP** (préinstallé sur macOS ; `sudo apt install php-cli` sur Ubuntu).
 
 ```bash
 git pull
 npm run essai-local
 ```
 
-Le script réutilise les clés Firebase saisies au test A, monte un site complet
+Le script réutilise les clés Firebase saisies plus haut, monte un site complet
 dans `.essai-local/` et lance un serveur PHP.
 
 1. Ouvrez `http://localhost:8080/?admin`
@@ -207,18 +229,25 @@ trace le nombre d'éléments détectés et chaque application de contenu.
 | Le contenu publié ne s'affiche pas pour un visiteur | `pages/{pageId}` doit être en lecture publique — vérifiez que vous avez bien collé le fichier de règles fourni |
 | Rien ne se passe avec `?admin` | `siteId` ou `projectId` erroné : la console le dit |
 | L'historique reste vide | Firestore réclame un index : le lien pour le créer en un clic est dans la console |
-| Test B : « Le serveur a répondu 401 » | Apache/CGI supprime l'en-tête `Authorization`. Sur un vrai hébergement, ajoutez au `.htaccess` : `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1` |
+| En local : « Le serveur a répondu 401 » | Apache/CGI supprime l'en-tête `Authorization`. Sur un vrai hébergement, ajoutez au `.htaccess` : `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1` |
 
 ---
 
 # Et après
 
-Si le test A vous convainc et que vous voulez la réécriture automatique **en
-production**, deux voies :
+Pour obtenir la réécriture automatique **en production**, trois voies, de la
+plus simple à la plus autonome :
 
-- **Hébergement PHP** (OVH, o2switch) : déposez `tools/admin-endpoint.php`,
-  ajoutez une ligne à la configuration. C'est décrit à l'étape C de
-  [`docs/INSTALLATION.md`](../../docs/INSTALLATION.md).
-- **Rester sur Vercel** : il faudrait un adaptateur qui écrive le HTML
-  régénéré dans le dépôt Git via l'API GitHub, ce qui déclencherait un
-  redéploiement automatique. Ce n'est pas écrit à ce jour.
+- **Export manuel** (rien à écrire, gratuit) : l'icône ⤓ du panneau télécharge
+  la page figée. Vous remplacez le `.html` du dépôt, vous poussez. À faire
+  quand vous le voulez, par exemple avant de livrer le site.
+- **Écriture dans le dépôt GitHub** (gratuit, à écrire) : une fonction
+  serverless — gratuite sur Vercel, Netlify et Cloudflare — qui vérifie le
+  jeton Firebase du client puis commite le HTML régénéré via l'API GitHub, ce
+  qui déclenche un redéploiement. Le jeton GitHub reste côté serveur, jamais
+  dans le navigateur du client. Ce n'est pas écrit à ce jour.
+- **Hébergement PHP** (OVH, o2switch, payant) : déposez
+  `tools/admin-endpoint.php`, ajoutez une ligne à la configuration, et tout
+  fonctionne sans rien écrire de plus — y compris le téléversement des médias
+  et la création de pages. Voir
+  [`docs/MISE-EN-LIGNE.md`](../../docs/MISE-EN-LIGNE.md).

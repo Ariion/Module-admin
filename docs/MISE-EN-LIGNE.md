@@ -17,15 +17,22 @@ Comptez **30 minutes** la première fois, 5 pour les sites suivants.
 | **Création de pages** depuis l'éditeur | ✅ | ❌ |
 | Mise en route | 30 min | 20 min |
 
-**Prenez l'hébergement PHP.** C'est celui de vos clients, et c'est le seul qui
-exerce ce qui fait la valeur du module : le site garde son contenu même si le
-module est retiré. Vercel ne peut pas réécrire un fichier — après déploiement
-ses fichiers sont en lecture seule, et une fonction serverless n'écrit que
-dans `/tmp`, effacé à la fin de l'appel.
+**Si vous ne voulez rien payer**, prenez le statique : tout le module
+fonctionne sauf la réécriture du `.html`, le téléversement des médias et la
+création de pages. La marche à suivre est dans
+[`essais/vercel/LISEZMOI.md`](../essais/vercel/LISEZMOI.md), et l'export
+manuel (icône ⤓ du panneau) permet de figer la page dans le dépôt quand vous
+le décidez. Attention : le plan *Hobby* de Vercel exclut l'usage commercial —
+pour des sites clients, **Netlify** ou **Cloudflare Pages**, tout aussi
+gratuits, l'autorisent.
 
-Le reste de ce guide décrit la voie PHP. Pour un essai rapide sans hébergement
-sous la main, [`essais/vercel/LISEZMOI.md`](../essais/vercel/LISEZMOI.md)
-donne la variante statique.
+**Sinon, prenez l'hébergement PHP** (2 à 5 € par mois). C'est celui de vos
+clients, et le seul qui exerce ce qui fait la valeur du module : le site garde
+son contenu même si le module est retiré. Un statique ne peut pas réécrire un
+fichier — après déploiement ses fichiers sont en lecture seule, et une
+fonction serverless n'écrit que dans `/tmp`, effacé à la fin de l'appel.
+
+Le reste de ce guide décrit la voie PHP.
 
 ---
 
