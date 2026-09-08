@@ -8,7 +8,8 @@
     "start": "http-server -p 8080 -c-1 .",
     "demo": "http-server -p 8080 -c-1 . -o /demo/index.html",
     "lint": "eslint admin",
-    "essai-local": "node tools/essai-local.mjs"
+    "essai-local": "node tools/essai-local.mjs",
+    "paquet": "node tools/paquet.mjs"
   },
   "keywords": [
     "cms",

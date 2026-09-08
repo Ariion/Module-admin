@@ -33,6 +33,18 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Bibliothèque média interne** | Onglet « Médias » : glisser-déposer des fichiers, ajout par adresse (une image du site, une vidéo YouTube, un MP3 hébergé ailleurs), recherche, filtres par famille — images, vidéos, audio, fichiers — copie de l'adresse et suppression. Elle alimente tous les réglages qui demandent un média. |
 | **Images sans abonnement** | Firebase Storage, ou un simple dossier sur l'hébergement du client (script PHP fourni), ou une adresse saisie à la main. Le script PHP accepte aussi l'audio et la vidéo (48 Mo), servis depuis le domaine du site. |
 
+## Mettre en ligne
+
+```bash
+npm run paquet -- --site=hotel-des-pins --projet=mon-projet-firebase
+```
+
+Fabrique le dossier `paquet/` à téléverser tel quel à la racine du site :
+le module, le script PHP avec le projet déjà renseigné, la configuration à
+compléter, le dossier des médias et la marche à suivre. Le guide complet, avec
+la création du projet Firebase et la liste de vérification, est dans
+[`docs/MISE-EN-LIGNE.md`](docs/MISE-EN-LIGNE.md).
+
 ## Essayer en trois minutes
 
 ```bash
@@ -92,7 +104,8 @@ demo/                     site de démonstration complet
 essais/domaine-lamartine/ test sur un site client réel (code brut + module)
 firebase/                 règles de sécurité Firestore et Storage
 tools/admin-endpoint.php  script serveur : médias + réécriture du HTML
-docs/                     architecture et installation
+tools/paquet.mjs          fabrique le dossier à téléverser chez le client
+docs/                     architecture, installation, mise en ligne
 ```
 
 ## Points d'architecture

@@ -1,4 +1,9 @@
-# Test grandeur nature
+# Test grandeur nature — variante statique (Vercel)
+
+> **Pour un vrai test, préférez [`docs/MISE-EN-LIGNE.md`](../../docs/MISE-EN-LIGNE.md)**
+> : hébergement PHP (o2switch, OVH), donc réécriture du HTML, téléversement des
+> médias et création de pages. Cette page-ci reste utile pour juger l'éditeur
+> en vingt minutes sans hébergement sous la main.
 
 Deux tests complémentaires. Le premier suffit pour juger le module ; le second
 couvre la seule chose que Vercel ne permet pas.
@@ -96,26 +101,39 @@ Ajoutez **`?admin`** à l'URL :
 
 - [ ] L'écran de connexion apparaît
 - [ ] Connexion avec le compte de l'étape (c)
-- [ ] La barre noire s'affiche en haut, la nav du site est décalée dessous
-- [ ] **Survol** d'un titre : contour bleu + étiquette « Texte »
-- [ ] **Clic sur un titre** : le curseur se place, tapez, `Entrée` valide
-- [ ] **Clic sur « Réserver »** (le bouton du menu) : panneau *Lien* à droite,
-      changez l'adresse
-- [ ] **Survol d'une carte de gîte** : petite barre d'outils en haut à droite
-      du bloc — dupliquez-en un, déplacez-le, supprimez-le
+- [ ] L'éditeur s'ouvre : panneau de réglages à gauche, le site dans un aperçu
+      à droite, le nom de la page en haut
+- [ ] **Survol** d'un titre dans l'aperçu : contour bleu + étiquette « Texte »
+- [ ] **Clic** sur ce titre : le panneau bascule sur ses réglages, et le
+      curseur se place dans la page — tapez, `Échap` valide
+- [ ] **Clic sur « Réserver »** (le bouton du menu) : champ *Adresse du lien*
+      dans le panneau, changez-la
+- [ ] **Survol d'une carte de gîte** : barre d'outils du bloc — dupliquez-en
+      un, déplacez-le, supprimez-le
 - [ ] **Clic sur « 43 »** (couchages) : c'est un champ à part, pas fusionné
       avec son libellé
-- [ ] La barre indique « Modifications non publiées », puis « Brouillon
-      enregistré » après 2-3 secondes
+- [ ] Onglet **Structure** : l'arborescence de la page, et *Ajouter une
+      section* propose les modèles
+- [ ] Onglet **Médias** : ajoutez une image par son adresse (`/images/…` ou une
+      adresse complète) — elle apparaît dans la grille et devient choisissable
+      depuis un réglage d'image
+- [ ] Les trois formats d'écran (ordinateur, tablette, mobile), en haut à
+      droite, changent la largeur de l'aperçu
+- [ ] Le pied du panneau indique « Modifications non publiées », puis
+      « Brouillon enregistré » après 2-3 secondes
 - [ ] Rechargez la page avec `?admin` : **le brouillon est toujours là**
-- [ ] **Aperçu** : les contours disparaissent, le site redevient normal
+- [ ] **Aperçu** (icône œil) : les contours disparaissent, le site redevient
+      normal
 - [ ] **Publier** : le badge passe au vert « Contenu publié »
 - [ ] Rechargez **sans** `?admin` : les modifications sont en ligne
-- [ ] Ouvrez l'URL dans une **fenêtre de navigation privée** : les
-      modifications sont visibles sans être connecté
+- [ ] Ouvrez l'URL en **navigation privée** : les modifications sont visibles
+      sans être connecté
 - [ ] **Historique** (icône horloge) : la publication est listée, *Restaurer*
       la recharge dans la page
-- [ ] **Quitter** : la barre disparaît, le site retrouve sa mise en page
+- [ ] **Quitter** (icône ✕) : l'éditeur se ferme, le site retrouve sa mise en
+      page
+- [ ] Depuis un **téléphone** : le site occupe tout l'écran, une barre « Admin »
+      en bas la déplie, un appui sur un élément ouvre ses réglages
 
 Contrôle de robustesse, dans l'onglet *Network* des outils développeur :
 passez en mode **Offline** et rechargez. Le site doit s'afficher normalement,

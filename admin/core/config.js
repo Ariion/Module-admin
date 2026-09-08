@@ -4,7 +4,7 @@
  * @module core/config
  */
 import { pageKeyFromLocation } from './dom.js';
-import { warn } from './log.js';
+import { warn, setDebug } from './log.js';
 
 export const DEFAULTS = {
   /** Identifiant du site dans la base. Obligatoire. */
@@ -93,12 +93,23 @@ function merge(base, override) {
 export function resolveConfig(input = {}) {
   const config = merge(DEFAULTS, input);
   config.pageId = config.pageId || pageKeyFromLocation();
+  // Avant toute chose : sans ça, les avertissements qui suivent seraient
+  // écrits alors que la trace n'est pas encore activée, donc perdus.
+  setDebug(config.debug);
 
   if (!config.siteId) {
     warn('siteId manquant : le module reste inactif.');
   }
   if (config.backend === 'firebase' && !config.firebase?.projectId) {
     warn('Configuration Firebase incomplète : le site s’affichera avec son contenu d’origine.');
+  }
+  // Le gabarit de configuration laisse des « À REMPLIR » : le dire tout de
+  // suite évite de chercher l'erreur du côté d'Auth ou des règles.
+  const aRemplir = Object.entries(config.firebase || {})
+    .filter(([, v]) => /À REMPLIR/i.test(String(v)))
+    .map(([k]) => k);
+  if (aRemplir.length) {
+    warn('Clés Firebase non renseignées dans admin-config.js : ' + aRemplir.join(', '));
   }
   if (config.media.adapter === 'endpoint' && !config.media.endpoint) {
     warn('media.adapter = "endpoint" mais media.endpoint n’est pas renseigné.');
