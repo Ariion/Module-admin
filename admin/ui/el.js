@@ -41,6 +41,8 @@ export function icon(name, size = 14) {
     link: 'M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1',
     copy: 'M8 8h12v12H8zM4 16V4h12',
     up: 'M12 19V5M5 12l7-7 7 7',
+    right: 'M5 12h14M13 5l7 7-7 7',
+    left: 'M19 12H5M11 19l-7-7 7-7',
     down: 'M12 5v14M5 12l7 7 7-7',
     trash: 'M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13',
     history: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',

@@ -21,9 +21,13 @@ function apercu(formes) {
   }));
 }
 
-export function openPageTemplates({ root, t, onApply }) {
+export function openPageTemplates({ root, t, onApply, onWizard }) {
   const corps = h('div', {},
     h('p', { class: 'hint', style: { marginTop: '0' } }, t('pageTplHint')),
+    onWizard ? h('button', {
+      class: 'btn btn--wide', type: 'button', style: { margin: '4px 0 14px' },
+      onclick: () => { modal.close(); onWizard(); },
+    }, icon('sliders', 13), t('wizardRestart')) : null,
     h('div', { class: 'pagetpls' }, PAGE_TEMPLATES.map((modele) => h('div', { class: 'pagetpl' },
       apercu(modele.apercu),
       h('div', { class: 'pagetpl__main' },

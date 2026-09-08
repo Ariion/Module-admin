@@ -33,6 +33,24 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Bibliothèque média interne** | Onglet « Médias » : glisser-déposer des fichiers, ajout par adresse (une image du site, une vidéo YouTube, un MP3 hébergé ailleurs), recherche, filtres par famille — images, vidéos, audio, fichiers — copie de l'adresse et suppression. Elle alimente tous les réglages qui demandent un média. |
 | **Images sans abonnement** | Firebase Storage, ou un simple dossier sur l'hébergement du client (script PHP fourni), ou une adresse saisie à la main. Le script PHP accepte aussi l'audio et la vidéo (48 Mo), servis depuis le domaine du site. |
 
+## Vendre le module
+
+```bash
+npm run livraison
+```
+
+Fabrique `livraison/module-admin-<version>.zip` : le module, le script PHP,
+les règles Firebase, une page vierge prête, la page d'installation guidée, la
+démonstration, la documentation et la licence. Ni les essais internes ni le
+code d'un site client ne s'y trouvent.
+
+L'acquéreur extrait l'archive dans son dossier, sert celui-ci, et ouvre
+`installation.html` : la page le mène de la création du projet Firebase
+jusqu'à la vérification, en fabriquant son fichier de configuration au
+passage. S'il part d'une page vide, un assistant lui pose deux questions et
+construit la page. S'il a déjà un site, son code reste intact — le module s'y
+accroche.
+
 ## Mettre en ligne
 
 ```bash
@@ -105,6 +123,8 @@ essais/domaine-lamartine/ test sur un site client réel (code brut + module)
 firebase/                 règles de sécurité Firestore et Storage
 tools/admin-endpoint.php  script serveur : médias + réécriture du HTML
 tools/paquet.mjs          fabrique le dossier à téléverser chez le client
+tools/livraison.mjs       fabrique l'archive vendue à l'acquéreur
+distribution/             les fichiers destinés à l'acquéreur (licence, guides)
 docs/                     architecture, installation, mise en ligne
 ```
 

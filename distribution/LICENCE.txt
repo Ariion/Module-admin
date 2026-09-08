@@ -1,0 +1,79 @@
+LICENCE D'UTILISATION — MODULE ADMIN
+Version 1.0
+
+Entre : ______________________________  (« l'éditeur »)
+Et    : ______________________________  (« le titulaire »), acquéreur de la
+présente licence.
+
+1. OBJET
+
+L'éditeur concède au titulaire une licence d'utilisation du Module Admin
+(ci-après « le module ») : code source, script serveur, documentation et
+fichiers de configuration fournis avec la présente licence.
+
+2. CE QUE LE TITULAIRE PEUT FAIRE
+
+  a. Installer le module sur un nombre illimité de sites internet qu'il
+     développe, exploite ou administre, y compris pour le compte de ses
+     propres clients.
+  b. Modifier le code source pour l'adapter à ses besoins.
+  c. Conserver et utiliser indéfiniment la version acquise, sans redevance
+     périodique.
+  d. Facturer à ses clients la prestation d'installation, d'adaptation et
+     d'accompagnement.
+
+3. CE QUE LE TITULAIRE NE PEUT PAS FAIRE
+
+  a. Revendre, redistribuer, publier ou céder le module lui-même — modifié ou
+     non — sous forme de code, de bibliothèque, de thème, d'extension ou de
+     produit dérivé destiné à des tiers développeurs.
+  b. Publier le code source sur un dépôt public ou tout autre canal de
+     diffusion.
+  c. Retirer ou masquer les mentions de paternité présentes dans les fichiers
+     source.
+
+La distinction tient en une phrase : le titulaire vend des sites, pas le
+module.
+
+4. PROPRIÉTÉ
+
+Le module reste la propriété de l'éditeur. La présente licence ne transfère
+aucun droit de propriété intellectuelle.
+
+5. GARANTIE
+
+Le module est fourni « en l'état ». L'éditeur ne garantit pas qu'il réponde à
+un besoin particulier ni qu'il fonctionne sans interruption. Le titulaire
+reste responsable de la sauvegarde des sites sur lesquels il l'installe, et
+de la vérification du bon fonctionnement avant mise en production.
+
+6. RESPONSABILITÉ
+
+La responsabilité de l'éditeur ne peut être engagée au-delà du montant payé
+pour la présente licence. Sont notamment exclus : perte de données, perte de
+chiffre d'affaires, interruption de service, dommages indirects.
+
+Les services tiers utilisés par le module (Firebase, hébergement du site)
+relèvent de leurs propres conditions et de la responsabilité du titulaire,
+qui en est le souscripteur.
+
+7. SUPPORT ET MISES À JOUR
+
+Sauf accord écrit distinct, la licence donne droit à la version acquise et
+aux correctifs de cette version. Les versions majeures ultérieures ne sont
+pas comprises.
+
+8. DURÉE
+
+La licence est concédée sans limitation de durée. Elle prend fin de plein
+droit en cas de manquement à l'article 3.
+
+9. DROIT APPLICABLE
+
+Droit français. À défaut d'accord amiable, compétence des tribunaux du
+ressort du siège de l'éditeur.
+
+
+Fait le ____ / ____ / ________
+
+L'éditeur                              Le titulaire

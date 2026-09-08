@@ -251,7 +251,18 @@ export class PageModel {
    */
   applyPageTemplate(id, remplacer) {
     const modele = findPageTemplate(id);
-    if (!modele) return false;
+    return modele ? this.applyTrees(modele.build(), remplacer) : false;
+  }
+
+  /**
+   * Pose une suite de sections composées ailleurs (modèle de page, assistant
+   * de démarrage). En mode remplacement, les sections du site sont masquées
+   * — jamais supprimées : elles restent récupérables depuis la Structure.
+   * @param {object[]} trees arbres de widgets, un par section
+   * @param {boolean} remplacer
+   */
+  applyTrees(trees, remplacer) {
+    if (!Array.isArray(trees) || !trees.length) return false;
 
     if (remplacer) {
       for (const section of this.sectionList()) {
@@ -262,7 +273,7 @@ export class PageModel {
 
     // Chaque section vient après la précédente : la trame garde son ordre.
     let apres = remplacer ? null : (this.sectionList().slice(-1)[0]?.ref || null);
-    for (const tree of modele.build()) {
+    for (const tree of trees) {
       const record = { kind: 'widgets', key: uid('s'), after: apres, tree };
       this.sections = { ...this.sections, add: [...this.sections.add, record] };
       apres = 'ins:' + record.key;

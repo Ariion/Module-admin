@@ -21,6 +21,7 @@ import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
+import { openWizard } from './wizard.js';
 import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
 import { createHost } from '../data/host.js';
@@ -56,7 +57,7 @@ export async function startEditor(runtime) {
 
   const state = {
     editing: true, dirty: false, saving: false, baking: false,
-    hasDraft: false, savedAt: null, baked: null,
+    hasDraft: false, savedAt: null, baked: null, pageVierge: false,
     pageId: config.pageId, user: null, access: null,
   };
 
@@ -194,6 +195,7 @@ export async function startEditor(runtime) {
       onclick: () => openPageTemplates({
         root, t,
         onApply: (id, remplacer) => appliquerModelePage(id, remplacer),
+        onWizard: () => ouvrirAssistant(),
       }),
     }, icon('pages', 13), t('pageTemplates'))]);
 
@@ -318,10 +320,18 @@ export async function startEditor(runtime) {
     if (!state.hasDraft) {
       try { instantane = await backend.loadPublished(state.pageId); } catch { instantane = null; }
     }
-    if (instantane && aDuContenu(instantane)) {
+    const enregistre = !!(instantane && aDuContenu(instantane));
+    if (enregistre) {
       model.applySnapshot(instantane);
       state.savedAt = instantane.updatedAt || null;
     }
+
+    // Une page vierge, c'est une page de départ : presque rien à éditer, et
+    // rien d'enregistré. Sur un site existant, cette condition est fausse —
+    // le code du client reste intact, le module s'y accroche.
+    state.pageVierge = !enregistre
+      && model.entries.size <= 6
+      && model.sectionList().filter((x) => !x.ref.startsWith('ins:')).length <= 3;
 
     overlay.refresh(model);
     overlay.enable();
@@ -499,6 +509,37 @@ export async function startEditor(runtime) {
     await loadPage(urlCourante(), { keepScroll: false });
     showLibrary();
     notify(t('pageTplApplied'));
+  }
+
+  /**
+   * Assistant de démarrage. Ne s'ouvre de lui-même que sur une page vierge,
+   * et une seule fois : refermé, il ne revient pas à chaque chargement.
+   */
+  function ouvrirAssistant() {
+    openWizard({
+      root, t,
+      peutCreerPages: hosting.enabled,
+      onSkip: () => marquerAssistantVu(),
+      onApply: async (trees) => {
+        marquerAssistantVu();
+        if (!model.applyTrees(trees, true)) return;
+        markDirty();
+        await autosave.flush();
+        await loadPage(urlCourante(), { keepScroll: false });
+        showLibrary();
+        notify(t('pageTplApplied'));
+      },
+    });
+  }
+
+  const cleAssistant = () => `admin:assistant:${config.siteId}:${state.pageId}`;
+
+  function marquerAssistantVu() {
+    try { localStorage.setItem(cleAssistant(), '1'); } catch { /* stockage refusé */ }
+  }
+
+  function assistantDejaVu() {
+    try { return localStorage.getItem(cleAssistant()) === '1'; } catch { return false; }
   }
 
   /** Insère une section construite depuis un modèle. */
@@ -732,6 +773,7 @@ export async function startEditor(runtime) {
     buildShell();
     await loadPage(location.pathname);
     library.charger();
+    if (state.pageVierge && !assistantDejaVu()) ouvrirAssistant();
   }
 
   return new Promise((resolve) => {

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module Admin — installation</title>
+<style>
+  :root{
+    --encre:#15181d; --doux:#5d6673; --pale:#8b94a1;
+    --trait:#e4e7ec; --trait-clair:#eef0f4;
+    --fond:#fbfbfc; --carte:#ffffff; --creux:#f4f6f8;
+    --accent:#2563eb; --accent-doux:#eef4ff;
+    --vert:#0f7b46; --vert-doux:#e9f7ef;
+    --rouge:#b42318; --rouge-doux:#fdeceb;
+    --ambre:#a35c00; --ambre-doux:#fdf3e4;
+    --rayon:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--fond); color:var(--encre); line-height:1.6; font-size:15.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  code,kbd,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+  .page{max-width:820px; margin:0 auto; padding:0 24px 100px}
+
+  header.tete{padding:64px 0 40px; border-bottom:1px solid var(--trait)}
+  .marque{
+    display:inline-flex; align-items:center; gap:9px; margin-bottom:22px;
+    font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--accent);
+  }
+  .marque .point{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+  h1{font-size:clamp(1.9rem,4vw,2.6rem); line-height:1.15; letter-spacing:-.025em; margin-bottom:14px}
+  .chapo{color:var(--doux); font-size:1.08rem; max-width:600px}
+
+  .etape{padding:44px 0; border-bottom:1px solid var(--trait-clair)}
+  .etape:last-of-type{border-bottom:0}
+  .num{
+    display:flex; align-items:center; gap:12px; margin-bottom:8px;
+    font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--pale);
+  }
+  .num b{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:50%; background:var(--encre); color:#fff;
+    font-size:13px; letter-spacing:0;
+  }
+  h2{font-size:1.5rem; letter-spacing:-.02em; margin-bottom:10px}
+  h3{font-size:1.02rem; margin:26px 0 8px}
+  p{margin-bottom:12px; color:var(--doux)}
+  p strong,li strong{color:var(--encre); font-weight:600}
+  ul,ol{margin:0 0 14px 20px; color:var(--doux)}
+  li{margin-bottom:7px}
+  a{color:var(--accent)}
+
+  .carte{
+    background:var(--carte); border:1px solid var(--trait); border-radius:var(--rayon);
+    padding:22px 24px; margin:18px 0;
+  }
+  .note{
+    background:var(--accent-doux); border:1px solid #d3e3ff; border-radius:var(--rayon);
+    padding:16px 18px; margin:18px 0; color:#1d4ed8; font-size:.95rem;
+  }
+  .note strong{color:#1e40af}
+  .attention{
+    background:var(--ambre-doux); border:1px solid #f2dcb8; border-radius:var(--rayon);
+    padding:16px 18px; margin:18px 0; color:var(--ambre); font-size:.95rem;
+  }
+
+  .champs{display:grid; gap:14px; margin-bottom:6px}
+  .champ label{display:block; font-size:.85rem; font-weight:600; margin-bottom:5px; color:var(--encre)}
+  .champ .aide{font-weight:400; color:var(--pale); margin-left:6px}
+  input[type=text]{
+    width:100%; height:42px; padding:0 13px; font-size:15px;
+    background:var(--carte); border:1px solid var(--trait); border-radius:9px; color:var(--encre);
+    outline:none; transition:border-color .15s, box-shadow .15s;
+  }
+  input[type=text]:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-doux)}
+  input[type=text].vide{background:var(--creux)}
+
+  .choix{display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px}
+  .choix button{
+    padding:8px 14px; border-radius:999px; border:1px solid var(--trait); background:var(--carte);
+    font:inherit; font-size:.9rem; color:var(--doux); cursor:pointer; transition:.15s;
+  }
+  .choix button[aria-pressed=true]{background:var(--encre); border-color:var(--encre); color:#fff}
+
+  pre{
+    position:relative; background:#12151a; color:#e6eaf2; border-radius:var(--rayon);
+    padding:18px 20px; overflow:auto; font-size:12.8px; line-height:1.6; margin:14px 0;
+  }
+  pre .cle{color:#9ecbff} pre .txt{color:#a8e6a3} pre .com{color:#7d8899}
+
+  .barre{display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin:14px 0}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; height:40px; padding:0 18px;
+    border-radius:9px; border:1px solid var(--trait); background:var(--carte);
+    font:inherit; font-size:.94rem; color:var(--encre); cursor:pointer; text-decoration:none;
+    transition:.15s;
+  }
+  .btn:hover{background:var(--creux)}
+  .btn--fort{background:var(--encre); border-color:var(--encre); color:#fff}
+  .btn--fort:hover{background:#000}
+  .btn:disabled{opacity:.45; cursor:default}
+
+  .verdict{border-radius:var(--rayon); padding:15px 18px; margin-top:14px; font-size:.95rem; display:none}
+  .verdict.on{display:block}
+  .verdict.ok{background:var(--vert-doux); color:var(--vert); border:1px solid #bfe6cf}
+  .verdict.ko{background:var(--rouge-doux); color:var(--rouge); border:1px solid #f5c9c5}
+  .verdict.att{background:var(--ambre-doux); color:var(--ambre); border:1px solid #f2dcb8}
+  .verdict ul{margin:8px 0 0 18px; color:inherit}
+  .verdict li{margin-bottom:4px}
+
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.94rem}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--trait-clair)}
+  th{font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--pale); font-weight:600}
+  td{color:var(--doux)} td:first-child{color:var(--encre); font-weight:500}
+
+  .fin{text-align:center; padding:56px 0 0; color:var(--pale); font-size:.9rem}
+  @media (max-width:620px){
+    header.tete{padding:44px 0 32px}
+    .etape{padding:34px 0}
+    .carte{padding:18px}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="tete">
+  <div class="marque"><span class="point"></span> Module Admin</div>
+  <h1>Installation</h1>
+  <p class="chapo">Vous venez d'extraire le dossier. Cette page vous emmène de
+     là au site en ligne, éditable par votre client. Comptez 30 minutes la
+     première fois, 5 pour les sites suivants.</p>
+</header>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="etape">
+  <div class="num"><b>0</b> Tout de suite</div>
+  <h2>Essayez avant de configurer quoi que ce soit</h2>
+  <p>Le dossier fonctionne déjà. Servez-le avec n'importe quel serveur local :</p>
+  <pre>npx http-server -p 8080 .
+<span class="com"># ou, si vous avez Python :</span>
+python3 -m http.server 8080</pre>
+  <p>Puis ouvrez <code>http://localhost:8080/index.html?admin</code>. N'importe
+     quelle adresse et n'importe quel mot de passe ouvrent l'éditeur : dans cet
+     état, tout est enregistré dans votre navigateur, sans compte ni serveur.</p>
+  <p>La page <code>index.html</code> livrée est vierge : un <strong>assistant</strong>
+     s'ouvre, vous pose deux questions et construit la page à partir de vos
+     réponses. Pour voir l'outil sur un vrai site, ouvrez plutôt
+     <code>demo/index.html?admin</code>.</p>
+  <div class="note">
+     <strong>Vous avez déjà un site ?</strong> Rien à refaire : copiez
+     <code>admin/</code> à sa racine et ajoutez les deux lignes de l'étape 4.
+     Votre code reste tel quel, le module s'y accroche. L'assistant ne
+     s'ouvre que sur une page vide.
+  </div>
+  <div class="note">
+    <strong>Pourquoi un serveur local ?</strong> Un double-clic sur le fichier
+    l'ouvre en <code>file://</code>, où le navigateur interdit les modules
+    JavaScript. Toute commande ci-dessus suffit.
+  </div>
+  <p>Quand l'outil vous convient, passez à la suite : c'est ce qui rend les
+     modifications réelles, partagées et publiées.</p>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="etape">
+  <div class="num"><b>1</b> 10 minutes</div>
+  <h2>Créer le projet Firebase</h2>
+  <p>C'est la base de données qui garde le contenu. Le plan gratuit suffit
+     largement pour un site vitrine.</p>
+  <p>Sur <a href="https://console.firebase.google.com" target="_blank" rel="noopener">console.firebase.google.com</a> :</p>
+  <ol>
+    <li><strong>Ajouter un projet</strong>. Vous pouvez refuser Google Analytics.</li>
+    <li><strong>Paramètres du projet</strong> (roue dentée) ▸ <strong>Vos applications</strong>
+        ▸ icône <code>&lt;/&gt;</code> ▸ enregistrer l'application. Gardez l'objet
+        <code>firebaseConfig</code> affiché : c'est l'étape 2.</li>
+    <li><strong>Authentication</strong> ▸ Commencer ▸ activer <strong>E-mail/Mot de passe</strong>.</li>
+    <li><strong>Authentication ▸ Users ▸ Ajouter un utilisateur</strong> : l'adresse et le
+        mot de passe que vous donnerez au client. <strong>Notez l'UID</strong> affiché
+        dans la liste.</li>
+    <li><strong>Firestore Database</strong> ▸ Créer une base ▸ <strong>mode production</strong>
+        ▸ région <code>eur3</code> ou <code>europe-west1</code>.</li>
+  </ol>
+  <div class="attention">
+    <strong>À ne pas oublier</strong> — <em>Authentication ▸ Settings ▸ Authorized
+    domains ▸ Add domain</em> : ajoutez le domaine du site. Sans ça, la connexion
+    échoue même avec le bon mot de passe. C'est l'oubli le plus fréquent.
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="etape">
+  <div class="num"><b>2</b> 2 minutes</div>
+  <h2>Fabriquer la configuration</h2>
+  <p>Recopiez ici les valeurs de <code>firebaseConfig</code>. Le fichier se
+     fabrique au fur et à mesure, en bas.</p>
+
+  <div class="carte">
+    <div class="champs">
+      <div class="champ">
+        <label for="siteId">Identifiant du site <span class="aide">un site = un identifiant, à vous de choisir</span></label>
+        <input type="text" id="siteId" value="mon-site" spellcheck="false">
+      </div>
+      <div class="champ">
+        <label for="apiKey">apiKey</label>
+        <input type="text" id="apiKey" placeholder="AIza…" spellcheck="false">
+      </div>
+      <div class="champ">
+        <label for="projectId">projectId</label>
+        <input type="text" id="projectId" placeholder="mon-projet" spellcheck="false">
+      </div>
+      <div class="champ">
+        <label for="authDomain">authDomain</label>
+        <input type="text" id="authDomain" placeholder="mon-projet.firebaseapp.com" spellcheck="false">
+      </div>
+      <div class="champ">
+        <label for="storageBucket">storageBucket</label>
+        <input type="text" id="storageBucket" placeholder="mon-projet.appspot.com" spellcheck="false">
+      </div>
+      <div class="champ">
+        <label for="appId">appId</label>
+        <input type="text" id="appId" placeholder="1:000000000000:web:0000000000" spellcheck="false">
+      </div>
+    </div>
+
+    <h3>L'hébergement du site</h3>
+    <p style="font-size:.94rem">Ça décide de deux choses : la réécriture du
+       fichier <code>.html</code> à chaque publication, et le téléversement des
+       médias.</p>
+    <div class="choix" id="choixHote">
+      <button type="button" data-hote="php" aria-pressed="true">Hébergement PHP (OVH, o2switch…)</button>
+      <button type="button" data-hote="statique" aria-pressed="false">Statique (Netlify, Vercel, Cloudflare)</button>
+    </div>
+    <p id="explicationHote" style="font-size:.92rem; margin:6px 0 0"></p>
+  </div>
+
+  <h3>Le fichier à déposer</h3>
+  <pre id="sortie"></pre>
+  <div class="barre">
+    <button class="btn btn--fort" id="telecharger">Télécharger admin-config.js</button>
+    <button class="btn" id="copier">Copier</button>
+    <span id="etatCopie" style="color:var(--pale); font-size:.9rem"></span>
+  </div>
+  <p>Ce fichier remplace le <code>admin-config.js</code> livré dans le dossier,
+     à côté de <code>index.html</code>.</p>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="etape">
+  <div class="num"><b>3</b> 3 minutes</div>
+  <h2>Publier les règles de sécurité</h2>
+  <p>Sans cette étape, votre base est ouverte à tous. Dans la console :
+     <strong>Firestore Database ▸ onglet Règles</strong>, remplacez tout, puis
+     <strong>Publier</strong>.</p>
+  <div class="barre">
+    <button class="btn btn--fort" id="copierRegles">Copier les règles Firestore</button>
+    <span id="etatRegles" style="color:var(--pale); font-size:.9rem"></span>
+  </div>
+  <p>Le fichier est aussi dans le dossier : <code>firebase/firestore.rules</code>.</p>
+
+  <h3>Donner l'accès au client</h3>
+  <p>Toujours dans Firestore, créez le document qui autorise son compte :</p>
+  <table>
+    <tr><th>Collection</th><th>Document</th><th>Champ</th></tr>
+    <tr><td>sites</td><td><span id="rappelSite">mon-site</span></td><td>—</td></tr>
+    <tr><td>└ members</td><td>l'UID noté à l'étape 1</td><td><code>role</code> (chaîne) = <code>owner</code></td></tr>
+  </table>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="etape">
+  <div class="num"><b>4</b> 2 minutes</div>
+  <h2>Brancher le module sur les pages</h2>
+  <p>Sur <strong>chaque page</strong> du site, juste avant <code>&lt;/body&gt;</code> :</p>
+  <pre id="deuxLignes"><span class="kle">&lt;script</span> src="/admin-config.js"<span class="kle">&gt;&lt;/script&gt;</span>
+<span class="kle">&lt;script</span> type="module" src="/admin/runtime.js"<span class="kle">&gt;&lt;/script&gt;</span></pre>
+  <div class="barre">
+    <button class="btn" id="copierLignes">Copier les deux lignes</button>
+    <span id="etatLignes" style="color:var(--pale); font-size:.9rem"></span>
+  </div>
+  <p>La page <code>index.html</code> livrée dans le dossier les contient déjà.
+     Si vous partez d'un site existant, c'est la seule modification à apporter à
+     son code.</p>
+
+  <div id="blocPhp">
+    <h3>Le script serveur</h3>
+    <p>Déposez <code>admin-endpoint.php</code> à la racine du site, ouvrez-le et
+       renseignez la première ligne de réglage :</p>
+    <pre>$PROJECT_ID   = '<span class="txt" id="rappelProjet">votre-projet</span>';</pre>
+    <p>Créez à côté un dossier <code>medias/</code> accessible en écriture
+       (<code>chmod 755</code>, <code>775</code> si votre hébergeur l'exige).</p>
+    <div class="attention">
+      <strong>Apache en CGI/FastCGI</strong> supprime l'en-tête
+      <code>Authorization</code>, ce qui ferait échouer toute écriture avec une
+      erreur 401. Dans le doute, ajoutez au <code>.htaccess</code> :
+      <code>SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</code>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="etape">
+  <div class="num"><b>5</b> 1 minute</div>
+  <h2>Vérifier</h2>
+  <p>Cette page peut interroger Firebase avec les valeurs saisies plus haut, et
+     vous dire ce qui manque encore.</p>
+  <div class="barre">
+    <button class="btn btn--fort" id="verifier">Vérifier la configuration</button>
+  </div>
+  <div class="verdict" id="verdict"></div>
+
+  <h3>Puis, sur le site</h3>
+  <ul>
+    <li><code>https://ledomaine/</code> — le site s'affiche normalement</li>
+    <li><code>https://ledomaine/?admin</code> — l'écran de connexion apparaît,
+        le compte du client ouvre l'éditeur</li>
+    <li>Modifiez un texte, <strong>Publier</strong>, rechargez sans
+        <code>?admin</code> : la modification est en ligne pour tout le monde</li>
+    <li id="verifPhp">En FTP, <code>index.html</code> contient la modification
+        <strong>en clair dans le HTML</strong>, et un <code>index.src.html</code>
+        est apparu à côté : la copie du code d'origine, gardée comme référence</li>
+  </ul>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="etape">
+  <div class="num"><b>?</b> Si ça coince</div>
+  <h2>Les pannes courantes</h2>
+  <table>
+    <tr><th>Symptôme</th><th>Cause la plus probable</th></tr>
+    <tr><td>« Connexion impossible » avec le bon mot de passe</td><td>domaine non autorisé dans Authentication ▸ Settings ▸ Authorized domains</td></tr>
+    <tr><td>« Ce compte n'a pas accès à ce site »</td><td>document <code>sites/&lt;siteId&gt;/members/&lt;UID&gt;</code> absent, ou <code>role</code> ≠ <code>owner</code></td></tr>
+    <tr><td><code>Missing or insufficient permissions</code></td><td>règles de sécurité non publiées (étape 3)</td></tr>
+    <tr><td>Rien ne se passe avec <code>?admin</code></td><td><code>siteId</code> ou <code>projectId</code> erroné — la console du navigateur le dit</td></tr>
+    <tr><td>« Le serveur a répondu 401 » à la publication</td><td>en-tête <code>Authorization</code> supprimé par Apache (étape 4)</td></tr>
+    <tr><td>« Écriture impossible »</td><td>droits du dossier : le site doit être inscriptible par PHP</td></tr>
+    <tr><td>Le téléversement d'une vidéo échoue</td><td><code>upload_max_filesize</code> et <code>post_max_size</code> du <code>php.ini</code>, souvent à 2 Mo</td></tr>
+    <tr><td>L'historique reste vide</td><td>Firestore réclame un index : le lien pour le créer en un clic est dans la console du navigateur</td></tr>
+  </table>
+  <p>Le module trace ce qu'il fait quand <code>debug: true</code> : ouvrez la
+     console du navigateur, elle dit combien d'éléments ont été détectés et ce
+     qui a été appliqué.</p>
+</section>
+
+<p class="fin">
+  Documentation complète : <code>docs/INSTALLATION.md</code> ·
+  <code>docs/ARCHITECTURE.md</code>
+</p>
+
+</div>
+
+<script>
+const REGLES_FIRESTORE = `/*__REGLES_FIRESTORE__*/`;
+
+const champs = ['siteId','apiKey','projectId','authDomain','storageBucket','appId']
+  .reduce((acc, id) => (acc[id] = document.getElementById(id), acc), {});
+const sortie = document.getElementById('sortie');
+let hote = 'php';
+
+const echappe = (s) => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const valeur = (id) => champs[id].value.trim();
+
+/** Le fichier tel qu'il sera déposé. */
+function fabriquer() {
+  const v = (id, defaut) => valeur(id) || defaut;
+  const lignesHote = hote === 'php'
+    ? `
+  // Réécriture du fichier .html à chaque publication, et bibliothèque média
+  // dans un dossier du site.
+  host: { endpoint: '/admin-endpoint.php' },
+  media: { adapter: 'endpoint', endpoint: '/admin-endpoint.php' },`
+    : `
+  // Hébergement statique : pas de réécriture du .html possible, et la
+  // bibliothèque média se remplit par adresse.
+  media: { adapter: 'url' },`;
+
+  return `/* Module Admin — configuration de ${v('siteId','mon-site')} */
+window.ADMIN_CONFIG = {
+  siteId: '${v('siteId','mon-site')}',
+
+  firebase: {
+    apiKey:        '${v('apiKey','À REMPLIR')}',
+    authDomain:    '${v('authDomain','À REMPLIR')}',
+    projectId:     '${v('projectId','À REMPLIR')}',
+    storageBucket: '${v('storageBucket','À REMPLIR')}',
+    appId:         '${v('appId','À REMPLIR')}',
+  },
+
+  lang: 'fr',
+${lignesHote}
+
+  // À repasser à false une fois le site en service.
+  debug: true,
+};
+`;
+}
+
+function colorer(code) {
+  return echappe(code)
+    .replace(/(\/\/[^\n]*)/g, '<span class="com">$1</span>')
+    .replace(/('[^']*')/g, '<span class="txt">$1</span>')
+    .replace(/^(\s*)([a-zA-Z]+):/gm, '$1<span class="cle">$2</span>:');
+}
+
+function rafraichir() {
+  sortie.innerHTML = colorer(fabriquer());
+  document.getElementById('rappelSite').textContent = valeur('siteId') || 'mon-site';
+  document.getElementById('rappelProjet').textContent = valeur('projectId') || 'votre-projet';
+  for (const id of Object.keys(champs)) champs[id].classList.toggle('vide', !valeur(id));
+  const php = hote === 'php';
+  document.getElementById('blocPhp').style.display = php ? '' : 'none';
+  document.getElementById('verifPhp').style.display = php ? '' : 'none';
+  document.getElementById('explicationHote').textContent = php
+    ? 'Le fichier .html du site est réécrit à chaque publication : le module peut être retiré, le site garde tout. Le client téléverse ses images depuis l’éditeur.'
+    : 'Pas de réécriture du .html ni de téléversement : la bibliothèque média se remplit par adresse, et l’éditeur propose un export manuel de la page figée.';
+}
+
+for (const id of Object.keys(champs)) champs[id].addEventListener('input', rafraichir);
+for (const b of document.querySelectorAll('#choixHote button')) {
+  b.addEventListener('click', () => {
+    hote = b.dataset.hote;
+    for (const autre of document.querySelectorAll('#choixHote button')) {
+      autre.setAttribute('aria-pressed', autre === b ? 'true' : 'false');
+    }
+    rafraichir();
+  });
+}
+
+/** Recopie dans le presse-papier, avec repli si l'API est refusée. */
+async function copier(texte, temoin) {
+  try {
+    await navigator.clipboard.writeText(texte);
+    temoin.textContent = 'Copié.';
+  } catch {
+    const zone = document.createElement('textarea');
+    zone.value = texte;
+    document.body.appendChild(zone);
+    zone.select();
+    temoin.textContent = document.execCommand('copy') ? 'Copié.' : 'Copie refusée — sélectionnez le texte.';
+    zone.remove();
+  }
+  setTimeout(() => { temoin.textContent = ''; }, 2600);
+}
+
+document.getElementById('copier').onclick =
+  () => copier(fabriquer(), document.getElementById('etatCopie'));
+document.getElementById('copierRegles').onclick =
+  () => copier(REGLES_FIRESTORE, document.getElementById('etatRegles'));
+document.getElementById('copierLignes').onclick =
+  () => copier('<script src="/admin-config.js"><\/script>\n<script type="module" src="/admin/runtime.js"><\/script>',
+    document.getElementById('etatLignes'));
+
+document.getElementById('telecharger').onclick = () => {
+  const url = URL.createObjectURL(new Blob([fabriquer()], { type: 'text/javascript' }));
+  const lien = document.createElement('a');
+  lien.href = url;
+  lien.download = 'admin-config.js';
+  document.body.appendChild(lien);
+  lien.click();
+  lien.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
+// ---------------------------------------------------------------- vérification
+const verdict = document.getElementById('verdict');
+
+function afficher(classe, titre, points) {
+  verdict.className = 'verdict on ' + classe;
+  verdict.innerHTML = '<strong>' + echappe(titre) + '</strong>'
+    + (points.length ? '<ul>' + points.map(p => '<li>' + p + '</li>').join('') + '</ul>' : '');
+}
+
+document.getElementById('verifier').onclick = async () => {
+  const apiKey = valeur('apiKey');
+  const projectId = valeur('projectId');
+  const siteId = valeur('siteId');
+
+  const manquants = ['apiKey','projectId','authDomain','storageBucket','appId']
+    .filter((id) => !valeur(id));
+  if (manquants.length) {
+    afficher('att', 'Il manque des valeurs', ['À renseigner : <code>' + manquants.join('</code>, <code>') + '</code>']);
+    return;
+  }
+
+  afficher('att', 'Vérification en cours…', []);
+  const points = [];
+  let bloquant = false;
+
+  // 1. La clé et le projet existent-ils ? Firestore répond même sans compte.
+  try {
+    const url = 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(projectId)
+      + '/databases/(default)/documents/sites/' + encodeURIComponent(siteId)
+      + '?key=' + encodeURIComponent(apiKey);
+    const r = await fetch(url);
+    const json = await r.json().catch(() => ({}));
+    const code = json?.error?.status || '';
+
+    if (r.ok) {
+      points.push('Projet et clé valides. Le document <code>sites/' + echappe(siteId) + '</code> existe.');
+    } else if (code === 'PERMISSION_DENIED') {
+      points.push('Projet et clé valides, et les règles de sécurité sont bien en place (l’accès anonyme est refusé).');
+    } else if (code === 'NOT_FOUND') {
+      points.push('Projet et clé valides. Le document <code>sites/' + echappe(siteId)
+        + '</code> n’existe pas encore — créez-le à l’étape 3.');
+    } else if (code === 'INVALID_ARGUMENT' || /API key/i.test(json?.error?.message || '')) {
+      points.push('❌ <code>apiKey</code> refusée par Google : vérifiez la valeur copiée.');
+      bloquant = true;
+    } else {
+      points.push('❌ Firestore a répondu <code>' + echappe(code || r.status) + '</code> : '
+        + echappe(json?.error?.message || 'réponse inattendue') + '.');
+      bloquant = true;
+    }
+  } catch {
+    points.push('❌ Impossible de joindre Firestore. Vérifiez votre connexion, ou un bloqueur de requêtes.');
+    bloquant = true;
+  }
+
+  // 2. La connexion par e-mail est-elle activée ? La réponse d'erreur le dit.
+  try {
+    const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='
+      + encodeURIComponent(apiKey), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'verification-' + Date.now() + '@exemple.invalid',
+        password: 'x'.repeat(12),
+        returnSecureToken: true,
+      }),
+    });
+    const json = await r.json().catch(() => ({}));
+    const message = json?.error?.message || '';
+
+    if (/OPERATION_NOT_ALLOWED/.test(message)) {
+      points.push('❌ La connexion <strong>E-mail/Mot de passe</strong> n’est pas activée : '
+        + 'Authentication ▸ Sign-in method (étape 1).');
+      bloquant = true;
+    } else if (/EMAIL_NOT_FOUND|INVALID_LOGIN_CREDENTIALS|INVALID_PASSWORD/.test(message)) {
+      points.push('Authentication répond, connexion par e-mail activée.');
+    } else if (/API key not valid|API_KEY_INVALID/i.test(message)) {
+      points.push('❌ <code>apiKey</code> refusée par Authentication.');
+      bloquant = true;
+    } else if (r.ok) {
+      points.push('Authentication répond.');
+    } else {
+      points.push('Authentication a répondu <code>' + echappe(message || r.status)
+        + '</code> — à vérifier si la connexion échoue.');
+    }
+  } catch {
+    points.push('Impossible de joindre Authentication (connexion ou bloqueur de requêtes).');
+  }
+
+  points.push('Le domaine du site doit figurer dans <em>Authentication ▸ Settings ▸ '
+    + 'Authorized domains</em> : cette page ne peut pas le vérifier à votre place.');
+
+  if (bloquant) afficher('ko', 'Il reste quelque chose à corriger', points);
+  else afficher('ok', 'La configuration répond correctement', points);
+};
+
+rafraichir();
+</script>
+</body>
+</html>

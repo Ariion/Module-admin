@@ -15,6 +15,7 @@ const T = (texte) => ({ html: texte });
 export const PAGE_TEMPLATES = [
   {
     id: 'onepage',
+    pour: ['vitrine'], resume: 3,
     apercu: ['bar', 'trio', 'duo', 'trio'],
     build: () => [
       section([
@@ -64,6 +65,7 @@ export const PAGE_TEMPLATES = [
 
   {
     id: 'vente',
+    pour: ['vente'], resume: 3,
     apercu: ['bar', 'trio', 'duo', 'bar'],
     build: () => [
       section([
@@ -105,6 +107,7 @@ export const PAGE_TEMPLATES = [
 
   {
     id: 'portfolio',
+    pour: ['portfolio'], resume: 2,
     apercu: ['bar', 'trio', 'trio', 'duo'],
     build: () => [
       section([
@@ -127,6 +130,7 @@ export const PAGE_TEMPLATES = [
 
   {
     id: 'contact',
+    pour: ['contact'], resume: 2,
     apercu: ['bar', 'duo', 'bar'],
     build: () => [
       section([
@@ -153,6 +157,7 @@ export const PAGE_TEMPLATES = [
 
   {
     id: 'apropos',
+    pour: ['histoire'], resume: 2,
     apercu: ['bar', 'duo', 'trio'],
     build: () => [
       section([
@@ -176,7 +181,106 @@ export const PAGE_TEMPLATES = [
       ]),
     ],
   },
+
+  {
+    id: 'article',
+    pour: ['article'], resume: 2,
+    apercu: ['bar', 'bar', 'duo'],
+    build: () => [
+      section([
+        w('heading', { text: 'Le titre de votre article', level: 'h2' }),
+        w('text', T('<em>Publié le 1er janvier — par votre nom</em>')),
+        w('spacer', { height: 12 }),
+        w('image', { alt: '' }),
+      ], { padding: 64 }),
+      section([
+        w('text', T('Le chapeau : deux ou trois phrases qui résument l’essentiel, pour donner envie de lire la suite.')),
+        w('spacer', { height: 20 }),
+        w('heading', { text: 'Un premier intertitre', level: 'h3' }),
+        w('text', T('Le corps du texte. Vous écrivez ici directement dans la page, comme dans un traitement de texte.')),
+        w('spacer', { height: 16 }),
+        w('heading', { text: 'Un second intertitre', level: 'h3' }),
+        w('text', T('La suite de votre propos. Ajoutez des images, des listes ou des citations depuis le panneau.')),
+      ]),
+      section([
+        w('columns', { count: 2, gap: 40 }, [
+          [w('heading', { text: 'En savoir plus', level: 'h3' }),
+           w('list', { items: 'Un lien utile\nUn document à télécharger\nUne page connexe' })],
+          [w('heading', { text: 'Contact presse', level: 'h3' }),
+           w('text', T('Nom, téléphone, adresse électronique.')),
+           w('spacer', { height: 12 }),
+           w('button', { text: 'Nous écrire', href: 'mailto:contact@exemple.fr' })],
+        ]),
+      ]),
+    ],
+  },
 ];
+
+/**
+ * Les intentions proposées par l'assistant de démarrage, dans l'ordre où
+ * elles sont présentées. Chacune pointe vers le modèle qui la sert.
+ */
+export const INTENTIONS = [
+  { id: 'vitrine', modele: 'onepage' },
+  { id: 'vente', modele: 'vente' },
+  { id: 'portfolio', modele: 'portfolio' },
+  { id: 'histoire', modele: 'apropos' },
+  { id: 'article', modele: 'article' },
+  { id: 'contact', modele: 'contact' },
+];
+
+/**
+ * Compose des propositions de mise en page à partir des intentions cochées.
+ *
+ * Empiler des modèles entiers donnerait une page interminable : chaque
+ * intention n'apporte donc que ses premières sections (`resume`), sauf quand
+ * elle est seule — auquel cas le modèle complet est le meilleur départ.
+ *
+ * @param {string[]} intentions identifiants cochés, dans l'ordre de la liste
+ * @param {string} mode 'une' (tout sur cette page) ou 'plusieurs'
+ * @returns {{id:string, trees:object[][], apercu:string[], modeles:string[]}[]}
+ */
+export function composerPropositions(intentions, mode) {
+  const retenues = INTENTIONS.filter((i) => intentions.includes(i.id));
+  if (!retenues.length) return [];
+
+  const modeleDe = (intention) => findPageTemplate(intention.modele);
+  const propositions = [];
+
+  const complet = (intention) => {
+    const modele = modeleDe(intention);
+    return { trees: modele.build(), apercu: modele.apercu, modeles: [modele.id] };
+  };
+
+  // Sur plusieurs pages, celle-ci ne porte que la première intention : les
+  // autres deviendront des pages à part.
+  if (mode === 'plusieurs' || retenues.length === 1) {
+    const premier = complet(retenues[0]);
+    propositions.push({ id: 'complet', ...premier });
+    if (retenues.length > 1) {
+      propositions.push({
+        id: 'assemble',
+        ...assembler(retenues.map(modeleDe)),
+      });
+    }
+    return propositions;
+  }
+
+  propositions.push({ id: 'assemble', ...assembler(retenues.map(modeleDe)) });
+  propositions.push({ id: 'essentiel', ...complet(retenues[0]) });
+  return propositions;
+}
+
+function assembler(modeles) {
+  const trees = [];
+  const apercu = [];
+  for (const modele of modeles) {
+    const sections = modele.build().slice(0, modele.resume || 2);
+    trees.push(...sections);
+    apercu.push(...modele.apercu.slice(0, sections.length));
+  }
+  return { trees, apercu, modeles: modeles.map((m) => m.id) };
+}
 
 export function findPageTemplate(id) {
   return PAGE_TEMPLATES.find((m) => m.id === id) || null;

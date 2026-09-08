@@ -165,8 +165,8 @@ réponse tient dans le balisage — les éléments émettent du HTML **sémantiq
 sans classes** : un `<h2>`, un `<p>`, un `<img>`. La feuille de style du site
 s'y applique donc d'elle-même, et un titre inséré prend sa police, sa couleur
 et ses marges. Seuls les conteneurs portent quelques styles en ligne, pour la
-mise en grille. *Vérifié :* un titre inséré dans le site du Domaine de
-Lamartine hérite bien de sa police `Fraunces`.
+mise en grille. *Vérifié :* sur le site client servant de banc d'essai, un
+titre inséré hérite bien de la police du site.
 
 Un élément n'est jamais inséré dans le balisage du développeur : il vit dans
 une section ajoutée. La mise en page du site reste intacte.
