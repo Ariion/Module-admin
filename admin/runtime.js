@@ -10,7 +10,7 @@
  *
  * @module runtime
  */
-import { resolveConfig, cacheKey, isPassive } from './core/config.js';
+import { resolveConfig, cacheKey, isPassive, PAGE_COMMUNE } from './core/config.js';
 import { PageModel } from './core/model.js';
 import { getDocument } from './data/rest.js';
 import { paths } from './data/schema.js';
@@ -20,17 +20,17 @@ import { ready, emitter } from './core/util.js';
 
 const EDITOR_SESSION_KEY = 'admin:editing';
 
-function readCache(config) {
+function readCache(config, pageId = config.pageId) {
   if (!config.cache) return null;
   return safe(() => {
-    const raw = localStorage.getItem(cacheKey(config));
+    const raw = localStorage.getItem(cacheKey({ ...config, pageId }));
     return raw ? JSON.parse(raw) : null;
   }, null, 'cache');
 }
 
-function writeCache(config, snapshot) {
+function writeCache(config, snapshot, pageId = config.pageId) {
   if (!config.cache) return;
-  safe(() => localStorage.setItem(cacheKey(config), JSON.stringify(snapshot)), null, 'cache');
+  safe(() => localStorage.setItem(cacheKey({ ...config, pageId }), JSON.stringify(snapshot)), null, 'cache');
 }
 
 function hasContent(snapshot) {
@@ -40,7 +40,9 @@ function hasContent(snapshot) {
     || Object.keys(snapshot.collections || {}).length > 0
     || (structure.add || []).length > 0
     || (structure.hide || []).length > 0
-    || (structure.order || []).length > 0;
+    || (structure.order || []).length > 0
+    // Un document commun peut ne porter que les réglages du site.
+    || !!snapshot.reglages;
 }
 
 /** L'éditeur doit-il s'ouvrir ? (paramètre d'URL, ou session déjà ouverte) */
@@ -78,7 +80,10 @@ class AdminRuntime {
 
   apply(snapshot, origin) {
     if (!hasContent(snapshot)) return null;
-    const result = this.getModel().applySnapshot(snapshot);
+    // Le commun et la page se succèdent : le second cumule ce que le premier
+    // n'a pas retrouvé, au lieu de repartir de zéro.
+    const estCommun = String(origin).includes('commun');
+    const result = this.getModel().applySnapshot(snapshot, { cumuler: !estCommun });
     // Les appels à l'action qui ouvrent une fenêtre : on rebranche à chaque
     // application, les éléments ayant pu être reconstruits.
     safe(() => {
@@ -93,8 +98,8 @@ class AdminRuntime {
   }
 
   /** Récupère le contenu publié (lecture publique, sans SDK). */
-  async fetchPublished() {
-    const { firebase, siteId, pageId } = this.config;
+  async fetchPublished(pageId = this.config.pageId) {
+    const { firebase, siteId } = this.config;
     if (!firebase?.projectId || !siteId) return null;
     const data = await getDocument(firebase, paths.page(siteId, pageId));
     if (!data) return null;
@@ -104,6 +109,15 @@ class AdminRuntime {
       collections: data.collections || {},
       sections: data.sections || null,
     };
+  }
+
+  /**
+   * Contenu de l'en-tête et du pied de page, commun à toutes les pages.
+   * Une requête de plus, mais c'est ce qui évite au client de corriger son
+   * numéro de téléphone page par page.
+   */
+  fetchCommun() {
+    return this.fetchPublished(PAGE_COMMUNE);
   }
 
   /** Charge le code de l'éditeur (uniquement pour les administrateurs). */
@@ -123,9 +137,9 @@ class AdminRuntime {
 }
 
 /** Mode démonstration : le contenu « publié » vit dans le localStorage. */
-async function loadDemoPublished(config) {
+async function loadDemoPublished(config, pageId = config.pageId) {
   const { MemoryBackend } = await import('./data/memory.js');
-  const data = await new MemoryBackend(config).loadPublished(config.pageId);
+  const data = await new MemoryBackend(config).loadPublished(pageId);
   if (!data) return null;
   return {
     v: data.v || 1,
@@ -171,16 +185,30 @@ async function boot() {
   // 1. Cache local : le contenu déjà connu est appliqué sans attendre le
   //    réseau, ce qui évite de voir l'ancien texte pendant un instant.
   const cached = readCache(config);
+  const cachedCommun = readCache(config, PAGE_COMMUNE);
   ready(() => {
+    // L'en-tête et le pied d'abord : la page a le dernier mot sur ce qui la
+    // concerne, mais les deux visent des éléments distincts.
+    if (cachedCommun) safe(() => runtime.apply(cachedCommun, 'cache-commun'), null, 'apply-cache-commun');
     if (cached) safe(() => runtime.apply(cached, 'cache'), null, 'apply-cache');
     if (editorRequested(config)) runtime.openEditor().catch((err) => console.error('[admin]', err));
   });
 
   // 2. Version publiée, en tâche de fond.
   if (config.siteId) {
-    const published = config.backend === 'demo'
-      ? await loadDemoPublished(config)
-      : await runtime.fetchPublished();
+    const demo = config.backend === 'demo';
+    const [commun, published] = await Promise.all([
+      demo ? loadDemoPublished(config, PAGE_COMMUNE) : runtime.fetchCommun(),
+      demo ? loadDemoPublished(config) : runtime.fetchPublished(),
+    ]);
+    if (commun) {
+      writeCache(config, commun, PAGE_COMMUNE);
+      ready(() => {
+        if (JSON.stringify(commun) !== JSON.stringify(cachedCommun)) {
+          safe(() => runtime.apply(commun, 'firestore-commun'), null, 'apply-commun');
+        }
+      });
+    }
     if (published) {
       writeCache(config, published);
       ready(() => {

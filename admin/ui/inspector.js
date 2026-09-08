@@ -32,13 +32,22 @@ export function createInspector({ vue, t, actions }) {
 
     const { entry, collection, itemIndex, el } = selection;
 
-    vue.appendChild(h('div', { class: 'sel' },
-      h('span', { class: 'sel__icon' }, icon(entry ? iconeDe(entry.role) : 'section', 15)),
+    const zone = actions.zoneDe?.(el) || null;
+    vue.appendChild(h('div', { class: 'sel' + (zone ? ' sel--commun' : '') },
+      h('span', { class: 'sel__icon' }, icon(zone ? 'pages' : (entry ? iconeDe(entry.role) : 'section'), 15)),
       h('div', { class: 'sel__main' },
         h('div', { class: 'sel__title' }, entry ? t(TITRES[entry.role] || 'text') : t('container')),
         h('div', { class: 'sel__meta' }, '<' + el.tagName.toLowerCase() + '>'),
       ),
     ));
+    // Une modification d'en-tête ou de pied vaut pour toutes les pages : le
+    // dire ici évite la mauvaise surprise.
+    if (zone) {
+      vue.appendChild(h('p', { class: 'commun' },
+        icon('warn', 13),
+        h('span', {}, t(zone === 'pied' ? 'communPied' : 'communEntete')),
+      ));
+    }
 
     if (entry) vue.appendChild(groupe(t('content'), 'text', () => champsContenu(entry), true));
     for (const bloc of champsStyle(el)) vue.appendChild(bloc);

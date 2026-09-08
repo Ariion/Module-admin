@@ -145,6 +145,12 @@ export function isPassive(search = location.search) {
 }
 
 /** Clé de cache local du contenu publié. */
+/**
+ * Identifiant du document qui porte l'en-tête et le pied de page : il n'est
+ * pas rattaché à une page, il vaut pour tout le site.
+ */
+export const PAGE_COMMUNE = '__commun';
+
 export function cacheKey(config) {
   return `admin:content:${config.siteId}:${config.pageId}`;
 }

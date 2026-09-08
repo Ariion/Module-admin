@@ -22,7 +22,10 @@ import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
 import { openWizard } from './wizard.js';
+import { openLegal } from './legal-panel.js';
+import { filePathOf } from '../core/pages.js';
 import { ouvrirAction } from '../core/actions.js';
+import { PAGE_COMMUNE } from '../core/config.js';
 import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
 import { createHost } from '../data/host.js';
@@ -133,6 +136,7 @@ export async function startEditor(runtime) {
         pickMedia: (rappel, accept) => { shell.showView('medias'); library.pick(rappel, accept); },
         // Voir la fenêtre telle que le visiteur la verra, dans l'aperçu.
         previewAction: (action) => ouvrirAction(model.doc, action),
+        zoneDe: (el) => model.zoneDe(el),
         upload: async (fichier, onProgress) => {
           // Tout ce qui est téléversé depuis un réglage rejoint la
           // bibliothèque : le client le retrouve pour une autre page.
@@ -193,14 +197,21 @@ export async function startEditor(runtime) {
     // Le nom de la page ouvre la liste des pages du site.
     shell.onPageClick(() => ouvrirPages());
 
-    shell.setFootExtra([h('button', {
-      class: 'btn btn--wide btn--sect', type: 'button', style: { marginBottom: '10px' },
-      onclick: () => openPageTemplates({
-        root, t,
-        onApply: (id, remplacer) => appliquerModelePage(id, remplacer),
-        onWizard: () => ouvrirAssistant(),
-      }),
-    }, icon('pages', 13), t('pageTemplates'))]);
+    shell.setFootExtra([
+      h('div', { class: 'row', style: { marginBottom: '10px' } },
+        h('button', {
+          class: 'btn btn--sect', type: 'button',
+          onclick: () => openPageTemplates({
+            root, t,
+            onApply: (id, remplacer) => appliquerModelePage(id, remplacer),
+            onWizard: () => ouvrirAssistant(),
+          }),
+        }, icon('pages', 13), t('pageTemplates')),
+        h('button', {
+          class: 'btn', type: 'button', title: t('legalTitle'), onclick: () => ouvrirLegal(),
+        }, icon('code', 13), t('legalCourt')),
+      ),
+    ]);
 
     shell.setActions([
       publishButton,
@@ -316,16 +327,28 @@ export async function startEditor(runtime) {
     }).refresh();
     runtime.model = model;
 
-    // Brouillon s'il existe, sinon la dernière version publiée.
-    let instantane = null;
-    try { instantane = await backend.loadDraft(state.pageId); } catch { instantane = null; }
-    state.hasDraft = !!(instantane && aDuContenu(instantane));
-    if (!state.hasDraft) {
-      try { instantane = await backend.loadPublished(state.pageId); } catch { instantane = null; }
+    // L'en-tête et le pied de page viennent d'un document commun à tout le
+    // site : ils sont appliqués avant le contenu propre à la page.
+    const charger = async (id) => {
+      let brouillon = null;
+      try { brouillon = await backend.loadDraft(id); } catch { brouillon = null; }
+      if (brouillon && aDuContenu(brouillon)) return { instantane: brouillon, brouillon: true };
+      let publie = null;
+      try { publie = await backend.loadPublished(id); } catch { publie = null; }
+      return { instantane: publie, brouillon: false };
+    };
+
+    const commun = await charger(PAGE_COMMUNE);
+    if (commun.instantane && aDuContenu(commun.instantane)) {
+      model.applySnapshot(commun.instantane);
     }
+
+    const propre = await charger(state.pageId);
+    const instantane = propre.instantane;
+    state.hasDraft = propre.brouillon || commun.brouillon;
     const enregistre = !!(instantane && aDuContenu(instantane));
     if (enregistre) {
-      model.applySnapshot(instantane);
+      model.applySnapshot(instantane, { cumuler: true });
       state.savedAt = instantane.updatedAt || null;
     }
 
@@ -366,7 +389,9 @@ export async function startEditor(runtime) {
       || Object.keys(instantane.collections || {}).length > 0
       || (structure.add || []).length > 0
       || (structure.hide || []).length > 0
-      || (structure.order || []).length > 0;
+      || (structure.order || []).length > 0
+      // Un document commun peut ne porter que les réglages du site.
+      || !!instantane.reglages;
   }
 
   /**
@@ -504,6 +529,61 @@ export async function startEditor(runtime) {
     });
   }
 
+  /**
+   * Pages légales. Les réponses au questionnaire sont conservées dans le
+   * document commun du site : elles ne dépendent d'aucune page, et servent
+   * aux trois documents.
+   */
+  function ouvrirLegal() {
+    openLegal({
+      root, t,
+      etat: model.reglages?.legal || null,
+      peutCreerPages: hosting.enabled,
+      onSave: (etat) => { model.setReglage('legal', etat); markDirty(); },
+      onApply: async (documents) => {
+        for (const document of documents) {
+          await poserDocumentLegal(document);
+        }
+        notify(t('legalFait', documents.length));
+      },
+    });
+  }
+
+  /**
+   * Pose un document légal : dans une page dédiée quand l'hébergement sait
+   * en créer une, sinon à la suite de la page ouverte.
+   */
+  async function poserDocumentLegal(document) {
+    if (hosting.enabled) {
+      const base = urlCourante().replace(/[^/]*$/, '');
+      try {
+        // L'endpoint attend un chemin relatif au site, pas une URL.
+        await hosting.createPage(document.fichier, filePathOf(urlCourante()));
+        await autosave.flush();
+        await loadPage(base + document.fichier, { keepScroll: false });
+        model.applyTrees(document.sections, true);
+        markDirty();
+        // La page vient d'être créée en copiant celle-ci : la laisser en
+        // brouillon mettrait en ligne une page « mentions légales » qui
+        // affiche l'accueil. On publie donc tout de suite ; l'avertissement
+        // du panneau rappelle qu'il faut relire.
+        await publish();
+        await loadPage(base + document.fichier, { keepScroll: false });
+        showLibrary();
+        return;
+      } catch (err) {
+        // La page existe déjà, ou l'écriture est refusée : on retombe sur
+        // l'insertion dans la page ouverte plutôt que d'abandonner.
+        debug('création de page légale impossible', err);
+      }
+    }
+    model.applyTrees(document.sections, false);
+    markDirty();
+    await autosave.flush();
+    await loadPage(urlCourante(), { keepScroll: false });
+    showLibrary();
+  }
+
   /** Pose la trame d'une page entière. */
   async function appliquerModelePage(id, remplacer) {
     if (!model.applyPageTemplate(id, remplacer)) return;
@@ -627,7 +707,10 @@ export async function startEditor(runtime) {
     state.saving = true;
     render();
     try {
-      await backend.saveDraft(state.pageId, model.toSnapshot());
+      await Promise.all([
+        backend.saveDraft(state.pageId, model.toSnapshot({ portee: 'page' })),
+        backend.saveDraft(PAGE_COMMUNE, model.toSnapshot({ portee: 'commun' })),
+      ]);
       state.hasDraft = true;
       state.savedAt = Date.now();
       state.dirty = false;
@@ -650,9 +733,12 @@ export async function startEditor(runtime) {
     textEditor.commit();
     publishButton.disabled = true;
     try {
-      const instantane = model.toSnapshot();
+      const instantane = model.toSnapshot({ portee: 'page' });
+      const commun = model.toSnapshot({ portee: 'commun' });
       await backend.publish(state.pageId, instantane);
+      await backend.publish(PAGE_COMMUNE, commun);
       safe(() => localStorage.setItem(cacheKey({ ...config, pageId: state.pageId }), JSON.stringify(instantane)));
+      safe(() => localStorage.setItem(cacheKey({ ...config, pageId: PAGE_COMMUNE }), JSON.stringify(commun)));
       state.dirty = false;
       state.hasDraft = false;
       state.savedAt = Date.now();
@@ -685,14 +771,17 @@ export async function startEditor(runtime) {
   }
 
   async function bakeIntoHost() {
-    const { sourceUrl } = await hosting.ensureSource();
+    // La page régénérée est celle qu'on édite, pas celle par laquelle on est
+    // entré : sans ça, publier depuis une autre page écraserait l'accueil.
+    const chemin = filePathOf(urlCourante());
+    const { sourceUrl } = await hosting.ensureSource(chemin);
     const scanOptions = { ...model.scanOptions };
     delete scanOptions.doc;
     const { html, orphans } = await bakePage({
       sourceUrl, snapshot: model.toSnapshot(), scanOptions, pageId: state.pageId,
     });
     if (orphans.length) notify(t('orphans', orphans.length), true);
-    await hosting.writePage(html);
+    await hosting.writePage(html, chemin);
   }
 
   function history() {

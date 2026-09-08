@@ -56,15 +56,20 @@ export function createHost(config, backend) {
      * URL. Si le développeur a redéployé sa page entre-temps, l'hébergement
      * remplace la copie par la nouvelle version — le code reste maître.
      */
-    async ensureSource() {
-      const result = await call('source', { path: pagePath });
+    /**
+     * @param {string} [chemin] page visée. L'éditeur peut naviguer d'une page
+     *   à l'autre : sans ce paramètre, la régénération viserait toujours la
+     *   page d'ouverture — et écraserait donc l'accueil.
+     */
+    async ensureSource(chemin) {
+      const result = await call('source', { path: chemin || pagePath });
       debug('source du site', result.sourceUrl, result.refreshed ? '(rafraîchie)' : '');
       return result;
     },
 
     /** Écrit le HTML régénéré à la place de la page publiée. */
-    async writePage(html) {
-      const result = await call('page', { path: pagePath, html });
+    async writePage(html, chemin) {
+      const result = await call('page', { path: chemin || pagePath, html });
       debug('page réécrite', result.bytes, 'octets');
       return result;
     },

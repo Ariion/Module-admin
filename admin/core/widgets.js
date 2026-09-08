@@ -122,6 +122,17 @@ export const WIDGETS = {
     ],
   },
 
+  copyright: {
+    category: 'basique', icon: 'pages',
+    defaults: () => ({ nom: '', depuis: '', mention: 'Tous droits réservés', align: 'center' }),
+    fields: [
+      { key: 'nom', type: 'text', label: 'copyrightNom', placeholder: 'Nom du site ou de la société' },
+      { key: 'depuis', type: 'number', label: 'copyrightDepuis', min: 1900, max: 2200, step: 1 },
+      { key: 'mention', type: 'text', label: 'copyrightMention' },
+      { key: 'align', type: 'align', label: 'alignLabel' },
+    ],
+  },
+
   map: {
     category: 'media', icon: 'map',
     defaults: () => ({ query: '', height: 340 }),
@@ -191,14 +202,14 @@ export function renderWidget(noeud, doc) {
 
     case 'heading': {
       el = doc.createElement(['h2', 'h3', 'h4'].includes(p.level) ? p.level : 'h2');
-      el.textContent = String(p.text ?? '');
+      el.textContent = remplacerJetons(p.text);
       appliquerAlignement(el, p.align);
       break;
     }
 
     case 'text': {
       el = doc.createElement('div');
-      el.innerHTML = safeHtml(p.html ?? '');
+      el.innerHTML = safeHtml(remplacerJetons(p.html));
       appliquerAlignement(el, p.align);
       break;
     }
@@ -305,6 +316,21 @@ export function renderWidget(noeud, doc) {
       break;
     }
 
+    case 'copyright': {
+      // L'année est recalculée à chaque affichage : le pied de page d'un
+      // site vitrine ne devrait jamais afficher une année périmée.
+      el = doc.createElement('p');
+      appliquerAlignement(el, p.align);
+      const annee = new Date().getFullYear();
+      const depuis = parseInt(p.depuis, 10);
+      const periode = Number.isFinite(depuis) && depuis > 1900 && depuis < annee
+        ? depuis + '–' + annee
+        : String(annee);
+      el.textContent = ['©', periode, remplacerJetons(p.nom).trim(), remplacerJetons(p.mention).trim() ? '— ' + remplacerJetons(p.mention) : '']
+        .filter(Boolean).join(' ');
+      break;
+    }
+
     case 'map': {
       el = doc.createElement('div');
       const requete = String(p.query || '').trim();
@@ -382,6 +408,18 @@ function urlIntegration(url) {
     }
   } catch { /* URL illisible */ }
   return '';
+}
+
+const JETONS = /\{\{\s*(année|annee|year)\s*\}\}/gi;
+
+/**
+ * Remplace les jetons d'un texte de widget. Seuls les widgets en profitent :
+ * ils sont reconstruits depuis leurs réglages à chaque affichage, alors qu'un
+ * texte du site est relu depuis la page quand le client le modifie — le jeton
+ * y serait remplacé par sa valeur, et l'année figerait sans prévenir.
+ */
+export function remplacerJetons(texte) {
+  return String(texte ?? '').replace(JETONS, String(new Date().getFullYear()));
 }
 
 /** Parcourt un arbre de widgets et retourne le nœud portant cette clé. */

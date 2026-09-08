@@ -242,6 +242,16 @@ button, input, textarea, select { font: inherit; color: inherit; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
+/* Zone commune : ce qui se modifie ici vaut pour toutes les pages. */
+.sel--commun { border-color: rgba(251,191,36,.4); background: rgba(251,191,36,.07); }
+.sel--commun .sel__icon { background: rgba(251,191,36,.16); color: var(--warn); }
+.commun {
+  display: flex; align-items: flex-start; gap: 9px; margin: -4px 0 12px; padding: 10px 12px;
+  background: rgba(251,191,36,.09); border: 1px solid rgba(251,191,36,.28);
+  border-radius: var(--radius); color: #f5d78e; font-size: 11.5px; line-height: 1.45;
+}
+.commun svg { flex: none; margin-top: 1px; color: var(--warn); }
+
 /* Actions du pied : le bouton Publier domine, le reste s'efface. */
 .panel__actions .btn--icon {
   background: transparent; border-color: var(--line-soft); color: var(--muted);
@@ -540,6 +550,18 @@ select.input { appearance: none; cursor: pointer; }
 @media (max-width: 860px) {
   .assist__cartes { grid-template-columns: 1fr; }
 }
+
+/* ---- Questionnaire des pages légales ---- */
+.legal__champs { display: grid; gap: 11px; margin-bottom: 12px; }
+.legal__champ { display: block; }
+.legal__requis { color: var(--warn); font-style: normal; font-size: 10.5px; }
+.input--manque { border-color: rgba(251,191,36,.55); }
+
+/* ---- Questionnaire des pages légales ---- */
+.legal__champs { display: grid; gap: 11px; margin-bottom: 12px; }
+.legal__champ { display: block; }
+.legal__requis { color: var(--warn); font-style: normal; font-size: 10.5px; }
+.input--manque { border-color: rgba(251,191,36,.55); }
 
 /* ---- Zones de dépôt dans l'aperçu ---- */
 .drop {

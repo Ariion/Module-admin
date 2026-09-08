@@ -38,6 +38,7 @@ export class PageModel {
     this.collections = [];
     /** @type {Map<string, object>} valeurs actuelles (contenu surchargé) */
     this.values = new Map();
+    this.reglages = null;
     /** @type {Map<string, object>} état des collections */
     this.collectionState = new Map();
     /** @type {Map<string, object>} métadonnées d'identité par id */
@@ -108,15 +109,18 @@ export class PageModel {
    * Applique un instantané de contenu au DOM.
    * @returns {{applied:number, orphans:object[]}}
    */
-  applySnapshot(snapshot) {
+  applySnapshot(snapshot, options = {}) {
     const data = snapshot && typeof snapshot === 'object' ? snapshot : emptySnapshot();
     let applied = 0;
+    // Deux instantanés se succèdent (le commun, puis la page) : le second ne
+    // doit pas effacer les orphelins signalés par le premier.
+    const orphelinsPrecedents = options.cumuler ? [...this.orphans] : [];
 
     // --- Contenu simple -----------------------------------------------
     const records = Object.entries(data.content || {}).map(([id, record]) => ({ id, ...record }));
     const { matched, orphans } = safe(() => resolveAll(records, this.index), { matched: new Map(), orphans: records }, 'resolveAll');
 
-    this.orphans = new Map(orphans.map((record) => [record.id, record]));
+    this.orphans = new Map([...orphelinsPrecedents, ...orphans.map((record) => [record.id, record])]);
     for (const record of records) {
       const hit = matched.get(record.id);
       if (!hit) continue;
@@ -136,6 +140,10 @@ export class PageModel {
       this.values.set(id, clone(record.value));
       this.meta.set(id, { ...record, resolvedVia: hit.via });
       if (safe(() => applyValue(hit.el, record.role, record.value), false, 'applyValue')) applied++;
+    }
+
+    if (data.reglages && typeof data.reglages === 'object') {
+      this.reglages = { ...(this.reglages || {}), ...clone(data.reglages) };
     }
 
     // --- Blocs répétables ---------------------------------------------
@@ -561,14 +569,54 @@ export class PageModel {
     this.refresh();
   }
 
-  /** Sérialise l'état courant pour l'enregistrement. */
-  toSnapshot() {
+  /**
+   * Réglages du site, conservés dans le document commun : ils ne dépendent
+   * d'aucune page. Aujourd'hui, les réponses au questionnaire légal.
+   */
+  setReglage(cle, valeur) {
+    this.reglages = { ...(this.reglages || {}), [cle]: clone(valeur) };
+  }
+
+  /**
+   * Zone commune à laquelle appartient un élément, s'il y en a une.
+   *
+   * Sur un site codé à la main, l'en-tête et le pied de page sont recopiés
+   * dans chaque fichier. Sans traitement particulier, un client qui corrige
+   * son téléphone dans le pied de page ne le corrigerait que sur la page
+   * ouverte. Ce qui vit dans ces zones est donc enregistré à part, dans un
+   * document commun appliqué à toutes les pages.
+   *
+   * @returns {'entete'|'pied'|null}
+   */
+  zoneDe(el) {
+    const zone = el?.closest?.(ZONES_COMMUNES);
+    if (!zone) return null;
+    const signes = [zone.tagName, zone.className, zone.id, zone.getAttribute('role') || ''].join(' ');
+    return /footer|contentinfo|pied|bas-de-page/i.test(signes) ? 'pied' : 'entete';
+  }
+
+  /**
+   * Sérialise l'état courant pour l'enregistrement.
+   * @param {{portee?:'page'|'commun'}} options `page` exclut l'en-tête et le
+   *   pied, `commun` ne garde qu'eux. Sans portée, tout est sérialisé.
+   */
+  toSnapshot(options = {}) {
+    const portee = options.portee || null;
+    // Un enregistrement dont on ne retrouve pas l'élément reste au format
+    // page : c'est là qu'il a été écrit, et le perdre serait pire.
+    const garder = (el) => {
+      if (!portee) return true;
+      const commun = !!(el && this.zoneDe(el));
+      return portee === 'commun' ? commun : !commun;
+    };
+
     const content = {};
     for (const [id, value] of this.values) {
       const entry = this.entries.get(id);
       const meta = this.meta.get(id);
       const print = entry ? entry.print : meta;
       if (!print) continue;
+      if (!garder(entry?.el)) continue;
       content[id] = {
         role: print.role,
         anchor: print.anchor,
@@ -583,6 +631,7 @@ export class PageModel {
     for (const [id, value] of this.styles) {
       const cible = this.styleTargets.get(id);
       if (!cible) continue;
+      if (!garder(cible.el)) continue;
       content[id] = {
         role: 'style',
         anchor: cible.print.anchor,
@@ -598,6 +647,7 @@ export class PageModel {
     for (const [id, data] of this.collectionState) {
       const collection = this.collectionsById.get(id);
       if (!collection) continue;
+      if (!garder(collection.container)) continue;
       collections[id] = {
         anchor: collection.print.anchor,
         path: collection.print.path,
@@ -608,7 +658,11 @@ export class PageModel {
     }
 
     const instantane = { v: SNAPSHOT_VERSION, content, collections };
-    if (!sectionsEmpty(this.sections)) instantane.sections = clone(this.sections);
+    // Ajouter ou masquer une section vaut pour la page ouverte, jamais pour
+    // toutes : la structure ne fait pas partie du commun.
+    if (portee !== 'commun' && !sectionsEmpty(this.sections)) instantane.sections = clone(this.sections);
+    // Les réglages du site voyagent avec le document commun.
+    if (portee !== 'page' && this.reglages) instantane.reglages = clone(this.reglages);
     return instantane;
   }
 
@@ -619,5 +673,16 @@ export class PageModel {
     return this.values.size + this.collectionState.size + this.styles.size + structure;
   }
 }
+
+/**
+ * Ce qui compte comme en-tête ou pied de page. On reste sur des repères que
+ * tout le monde écrit : la balise, le rôle ARIA, ou une classe évidente.
+ */
+const ZONES_COMMUNES = [
+  'header', 'footer',
+  '[role="banner"]', '[role="contentinfo"]',
+  '.site-header', '.site-footer', '.header', '.footer',
+  '#header', '#footer', '#site-header', '#site-footer',
+].join(',');
 
 export { readCurrent };

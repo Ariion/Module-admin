@@ -1,5 +1,33 @@
 # Journal des versions
 
+## 1.2.0
+
+**En-tête et pied de page**
+- Ce qui est modifié dans un `<header>` ou un `<footer>` est enregistré dans
+  un document commun au site et appliqué à toutes les pages.
+- L'éditeur signale la portée au moment de la modification.
+
+**Pages légales**
+- Questionnaire en trois écrans : documents voulus, identité de l'éditeur,
+  puis ce que fait le site (formulaire, réservations, paiement, expédition,
+  audience, contenus intégrés…).
+- Rédige les mentions légales, la politique de confidentialité et les
+  conditions générales de vente. Les clauses non concernées ne sont pas
+  écrites du tout.
+- Liste d'hébergeurs courants avec la mention légale exacte.
+- Sur un hébergement inscriptible, chaque document devient une page créée et
+  publiée ; sinon il est ajouté à la page ouverte.
+
+**Copyright**
+- Élément Copyright : année en cours recalculée à chaque affichage, période
+  « 2018–2026 » si une année de création est renseignée.
+- Jeton `{{année}}` utilisable dans les titres et textes insérés.
+
+**Correction importante**
+- La régénération du fichier `.html` visait toujours la page par laquelle on
+  était entré dans l'éditeur : publier depuis une autre page écrasait
+  l'accueil avec le contenu de celle-ci.
+
 ## 1.1.0
 
 **Appels à l'action**
