@@ -32,6 +32,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Habillage complet** | Police (48 familles Google Fonts rangées par nature, chargées à la demande), taille, graisse, casse, interlignage, espacement, couleurs, marges, contour et son style, angles, ombre, opacité — et du **CSS personnalisé** avec sélecteur, pour les états `:hover`. |
 | **Placement libre** | Largeur du bloc, alignement dans la section, décalage horizontal et vertical, rotation. Le décalage est une transformée, pas une marge : le bloc bouge, la mise en page autour ne bronche pas. |
 | **Images libres de droits** | Recherche Pixabay depuis l'onglet Médias (clé d'API gratuite à renseigner). Sur un hébergement PHP, l'image choisie est rapatriée dans le dossier du site plutôt que pointée à distance. |
+| **Prévisualisation** | Le panneau s'efface, le site prend tout l'écran, et une barre noire dit où l'on est : *Mode prévisualisation*, avec *Retourner à la modification* et *Aller sur le site*. Les liens sont cliquables — on parcourt le site page par page. Si des modifications ne sont pas publiées, la barre le signale. |
 | **Blocs répétables** | Dupliquer, réordonner, supprimer une carte de la liste — dans le gabarit prévu par le développeur, sans pouvoir casser la mise en page. |
 | **Brouillon puis publication** | Enregistrement automatique du brouillon, bouton « Publier », historique des versions et restauration. |
 | **Ne casse jamais le site** | Firebase injoignable, base vide, contenu illisible : la page s'affiche avec son HTML d'origine. Aucune exception ne remonte. |

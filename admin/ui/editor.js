@@ -417,7 +417,10 @@ export async function startEditor(runtime) {
     memoriserPage();
 
     overlay.refresh(model);
-    overlay.enable();
+    // En prévisualisation, suivre un lien recharge la page ici : la surcouche
+    // de sélection ne doit pas revenir par la bande, sinon les liens cessent
+    // d'être cliquables alors que la barre annonce toujours l'aperçu.
+    if (state.editing) overlay.enable(); else overlay.disable();
     navigator.render(model);
     guide?.render();
     inspector.render(null);
@@ -766,6 +769,8 @@ export async function startEditor(runtime) {
    * créer est vierge elle aussi, et c'est là qu'on a le plus besoin d'aide.
    */
   function proposerAssistant() {
+    // Pas d'assistant par-dessus la prévisualisation : on regarde son site.
+    if (!state.editing) return;
     if (state.pageVierge && !assistantDejaVu()) ouvrirAssistant();
   }
 
@@ -952,11 +957,39 @@ export async function startEditor(runtime) {
     });
   }
 
-  function togglePreview() {
-    state.editing = !state.editing;
-    if (state.editing) overlay.enable();
-    else { textEditor.commit(); overlay.disable(); }
+  /**
+   * Prévisualisation : le site en entier, sans le panneau.
+   *
+   * Regarder son travail dans une colonne de 900 px, à côté d'un panneau et
+   * sous une surcouche de sélection, ne dit pas ce que verra le visiteur.
+   * Ici tout s'efface — il ne reste que la page, et une barre noire qui dit
+   * où l'on est et par où sortir.
+   */
+  function togglePreview(actif = state.editing) {
+    state.editing = !actif;
+    if (state.editing) {
+      overlay.enable();
+      shell.setPreview(false);
+    } else {
+      textEditor.commit();
+      overlay.disable();
+      shell.setPreview(true, {
+        retour: () => togglePreview(false),
+        site: () => ouvrirLeSite(),
+      });
+    }
     render();
+  }
+
+  /**
+   * Ouvre la page telle qu'elle est EN LIGNE, dans un nouvel onglet.
+   *
+   * C'est le site publié, pas l'aperçu : s'il reste des modifications non
+   * publiées, ce qui s'ouvrira ne les contiendra pas. La barre le dit.
+   */
+  function ouvrirLeSite() {
+    const vue = root.ownerDocument.defaultView;
+    safe(() => vue.open(urlCourante(), '_blank', 'noopener'), null, 'ouvrirLeSite');
   }
 
   async function quit() {
@@ -1000,6 +1033,10 @@ export async function startEditor(runtime) {
 
     previewButton.replaceChildren(icon(state.editing ? 'eye' : 'pencil', 13));
     previewButton.title = state.editing ? t('preview') : t('edit');
+    // En prévisualisation, on voit le brouillon : si le site en ligne n'a pas
+    // encore ces modifications, il faut le dire avant qu'on clique « voir ».
+    shell.setPreviewNote(!state.editing && (modifications || state.hasDraft)
+      ? t('previewDraft') : '');
     publishButton.disabled = !modifications && !state.hasDraft;
   }
 

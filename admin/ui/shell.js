@@ -53,6 +53,32 @@ export function createShell({ root, t, config, onDevice }) {
     h('div', { class: 'panel__foot' }, avantEtat, etat, actions),
   );
 
+  // --- Barre de prévisualisation --------------------------------------
+  // En prévisualisation, le panneau disparaît et le site occupe tout l'écran.
+  // Il faut alors une marque non ambiguë de l'état où l'on se trouve, et le
+  // moyen d'en sortir : sans cela on croit que l'éditeur s'est fermé.
+  const previsuNote = h('span', { class: 'previs__note', hidden: true });
+  const previsuBar = h('div', { class: 'previs', 'data-admin-ui': '' },
+    h('span', { class: 'previs__pastille' }),
+    h('span', { class: 'previs__titre' }, t('previewMode')),
+    previsuNote,
+    h('span', { style: { flex: '1' } }),
+    // Deux libellés : sur un téléphone, la phrase complète mangerait le titre
+    // de la barre, qui est précisément ce qui dit où l'on se trouve.
+    h('button', {
+      class: 'previs__btn', type: 'button', onclick: () => rappelsPrevisu.retour?.(),
+    }, icon('pencil', 13),
+      h('span', { class: 'previs__long' }, t('previewBack')),
+      h('span', { class: 'previs__court' }, t('previewBackShort'))),
+    h('button', {
+      class: 'previs__btn previs__btn--fort', type: 'button',
+      onclick: () => rappelsPrevisu.site?.(),
+    }, icon('link', 13),
+      h('span', { class: 'previs__long' }, t('previewLive')),
+      h('span', { class: 'previs__court' }, t('previewLiveShort'))),
+  );
+  const rappelsPrevisu = {};
+
   // --- Scène ---------------------------------------------------------
   const nomPage = h('button', { class: 'stage__page', type: 'button', title: t('pages') },
     icon('pages', 13), h('span', {}, ''));
@@ -62,12 +88,14 @@ export function createShell({ root, t, config, onDevice }) {
   const chargement = h('div', { class: 'loading' }, h('span', { class: 'spinner' }), t('loadingPreview'));
   chargement.style.display = 'none';
   const zoneFrame = h('div', { class: 'stage__frame', style: { position: 'relative' } }, couche, chargement);
-  const stage = h('div', { class: 'stage' }, outilsScene, zoneFrame);
+  const stage = h('div', { class: 'stage' }, previsuBar, outilsScene, zoneFrame);
 
-  root.appendChild(h('div', { class: 'shell' }, panel, stage));
+  const shell = h('div', { class: 'shell', 'data-previsu': 'off' }, panel, stage);
+  root.appendChild(shell);
 
   // --- Formats d'écran ------------------------------------------------
   let appareil = 'desktop';
+  let previsuAvant = null;
   for (const [cle, def] of Object.entries(DEVICES)) {
     boutonsAppareil.appendChild(h('button', {
       class: 'device', type: 'button', title: def.label,
@@ -150,6 +178,7 @@ export function createShell({ root, t, config, onDevice }) {
     zoneFrame.append(couche, chargement);
     nomPage.lastElementChild.textContent = pageLisible(resultat.doc);
     chargement.style.display = 'none';
+    if (enPrevisu) ecouterEchap(true);
     return resultat;
   }
 
@@ -170,9 +199,54 @@ export function createShell({ root, t, config, onDevice }) {
     return { x: vue.left - cadre.left, y: vue.top - cadre.top };
   }
 
+  /**
+   * Entre ou sort de la prévisualisation : le panneau s'efface, la page
+   * reprend toute la largeur, et la barre noire dit où l'on est.
+   */
+  /** Échap sort de la prévisualisation, où qu'on ait le curseur. */
+  const surEchap = (event) => {
+    if (event.key === 'Escape') rappelsPrevisu.retour?.();
+  };
+
+  /**
+   * (Ré)installe l'écoute d'Échap. Le document de l'aperçu est remplacé à
+   * chaque changement de page : sans ce rappel, suivre un lien en
+   * prévisualisation ferait perdre le raccourci.
+   */
+  function ecouterEchap(actif) {
+    const docs = [root.ownerDocument, iframe?.contentDocument].filter(Boolean);
+    for (const doc of docs) {
+      doc.removeEventListener('keydown', surEchap);
+      if (actif) doc.addEventListener('keydown', surEchap);
+    }
+  }
+
+  let enPrevisu = false;
+
+  function setPreview(actif, rappels = {}) {
+    Object.assign(rappelsPrevisu, rappels);
+    enPrevisu = !!actif;
+    shell.setAttribute('data-previsu', actif ? 'on' : 'off');
+    ecouterEchap(enPrevisu);
+    // Le site se regarde en entier : un cadre de téléphone n'a plus lieu
+    // d'être, mais le format choisi est rendu à la sortie.
+    if (actif) {
+      if (appareil !== 'desktop') { previsuAvant = appareil; setDevice('desktop'); }
+    } else if (previsuAvant) {
+      setDevice(previsuAvant);
+      previsuAvant = null;
+    }
+  }
+
+  /** Signale, dans la barre, que ce qu'on voit n'est pas encore en ligne. */
+  function setPreviewNote(texte) {
+    previsuNote.textContent = texte || '';
+    previsuNote.hidden = !texte;
+  }
+
   return {
     panel, stage, layer: couche, views: conteneurVues,
-    addView, showView,
+    addView, showView, setPreview, setPreviewNote,
     load, setDevice, origine,
     get frame() { return iframe; },
     get device() { return appareil; },

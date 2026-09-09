@@ -82,11 +82,18 @@ export async function bakePage({ sourceUrl, snapshot, scanOptions = {}, pageId, 
   });
   if (!doc) throw new Error('Source illisible.');
   try {
+    // Combien d'enfants de <body> l'analyseur a réellement produits, AVANT
+    // toute modification. Le compter après ne dit plus rien : le module a pu
+    // en ajouter (une section posée en fin de page) ou en retirer (une section
+    // masquée), et la fin de page serait alors recollée de travers — ou pas du
+    // tout, ce qui coûterait au site sa balise <script> du module.
+    const analyses = doc.body.children.length;
+
     const model = new PageModel({ ...scanOptions, doc }).refresh();
     const result = model.applySnapshot(snapshot);
     clean(doc, pageId);
 
-    const html = serialize(doc, sourceDoc);
+    const html = serialize(doc, sourceDoc, analyses);
     debug('régénération', pageId, result.applied, 'valeurs,', result.orphans.length, 'orphelins');
 
     if (result.orphans.length) {
@@ -103,11 +110,14 @@ export async function bakePage({ sourceUrl, snapshot, scanOptions = {}, pageId, 
  * l'analyseur de l'iframe n'aurait pas atteinte. Sans cela, les balises
  * <script> du module — donc la capacité du client à continuer à éditer —
  * disparaîtraient du fichier réécrit.
+ *
+ * @param {number} analyses nombre d'enfants de <body> produits par
+ *   l'analyseur, relevé AVANT que le module ne modifie la page.
  */
-function serialize(doc, sourceDoc) {
+function serialize(doc, sourceDoc, analyses) {
   let tail = '';
   if (sourceDoc) {
-    const missing = Array.from(sourceDoc.body.children).slice(doc.body.children.length);
+    const missing = Array.from(sourceDoc.body.children).slice(analyses);
     tail = missing.map((node) => node.outerHTML).join('\n');
   }
   let html = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML + '\n';

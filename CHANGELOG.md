@@ -1,5 +1,27 @@
 # Journal des versions
 
+## 1.4.1
+
+**Prévisualisation**
+- Le bouton d'aperçu ouvre désormais une vraie prévisualisation : le panneau
+  s'efface, le site occupe tout l'écran. Auparavant il ne faisait que couper
+  la surcouche de sélection, ce qui ne montrait rien de plus.
+- Une barre noire en haut dit « Mode prévisualisation », et porte à droite
+  deux boutons : *Retourner à la modification* et *Aller sur le site*.
+- Les liens sont cliquables : on parcourt le site page par page, et la
+  prévisualisation tient bon d'une page à l'autre. Échap en sort.
+- Quand des modifications ne sont pas publiées, la barre le signale : ce qui
+  s'ouvrira avec *Aller sur le site* ne les contiendra pas.
+
+**Correction importante**
+- La régénération du HTML pouvait perdre la fin de la page — donc la balise
+  `<script>` du module. Le site restait juste, mais **le client ne pouvait
+  plus l'éditer** : rouvrir la page avec `?admin` ne chargeait plus rien.
+  Le recollage de fin de page se fiait au nombre de blocs présents ; ajouter
+  une section en bas de page décalait ce compte d'exactement ce qui manquait,
+  et le recollage n'avait plus lieu. Ce nombre est désormais relevé avant
+  toute modification.
+
 ## 1.4.0
 
 **Le Guide : la page de haut en bas**

@@ -775,6 +775,54 @@ select.input { appearance: none; cursor: pointer; }
   .modal { max-height: 88vh; }
 }
 
+/* ================= Prévisualisation =================
+   Le panneau s'efface et le site prend tout l'écran : sans marque visible,
+   on croirait l'éditeur fermé. D'où cette barre, noire et pleine largeur,
+   qui dit où l'on est et par où sortir. */
+.previs {
+  display: none; align-items: center; gap: 10px; flex: none;
+  height: var(--topbar); padding: 0 14px;
+  background: #000; color: #fff; border-bottom: 1px solid #000;
+}
+.shell[data-previsu="on"] .previs { display: flex; }
+.shell[data-previsu="on"] { grid-template-columns: 1fr; }
+.shell[data-previsu="on"] .panel,
+.shell[data-previsu="on"] .stage__bar { display: none; }
+.shell[data-previsu="on"] .stage__frame { padding: 0; }
+
+.previs__pastille {
+  width: 8px; height: 8px; border-radius: 999px; background: #34d399; flex: none;
+}
+.previs__titre { font-weight: 600; letter-spacing: .01em; }
+.previs__note {
+  color: #fbbf24; font-size: 12px; border: 1px solid rgba(251,191,36,.4);
+  border-radius: 999px; padding: 2px 10px; white-space: nowrap;
+}
+.previs__btn {
+  display: inline-flex; align-items: center; gap: 7px; flex: none;
+  height: 30px; padding: 0 14px; cursor: pointer;
+  background: transparent; color: #fff; font-size: 12.5px; font-weight: 500;
+  border: 1px solid rgba(255,255,255,.32); border-radius: 999px;
+  transition: background .14s, border-color .14s;
+}
+.previs__btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.6); }
+.previs__btn--fort { background: #fff; color: #000; border-color: #fff; }
+.previs__btn--fort:hover { background: #e6e6e6; border-color: #e6e6e6; }
+.previs__court { display: none; }
+
+@media (max-width: 700px) {
+  .previs { gap: 7px; padding: 0 10px; }
+  .previs__pastille { display: none; }
+  .previs__titre {
+    font-size: 12.5px; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .previs__note { display: none; }
+  .previs__btn { padding: 0 11px; font-size: 12px; gap: 5px; }
+  .previs__long { display: none; }
+  .previs__court { display: inline; }
+}
+
 /* ------------------------------------------------------------------ Guide
    Le parcours pas à pas : une étape par section, de haut en bas. C'est la
    première chose que voit quelqu'un qui n'a jamais fait de site, donc tout y
