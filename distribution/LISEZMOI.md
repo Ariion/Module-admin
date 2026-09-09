@@ -56,6 +56,16 @@ pose trois questions — une page ou plusieurs, à quoi elle sert, et quelle
 allure vous voulez lui donner — puis propose des mises en page. Vous en
 choisissez une, et la page est construite.
 
+Si vous ne savez pas du tout quoi écrire, l'assistant propose
+**« Je ne sais pas du tout quoi mettre »** : une dizaine de questions sur
+votre activité — nom, secteur, ville, ce que vous proposez, comment on vous
+joint — et la page est **écrite en entier**, photos comprises. Les phrases
+sont composées par le module, sans internet ni abonnement ; celles qui ne
+viennent pas de vos mots sont ensuite signalées « à relire ».
+
+Une rédaction par IA peut être branchée par-dessus, mais elle n'est pas
+nécessaire : voir `docs/IA.md`.
+
 Vous arrivez ensuite sur le **Guide** : la page reprise de haut en bas, une
 étape par partie, et dans chacune les champs à remplir avec, sous chaque
 champ, une phrase qui dit quoi y mettre. Une jauge en haut indique ce qu'il

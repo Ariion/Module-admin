@@ -24,12 +24,16 @@ import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
 import { openWizard } from './wizard.js';
+import { openBrief } from './brief-panel.js';
 import { openLegal } from './legal-panel.js';
 import { openBoutique } from './boutique-panel.js';
 import { filePathOf, labelOf } from '../core/pages.js';
 import { ouvrirAction } from '../core/actions.js';
 import { etapesDuGuide } from '../core/guide.js';
 import { illustrations } from '../core/illustrations.js';
+import { redigerPage } from '../core/redacteur.js';
+import { prestationsDuBrief, themeSuggere } from '../core/brief.js';
+import { redigerAvecIA, cleLocale } from '../core/ia.js';
 import { PAGE_COMMUNE } from '../core/config.js';
 import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
@@ -198,6 +202,7 @@ export async function startEditor(runtime) {
           overlay.setActive(etape.el);
         },
         addSection: () => ouvrirNouvelleSection(null),
+        brief: () => ouvrirBrief(),
         openPages: () => ouvrirPages(),
         openLegal: () => ouvrirLegal(),
         publish: () => publish(),
@@ -254,6 +259,10 @@ export async function startEditor(runtime) {
             onWizard: () => ouvrirAssistant(),
           }),
         }, icon('pages', 13), t('pageTemplates')),
+        h('button', {
+          class: 'btn btn--sect', type: 'button', title: t('briefTitre'),
+          onclick: () => ouvrirBrief(),
+        }, icon('pencil', 13), t('briefCourt')),
         h('button', {
           class: 'btn', type: 'button', title: t('themeTitre'), onclick: () => ouvrirTheme(),
         }, icon('palette', 13), t('themeCourt')),
@@ -632,6 +641,111 @@ export async function startEditor(runtime) {
     });
   }
 
+  /**
+   * La rédaction assistée est-elle branchée ? Deux façons : le script du
+   * client (la clé reste sur son hébergement) ou une clé rangée sur cette
+   * machine. Sans l'une ou l'autre, on ne propose rien plutôt que d'ouvrir
+   * une case à cocher qui échouerait.
+   */
+  function reglageIA() {
+    if (config.ia?.endpoint) return { mode: 'endpoint', endpoint: config.ia.endpoint };
+    if (cleLocale()) {
+      return {
+        mode: 'navigateur',
+        fournisseur: config.ia?.fournisseur || 'anthropic',
+        modele: config.ia?.modele || '',
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Questionnaire « je ne sais pas quoi mettre » : quelques faits, et le
+   * module écrit la page entière.
+   */
+  function ouvrirBrief() {
+    openBrief({
+      root, t,
+      brief: model.reglages?.brief || null,
+      iaDisponible: !!reglageIA(),
+      onApply: (brief, options) => construireDepuisBrief(brief, options),
+    });
+  }
+
+  /**
+   * Construit la page à partir du brief.
+   *
+   * L'ordre compte : on cherche les images d'abord (c'est ce qui peut
+   * échouer), on demande les textes ensuite, et on n'écrit la page qu'une
+   * fois. Si l'IA ou la banque d'images font défaut, le rédacteur écrit
+   * quand même — le client ne se retrouve jamais devant une page vide.
+   */
+  async function construireDepuisBrief(brief, { ia = false } = {}) {
+    model.setReglage('brief', brief);
+    // Sans ambiance, toutes les pages écrites se ressembleraient : on en pose
+    // une accordée au métier, que l'étape 1 du guide permet de changer.
+    if (!model.reglages?.theme?.id) {
+      model.setReglage('theme', { id: themeSuggere(brief), portee: 'site' });
+    }
+    notify(t('briefEnCours'));
+
+    const plan = redigerPage(brief);
+    const images = await chercherPhotos(plan.requetes, plan.besoinImages);
+
+    let textes = null;
+    if (ia) {
+      const reponse = await redigerAvecIA(
+        brief, prestationsDuBrief(brief), reglageIA(), backend);
+      textes = reponse.textes;
+      if (!textes) notify(t('briefIAEchec_' + reponse.erreur) || t('briefIAEchec_reseau'));
+    }
+
+    const final = redigerPage(brief, { images, textes });
+    if (!model.applyTrees(final.sections, true)) return;
+    marquerAssistantVu();
+    markDirty();
+    await autosave.flush();
+    await loadPage(urlCourante(), { keepScroll: false });
+    shell.showView('guide');
+    notify(t('briefFait'));
+  }
+
+  /**
+   * Les photos de la page.
+   *
+   * Banque d'images libres quand une clé est configurée ; sinon les visuels
+   * dessinés d'après l'ambiance. Dans les deux cas la page est illustrée : ne
+   * rien mettre laisserait des cadres vides, et c'est précisément ce qui
+   * décourage quelqu'un qui découvre.
+   */
+  async function chercherPhotos(requetes, combien) {
+    const trouvees = [];
+    if (media.banque?.disponible) {
+      for (const requete of requetes) {
+        if (trouvees.length >= combien) break;
+        try {
+          const { images: resultats } = await media.banque.chercher(requete, { page: 1 });
+          for (const image of resultats.slice(0, 2)) {
+            if (trouvees.length >= combien) break;
+            // Les conditions de Pixabay demandent de ne pas se contenter de
+            // pointer leurs fichiers : on rapatrie quand l'hébergement le permet.
+            const pose = await media.banque.importer(image).catch(() => null);
+            trouvees.push(pose?.url || image.url);
+            if (pose) await backend.addMedia(pose).catch(() => {});
+          }
+        } catch (err) { debug('banque d’images indisponible', err?.message); }
+      }
+      library?.charger();
+    }
+    if (trouvees.length < combien) {
+      const dessins = illustrations(model.reglages?.theme);
+      for (let i = trouvees.length; i < combien; i += 1) {
+        trouvees.push(dessins[i % dessins.length].url);
+      }
+    }
+    return trouvees;
+  }
+
   /** L'ambiance du site : polices, couleurs, formes, rythme. */
   function ouvrirTheme() {
     openTheme({
@@ -739,6 +853,7 @@ export async function startEditor(runtime) {
       root, t,
       peutCreerPages: hosting.enabled,
       theme: model.reglages?.theme || null,
+      onBrief: () => ouvrirBrief(),
       onSkip: () => marquerAssistantVu(),
       onApply: async (trees, theme) => {
         marquerAssistantVu();

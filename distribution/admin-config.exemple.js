@@ -43,6 +43,16 @@ window.ADMIN_CONFIG = {
     pixabay: '',
   },
 
+  // ------------------------------------------------- rédaction assistée
+  // FACULTATIF. Le questionnaire « Écrire pour moi » fonctionne déjà sans
+  // rien de tout cela : les textes sont composés par le module.
+  //
+  // Pour les faire écrire par une IA, la clé se met dans admin-endpoint.php
+  // (variable $IA_CLE), sur VOTRE hébergement — pas ici. Ce fichier-ci est
+  // servi à tous les visiteurs du site : une clé d'API y serait publique,
+  // et facturée à qui la trouve. Voir docs/IA.md.
+  // ia: { endpoint: '/admin-endpoint.php' },
+
   // ------------------------------------------------- réécriture du HTML
   // Chaque publication réécrit le fichier .html du site avec le contenu à
   // l'intérieur : le module peut être retiré, le site garde tout.

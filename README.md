@@ -23,6 +23,8 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Édition en place** | Survol = contour, clic sur un texte = édition directe, clic sur une image = panneau d'upload, clic sur un lien = champ d'adresse. |
 | **Sites de plusieurs pages** | Créer une page, la nommer (titre et description pour les moteurs), poser un menu pré-rempli avec les pages connues. Le module retient les pages ouvertes : une page toute neuve, que rien ne pointe encore, reste joignable. L'assistant se relance sur chaque page vierge. |
 | **Pages du site** | Le nom de la page, en haut de l'aperçu, ouvre la liste des pages — déduite des liens du site. On y change de page, et on en crée une nouvelle, copiée sur une page existante (demande un hébergement inscriptible). |
+| **« Je ne sais pas quoi mettre »** | Un questionnaire — nom, secteur, ville, prestations, coordonnées — et le module **écrit la page entière** : accroche, prestations, présentation, coordonnées, plan, photos, et une ambiance accordée au métier. Les phrases viennent d'un fonds écrit par secteur dans lequel les mots du client sont insérés : aucun réseau, aucune clé, aucun abonnement. Le guide signale ensuite ce qui vient du fonds et reste à relire. |
+| **Rédaction par IA (facultative)** | Branchée, elle remplace **les phrases**, jamais le plan de la page ni les images. La clé vit dans le script PHP du client, invisible du navigateur ; à défaut, dans le `localStorage` de l'administrateur — **jamais** dans `admin-config.js`, qui est public. Si elle échoue, le fonds écrit reprend la main : la page se construit quand même. Voir [docs/IA.md](docs/IA.md). |
 | **Modèles de page** | Cinq trames complètes — accueil une page, page de vente, portfolio, contact, à propos. À ajouter à la suite ou à substituer à la page. |
 | **Modèles de section** | Huit mises en page prêtes à l'emploi, proposées au moment de créer la section : trois colonnes, image et texte, appel à l'action, galerie… |
 | **Bibliothèque d'éléments** | Titre, texte, bouton, liste, image, vidéo, carte, colonnes, séparateur, espaceur — recherche, catégories, glisser-déposer dans l'aperçu. Le balisage émis est sémantique et sans classes : la feuille de style du site s'y applique d'elle-même. |
@@ -114,6 +116,9 @@ admin/                    le module (à copier tel quel sur un site)
 ├── core/templates.js     modèles de section
 ├── core/boutique.js      produits, prix, bouton d'achat, panier
 ├── core/theme.js         ambiances : polices, couleurs, formes, rythme
+├── core/brief.js         le questionnaire et ses fonds par métier
+├── core/redacteur.js     du brief à la page écrite, sans réseau
+├── core/ia.js            rédaction par IA, facultative
 ├── core/guide.js         le parcours pas à pas, déduit de la page
 ├── core/illustrations.js images d'exemple dessinées d'après l'ambiance
 ├── core/page-templates.js modèles de page entière
@@ -130,6 +135,7 @@ admin/                    le module (à copier tel quel sur un site)
 └── ui/                   éditeur (chargé uniquement pour les administrateurs)
     ├── shell.js          coque : panneau à gauche, aperçu à droite
     ├── guide-panel.js    le guide : la page de haut en bas
+    ├── brief-panel.js    questionnaire « écrire ma page »
     ├── theme-panel.js    choix de l'ambiance
     ├── widgets-panel.js  bibliothèque d'éléments
     ├── inspector.js      réglages de l'élément choisi
@@ -144,7 +150,7 @@ tools/admin-endpoint.php  script serveur : médias + réécriture du HTML
 tools/paquet.mjs          fabrique le dossier à téléverser chez le client
 tools/livraison.mjs       fabrique l'archive vendue à l'acquéreur
 distribution/             les fichiers destinés à l'acquéreur (licence, guides)
-docs/                     architecture, installation, mise en ligne
+docs/                     architecture, installation, mise en ligne, IA
 ```
 
 ## Points d'architecture

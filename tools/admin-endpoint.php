@@ -46,6 +46,17 @@ $ALLOW_BAKE   = true;                    // autoriser la réécriture des .html
 $MAX_HTML     = 4 * 1024 * 1024;         // 4 Mo par page
 $BAKED_MARKER = 'name="admin-baked"';    // marque une page déjà régénérée
 
+// --- Rédaction assistée (facultative) -----------------------------------
+// La clé est ici, sur VOTRE hébergement, et jamais dans le navigateur : c'est
+// tout l'intérêt de passer par ce script. Laissez vide pour ne rien activer —
+// l'éditeur écrit alors les textes tout seul, sans rien demander à personne.
+//
+// Dans admin-config.js, côté site :  ia: { endpoint: '/admin-endpoint.php' }
+$IA_CLE        = '';                 // vide = rédaction assistée désactivée
+$IA_FOURNISSEUR = 'anthropic';       // 'anthropic' | 'openai' | 'mistral'
+$IA_MODELE     = '';                 // vide = le modèle par défaut ci-dessous
+$IA_MAX_JOUR   = 60;                 // garde-fou : appels par jour et par compte
+
 // Hôtes d'où l'on accepte de rapatrier une image (action=import). Tout le
 // reste est refusé : ce script ne doit pas devenir un aspirateur à URL.
 $IMPORT_HOSTS = [
@@ -414,6 +425,127 @@ function resolvePagePath(string $relative, string $root): array
             ? '/' . basename($source)
             : rtrim(dirname('/' . $relative), '/') . '/' . basename($source),
     ];
+}
+
+/**
+ * Rédaction assistée. Le navigateur envoie une invite, le script y ajoute la
+ * clé et relaie la réponse. Trois raisons d'exister :
+ *   - la clé reste sur l'hébergement, invisible du navigateur ;
+ *   - seul un compte Firebase du projet peut appeler (comme le reste) ;
+ *   - un quota journalier borne la dépense en cas de compte compromis.
+ */
+if ($action === 'ia') {
+    $uid = currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    if ($IA_CLE === '') {
+        fail('La rédaction assistée n’est pas configurée sur cet hébergement.', 501);
+    }
+
+    $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+    $invite = trim((string) ($body['invite'] ?? ''));
+    if ($invite === '' || strlen($invite) > 8000) {
+        fail('Demande absente ou trop longue.');
+    }
+
+    if (!iaQuotaOk($uid, $IA_MAX_JOUR)) {
+        fail('Quota de rédaction atteint pour aujourd’hui.', 429);
+    }
+
+    $reponse = iaAppeler($IA_FOURNISSEUR, $IA_CLE, $IA_MODELE, $invite);
+    if ($reponse === null) {
+        fail('Le fournisseur n’a pas répondu.', 502);
+    }
+    ok(['texte' => $reponse]);
+}
+
+/** Compte les appels du jour, par compte, dans un fichier à côté des médias. */
+function iaQuotaOk(string $uid, int $max): bool
+{
+    if ($max <= 0) {
+        return true;
+    }
+    $fichier = sys_get_temp_dir() . '/admin-ia-' . substr(hash('sha256', $uid), 0, 24) . '.json';
+    $jour = gmdate('Y-m-d');
+    $etat = ['jour' => $jour, 'n' => 0];
+    if (is_file($fichier)) {
+        $lu = json_decode((string) @file_get_contents($fichier), true);
+        if (is_array($lu) && ($lu['jour'] ?? '') === $jour) {
+            $etat = ['jour' => $jour, 'n' => (int) ($lu['n'] ?? 0)];
+        }
+    }
+    if ($etat['n'] >= $max) {
+        return false;
+    }
+    $etat['n']++;
+    @file_put_contents($fichier, json_encode($etat));
+    return true;
+}
+
+/** Appelle le fournisseur et retourne le texte, ou null. */
+function iaAppeler(string $fournisseur, string $cle, string $modele, string $invite): ?string
+{
+    $profils = [
+        'anthropic' => [
+            'url'     => 'https://api.anthropic.com/v1/messages',
+            'modele'  => 'claude-sonnet-5',
+            'entetes' => ['content-type: application/json', 'x-api-key: ' . $cle, 'anthropic-version: 2023-06-01'],
+            'corps'   => static fn(string $m, string $i): array => [
+                'model' => $m, 'max_tokens' => 1200,
+                'messages' => [['role' => 'user', 'content' => $i]],
+            ],
+            'texte'   => static function (array $j): string {
+                $out = '';
+                foreach (($j['content'] ?? []) as $bloc) {
+                    $out .= (string) ($bloc['text'] ?? '');
+                }
+                return $out;
+            },
+        ],
+        'openai' => [
+            'url'     => 'https://api.openai.com/v1/chat/completions',
+            'modele'  => 'gpt-4o-mini',
+            'entetes' => ['content-type: application/json', 'authorization: Bearer ' . $cle],
+            'corps'   => static fn(string $m, string $i): array => [
+                'model' => $m, 'max_tokens' => 1200,
+                'messages' => [['role' => 'user', 'content' => $i]],
+            ],
+            'texte'   => static fn(array $j): string => (string) ($j['choices'][0]['message']['content'] ?? ''),
+        ],
+        'mistral' => [
+            'url'     => 'https://api.mistral.ai/v1/chat/completions',
+            'modele'  => 'mistral-small-latest',
+            'entetes' => ['content-type: application/json', 'authorization: Bearer ' . $cle],
+            'corps'   => static fn(string $m, string $i): array => [
+                'model' => $m, 'max_tokens' => 1200,
+                'messages' => [['role' => 'user', 'content' => $i]],
+            ],
+            'texte'   => static fn(array $j): string => (string) ($j['choices'][0]['message']['content'] ?? ''),
+        ],
+    ];
+
+    $profil = $profils[$fournisseur] ?? $profils['anthropic'];
+    $corps = json_encode(($profil['corps'])($modele !== '' ? $modele : $profil['modele'], $invite));
+
+    $ch = curl_init($profil['url']);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => $profil['entetes'],
+        CURLOPT_POSTFIELDS     => $corps,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 45,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $brut = curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($brut === false || $code < 200 || $code >= 300) {
+        return null;
+    }
+    $json = json_decode((string) $brut, true);
+    if (!is_array($json)) {
+        return null;
+    }
+    return ($profil['texte'])($json);
 }
 
 if ($action === 'check') {

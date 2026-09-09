@@ -36,7 +36,7 @@ function apercu(formes) {
  * @param {boolean} [options.peutCreerPages] l'hébergement accepte-t-il la création de pages
  * @param {object|null} [options.theme] ambiance déjà retenue pour le site, s'il y en a une
  */
-export function openWizard({ root, t, onApply, onSkip, peutCreerPages = false, theme: themeSite = null }) {
+export function openWizard({ root, t, onApply, onSkip, onBrief, peutCreerPages = false, theme: themeSite = null }) {
   let mode = 'une';
   const intentions = new Set(['vitrine']);
   let propositions = [];
@@ -91,6 +91,22 @@ export function openWizard({ root, t, onApply, onSkip, peutCreerPages = false, t
         })),
       ),
     );
+
+    // Le chemin pour ceux qui ne savent pas quoi écrire du tout : plutôt que
+    // de choisir une trame vide, ils répondent à trois questions et repartent
+    // avec une page rédigée.
+    if (onBrief) {
+      corps.appendChild(h('button', {
+        class: 'assist__brief', type: 'button',
+        onclick: () => { pose = true; modal.close(); onBrief(); },
+      },
+        icon('pencil', 15),
+        h('span', {},
+          h('span', { class: 'assist__cocheTitre' }, t('wizardBrief')),
+          h('span', { class: 'assist__cocheAide' }, t('wizardBriefAide'))),
+        icon('right', 13),
+      ));
+    }
 
     clear(pied);
     const suite = h('button', {

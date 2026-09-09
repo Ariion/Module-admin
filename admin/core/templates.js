@@ -23,7 +23,10 @@ const REMPLISSAGE = ['text', 'html', 'items'];
 export function w(type, props = {}, enfants = null) {
   const noeud = createWidget(type);
   noeud.props = { ...noeud.props, ...props };
-  if (REMPLISSAGE.some((cle) => props[cle] !== undefined)) noeud.props.exemple = true;
+  // `exemple: false` explicite : un texte écrit à partir des mots du client
+  // n'est pas du remplissage, et le guide ne doit pas le réclamer.
+  if (props.exemple === undefined
+    && REMPLISSAGE.some((cle) => props[cle] !== undefined)) noeud.props.exemple = true;
   if (enfants) {
     if (noeud.type === 'columns') {
       noeud.children = enfants.map((contenu) => {

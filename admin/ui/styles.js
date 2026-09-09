@@ -823,6 +823,32 @@ select.input { appearance: none; cursor: pointer; }
   .previs__court { display: inline; }
 }
 
+/* ------------------------------------------- Questionnaire de rédaction */
+.metiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.metier {
+  padding: 9px 8px; cursor: pointer; font-size: 12px; line-height: 1.3;
+  border: 1px solid var(--line-soft); border-radius: var(--radius-sm);
+  background: var(--bg-soft); color: var(--muted); text-align: center;
+}
+.metier:hover { color: var(--text); border-color: var(--line); }
+.metier[aria-pressed="true"] {
+  border-color: var(--accent); background: var(--accent-dim); color: var(--text);
+}
+.assist__coche--court { padding: 8px 10px; }
+.assist__pas { color: var(--faint); font-size: 12px; margin-right: 10px; }
+.assist__brief {
+  display: flex; align-items: center; gap: 11px; width: 100%; margin-top: 18px;
+  padding: 13px 14px; cursor: pointer; text-align: left; color: var(--text);
+  border: 1px dashed var(--sect); border-radius: var(--radius);
+  background: var(--sect-dim);
+}
+.assist__brief:hover { background: rgba(169,122,232,.22); border-style: solid; }
+.assist__brief > span { flex: 1; min-width: 0; display: grid; gap: 2px; }
+
+@media (max-width: 700px) {
+  .metiers { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* ------------------------------------------------------------------ Guide
    Le parcours pas à pas : une étape par section, de haut en bas. C'est la
    première chose que voit quelqu'un qui n'a jamais fait de site, donc tout y

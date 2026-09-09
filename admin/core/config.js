@@ -78,6 +78,21 @@ export const DEFAULTS = {
     banqueUrl: '',
   },
 
+  /**
+   * Rédaction assistée (facultative). La clé d'API ne se met JAMAIS ici :
+   * ce fichier est servi à tous les visiteurs du site.
+   *   - `endpoint` : URL d'admin-endpoint.php, où la clé est écrite côté
+   *     serveur. C'est la seule façon dont un visiteur ne peut rien lire.
+   *   - à défaut, l'éditeur accepte une clé rangée dans le localStorage de
+   *     la machine de l'administrateur (voir core/ia.js).
+   */
+  ia: {
+    endpoint: '',
+    /** 'anthropic' | 'openai' | 'mistral' — mode « clé sur la machine ». */
+    fournisseur: 'anthropic',
+    modele: '',
+  },
+
   /** Appelée après chaque application de contenu : réinitialiser un slider… */
   onApplied: null,
 };

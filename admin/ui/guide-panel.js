@@ -286,6 +286,9 @@ export function createGuide({ vue, t, actions }) {
     const corps = h('div', { class: 'pas__corps' },
       h('p', { class: 'champ__aide', style: { marginTop: '0' } }, t('guideFinAide')),
       h('button', {
+        class: 'btn btn--wide', type: 'button', onclick: () => actions.brief(),
+      }, icon('pencil', 13), t('guideBrief')),
+      h('button', {
         class: 'btn btn--wide', type: 'button', onclick: () => actions.addSection(),
       }, icon('plus', 13), t('guideAjouterSection')),
       h('button', {

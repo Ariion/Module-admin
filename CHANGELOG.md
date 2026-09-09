@@ -1,5 +1,40 @@
 # Journal des versions
 
+## 1.5.0
+
+**« Je ne sais pas quoi mettre » — le module écrit la page**
+- Nouveau questionnaire : nom de l'activité, secteur, ville, ce qu'on
+  propose, ce qui est vrai chez soi (cases à cocher), coordonnées, ton.
+- À la fin, la page entière est écrite : accroche, prestations,
+  présentation, coordonnées, plan, photos, et une ambiance accordée au
+  métier. Le client arrive sur le guide avec une page remplie.
+- Les phrases viennent d'un fonds écrit par secteur — douze métiers — dans
+  lequel les mots du client sont insérés. Aucun réseau, aucune clé, aucun
+  abonnement : c'est le mode par défaut, et il est complet.
+- Le guide distingue les deux origines : ce qui vient du fonds est signalé
+  « à relire », ce que le client a écrit ne l'est pas.
+- Les photos viennent de la banque libre de droits quand une clé Pixabay est
+  configurée (et sont rapatriées sur l'hébergement), sinon des visuels
+  dessinés d'après l'ambiance. La page est illustrée dans tous les cas.
+- Accessible depuis l'assistant de démarrage, depuis le pied du panneau, et
+  depuis la dernière étape du guide.
+
+**Rédaction par IA — facultative**
+- Branchée, elle remplace **les phrases**, jamais le plan de la page, les
+  sections ni les images. Si elle échoue — clé absente, quota, réponse
+  illisible, réseau — le fonds écrit reprend la main et la page se construit
+  quand même.
+- La réponse est lue champ par champ : ce qui déborde des longueurs prévues
+  est ignoré, un titre de prestation saisi par le client n'est jamais
+  réécrit.
+- La clé se met dans `admin-endpoint.php`, sur l'hébergement du client :
+  le navigateur ne la voit jamais, le script vérifie le jeton Firebase, et
+  un quota journalier par compte borne la dépense. À défaut, une clé rangée
+  dans le `localStorage` de l'administrateur.
+- **Jamais dans `admin-config.js`**, qui est servi à tous les visiteurs. Le
+  module n'offre aucun réglage pour le faire.
+- Anthropic, OpenAI et Mistral. Voir `docs/IA.md`.
+
 ## 1.4.1
 
 **Prévisualisation**
