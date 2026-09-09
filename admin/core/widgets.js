@@ -122,6 +122,15 @@ export const WIDGETS = {
     ],
   },
 
+  menu: {
+    category: 'basique', icon: 'list',
+    defaults: () => ({ liens: '', align: 'center' }),
+    fields: [
+      { key: 'liens', type: 'lines', label: 'menuLiens' },
+      { key: 'align', type: 'align', label: 'alignLabel' },
+    ],
+  },
+
   copyright: {
     category: 'basique', icon: 'pages',
     defaults: () => ({ nom: '', depuis: '', mention: 'Tous droits réservés', align: 'center' }),
@@ -316,6 +325,33 @@ export function renderWidget(noeud, doc) {
       break;
     }
 
+    case 'menu': {
+      // Une ligne par entrée : « Libellé | adresse ». Sans adresse, on
+      // déduit un nom de fichier du libellé — c'est ce qu'attend quelqu'un
+      // qui tape juste « Contact ».
+      el = doc.createElement('nav');
+      appliquerAlignement(el, p.align);
+      el.style.display = 'flex';
+      el.style.flexWrap = 'wrap';
+      el.style.gap = '22px';
+      if (p.align === 'center') el.style.justifyContent = 'center';
+      if (p.align === 'right') el.style.justifyContent = 'flex-end';
+
+      for (const ligne of String(p.liens ?? '').split('\n')) {
+        const brut = ligne.trim();
+        if (!brut) continue;
+        const [libelle, adresse] = brut.split('|').map((x) => x.trim());
+        if (!libelle) continue;
+        const lien = doc.createElement('a');
+        lien.textContent = libelle;
+        const href = safeUrl(adresse || fichierDepuisLibelle(libelle));
+        if (href) lien.setAttribute('href', href);
+        el.appendChild(lien);
+      }
+      if (!el.childNodes.length) el.appendChild(placeholder(doc, 'Une ligne par entrée : Accueil | index.html'));
+      break;
+    }
+
     case 'copyright': {
       // L'année est recalculée à chaque affichage : le pied de page d'un
       // site vitrine ne devrait jamais afficher une année périmée.
@@ -372,6 +408,13 @@ function placeholder(doc, texte) {
   el.textContent = texte;
   el.style.cssText = 'padding:26px;border:1px dashed currentColor;opacity:.45;text-align:center;margin:0;';
   return el;
+}
+
+/** « Nos tarifs » → « nos-tarifs.html ». */
+function fichierDepuisLibelle(libelle) {
+  const slug = String(libelle).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return slug ? slug + '.html' : '';
 }
 
 const VIDEO_EXT = /\.(mp4|webm|ogv|mov|m4v)$/i;

@@ -1,5 +1,21 @@
 # Journal des versions
 
+## 1.2.1
+
+**Construire un site de plusieurs pages depuis une page blanche**
+- L'assistant se propose aussi après un changement de page : une page qu'on
+  vient de créer est vierge, et c'est là qu'on a le plus besoin d'aide.
+- Le module se souvient des pages ouvertes : une page créée à l'instant, que
+  rien ne pointe encore, reste joignable depuis la liste.
+- Élément **Menu** : une ligne par entrée, pré-rempli avec les pages connues.
+- **Nom et description de la page**, modifiables depuis la liste des pages.
+  Ils s'écrivent dans le `<title>` et la balise description, et sont donc
+  repris à la régénération du HTML.
+
+**Corrections**
+- Créer une page ne vidait pas la sauvegarde en attente : ce qui venait
+  d'être saisi était perdu au rechargement.
+
 ## 1.2.0
 
 **En-tête et pied de page**

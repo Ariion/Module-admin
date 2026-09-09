@@ -23,7 +23,7 @@ import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
 import { openWizard } from './wizard.js';
 import { openLegal } from './legal-panel.js';
-import { filePathOf } from '../core/pages.js';
+import { filePathOf, labelOf } from '../core/pages.js';
 import { ouvrirAction } from '../core/actions.js';
 import { PAGE_COMMUNE } from '../core/config.js';
 import { openPages } from './pages-panel.js';
@@ -359,6 +359,8 @@ export async function startEditor(runtime) {
       && model.entries.size <= 6
       && model.sectionList().filter((x) => !x.ref.startsWith('ins:')).length <= 3;
 
+    memoriserPage();
+
     overlay.refresh(model);
     overlay.enable();
     navigator.render(model);
@@ -391,7 +393,8 @@ export async function startEditor(runtime) {
       || (structure.hide || []).length > 0
       || (structure.order || []).length > 0
       // Un document commun peut ne porter que les réglages du site.
-      || !!instantane.reglages;
+      || !!instantane.reglages
+      || !!instantane.meta;
   }
 
   /**
@@ -510,21 +513,62 @@ export async function startEditor(runtime) {
     inspector.showNewSection(ref);
   }
 
+  /**
+   * Garde trace des pages visitées, dans les réglages du site.
+   *
+   * La découverte par les liens ne suffit pas quand on part de zéro : une
+   * page créée à l'instant n'est encore liée de nulle part, et on ne pourrait
+   * plus y revenir. Le module se souvient donc de ce qu'il a ouvert.
+   */
+  function memoriserPage() {
+    const chemin = filePathOf(urlCourante());
+    const connues = model.reglages?.pages || [];
+    if (connues.some((p) => p.path === chemin)) return;
+    // Une page créée hérite du titre de sa page modèle : deux entrées
+    // portant le même nom ne se distingueraient pas. Le nom du fichier
+    // prend alors le relais.
+    const titre = (model.doc.title || '').split(/[—|–-]/)[0].trim().slice(0, 40);
+    const doublon = !titre || connues.some((p) => p.label === titre);
+    model.setReglage('pages', [...connues, { path: chemin, label: doublon ? labelOf(chemin) : titre }]);
+    markDirty();
+  }
+
   /** Liste des pages du site : changer de page, ou en créer une. */
   function ouvrirPages() {
     openPages({
       root, t, doc: model.doc, hosting,
+      connues: model.reglages?.pages || [],
+      meta: {
+        lire: () => model.pageMetaCourant(),
+        ecrire: (patch) => {
+          model.setPageMeta(patch);
+          // Le nom de la page sert aussi de libellé dans la liste et dans un
+          // menu : on le répercute au lieu de garder l'ancien.
+          if (typeof patch.titre === 'string' && patch.titre.trim()) {
+            const chemin = filePathOf(urlCourante());
+            const connues = (model.reglages?.pages || [])
+              .map((p) => (p.path === chemin ? { ...p, label: patch.titre.trim().slice(0, 40) } : p));
+            model.setReglage('pages', connues);
+          }
+          markDirty();
+        },
+      },
       onOpen: async (url) => {
         await autosave.flush();
         await loadPage(url, { keepScroll: false });
         showLibrary();
+        proposerAssistant();
       },
       onCreate: async (chemin, depuis) => {
+        // Sans ça, ce qui vient d'être saisi — le nom de la page, par
+        // exemple — serait perdu au rechargement qui suit.
+        await autosave.flush();
         await hosting.createPage(chemin, depuis);
         const base = urlCourante().replace(/[^/]*$/, '');
         await loadPage(base + chemin, { keepScroll: false });
         showLibrary();
         notify(t('pageCreated'));
+        proposerAssistant();
       },
     });
   }
@@ -623,6 +667,15 @@ export async function startEditor(runtime) {
 
   function assistantDejaVu() {
     try { return localStorage.getItem(cleAssistant()) === '1'; } catch { return false; }
+  }
+
+  /**
+   * Ouvre l'assistant si la page ouverte est vierge. Appelé à l'entrée dans
+   * l'éditeur et après chaque changement de page : une page qu'on vient de
+   * créer est vierge elle aussi, et c'est là qu'on a le plus besoin d'aide.
+   */
+  function proposerAssistant() {
+    if (state.pageVierge && !assistantDejaVu()) ouvrirAssistant();
   }
 
   /** Insère une section construite depuis un modèle. */
@@ -865,7 +918,7 @@ export async function startEditor(runtime) {
     buildShell();
     await loadPage(location.pathname);
     library.charger();
-    if (state.pageVierge && !assistantDejaVu()) ouvrirAssistant();
+    proposerAssistant();
   }
 
   return new Promise((resolve) => {

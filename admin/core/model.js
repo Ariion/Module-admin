@@ -39,6 +39,7 @@ export class PageModel {
     /** @type {Map<string, object>} valeurs actuelles (contenu surchargé) */
     this.values = new Map();
     this.reglages = null;
+    this.pageMeta = null;
     /** @type {Map<string, object>} état des collections */
     this.collectionState = new Map();
     /** @type {Map<string, object>} métadonnées d'identité par id */
@@ -140,6 +141,11 @@ export class PageModel {
       this.values.set(id, clone(record.value));
       this.meta.set(id, { ...record, resolvedVia: hit.via });
       if (safe(() => applyValue(hit.el, record.role, record.value), false, 'applyValue')) applied++;
+    }
+
+    if (data.meta && typeof data.meta === 'object') {
+      this.pageMeta = { ...(this.pageMeta || {}), ...clone(data.meta) };
+      safe(() => appliquerMeta(this.doc, this.pageMeta), false, 'meta');
     }
 
     if (data.reglages && typeof data.reglages === 'object') {
@@ -302,6 +308,13 @@ export class PageModel {
    * @param {string} parentKey clé du conteneur (section, colonnes, colonne)
    * @param {number} index     position, -1 pour la fin
    */
+  /** Entrées de menu déduites des pages connues du site. */
+  liensDesPages() {
+    return (this.reglages?.pages || [])
+      .map((page) => `${page.label || page.path} | ${page.path}`)
+      .join('\n');
+  }
+
   insertWidget(type, parentKey, index = -1) {
     const cible = this.findWidgetNode(parentKey);
     if (!cible || !cible.noeud.children) return null;
@@ -309,6 +322,9 @@ export class PageModel {
     if (!def) return null;
 
     const noeud = createWidget(type);
+    // Un menu inséré sur un site qu'on construit part des pages connues :
+    // le client n'a pas à retaper ce que le module sait déjà.
+    if (type === 'menu' && !noeud.props.liens) noeud.props.liens = this.liensDesPages();
     const liste = cible.noeud.children;
     if (index < 0 || index >= liste.length) liste.push(noeud);
     else liste.splice(index, 0, noeud);
@@ -573,6 +589,20 @@ export class PageModel {
    * Réglages du site, conservés dans le document commun : ils ne dépendent
    * d'aucune page. Aujourd'hui, les réponses au questionnaire légal.
    */
+  setPageMeta(patch) {
+    this.pageMeta = { ...(this.pageMeta || {}), ...patch };
+    appliquerMeta(this.doc, this.pageMeta);
+  }
+
+  /** Valeurs actuelles, lues dans la page si rien n'a été enregistré. */
+  pageMetaCourant() {
+    const description = this.doc.querySelector('meta[name="description"]');
+    return {
+      titre: this.pageMeta?.titre ?? (this.doc.title || ''),
+      description: this.pageMeta?.description ?? (description?.getAttribute('content') || ''),
+    };
+  }
+
   setReglage(cle, valeur) {
     this.reglages = { ...(this.reglages || {}), [cle]: clone(valeur) };
   }
@@ -663,6 +693,8 @@ export class PageModel {
     if (portee !== 'commun' && !sectionsEmpty(this.sections)) instantane.sections = clone(this.sections);
     // Les réglages du site voyagent avec le document commun.
     if (portee !== 'page' && this.reglages) instantane.reglages = clone(this.reglages);
+    // Le titre et la description appartiennent à la page, eux.
+    if (portee !== 'commun' && this.pageMeta) instantane.meta = clone(this.pageMeta);
     return instantane;
   }
 
@@ -672,6 +704,33 @@ export class PageModel {
       + (this.sections.order.length ? 1 : 0);
     return this.values.size + this.collectionState.size + this.styles.size + structure;
   }
+}
+
+/**
+ * Écrit le titre et la description dans l'en-tête du document. Ces deux-là
+ * vivent hors du `<body>`, donc hors de portée de la détection de contenu,
+ * mais ils comptent autant que le reste : sans eux, toutes les pages créées
+ * depuis un même modèle portent le même titre.
+ */
+function appliquerMeta(doc, meta) {
+  let change = false;
+  if (typeof meta?.titre === 'string' && meta.titre && doc.title !== meta.titre) {
+    doc.title = meta.titre;
+    change = true;
+  }
+  if (typeof meta?.description === 'string') {
+    let balise = doc.querySelector('meta[name="description"]');
+    if (!balise && meta.description) {
+      balise = doc.createElement('meta');
+      balise.setAttribute('name', 'description');
+      doc.head.appendChild(balise);
+    }
+    if (balise && balise.getAttribute('content') !== meta.description) {
+      balise.setAttribute('content', meta.description);
+      change = true;
+    }
+  }
+  return change;
 }
 
 /**

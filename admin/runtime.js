@@ -42,7 +42,8 @@ function hasContent(snapshot) {
     || (structure.hide || []).length > 0
     || (structure.order || []).length > 0
     // Un document commun peut ne porter que les réglages du site.
-    || !!snapshot.reglages;
+    || !!snapshot.reglages
+      || !!snapshot.meta;
 }
 
 /** L'éditeur doit-il s'ouvrir ? (paramètre d'URL, ou session déjà ouverte) */

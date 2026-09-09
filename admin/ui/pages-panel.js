@@ -10,8 +10,22 @@ import { h, icon, clear } from './el.js';
 import { openModal } from './modal.js';
 import { discoverPages, slugPage } from '../core/pages.js';
 
-export function openPages({ root, t, doc, hosting, onOpen, onCreate }) {
+export function openPages({ root, t, doc, hosting, onOpen, onCreate, connues = [], meta = null }) {
   const pages = discoverPages(doc);
+
+  // Les pages déjà ouvertes depuis l'éditeur complètent la découverte par
+  // les liens : sans ça, une page fraîchement créée — que rien ne pointe
+  // encore — serait injoignable.
+  const base = doc.location.href.replace(/[^/]*$/, '');
+  for (const connue of connues) {
+    if (pages.some((p) => p.path === connue.path)) continue;
+    pages.push({
+      url: base.replace(/[^/]*$/, '') + connue.path.split('/').pop(),
+      path: connue.path,
+      label: connue.label || connue.path,
+      courante: false,
+    });
+  }
 
   const liste = h('ul', { class: 'list' });
   for (const page of pages) {
@@ -30,7 +44,29 @@ export function openPages({ root, t, doc, hosting, onOpen, onCreate }) {
     ));
   }
 
+  // Nom et description de la page ouverte : c'est ce qui s'affiche dans
+  // l'onglet du navigateur et dans les résultats de recherche.
+  const metaCourant = meta ? meta.lire() : null;
+  const blocMeta = metaCourant ? h('div', { style: { marginBottom: '18px' } },
+    h('div', { class: 'field' },
+      h('span', { class: 'field__label' }, t('pageTitre')),
+      h('input', {
+        class: 'input', type: 'text', value: metaCourant.titre || '',
+        placeholder: t('pageTitrePlaceholder'),
+        // À la frappe : le nom de l'onglet suit, on voit ce qu'on écrit.
+        oninput: (e) => meta.ecrire({ titre: e.target.value }),
+      })),
+    h('div', { class: 'field' },
+      h('span', { class: 'field__label' }, t('pageDescription')),
+      h('textarea', {
+        class: 'textarea', style: { minHeight: '54px' }, value: metaCourant.description || '',
+        placeholder: t('pageDescriptionPlaceholder'),
+        oninput: (e) => meta.ecrire({ description: e.target.value }),
+      })),
+  ) : null;
+
   const corps = h('div', {},
+    blocMeta,
     h('p', { class: 'hint', style: { marginTop: '0' } }, t('pagesHint')),
     liste,
   );
