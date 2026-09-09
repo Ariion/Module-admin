@@ -148,14 +148,19 @@ python3 -m http.server 8080</pre>
      quelle adresse et n'importe quel mot de passe ouvrent l'éditeur : dans cet
      état, tout est enregistré dans votre navigateur, sans compte ni serveur.</p>
   <p>La page <code>index.html</code> livrée est vierge : un <strong>assistant</strong>
-     s'ouvre, vous pose deux questions et construit la page à partir de vos
-     réponses. Pour voir l'outil sur un vrai site, ouvrez plutôt
+     s'ouvre, vous pose trois questions — une page ou plusieurs, à quoi elle
+     sert, quelle allure lui donner — et construit la page à partir de vos
+     réponses. Vous arrivez ensuite sur le <strong>Guide</strong> : la page de
+     haut en bas, une étape par partie, avec sous chaque champ une phrase qui
+     dit quoi y mettre. Pour voir l'outil sur un vrai site, ouvrez plutôt
      <code>demo/index.html?admin</code>.</p>
   <div class="note">
      <strong>Vous avez déjà un site ?</strong> Rien à refaire : copiez
      <code>admin/</code> à sa racine et ajoutez les deux lignes de l'étape 4.
      Votre code reste tel quel, le module s'y accroche. L'assistant ne
-     s'ouvre que sur une page vide.
+     s'ouvre que sur une page vide, et l'ambiance ne s'applique par défaut
+     qu'aux parties que vous ajoutez : votre feuille de style n'est pas
+     touchée.
   </div>
   <div class="note">
     <strong>Pourquoi un serveur local ?</strong> Un double-clic sur le fichier

@@ -224,6 +224,9 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .hint { color: var(--muted); font-size: 12px; margin: 7px 0 0; line-height: 1.5; }
 .row { display: flex; gap: 7px; }
 .row > * { flex: 1; }
+/* Quatre boutons ne tiennent pas sur un rang de 344 px. */
+.row--wrap { flex-wrap: wrap; }
+.row--wrap > * { flex: 1 1 44%; }
 
 /* En-tête de sélection de l'inspecteur : ce qu'on est en train de régler */
 .sel {
@@ -770,6 +773,121 @@ select.input { appearance: none; cursor: pointer; }
   .toast { left: 50%; bottom: calc(var(--grab) + 14px); max-width: 86vw; }
   .backdrop { padding: 14px; align-items: flex-end; }
   .modal { max-height: 88vh; }
+}
+
+/* ------------------------------------------------------------------ Guide
+   Le parcours pas à pas : une étape par section, de haut en bas. C'est la
+   première chose que voit quelqu'un qui n'a jamais fait de site, donc tout y
+   est plus grand et plus espacé qu'ailleurs dans le panneau. */
+.guide__tete {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--bg); padding-bottom: 10px; margin-bottom: 4px;
+}
+.guide__prog {
+  height: 6px; border-radius: 999px; background: var(--bg-raise); overflow: hidden;
+}
+.guide__jauge {
+  display: block; height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--ok));
+  transition: width .25s ease;
+}
+.guide__compte { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.guide__liste { display: grid; gap: 8px; }
+
+.pas {
+  border: 1px solid var(--line-soft); border-radius: var(--radius);
+  background: var(--bg-soft); overflow: hidden;
+}
+.pas--on { border-color: var(--accent); background: var(--bg-raise); }
+.pas__tete {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 12px 12px; background: none; border: 0; cursor: pointer;
+  text-align: left; color: var(--text);
+}
+.pas__tete:hover { background: var(--bg-raise); }
+.pas__num {
+  flex: none; display: grid; place-items: center;
+  width: 24px; height: 24px; border-radius: 999px;
+  background: var(--bg-raise); border: 1px solid var(--line);
+  font-size: 11.5px; font-weight: 600; color: var(--muted);
+}
+.pas--on .pas__num { border-color: var(--accent); color: var(--accent-hi); }
+.pas__num--ok { background: var(--ok); border-color: var(--ok); color: #04231a; }
+.pas__nom { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.pas__reste {
+  flex: none; font-size: 11px; color: var(--warn);
+  background: rgba(251,191,36,.12); border-radius: 999px; padding: 2px 8px;
+}
+.pas__corps { padding: 2px 12px 14px; display: grid; gap: 12px; }
+.pas--fin .pas__corps { gap: 8px; }
+
+.champ { display: grid; gap: 4px; }
+.input--multi { min-height: 68px; resize: vertical; line-height: 1.5; }
+.champ__nom { font-weight: 600; }
+.champ__nom--sous { margin-top: 8px; }
+.champ__aide { color: var(--faint); font-size: 11.5px; line-height: 1.45; }
+.champ__exemple {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  color: var(--warn); font-size: 11.5px; margin-top: 2px;
+}
+.lien {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  color: var(--accent-hi); text-decoration: underline;
+}
+
+.guide__image { display: grid; gap: 8px; }
+.guide__vign {
+  height: 96px; border-radius: var(--radius-sm); border: 1px solid var(--line);
+  background-size: cover; background-position: center; background-color: var(--bg-sunk);
+  display: grid; place-items: center; color: var(--faint); font-size: 11.5px;
+}
+.guide__vign--vide { border-style: dashed; }
+.guide__imageActions { display: flex; gap: 7px; }
+.guide__imageActions > * { flex: 1; }
+.guide__exemples {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 2px;
+}
+.guide__exemple {
+  height: 44px; border-radius: var(--radius-xs); border: 1px solid var(--line);
+  background-size: cover; background-position: center; cursor: pointer;
+}
+.guide__exemple:hover { border-color: var(--accent); }
+.guide__dest { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.puce {
+  border: 1px solid var(--line); background: var(--bg-soft); color: var(--muted);
+  border-radius: 999px; padding: 3px 10px; font-size: 11.5px; cursor: pointer;
+}
+.puce:hover { color: var(--text); border-color: var(--accent); }
+.guide__fait {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--muted); cursor: pointer; user-select: none;
+}
+
+/* ------------------------------------------------------------------ Thèmes */
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.theme {
+  display: grid; gap: 6px; padding: 6px; cursor: pointer;
+  border: 1px solid var(--line-soft); border-radius: var(--radius-sm);
+  background: var(--bg-soft); color: var(--text); text-align: center;
+}
+.theme:hover { border-color: var(--line); }
+.theme[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+.theme__vue {
+  position: relative; display: block; height: 74px; overflow: hidden;
+  border-radius: var(--radius-xs); padding: 9px 9px 0;
+}
+.theme__titre { display: block; font-size: 17px; line-height: 1.1; }
+.theme__ligne { display: block; height: 3px; border-radius: 2px; opacity: .45; margin-top: 6px; }
+.theme__ligne--court { width: 62%; }
+.theme__btn { display: block; width: 42px; height: 13px; margin-top: 8px; }
+.theme__bande { position: absolute; left: 0; right: 0; bottom: 0; height: 12px; }
+.theme__nom { font-size: 11.5px; color: var(--muted); }
+.theme[aria-pressed="true"] .theme__nom { color: var(--text); }
+.theme__portee { margin-top: 12px; }
+
+@media (max-width: 700px) {
+  .themes { grid-template-columns: repeat(2, 1fr); }
+  .guide__exemples { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 700px) {

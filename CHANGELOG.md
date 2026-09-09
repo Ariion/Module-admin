@@ -1,5 +1,43 @@
 # Journal des versions
 
+## 1.4.0
+
+**Le Guide : la page de haut en bas**
+- Nouvelle vue, ouverte en premier : la page reprise partie par partie, dans
+  l'ordre où on la lit, et dans chacune les champs à remplir — nommés en
+  français courant, avec sous chaque champ une phrase qui dit quoi y mettre.
+- Une jauge indique ce qu'il reste. Chaque partie porte le nombre de champs
+  encore vides, et se coche quand elle est finie.
+- Le texte livré dans les modèles est marqué comme exemple tant qu'il n'a pas
+  été remplacé : une page ne peut plus partir en ligne en affichant
+  « Le titre de votre site » sans qu'on l'ait vu.
+- Le Guide marche aussi sur un site existant : il reprend les textes, images
+  et liens détectés dans le code du client.
+
+**Ambiances**
+- Neuf thèmes complets — Sobre, Chaleureux, Élégant, Nuit, Naturel, Punchy,
+  Pro, Magazine, Brut. Chacun décide d'un coup des polices, des couleurs, de
+  la forme des boutons et du rythme vertical.
+- C'est ce qui manquait : les modèles de page n'apportent que la structure,
+  donc sur une page vierge — où il n'y a aucun style à hériter — ils rendaient
+  tous exactement la même chose.
+- L'assistant pose la question au moment de construire la page, une seule fois
+  pour tout le site.
+- Sur un site existant, l'ambiance ne s'applique par défaut **qu'aux parties
+  ajoutées** : le code du client n'est pas repeint sans qu'on le demande. Le
+  choix « sur tout le site » reste possible.
+- La feuille de style produite est écrite dans le HTML régénéré : le site garde
+  son allure même une fois le module retiré.
+
+**Images d'exemple**
+- Huit visuels dessinés en SVG à partir des couleurs de l'ambiance retenue,
+  proposés sous chaque champ image. Aucun réseau, aucune clé d'API, aucune
+  question de droits.
+
+**Corrections**
+- Les colonnes gardaient leur nombre de pistes sur téléphone : trois colonnes
+  restaient trois colonnes, larges de rien. Elles se replient désormais.
+
 ## 1.3.0
 
 **Boutique**

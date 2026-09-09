@@ -16,6 +16,8 @@ import { createTextEditor } from './text-edit.js';
 import { createInspector } from './inspector.js';
 import { createNavigator } from './navigator.js';
 import { createWidgetsPanel } from './widgets-panel.js';
+import { createGuide } from './guide-panel.js';
+import { openTheme } from './theme-panel.js';
 import { createLibrary } from './library.js';
 import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
@@ -26,6 +28,8 @@ import { openLegal } from './legal-panel.js';
 import { openBoutique } from './boutique-panel.js';
 import { filePathOf, labelOf } from '../core/pages.js';
 import { ouvrirAction } from '../core/actions.js';
+import { etapesDuGuide } from '../core/guide.js';
+import { illustrations } from '../core/illustrations.js';
 import { PAGE_COMMUNE } from '../core/config.js';
 import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
@@ -90,6 +94,9 @@ export async function startEditor(runtime) {
   function buildShell() {
     shell = createShell({ root, t, config, onDevice: () => setTimeout(() => overlay?.reposition(), 240) });
 
+    // Le Guide passe en premier : c'est la vue qui s'ouvre au démarrage, et
+    // celle qui suffit à quelqu'un qui découvre. Les autres restent à côté.
+    const vueGuide = shell.addView('guide', t('tabGuide'), 'check');
     const vueElements = shell.addView('elements', t('tabElements'), 'grid');
     const vueStructure = shell.addView('structure', t('tabStructure'), 'layers');
     const vueMedias = shell.addView('medias', t('tabMedia'), 'image');
@@ -159,6 +166,44 @@ export async function startEditor(runtime) {
       },
     });
 
+    guide = createGuide({
+      vue: vueGuide, t,
+      actions: {
+        pageId: () => `${config.siteId}:${state.pageId}`,
+        etapes: () => etapesDuGuide(model),
+        theme: () => model.reglages?.theme || null,
+        setTheme: (reglage) => {
+          model.setReglage('theme', reglage);
+          markDirty();
+          overlay.reposition();
+        },
+        // Un site qui a déjà son propre code ne doit pas être repeint sans
+        // qu'on le demande : le thème s'y limite aux blocs ajoutés.
+        siteExistant: () => model.entries.size > 0,
+        illustrations: () => illustrations(model.reglages?.theme),
+        liens: () => (model.reglages?.pages || [])
+          .map((page) => ({ libelle: page.label || page.path, href: page.path })),
+        setWidgetProps: (key, patch) => {
+          if (!model.setWidgetProps(key, patch)) return;
+          markDirty();
+          overlay.refresh(model);
+          navigator.render(model);
+        },
+        setValue: (entry, patch) => setValue(entry, patch),
+        pickMedia: (rappel, accept) => { shell.showView('medias'); library.pick(rappel, accept); },
+        reveal: (ref) => {
+          const etape = guide.etapes.find((e) => e.ref === ref);
+          if (!etape?.el) return;
+          etape.el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          overlay.setActive(etape.el);
+        },
+        addSection: () => ouvrirNouvelleSection(null),
+        openPages: () => ouvrirPages(),
+        openLegal: () => ouvrirLegal(),
+        publish: () => publish(),
+      },
+    });
+
     navigator = createNavigator({
       vue: vueStructure, t,
       onSelect: (sel) => { select(sel, { reveal: true }); },
@@ -200,7 +245,7 @@ export async function startEditor(runtime) {
     shell.onPageClick(() => ouvrirPages());
 
     shell.setFootExtra([
-      h('div', { class: 'row', style: { marginBottom: '10px' } },
+      h('div', { class: 'row row--wrap', style: { marginBottom: '10px' } },
         h('button', {
           class: 'btn btn--sect', type: 'button',
           onclick: () => openPageTemplates({
@@ -209,6 +254,9 @@ export async function startEditor(runtime) {
             onWizard: () => ouvrirAssistant(),
           }),
         }, icon('pages', 13), t('pageTemplates')),
+        h('button', {
+          class: 'btn', type: 'button', title: t('themeTitre'), onclick: () => ouvrirTheme(),
+        }, icon('palette', 13), t('themeCourt')),
         h('button', {
           class: 'btn', type: 'button', title: t('legalTitle'), onclick: () => ouvrirLegal(),
         }, icon('code', 13), t('legalCourt')),
@@ -227,6 +275,7 @@ export async function startEditor(runtime) {
     ]);
   }
 
+  let guide = null;
   let hoteBibliotheque = null;
   let hoteInspecteur = null;
   let retourBibliotheque = null;
@@ -286,6 +335,7 @@ export async function startEditor(runtime) {
   function apresStructure(key) {
     overlay.refresh(model);
     navigator.render(model);
+    guide?.render();
     if (key) selectWidget(key);
   }
 
@@ -369,6 +419,7 @@ export async function startEditor(runtime) {
     overlay.refresh(model);
     overlay.enable();
     navigator.render(model);
+    guide?.render();
     inspector.render(null);
     surveillerNavigation(doc.location.href);
     if (defilement) doc.defaultView.scrollTo({ top: defilement });
@@ -578,6 +629,21 @@ export async function startEditor(runtime) {
     });
   }
 
+  /** L'ambiance du site : polices, couleurs, formes, rythme. */
+  function ouvrirTheme() {
+    openTheme({
+      root, t,
+      valeur: model.reglages?.theme || null,
+      siteExistant: model.entries.size > 0,
+      onChange: (reglage) => {
+        model.setReglage('theme', reglage);
+        markDirty();
+        overlay.reposition();
+        guide?.render();
+      },
+    });
+  }
+
   /** Catalogue du site : fiches produits et façon d'encaisser. */
   function ouvrirBoutique() {
     openBoutique({
@@ -669,14 +735,16 @@ export async function startEditor(runtime) {
     openWizard({
       root, t,
       peutCreerPages: hosting.enabled,
+      theme: model.reglages?.theme || null,
       onSkip: () => marquerAssistantVu(),
-      onApply: async (trees) => {
+      onApply: async (trees, theme) => {
         marquerAssistantVu();
         if (!model.applyTrees(trees, true)) return;
+        if (theme?.id) model.setReglage('theme', theme);
         markDirty();
         await autosave.flush();
         await loadPage(urlCourante(), { keepScroll: false });
-        showLibrary();
+        shell.showView('guide');
         notify(t('pageTplApplied'));
       },
     });
@@ -801,6 +869,9 @@ export async function startEditor(runtime) {
   function markDirty() {
     state.dirty = true;
     render();
+    // La jauge du guide suit la frappe ; le rendu complet, lui, attendrait la
+    // fin de la saisie — il ferait perdre le curseur à chaque caractère.
+    guide?.majAvancement();
     autosave();
   }
 

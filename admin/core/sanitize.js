@@ -78,7 +78,19 @@ export function safeImageUrl(url) {
 
   const scheme = schemeOf(value);
   if (scheme === 'data') {
-    return /^data:image\/(png|jpe?g|gif|webp|avif);base64,/.test(flatten(value)) ? value : '';
+    const plat = flatten(value);
+    if (/^data:image\/(png|jpe?g|gif|webp|avif);base64,/.test(plat)) return value;
+    // Les images d'exemple du guide sont des SVG écrits en clair. Un SVG
+    // chargé comme IMAGE n'exécute jamais de script — aucun navigateur ne le
+    // fait — mais on refuse quand même celui qui en contient : cette valeur
+    // finit dans le HTML publié, et on ne veut pas qu'elle devienne
+    // dangereuse le jour où elle servirait ailleurs.
+    if (/^data:image\/svg\+xml[,;]/.test(plat)) {
+      let texte = value;
+      try { texte = decodeURIComponent(value); } catch { /* déjà en clair */ }
+      return /<script|<foreignobject|\son\w+\s*=|javascript:/i.test(texte) ? '' : value;
+    }
+    return '';
   }
   if (scheme) return scheme === 'http' || scheme === 'https' ? value : '';
   return value;

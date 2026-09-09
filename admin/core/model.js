@@ -15,6 +15,7 @@ import {
 import { createWidget, renderWidget, findWidget, removeWidget, WIDGETS } from './widgets.js';
 import { compileCustomCss, writeCustomSheet } from './style.js';
 import { writeFontLink } from './fonts.js';
+import { writeThemeSheet, policesDuTheme } from './theme.js';
 import { findPageTemplate } from './page-templates.js';
 import { clone, equal, uid } from './util.js';
 import { debug, safe } from './log.js';
@@ -193,6 +194,7 @@ export class PageModel {
       this.refresh();
     }
 
+    this.refreshTheme();
     this.refreshCustomCss();
     this.refreshFonts();
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
@@ -378,6 +380,10 @@ export class PageModel {
     // L'habillage est un sous-objet : on le fusionne au lieu de l'écraser.
     const style = patch.style ? { ...(cible.noeud.props.style || {}), ...patch.style } : cible.noeud.props.style;
     cible.noeud.props = { ...cible.noeud.props, ...patch, ...(style ? { style } : {}) };
+    // Le texte n'est plus celui du modèle : le guide cesse de le réclamer.
+    if (['text', 'html', 'items'].some((cle) => patch[cle] !== undefined)) {
+      delete cible.noeud.props.exemple;
+    }
 
     // Changer le nombre de colonnes ajoute ou retire des colonnes, sans
     // perdre le contenu de celles qui restent.
@@ -420,6 +426,14 @@ export class PageModel {
   }
 
   /**
+   * Écrit la feuille du thème. Elle vit dans le `<head>` et survit à la
+   * régénération du HTML : le site garde son allure même sans le module.
+   */
+  refreshTheme() {
+    safe(() => writeThemeSheet(this.doc, this.reglages?.theme), null, 'theme');
+  }
+
+  /**
    * Réunit les CSS personnalisés de la page dans une feuille unique.
    * Une règle a besoin d'un sélecteur — pour un `:hover` par exemple — donc
    * elle ne peut pas vivre en style en ligne comme le reste.
@@ -458,6 +472,7 @@ export class PageModel {
       }
     };
     for (const record of this.widgetSections()) parcourir([record.tree]);
+    noms.push(...policesDuTheme(this.reglages?.theme));
     safe(() => writeFontLink(this.doc, noms), null, 'fonts');
   }
 
@@ -616,6 +631,9 @@ export class PageModel {
 
   setReglage(cle, valeur) {
     this.reglages = { ...(this.reglages || {}), [cle]: clone(valeur) };
+    // Le thème se voit tout de suite : sans cela il faudrait recharger la
+    // page pour juger de son effet, ce qui rend le choix impossible.
+    if (cle === 'theme') { this.refreshTheme(); this.refreshFonts(); }
   }
 
   /**

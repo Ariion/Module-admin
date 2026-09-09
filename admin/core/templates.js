@@ -9,10 +9,21 @@
  */
 import { createWidget } from './widgets.js';
 
-/** Fabrique un widget avec des propriétés initiales. */
+/** Propriétés qui portent du texte de remplissage dans un modèle. */
+const REMPLISSAGE = ['text', 'html', 'items'];
+
+/**
+ * Fabrique un widget avec des propriétés initiales.
+ *
+ * Le texte d'un modèle est marqué comme exemple : c'est ce qui permet au
+ * guide de dire « il reste ça à écrire » plutôt que de compter la page comme
+ * remplie alors qu'elle affiche encore « Le titre de votre site ». La marque
+ * disparaît dès que le client écrit son propre texte.
+ */
 export function w(type, props = {}, enfants = null) {
   const noeud = createWidget(type);
   noeud.props = { ...noeud.props, ...props };
+  if (REMPLISSAGE.some((cle) => props[cle] !== undefined)) noeud.props.exemple = true;
   if (enfants) {
     if (noeud.type === 'columns') {
       noeud.children = enfants.map((contenu) => {

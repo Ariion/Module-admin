@@ -52,12 +52,22 @@ npx http-server -p 8080 .
 ```
 
 Ouvrez **`http://localhost:8080/index.html?admin`** : un **assistant** vous
-pose deux questions — une page ou plusieurs, à quoi elle sert — puis propose
-des mises en page. Vous en choisissez une, et vous arrivez dans l'éditeur
-avec la page construite, prête à être remplie.
+pose trois questions — une page ou plusieurs, à quoi elle sert, et quelle
+allure vous voulez lui donner — puis propose des mises en page. Vous en
+choisissez une, et la page est construite.
+
+Vous arrivez ensuite sur le **Guide** : la page reprise de haut en bas, une
+étape par partie, et dans chacune les champs à remplir avec, sous chaque
+champ, une phrase qui dit quoi y mettre. Une jauge en haut indique ce qu'il
+reste. Vous descendez, et quand vous arrivez en bas, la page est finie.
+
+Le texte livré dans les modèles est signalé comme texte d'exemple tant que
+vous ne l'avez pas remplacé : impossible de mettre en ligne une page qui
+affiche encore « Le titre de votre site » sans l'avoir vu.
 
 L'assistant ne se déclenche que sur une page vierge. Sur un site existant, il
-ne s'ouvre jamais.
+ne s'ouvre jamais — mais le Guide, lui, reprend vos propres textes et images
+et vous les fait modifier de la même façon.
 
 ### Pour voir ce que ça donne sur un vrai site
 

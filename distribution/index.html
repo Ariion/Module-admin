@@ -51,6 +51,14 @@
   /* Colonnes émises par l'éditeur : un peu d'air entre les blocs. */
   section h3{margin-top:.2em}
 
+
+  /* Les colonnes de l'éditeur sont posées en grille : sur un téléphone, trois
+     colonnes resteraient trois colonnes, larges de rien. */
+  @media (max-width:760px){
+    [data-admin-section] [style*="grid-template-columns"]{ grid-template-columns:1fr !important }
+    section{ padding:46px 18px }
+  }
+
   .accueil{padding:96px 24px 84px; text-align:center}
   .accueil > *{max-width:680px; margin-left:auto; margin-right:auto}
   .pied{

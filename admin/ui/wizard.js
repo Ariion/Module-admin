@@ -12,6 +12,7 @@
 import { h, icon, clear } from './el.js';
 import { openModal } from './modal.js';
 import { INTENTIONS, composerPropositions } from '../core/page-templates.js';
+import { rendreChoixTheme } from './theme-panel.js';
 
 const MODES = ['une', 'plusieurs'];
 
@@ -29,15 +30,20 @@ function apercu(formes) {
  * @param {object} options
  * @param {HTMLElement} options.root racine du shadow DOM
  * @param {Function} options.t traduction
- * @param {Function} options.onApply reçoit (trees) : les sections à poser
+ * @param {Function} options.onApply reçoit (trees, theme) : les sections à poser
+ *   et l'ambiance retenue
  * @param {Function} [options.onSkip] appelé si l'assistant est refermé sans rien poser
  * @param {boolean} [options.peutCreerPages] l'hébergement accepte-t-il la création de pages
+ * @param {object|null} [options.theme] ambiance déjà retenue pour le site, s'il y en a une
  */
-export function openWizard({ root, t, onApply, onSkip, peutCreerPages = false }) {
+export function openWizard({ root, t, onApply, onSkip, peutCreerPages = false, theme: themeSite = null }) {
   let mode = 'une';
   const intentions = new Set(['vitrine']);
   let propositions = [];
   let choisie = 0;
+  // L'ambiance vaut pour tout le site : on ne la redemande pas à chaque page.
+  const ambianceDeja = !!themeSite?.id;
+  let theme = themeSite?.id ? { ...themeSite } : { id: 'sobre', portee: 'site' };
   let pose = false;
 
   const corps = h('div', { class: 'assist' });
@@ -153,13 +159,44 @@ export function openWizard({ root, t, onApply, onSkip, peutCreerPages = false })
         class: 'btn btn--ghost', type: 'button', onclick: () => etapeQuestions(),
       }, icon('left', 13), t('wizardBack')),
       h('span', { style: { flex: '1' } }),
+      ambianceDeja
+        ? h('button', {
+          class: 'btn btn--primary', type: 'button', onclick: () => poser(),
+        }, icon('check', 13), t('wizardApply'))
+        : h('button', {
+          class: 'btn btn--primary', type: 'button', onclick: () => etapeAmbiance(),
+        }, t('wizardVersAmbiance'), icon('right', 13)),
+    );
+  }
+
+  function poser() {
+    pose = true;
+    modal.close();
+    onApply(propositions[choisie].trees, theme);
+  }
+
+  // ----------------------------------------------------------- ambiance
+  // Sans cette étape, toutes les propositions se ressemblent : une page
+  // vierge n'a aucun style à leur prêter, et le client croit que le module
+  // ne sait faire qu'une seule mise en page.
+  function etapeAmbiance() {
+    clear(corps);
+    corps.append(h('p', { class: 'hint', style: { marginTop: '0' } }, t('wizardAmbiance')));
+    const hote = h('div', {});
+    corps.appendChild(hote);
+    rendreChoixTheme({
+      hote, t, valeur: theme, siteExistant: false,
+      onChange: (reglage) => { theme = reglage; },
+    });
+
+    clear(pied);
+    pied.append(
       h('button', {
-        class: 'btn btn--primary', type: 'button',
-        onclick: () => {
-          pose = true;
-          modal.close();
-          onApply(propositions[choisie].trees);
-        },
+        class: 'btn btn--ghost', type: 'button', onclick: () => etapePropositions(),
+      }, icon('left', 13), t('wizardBack')),
+      h('span', { style: { flex: '1' } }),
+      h('button', {
+        class: 'btn btn--primary', type: 'button', onclick: () => poser(),
       }, icon('check', 13), t('wizardApply')),
     );
   }

@@ -18,7 +18,8 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | | |
 |---|---|
 | **Détection automatique** | Le module analyse le DOM et repère seul les textes, images (y compris les fonds CSS), liens et blocs répétables. Rien à annoter dans le HTML. |
-| **Éditeur à panneau latéral** | Le site dans un aperçu, les réglages à gauche : contenu, structure de la page, bibliothèque média. Aperçu ordinateur / tablette / mobile. |
+| **Guide pas à pas** | La vue qui s'ouvre en premier, et la seule dont on ait besoin quand on n'a jamais fait de site : la page **de haut en bas**, une étape par partie, dans chacune les champs à remplir nommés en français courant (« Le titre », « Où mène ce bouton ? ») avec une phrase d'explication. Une jauge dit ce qu'il reste. Le texte encore issu du modèle est signalé comme tel, donc rien ne part en ligne en affichant « Le titre de votre site ». |
+| **Éditeur à panneau latéral** | Le site dans un aperçu, les réglages à gauche : guide, éléments, structure de la page, bibliothèque média. Aperçu ordinateur / tablette / mobile. |
 | **Édition en place** | Survol = contour, clic sur un texte = édition directe, clic sur une image = panneau d'upload, clic sur un lien = champ d'adresse. |
 | **Sites de plusieurs pages** | Créer une page, la nommer (titre et description pour les moteurs), poser un menu pré-rempli avec les pages connues. Le module retient les pages ouvertes : une page toute neuve, que rien ne pointe encore, reste joignable. L'assistant se relance sur chaque page vierge. |
 | **Pages du site** | Le nom de la page, en haut de l'aperçu, ouvre la liste des pages — déduite des liens du site. On y change de page, et on en crée une nouvelle, copiée sur une page existante (demande un hébergement inscriptible). |
@@ -26,6 +27,8 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Modèles de section** | Huit mises en page prêtes à l'emploi, proposées au moment de créer la section : trois colonnes, image et texte, appel à l'action, galerie… |
 | **Bibliothèque d'éléments** | Titre, texte, bouton, liste, image, vidéo, carte, colonnes, séparateur, espaceur — recherche, catégories, glisser-déposer dans l'aperçu. Le balisage émis est sémantique et sans classes : la feuille de style du site s'y applique d'elle-même. |
 | **Sections de page** | Ajouter une section vide et la remplir d'éléments, ou copier une section existante du site. Retirer, réordonner, remettre. |
+| **Ambiances** | Neuf thèmes complets — Sobre, Chaleureux, Élégant, Nuit, Naturel, Punchy, Pro, Magazine, Brut. Chacun décide d'un coup des polices, des couleurs, de la forme des boutons et du rythme vertical : sans cela, tous les modèles de page se ressemblent sur une page vierge, faute de style à hériter. Sur un site existant, l'ambiance ne s'applique par défaut **qu'aux parties ajoutées** — le code du client n'est pas repeint sans qu'on le demande. La feuille de style produite est écrite dans le HTML régénéré : le site garde son allure même sans le module. |
+| **Images d'exemple** | Huit visuels dessinés en SVG à partir des couleurs de l'ambiance retenue. Aucun réseau, aucune clé d'API, aucune question de droits — de quoi voir à quoi ressemblera la page avant d'avoir ses propres photos. |
 | **Habillage complet** | Police (48 familles Google Fonts rangées par nature, chargées à la demande), taille, graisse, casse, interlignage, espacement, couleurs, marges, contour et son style, angles, ombre, opacité — et du **CSS personnalisé** avec sélecteur, pour les états `:hover`. |
 | **Placement libre** | Largeur du bloc, alignement dans la section, décalage horizontal et vertical, rotation. Le décalage est une transformée, pas une marge : le bloc bouge, la mise en page autour ne bronche pas. |
 | **Images libres de droits** | Recherche Pixabay depuis l'onglet Médias (clé d'API gratuite à renseigner). Sur un hébergement PHP, l'image choisie est rapatriée dans le dossier du site plutôt que pointée à distance. |
@@ -109,6 +112,9 @@ admin/                    le module (à copier tel quel sur un site)
 ├── core/widgets.js       catalogue d'éléments et rendu
 ├── core/templates.js     modèles de section
 ├── core/boutique.js      produits, prix, bouton d'achat, panier
+├── core/theme.js         ambiances : polices, couleurs, formes, rythme
+├── core/guide.js         le parcours pas à pas, déduit de la page
+├── core/illustrations.js images d'exemple dessinées d'après l'ambiance
 ├── core/page-templates.js modèles de page entière
 ├── core/fonts.js         polices et chargement à la demande
 ├── core/pages.js         découverte des pages du site
@@ -122,6 +128,8 @@ admin/                    le module (à copier tel quel sur un site)
 │   └── resize.js            recompression avant envoi
 └── ui/                   éditeur (chargé uniquement pour les administrateurs)
     ├── shell.js          coque : panneau à gauche, aperçu à droite
+    ├── guide-panel.js    le guide : la page de haut en bas
+    ├── theme-panel.js    choix de l'ambiance
     ├── widgets-panel.js  bibliothèque d'éléments
     ├── inspector.js      réglages de l'élément choisi
     ├── navigator.js      structure de la page
