@@ -20,6 +20,7 @@ import { createGuide } from './guide-panel.js';
 import { openTheme } from './theme-panel.js';
 import { openReglages } from './reglages-panel.js';
 import { openOutils } from './outils-panel.js';
+import { openReset } from './reset-panel.js';
 import { createLibrary } from './library.js';
 import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
@@ -33,6 +34,7 @@ import { filePathOf, labelOf } from '../core/pages.js';
 import { ouvrirAction } from '../core/actions.js';
 import { etapesDuGuide } from '../core/guide.js';
 import { illustrations } from '../core/illustrations.js';
+import { remettreAZero, remettreLeSiteAZero } from '../core/reset.js';
 import { redigerPage } from '../core/redacteur.js';
 import { prestationsDuBrief, themeSuggere } from '../core/brief.js';
 import { redigerAvecIA, cleLocale, poserCleLocale } from '../core/ia.js';
@@ -801,6 +803,81 @@ export async function startEditor(runtime) {
   }
 
   /**
+   * Tout recommencer. La fenêtre décrit l'opération avant de la proposer ;
+   * ici on ne fait que l'exécuter et rendre compte.
+   */
+  function ouvrirReset() {
+    const pages = pagesConnues();
+    openReset({
+      root, t,
+      nomPage: filePathOf(urlCourante()) || state.pageId,
+      nbPages: pages.length,
+      peutRendreHtml: hosting.enabled,
+      onReset: (portee) => lancerReset(portee),
+    });
+  }
+
+  /** Les pages que le module connaît, avec leur fichier. */
+  function pagesConnues() {
+    const base = urlCourante().replace(/[^/]*$/, '');
+    const connues = (model.reglages?.pages || []).map((page) => ({
+      pageId: pageKeyFromLocation(new URL(page.path, base)),
+      chemin: page.path,
+    }));
+    const courante = { pageId: state.pageId, chemin: filePathOf(urlCourante()) };
+    if (!connues.some((p) => p.pageId === courante.pageId)) connues.unshift(courante);
+    return connues;
+  }
+
+  async function lancerReset(portee) {
+    autosave.cancel();
+    textEditor?.commit();
+    notify(t('razEnCours'));
+
+    let message = '';
+    try {
+      if (portee === 'page') {
+        const bilan = await remettreAZero({
+          backend, hosting, pageId: state.pageId, chemin: filePathOf(urlCourante()),
+        });
+        if (!bilan.contenu) { notify(bilan.erreur); return; }
+        message = bilan.erreur ? t('razPartielle', bilan.erreur) : t('razFaite');
+      } else {
+        const pages = pagesConnues();
+        const chemins = Object.fromEntries(pages.map((p) => [p.pageId, p.chemin]));
+        const bilan = await remettreLeSiteAZero({
+          backend, hosting, siteId: config.siteId,
+          // Le document commun porte l'en-tête, le pied et les réglages : il
+          // fait partie du site, même s'il n'a pas de fichier .html.
+          pages: [...pages.map((p) => p.pageId), PAGE_COMMUNE],
+          chemins,
+        });
+        message = bilan.erreurs.length
+          ? t('razPartielle', bilan.erreurs[0])
+          : t('razFaiteSite', bilan.faites);
+      }
+    } catch (err) {
+      notify(err?.message || t('razEchec'));
+      return;
+    }
+
+    // On repart de la page telle qu'elle est redevenue, sans rien de l'ancien
+    // modèle en mémoire.
+    state.dirty = false;
+    state.hasDraft = false;
+    state.savedAt = null;
+    await loadPage(urlCourante(), { keepScroll: false });
+
+    // Recharger la page la fait mémoriser, ce qui suffit à marquer le site
+    // « modifications non publiées » — juste après une remise à zéro, c'est
+    // trompeur. On republie donc pour repartir d'un état réellement propre.
+    if (state.dirty) await publish({ silencieux: true });
+
+    shell.showView('guide');
+    notify(message);
+  }
+
+  /**
    * Les outils du site. Ils tenaient dans le pied du panneau, six boutons
    * côte à côte sans hiérarchie ; ils ont maintenant une fenêtre où chacun
    * est nommé et expliqué.
@@ -819,6 +896,7 @@ export async function startEditor(runtime) {
         boutique: () => ouvrirBoutique(),
         legal: () => ouvrirLegal(),
         reglages: () => ouvrirReglages(),
+        reset: () => ouvrirReset(),
       },
     });
   }
@@ -1072,7 +1150,13 @@ export async function startEditor(runtime) {
     autosave();
   }
 
-  async function publish() {
+  /**
+   * @param {object} [options]
+   * @param {boolean} [options.silencieux] ne pas annoncer la publication.
+   *   Sert à la remise à zéro, qui republie pour repartir propre et a son
+   *   propre message à afficher.
+   */
+  async function publish({ silencieux = false } = {}) {
     autosave.cancel();
     textEditor.commit();
     publishButton.disabled = true;
@@ -1086,7 +1170,7 @@ export async function startEditor(runtime) {
       state.dirty = false;
       state.hasDraft = false;
       state.savedAt = Date.now();
-      notify(t('published'));
+      if (!silencieux) notify(t('published'));
     } catch (err) {
       notify(String(err.message || err), true);
       publishButton.disabled = false;
@@ -1102,7 +1186,7 @@ export async function startEditor(runtime) {
       try {
         await bakeIntoHost();
         state.baked = Date.now();
-        notify(t('bakedOk'));
+        if (!silencieux) notify(t('bakedOk'));
       } catch (err) {
         state.baked = null;
         notify(t('bakedFail') + ' ' + String(err.message || err), true);

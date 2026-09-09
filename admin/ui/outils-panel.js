@@ -40,7 +40,11 @@ export const GROUPES_OUTILS = [
   },
   {
     id: 'module',
-    outils: [{ cle: 'reglages', icone: 'sliders' }],
+    outils: [
+      { cle: 'reglages', icone: 'sliders' },
+      // En dernier, et signalé : c'est la seule ligne qui défait du travail.
+      { cle: 'reset', icone: 'history', danger: true },
+    ],
   },
 ];
 
@@ -61,7 +65,8 @@ export function openOutils({ root, t, actions }) {
       const action = actions[outil.cle];
       if (!action) continue;
       corps.appendChild(h('button', {
-        class: 'outil' + (outil.fort ? ' outil--fort' : ''), type: 'button',
+        class: 'outil' + (outil.fort ? ' outil--fort' : '') + (outil.danger ? ' outil--danger' : ''),
+        type: 'button',
         onclick: () => { modal.close(); action(); },
       },
         h('span', { class: 'outil__icone' }, icon(outil.icone, 15)),

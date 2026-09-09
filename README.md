@@ -39,6 +39,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Prévisualisation** | Le panneau s'efface, le site prend tout l'écran, et une barre noire dit où l'on est : *Mode prévisualisation*, avec *Retourner à la modification* et *Aller sur le site*. Les liens sont cliquables — on parcourt le site page par page. Si des modifications ne sont pas publiées, la barre le signale. |
 | **Blocs répétables** | Dupliquer, réordonner, supprimer une carte de la liste — dans le gabarit prévu par le développeur, sans pouvoir casser la mise en page. |
 | **Brouillon puis publication** | Enregistrement automatique du brouillon, bouton « Publier », historique des versions et restauration. |
+| **Tout recommencer** | Un outil rend au site son code d'origine — cette page seulement, ou le site entier avec l'ambiance et le catalogue. La fenêtre montre ce qui est effacé et ce qui ne l'est pas : le code du client, la bibliothèque média et l'historique restent intacts. L'opération publie un contenu vide au lieu de supprimer quoi que ce soit, donc **on peut revenir en arrière depuis l'historique**. |
 | **Ne casse jamais le site** | Firebase injoignable, base vide, contenu illisible : la page s'affiche avec son HTML d'origine. Aucune exception ne remonte. |
 | **Le module reste optionnel** | À chaque publication, le fichier `.html` de l'hébergement est **réécrit avec le contenu à l'intérieur**. Le client peut supprimer le module quand il veut : son site garde tout, sans aucune manipulation. |
 | **Appels à l'action** | Un bouton peut ouvrir une fenêtre au lieu de quitter la page : au centre, à droite, à gauche, en bas, en plein écran. Six modèles de remplissage — réservation, contact, horaires, carte, vidéo, libre — posent un contenu déjà écrit, et la fenêtre accepte une image, des boutons et un contenu intégré (module de réservation, formulaire, plan). Le lien reste le repli si le module est retiré. |
@@ -122,6 +123,7 @@ admin/                    le module (à copier tel quel sur un site)
 ├── core/redacteur.js     du brief à la page écrite, sans réseau
 ├── core/ia.js            rédaction par IA, facultative
 ├── core/guide.js         le parcours pas à pas, déduit de la page
+├── core/reset.js         rendre au site son code d'origine
 ├── core/illustrations.js images d'exemple dessinées d'après l'ambiance
 ├── core/page-templates.js modèles de page entière
 ├── core/fonts.js         polices et chargement à la demande
@@ -141,6 +143,7 @@ admin/                    le module (à copier tel quel sur un site)
     ├── brief-panel.js    questionnaire « écrire ma page »
     ├── reglages-panel.js les clés, saisies depuis le module
     ├── outils-panel.js   les outils du site, groupés et nommés
+    ├── reset-panel.js    « tout recommencer » : ce qui part, ce qui reste
     ├── theme-panel.js    choix de l'ambiance
     ├── widgets-panel.js  bibliothèque d'éléments
     ├── inspector.js      réglages de l'élément choisi

@@ -889,6 +889,43 @@ select.input { appearance: none; cursor: pointer; }
 }
 .reglages__trait { border: 0; border-top: 1px solid var(--line-soft); margin: 22px 0 18px; }
 
+/* ------------------------------------------------- Tout recommencer */
+.outil--danger .outil__icone { background: rgba(248,113,113,.12); color: #fca5a5; }
+.outil--danger:hover { background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.28); }
+.outil--danger .outil__nom { color: #fca5a5; }
+
+.raz__choix { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 16px 0 18px; }
+.raz__carte { text-align: left; }
+.raz__bilan { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.raz__colonne {
+  border: 1px solid var(--line-soft); border-radius: var(--radius-sm);
+  padding: 11px 12px; background: var(--bg-soft);
+}
+.raz__colonne--part { border-color: rgba(248,113,113,.24); background: rgba(248,113,113,.05); }
+.raz__colonne--reste { border-color: rgba(52,211,153,.22); background: rgba(52,211,153,.05); }
+.raz__entete {
+  display: flex; align-items: center; gap: 7px; margin-bottom: 7px;
+  font-size: 11px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase;
+}
+.raz__colonne--part .raz__entete { color: #fca5a5; }
+.raz__colonne--reste .raz__entete { color: var(--ok); }
+.raz__colonne ul { margin: 0; padding-left: 16px; }
+.raz__colonne li { font-size: 12px; color: var(--muted); line-height: 1.45; margin-bottom: 4px; }
+.raz__filet {
+  display: flex; gap: 9px; margin: 14px 0 0; padding: 11px 12px;
+  border: 1px solid var(--line-soft); border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--muted); font-size: 12px; line-height: 1.5;
+}
+.raz__filet svg { flex: none; margin-top: 2px; color: var(--accent-hi); }
+.raz__coche { margin-top: 14px; border-color: rgba(248,113,113,.3); }
+.btn--fort { font-weight: 650; }
+.btn--danger.btn--fort { background: rgba(248,113,113,.14); }
+.btn--danger.btn--fort:hover { background: rgba(248,113,113,.22); }
+
+@media (max-width: 700px) {
+  .raz__choix, .raz__bilan { grid-template-columns: 1fr; }
+}
+
 /* ------------------------------------------------------------- Outils
    Une ligne par outil, avec ce qu'il fait écrit à côté. Six boutons de même
    taille dans un pied de panneau ne se lisent pas ; six lignes nommées, si. */

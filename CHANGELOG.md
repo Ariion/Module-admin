@@ -1,5 +1,30 @@
 # Journal des versions
 
+## 1.7.0
+
+**Tout recommencer**
+- Nouvel outil, en dernier dans « Outils du site » et signalé comme tel : il
+  rend au site son code d'origine — celui écrit par le développeur, ou la
+  page livrée avec le module.
+- Deux portées : **cette page seulement** (les autres pages, l'ambiance et les
+  réglages ne bougent pas) ou **tout le site** (y compris l'ambiance, le
+  catalogue, les réponses aux pages légales et l'en-tête commun).
+- La fenêtre montre, côte à côte, ce qui est effacé et ce qui ne l'est pas.
+  Ne sont pas touchés : le code du client, la bibliothèque média — ce sont
+  ses fichiers, souvent introuvables ailleurs — et l'historique.
+- **L'opération reste réversible** : elle publie un contenu vide au lieu de
+  supprimer les documents, donc les versions précédentes restent dans
+  l'historique, d'où l'on peut revenir en arrière.
+- Sur un hébergement PHP, le fichier `.html` est rétabli à partir de la copie
+  du code d'origine : la régénération est défaite, pas seulement le contenu.
+- La portée « tout le site » demande une case cochée : c'est la seule qui
+  emporte l'ambiance et le catalogue.
+
+**Correction**
+- Recharger une page la faisait mémoriser, ce qui suffisait à afficher
+  « modifications non publiées » — juste après une remise à zéro, c'était
+  trompeur. L'état repart désormais réellement propre.
+
 ## 1.6.1
 
 **Refonte de l'interface — elle était plate, et elle l'était vraiment**
