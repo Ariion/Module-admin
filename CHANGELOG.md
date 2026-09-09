@@ -1,5 +1,26 @@
 # Journal des versions
 
+## 1.3.0
+
+**Boutique**
+- Catalogue de produits dans le module : nom, description, prix, devise,
+  image, catégorie, disponibilité.
+- Produits **physiques** (avec poids) et produits **virtuels**.
+- Deux façons d'encaisser :
+  - **page de paiement externe** — Stripe Payment Link, Gumroad,
+    Lemon Squeezy, PayPal, ou n'importe quelle adresse : le bouton emmène
+    l'acheteur chez le vendeur, rien n'est encaissé sur le site ;
+  - **panier sur le site** — Snipcart, ajouté à la page à la demande.
+- Deux éléments dans la bibliothèque : **Catalogue** (tous les produits, ou
+  une catégorie) et **Produit** (une fiche seule).
+
+**Corrections**
+- Sur un site déjà régénéré, les sections ajoutées par le module
+  apparaissaient **en double** pour le visiteur : la régénération effaçait le
+  marqueur de section, et le module ne reconnaissait plus ce qu'il avait
+  lui-même écrit. Le marqueur est désormais conservé, et une section déjà
+  présente est remplacée sur place au lieu d'être ajoutée à la suite.
+
 ## 1.2.1
 
 **Construire un site de plusieurs pages depuis une page blanche**

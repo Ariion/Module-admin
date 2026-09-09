@@ -16,6 +16,7 @@ import { getDocument } from './data/rest.js';
 import { paths } from './data/schema.js';
 import { setDebug, debug, safe } from './core/log.js';
 import { actionsDe, attacherActions } from './core/actions.js';
+import { poserPanier } from './core/boutique.js';
 import { ready, emitter } from './core/util.js';
 
 const EDITOR_SESSION_KEY = 'admin:editing';
@@ -91,6 +92,8 @@ class AdminRuntime {
       this.detacherActions?.();
       this.detacherActions = attacherActions(document, actionsDe(this.model));
     }, null, 'actions');
+    // Le panier n'est chargé que si le site en a un, et une seule fois.
+    safe(() => poserPanier(document, this.model.reglages?.boutique), null, 'panier');
     this.snapshot = snapshot;
     debug('contenu appliqué depuis', origin, result);
     this.events.emit('applied', { snapshot, origin, ...result });

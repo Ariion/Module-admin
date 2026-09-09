@@ -37,6 +37,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **En-tête et pied de page communs** | Ce qui est modifié dans un `<header>` ou un `<footer>` est enregistré à part et s'applique à **toutes les pages** : le client corrige son téléphone une fois, pas page par page. L'éditeur le signale au moment de la modification. |
 | **Pages légales rédigées** | Mentions légales, politique de confidentialité, conditions générales de vente. Le client répond à un questionnaire — qui il est, ce qu'il collecte, ce qu'il vend — et chaque réponse décide des clauses écrites. Les pages sont créées et publiées ; la liste des hébergeurs courants évite l'erreur classique sur la mention d'hébergement. |
 | **Copyright à jour** | Un élément Copyright affiche l'année en cours, recalculée à chaque affichage. `{{année}}` fonctionne aussi dans un titre ou un texte inséré. |
+| **Boutique** | Un catalogue de produits — physiques (avec poids) ou virtuels — géré depuis le module : nom, description, prix, devise, image, catégorie. Le paiement est délégué : Stripe Payment Link, Gumroad, Lemon Squeezy, PayPal, ou n'importe quelle adresse de vente. Le bouton emmène l'acheteur chez le vendeur, rien n'est encaissé sur le site. Au choix, un panier Snipcart sur le site. Deux éléments : **Catalogue** (tous les produits, ou une catégorie) et **Produit** (une fiche seule). |
 | **Bibliothèque média interne** | Onglet « Médias » : glisser-déposer des fichiers, ajout par adresse (une image du site, une vidéo YouTube, un MP3 hébergé ailleurs), recherche, filtres par famille — images, vidéos, audio, fichiers — copie de l'adresse et suppression. Elle alimente tous les réglages qui demandent un média. |
 | **Images sans abonnement** | Firebase Storage, ou un simple dossier sur l'hébergement du client (script PHP fourni), ou une adresse saisie à la main. Le script PHP accepte aussi l'audio et la vidéo (48 Mo), servis depuis le domaine du site. |
 
@@ -107,6 +108,7 @@ admin/                    le module (à copier tel quel sur un site)
 ├── core/sections.js      ajout, retrait et ordre des sections de page
 ├── core/widgets.js       catalogue d'éléments et rendu
 ├── core/templates.js     modèles de section
+├── core/boutique.js      produits, prix, bouton d'achat, panier
 ├── core/page-templates.js modèles de page entière
 ├── core/fonts.js         polices et chargement à la demande
 ├── core/pages.js         découverte des pages du site
@@ -123,6 +125,7 @@ admin/                    le module (à copier tel quel sur un site)
     ├── widgets-panel.js  bibliothèque d'éléments
     ├── inspector.js      réglages de l'élément choisi
     ├── navigator.js      structure de la page
+    ├── boutique-panel.js gestion du catalogue de produits
     └── library.js        bibliothèque média (dépôt, ajout par adresse, filtres)
 
 demo/                     site de démonstration complet

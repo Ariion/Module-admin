@@ -180,7 +180,7 @@ export class PageModel {
       safe(() => {
         const bilan = applySections(this.doc, this.sections, (racine, champs) => {
           this.applySectionFields(racine, champs);
-        });
+        }, this.contexteWidgets());
         applied += bilan.ajoutees + bilan.masquees;
       }, null, 'applySections');
       this.rebuilt = true;
@@ -308,6 +308,17 @@ export class PageModel {
    * @param {string} parentKey clé du conteneur (section, colonnes, colonne)
    * @param {number} index     position, -1 pour la fin
    */
+  /**
+   * Ce dont certains widgets ont besoin en plus de leurs réglages : le
+   * catalogue du site, et la façon de vendre.
+   */
+  contexteWidgets() {
+    return {
+      produits: this.reglages?.produits || [],
+      boutique: this.reglages?.boutique || {},
+    };
+  }
+
   /** Entrées de menu déduites des pages connues du site. */
   liensDesPages() {
     return (this.reglages?.pages || [])
@@ -390,7 +401,7 @@ export class PageModel {
     if (!record || record.kind !== 'widgets') return false;
     const ancien = this.doc.querySelector(`[data-admin-section="${sectionKey}"]`);
     if (!ancien) return false;
-    const neuf = renderWidget(record.tree, this.doc);
+    const neuf = renderWidget(record.tree, this.doc, this.contexteWidgets());
     if (!neuf) return false;
     neuf.setAttribute('data-admin-section', sectionKey);
     ancien.replaceWith(neuf);

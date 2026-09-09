@@ -23,6 +23,7 @@ import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
 import { openWizard } from './wizard.js';
 import { openLegal } from './legal-panel.js';
+import { openBoutique } from './boutique-panel.js';
 import { filePathOf, labelOf } from '../core/pages.js';
 import { ouvrirAction } from '../core/actions.js';
 import { PAGE_COMMUNE } from '../core/config.js';
@@ -137,6 +138,7 @@ export async function startEditor(runtime) {
         // Voir la fenêtre telle que le visiteur la verra, dans l'aperçu.
         previewAction: (action) => ouvrirAction(model.doc, action),
         zoneDe: (el) => model.zoneDe(el),
+        produits: () => model.reglages?.produits || [],
         upload: async (fichier, onProgress) => {
           // Tout ce qui est téléversé depuis un réglage rejoint la
           // bibliothèque : le client le retrouve pour une autre page.
@@ -210,6 +212,9 @@ export async function startEditor(runtime) {
         h('button', {
           class: 'btn', type: 'button', title: t('legalTitle'), onclick: () => ouvrirLegal(),
         }, icon('code', 13), t('legalCourt')),
+        h('button', {
+          class: 'btn', type: 'button', title: t('boutiqueTitre'), onclick: () => ouvrirBoutique(),
+        }, icon('grid', 13), t('boutiqueCourt')),
       ),
     ]);
 
@@ -569,6 +574,24 @@ export async function startEditor(runtime) {
         showLibrary();
         notify(t('pageCreated'));
         proposerAssistant();
+      },
+    });
+  }
+
+  /** Catalogue du site : fiches produits et façon d'encaisser. */
+  function ouvrirBoutique() {
+    openBoutique({
+      root, t,
+      produits: model.reglages?.produits || [],
+      boutique: model.reglages?.boutique || {},
+      pickMedia: (rappel, accept) => { shell.showView('medias'); library.pick(rappel, accept); },
+      onSave: async ({ produits, boutique }) => {
+        model.setReglage('produits', produits);
+        model.setReglage('boutique', boutique);
+        markDirty();
+        // Les vitrines déjà posées dans la page suivent le catalogue.
+        for (const record of model.widgetSections()) model.rerenderSection(record.key);
+        overlay.reposition();
       },
     });
   }

@@ -27,13 +27,25 @@ export const BAKED_META = 'admin-baked';
  * L'iframe est rendue (hors écran) et non `display:none` : la mise en page
  * doit être calculée pour que les images de fond CSS soient détectables.
  */
+/**
+ * Attributs conservés dans le fichier régénéré.
+ *
+ * Une section ajoutée doit rester reconnaissable : sans son marqueur, le
+ * module ne la retrouve pas au chargement suivant et l'ajoute une seconde
+ * fois — le visiteur voit alors le bloc en double. L'export manuel, lui,
+ * retire tout : il sert justement à se passer du module.
+ */
+const ATTRS_CONSERVES = new Set(['data-admin-section', 'data-admin-ref']);
+
 /** Retire du document régénéré tout ce que le module y a laissé. */
 function clean(doc, pageId) {
   for (const node of doc.querySelectorAll('[data-admin-ui]')) node.remove();
   for (const node of doc.querySelectorAll('#admin-document-style')) node.remove();
   for (const node of doc.querySelectorAll('*')) {
     for (const attr of Array.from(node.attributes)) {
-      if (attr.name.startsWith('data-admin-')) node.removeAttribute(attr.name);
+      if (attr.name.startsWith('data-admin-') && !ATTRS_CONSERVES.has(attr.name)) {
+        node.removeAttribute(attr.name);
+      }
     }
   }
   doc.documentElement.removeAttribute('data-admin-active');

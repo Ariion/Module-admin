@@ -15,9 +15,10 @@
 import { uid } from './util.js';
 import { safeHtml, safeUrl, safeImageUrl, safeText } from './sanitize.js';
 import { applyStyleObject } from './style.js';
+import { catalogueFiltre, prixLisible, boutonAchat } from './boutique.js';
 
 /** Catégories affichées dans le panneau, dans l'ordre. */
-export const CATEGORIES = ['structure', 'basique', 'media'];
+export const CATEGORIES = ['structure', 'basique', 'media', 'boutique'];
 
 /**
  * Définition d'un widget.
@@ -122,6 +123,25 @@ export const WIDGETS = {
     ],
   },
 
+  catalogue: {
+    category: 'boutique', icon: 'grid',
+    defaults: () => ({ categorie: '', colonnes: 3, libelle: 'Acheter', montrerPrix: true }),
+    fields: [
+      { key: 'categorie', type: 'text', label: 'catalogueCategorie', placeholder: 'Toutes' },
+      { key: 'colonnes', type: 'number', label: 'colCount', min: 1, max: 4, step: 1 },
+      { key: 'libelle', type: 'text', label: 'catalogueLibelle' },
+    ],
+  },
+
+  produit: {
+    category: 'boutique', icon: 'button',
+    defaults: () => ({ produit: '', libelle: 'Acheter', montrerPrix: true }),
+    fields: [
+      { key: 'produit', type: 'produit', label: 'produitChoisi' },
+      { key: 'libelle', type: 'text', label: 'catalogueLibelle' },
+    ],
+  },
+
   menu: {
     category: 'basique', icon: 'list',
     defaults: () => ({ liens: '', align: 'center' }),
@@ -176,7 +196,13 @@ function appliquerAlignement(el, align) {
  * @param {Document} doc
  * @returns {Element|null}
  */
-export function renderWidget(noeud, doc) {
+/**
+ * @param {object} noeud arbre du widget
+ * @param {Document} doc document cible
+ * @param {{produits?:object[], boutique?:object}} [contexte] données du site
+ *   dont certains widgets ont besoin — le catalogue, par exemple.
+ */
+export function renderWidget(noeud, doc, contexte = {}) {
   if (!noeud || !noeud.type) return null;
   const p = noeud.props || {};
   let el = null;
@@ -189,14 +215,14 @@ export function renderWidget(noeud, doc) {
       interieur.style.margin = '0 auto';
       interieur.style.padding = (p.padding ?? 64) + 'px 24px';
       el.appendChild(interieur);
-      rendreEnfants(noeud.children, interieur, doc);
+      rendreEnfants(noeud.children, interieur, doc, contexte);
       break;
     }
 
     case 'column': {
       el = doc.createElement('div');
       el.style.minWidth = '0';
-      rendreEnfants(noeud.children, el, doc);
+      rendreEnfants(noeud.children, el, doc, contexte);
       break;
     }
 
@@ -205,7 +231,7 @@ export function renderWidget(noeud, doc) {
       el.style.display = 'grid';
       el.style.gridTemplateColumns = `repeat(${Math.max(1, Math.min(4, p.count || 2))}, minmax(0, 1fr))`;
       el.style.gap = (p.gap ?? 28) + 'px';
-      rendreEnfants(noeud.children, el, doc);
+      rendreEnfants(noeud.children, el, doc, contexte);
       break;
     }
 
@@ -325,6 +351,63 @@ export function renderWidget(noeud, doc) {
       break;
     }
 
+    case 'catalogue':
+    case 'produit': {
+      // Le catalogue vit dans les réglages du site, pas dans le widget : un
+      // produit corrigé l'est partout où il apparaît.
+      const catalogue = contexte.produits || [];
+      const liste = noeud.type === 'produit'
+        ? catalogueFiltre(catalogue).filter((x) => x.id === p.produit).slice(0, 1)
+        : catalogueFiltre(catalogue, p.categorie);
+
+      el = doc.createElement('div');
+      if (!liste.length) {
+        el.appendChild(placeholder(doc, noeud.type === 'produit'
+          ? 'Choisissez un produit dans les réglages.'
+          : 'Aucun produit. Ajoutez-en depuis le panneau Boutique.'));
+        break;
+      }
+
+      if (noeud.type === 'catalogue') {
+        const colonnes = Math.max(1, Math.min(4, Number(p.colonnes) || 3));
+        el.style.display = 'grid';
+        el.style.gridTemplateColumns = `repeat(${colonnes}, minmax(0, 1fr))`;
+        el.style.gap = '28px';
+      }
+
+      for (const produit of liste) {
+        const carte = doc.createElement('div');
+        if (produit.image) {
+          const img = doc.createElement('img');
+          img.setAttribute('src', produit.image);
+          img.setAttribute('alt', produit.nom);
+          img.setAttribute('loading', 'lazy');
+          img.style.cssText = 'width:100%;height:auto;display:block;margin-bottom:14px;';
+          carte.appendChild(img);
+        }
+        const titre = doc.createElement('h3');
+        titre.textContent = produit.nom;
+        carte.appendChild(titre);
+
+        if (produit.description) {
+          const texte = doc.createElement('p');
+          texte.textContent = produit.description;
+          carte.appendChild(texte);
+        }
+        if (p.montrerPrix !== false) {
+          const prix = doc.createElement('p');
+          prix.textContent = prixLisible(produit);
+          prix.style.fontWeight = '600';
+          carte.appendChild(prix);
+        }
+        const achat = doc.createElement('div');
+        achat.appendChild(boutonAchat(doc, produit, contexte.boutique, String(p.libelle || 'Acheter')));
+        carte.appendChild(achat);
+        el.appendChild(carte);
+      }
+      break;
+    }
+
     case 'menu': {
       // Une ligne par entrée : « Libellé | adresse ». Sans adresse, on
       // déduit un nom de fichier du libellé — c'est ce qu'attend quelqu'un
@@ -395,9 +478,9 @@ export function renderWidget(noeud, doc) {
   return el;
 }
 
-function rendreEnfants(enfants, parent, doc) {
+function rendreEnfants(enfants, parent, doc, contexte = {}) {
   for (const enfant of enfants || []) {
-    const el = renderWidget(enfant, doc);
+    const el = renderWidget(enfant, doc, contexte);
     if (el) parent.appendChild(el);
   }
 }

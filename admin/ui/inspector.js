@@ -194,6 +194,20 @@ export function createInspector({ vue, t, actions }) {
           oninput: (e) => ecrire(e.target.value.replace(/\n/g, '<br>')),
         }));
 
+      case 'produit': {
+        const produits = actions.produits?.() || [];
+        return champ(t(f.label), produits.length
+          ? h('select', {
+            class: 'input', onchange: (e) => { ecrire(e.target.value); render(selection); },
+          }, [
+            h('option', { value: '', selected: !valeur }, t('produitAucun')),
+            ...produits.map((produit) => h('option', {
+              value: produit.id, selected: produit.id === valeur,
+            }, produit.nom || produit.id)),
+          ])
+          : h('p', { class: 'hint', style: { margin: '0' } }, t('produitVide')));
+      }
+
       case 'media':
       case 'audio':
         return champ(t(f.label), h('div', { class: 'row' },

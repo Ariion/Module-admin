@@ -87,7 +87,7 @@ export function emptyState() {
  * @param {(el:Element, fields:object) => void} applyFields
  * @returns {{ajoutees:number, masquees:number}}
  */
-export function applySections(doc, state, applyFields) {
+export function applySections(doc, state, applyFields, contexte = {}) {
   const data = { ...emptyState(), ...(state || {}) };
   let ajoutees = 0;
   let masquees = 0;
@@ -103,13 +103,21 @@ export function applySections(doc, state, applyFields) {
   // --- Ajouts ---------------------------------------------------------
   for (const record of data.add) {
     const el = record.kind === 'widgets'
-      ? construireSectionWidgets(record, doc)
+      ? construireSectionWidgets(record, doc, contexte)
       : construireCopie(record, parRef);
     if (!el) continue;
 
     el.setAttribute('data-admin-section', record.key);
-    const apres = parRef.get(record.after) || parRef.get(record.from) || doc.body.lastElementChild;
-    if (apres) apres.after(el); else doc.body.appendChild(el);
+
+    // Sur une page déjà régénérée, la section est écrite dans le HTML : on la
+    // remplace là où elle est, au lieu d'en ajouter une seconde à la suite.
+    const existant = doc.querySelector(`[data-admin-section="${record.key}"]`);
+    if (existant) {
+      existant.replaceWith(el);
+    } else {
+      const apres = parRef.get(record.after) || parRef.get(record.from) || doc.body.lastElementChild;
+      if (apres) apres.after(el); else doc.body.appendChild(el);
+    }
 
     parRef.set('ins:' + record.key, el);
     if (record.kind !== 'widgets' && applyFields && record.fields) applyFields(el, record.fields);
@@ -154,8 +162,8 @@ function construireCopie(record, parRef) {
 }
 
 /** Section construite à partir d'un arbre de widgets. */
-function construireSectionWidgets(record, doc) {
-  return renderWidget(record.tree, doc);
+function construireSectionWidgets(record, doc, contexte) {
+  return renderWidget(record.tree, doc, contexte);
 }
 
 /** Clé d'un champ à l'intérieur d'une section ajoutée. */
