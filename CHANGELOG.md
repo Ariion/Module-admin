@@ -1,5 +1,41 @@
 # Journal des versions
 
+## 1.6.0
+
+**Une banque d'images sans clé**
+- Nouvelle source **Openverse** (fondation WordPress) : la recherche d'images
+  libres fonctionne **dès l'installation**, sans compte ni clé d'API. C'est
+  désormais la source par défaut.
+- Restreinte aux licences `cc0` et domaine public : celles qui n'obligent à
+  créditer personne. Openverse indexe aussi du CC-BY, qui piégerait un client
+  ne sachant pas qu'il doit citer l'auteur.
+- Pixabay reste disponible pour un catalogue plus large, avec une clé
+  gratuite. Elle prend le relais dès qu'elle est renseignée.
+- Le script PHP accepte le rapatriement depuis les domaines vers lesquels
+  Openverse renvoie (Wikimedia, Flickr, Rawpixel…).
+
+**Les clés se saisissent depuis le module**
+- Nouveau panneau **Réglages** : clé de la banque d'images et clé de
+  rédaction assistée. Plus aucun fichier à ouvrir.
+- Les deux ne sont pas traitées pareil, et le panneau le dit :
+  - la clé **Pixabay** est gratuite et limitée par un quota ; elle rejoint
+    les réglages du site, donc lisible par qui inspecte le site — c'est écrit ;
+  - la clé de **rédaction** est facturée ; elle part vers le script PHP de
+    l'hébergement, qui l'écrit dans un fichier `.php` — demandé par HTTP, il
+    est exécuté et ne renvoie rien. Elle ne revient jamais vers le
+    navigateur : l'éditeur sait qu'une clé existe, pas laquelle.
+  - sans hébergement PHP, la clé de rédaction reste dans le navigateur de
+    l'administrateur, et le panneau explique ce que cela implique.
+- L'état de l'hébergement est redemandé au moment où la réponse compte : un
+  diagnostic raté au démarrage ne fait plus disparaître la rédaction assistée
+  alors qu'une clé est en place.
+
+**Documentation**
+- `docs/IMAGES.md` : les trois sources d'images, les licences, le
+  rapatriement.
+- `docs/IA.md` : section « Peut-on livrer une clé avec le module ? » —
+  non, et pourquoi.
+
 ## 1.5.0
 
 **« Je ne sais pas quoi mettre » — le module écrit la page**

@@ -57,11 +57,37 @@ $IA_FOURNISSEUR = 'anthropic';       // 'anthropic' | 'openai' | 'mistral'
 $IA_MODELE     = '';                 // vide = le modèle par défaut ci-dessous
 $IA_MAX_JOUR   = 60;                 // garde-fou : appels par jour et par compte
 
+// Clé renseignée depuis l'éditeur (action=config). Elle prime sur celle
+// écrite ci-dessus, ce qui permet au client de la poser lui-même sans jamais
+// ouvrir ce fichier. Le fichier produit est du PHP : demandé par HTTP, il est
+// exécuté et ne renvoie rien — la clé n'est donc pas téléchargeable.
+$IA_FICHIER = __DIR__ . '/admin-ia-cle.php';
+if (is_file($IA_FICHIER)) {
+    $enregistre = @include $IA_FICHIER;
+    if (is_array($enregistre)) {
+        $IA_CLE         = (string) ($enregistre['cle'] ?? $IA_CLE);
+        $IA_FOURNISSEUR = (string) ($enregistre['fournisseur'] ?? $IA_FOURNISSEUR);
+        $IA_MODELE      = (string) ($enregistre['modele'] ?? $IA_MODELE);
+    }
+}
+
 // Hôtes d'où l'on accepte de rapatrier une image (action=import). Tout le
 // reste est refusé : ce script ne doit pas devenir un aspirateur à URL.
 $IMPORT_HOSTS = [
     'pixabay.com',
     'cdn.pixabay.com',
+    // Openverse ne sert pas les fichiers lui-même : il pointe vers les sites
+    // d'origine. Ce sont donc ces hôtes-là qu'il faut autoriser.
+    'openverse.org',
+    'wikimedia.org',
+    'wikipedia.org',
+    'staticflickr.com',
+    'flickr.com',
+    'smithsonianmag.com',
+    'si.edu',
+    'nasa.gov',
+    'rawpixel.com',
+    'stocksnap.io',
 ];
 
 $ALLOWED_TYPES = [
@@ -428,6 +454,50 @@ function resolvePagePath(string $relative, string $root): array
 }
 
 /**
+ * Enregistre la clé de rédaction assistée, envoyée depuis l'éditeur.
+ *
+ * Le client n'a ainsi aucun fichier à ouvrir. La clé est écrite dans un
+ * fichier PHP à côté de ce script : servi par HTTP il est exécuté, donc il
+ * ne renvoie rien. Elle n'est JAMAIS relue vers le navigateur — l'éditeur
+ * sait seulement si une clé est en place, pas laquelle.
+ */
+if ($action === 'config') {
+    currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+
+    $cle = trim((string) ($body['cle'] ?? ''));
+    $fournisseur = (string) ($body['fournisseur'] ?? 'anthropic');
+    if (!in_array($fournisseur, ['anthropic', 'openai', 'mistral'], true)) {
+        fail('Fournisseur inconnu.');
+    }
+    $modele = trim((string) ($body['modele'] ?? ''));
+    if (strlen($cle) > 400 || strlen($modele) > 120) {
+        fail('Valeur trop longue.');
+    }
+
+    // Chaîne vide = on retire la clé.
+    if ($cle === '') {
+        if (is_file($IA_FICHIER) && !@unlink($IA_FICHIER)) {
+            fail('Impossible de retirer la clé enregistrée.', 500);
+        }
+        ok(['enregistre' => false]);
+    }
+
+    $contenu = "<?php\n// Écrit par le module Admin. Ne pas publier ce fichier.\nreturn "
+        . var_export(['cle' => $cle, 'fournisseur' => $fournisseur, 'modele' => $modele], true)
+        . ";\n";
+
+    if (!@file_put_contents($IA_FICHIER, $contenu, LOCK_EX)) {
+        fail('Impossible d’écrire la clé : le dossier du site n’est pas inscriptible.', 500);
+    }
+    // Lisible par PHP seulement. Si l'hébergeur refuse, le fichier reste du
+    // PHP : demandé par HTTP il ne renvoie toujours rien.
+    @chmod($IA_FICHIER, 0600);
+
+    ok(['enregistre' => true, 'fournisseur' => $fournisseur]);
+}
+
+/**
  * Rédaction assistée. Le navigateur envoie une invite, le script y ajoute la
  * clé et relaie la réponse. Trois raisons d'exister :
  *   - la clé reste sur l'hébergement, invisible du navigateur ;
@@ -557,6 +627,9 @@ if ($action === 'check') {
         'pageExists' => is_file($paths['file']),
         'writable'   => is_writable(dirname($paths['file'])) && (!is_file($paths['file']) || is_writable($paths['file'])),
         'media'      => is_dir($MEDIA_DIR) && is_writable($MEDIA_DIR),
+        // Une clé est-elle en place ? Jamais laquelle.
+        'ia'         => $IA_CLE !== '',
+        'iaEcrivable' => is_writable(__DIR__),
     ]);
 }
 

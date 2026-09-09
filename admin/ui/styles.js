@@ -823,6 +823,12 @@ select.input { appearance: none; cursor: pointer; }
   .previs__court { display: inline; }
 }
 
+.reglages__titre {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 0 4px; font-size: 13.5px; font-weight: 600;
+}
+.reglages__trait { border: 0; border-top: 1px solid var(--line-soft); margin: 22px 0 18px; }
+
 /* ------------------------------------------- Questionnaire de rédaction */
 .metiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .metier {

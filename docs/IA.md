@@ -63,6 +63,19 @@ Demande un hébergement PHP (OVH, o2switch, Infomaniak, IONOS…). Sur un
 hébergement statique (Netlify, Vercel, GitHub Pages), ce chemin n'existe
 pas.
 
+La clé se saisit **depuis le module** : bouton *Réglages*, section
+*Rédaction assistée*. Elle part vers le script, qui l'écrit dans
+`admin-ia-cle.php` à côté de lui, et **elle n'en revient jamais** — l'éditeur
+sait seulement qu'une clé est en place, pas laquelle.
+
+Le fichier produit est du PHP. Demandé par HTTP, il est exécuté et ne renvoie
+rien : la clé n'est pas téléchargeable, même en visant le fichier
+directement. (Vérifié : `GET /admin-ia-cle.php` répond 200 avec un corps
+vide.)
+
+Renseigner `$IA_CLE` à la main dans `admin-endpoint.php` reste possible et
+revient au même ; la valeur saisie depuis le module a la priorité.
+
 ### 2. Sur la machine de l'administrateur (repli)
 
 Sans PHP, la clé peut être saisie dans l'éditeur. Elle est rangée dans le
@@ -84,6 +97,25 @@ faire.
 La clé Pixabay, elle, y est bien dans `admin-config.js` : elle est
 gratuite, limitée par un quota, et ne peut rien coûter. Ce n'est pas le
 même sujet.
+
+## Peut-on livrer une clé avec le module ?
+
+Non. Trois raisons, et aucune n'est contournable :
+
+1. **Les conditions l'interdisent.** Les clés d'API — Pixabay comme les
+   fournisseurs d'IA — sont personnelles et ne se redistribuent pas. Une clé
+   partagée finit révoquée.
+2. **Le quota est par clé.** Cent acquéreurs sur une seule clé, ce sont cent
+   acquéreurs qui se gênent, et le premier gros utilisateur bloque tous les
+   autres.
+3. **Elle serait extractible.** Une clé livrée dans le module se retrouve
+   forcément dans un fichier servi par le site de chaque acquéreur. N'importe
+   qui peut la lire, et s'en servir à vos frais.
+
+C'est précisément pour cela qu'Openverse est la source d'images par défaut :
+elle ne demande **aucune clé**, donc le module est complet dès l'extraction
+du ZIP, sans que vous ayez à prêter quoi que ce soit. Qui veut le catalogue
+de Pixabay renseigne sa propre clé, gratuite, depuis les réglages.
 
 ## Ce que l'invite demande
 

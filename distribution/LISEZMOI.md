@@ -63,8 +63,14 @@ joint — et la page est **écrite en entier**, photos comprises. Les phrases
 sont composées par le module, sans internet ni abonnement ; celles qui ne
 viennent pas de vos mots sont ensuite signalées « à relire ».
 
+Les photos viennent d'une banque d'images libres qui **ne demande aucune
+clé** : rien à créer, rien à configurer. Une clé Pixabay gratuite, saisie
+depuis le bouton *Réglages* du module, donne accès à un catalogue plus large.
+Voir `docs/IMAGES.md`.
+
 Une rédaction par IA peut être branchée par-dessus, mais elle n'est pas
-nécessaire : voir `docs/IA.md`.
+nécessaire : voir `docs/IA.md`. Sa clé aussi se saisit depuis *Réglages*, et
+part sur votre hébergement sans jamais revenir dans le navigateur.
 
 Vous arrivez ensuite sur le **Guide** : la page reprise de haut en bas, une
 étape par partie, et dans chacune les champs à remplir avec, sous chaque

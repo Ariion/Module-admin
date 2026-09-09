@@ -18,6 +18,7 @@ import { createNavigator } from './navigator.js';
 import { createWidgetsPanel } from './widgets-panel.js';
 import { createGuide } from './guide-panel.js';
 import { openTheme } from './theme-panel.js';
+import { openReglages } from './reglages-panel.js';
 import { createLibrary } from './library.js';
 import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
@@ -33,7 +34,7 @@ import { etapesDuGuide } from '../core/guide.js';
 import { illustrations } from '../core/illustrations.js';
 import { redigerPage } from '../core/redacteur.js';
 import { prestationsDuBrief, themeSuggere } from '../core/brief.js';
-import { redigerAvecIA, cleLocale } from '../core/ia.js';
+import { redigerAvecIA, cleLocale, poserCleLocale } from '../core/ia.js';
 import { PAGE_COMMUNE } from '../core/config.js';
 import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
@@ -67,6 +68,12 @@ export async function startEditor(runtime) {
   const backend = await createBackend(config);
   const media = createMedia(config, backend);
   const hosting = createHost(config, backend);
+
+  /**
+   * Ce que l'hébergement sait faire, demandé une fois à l'ouverture.
+   * `ia` dit qu'une clé de rédaction y est posée — jamais laquelle.
+   */
+  const etatHebergement = { ok: false, ia: false, iaEcrivable: false };
 
   const state = {
     editing: true, dirty: false, saving: false, baking: false,
@@ -267,6 +274,10 @@ export async function startEditor(runtime) {
           class: 'btn', type: 'button', title: t('themeTitre'), onclick: () => ouvrirTheme(),
         }, icon('palette', 13), t('themeCourt')),
         h('button', {
+          class: 'btn', type: 'button', title: t('reglagesTitre'),
+          onclick: () => ouvrirReglages(),
+        }, icon('sliders', 13), t('reglagesCourt')),
+        h('button', {
           class: 'btn', type: 'button', title: t('legalTitle'), onclick: () => ouvrirLegal(),
         }, icon('code', 13), t('legalCourt')),
         h('button', {
@@ -424,6 +435,10 @@ export async function startEditor(runtime) {
       && model.sectionList().filter((x) => !x.ref.startsWith('ins:')).length <= 3;
 
     memoriserPage();
+
+    // La clé de la banque d'images peut avoir été saisie depuis le module :
+    // elle vit alors dans les réglages du site, pas dans le fichier de config.
+    if (model.reglages?.medias?.pixabay) media.banque?.setCle(model.reglages.medias.pixabay);
 
     overlay.refresh(model);
     // En prévisualisation, suivre un lien recharge la page ici : la surcouche
@@ -648,6 +663,9 @@ export async function startEditor(runtime) {
    * une case à cocher qui échouerait.
    */
   function reglageIA() {
+    // Une clé posée depuis le module vit sur l'hébergement : c'est le script
+    // qui la détient, et `check` nous dit seulement qu'elle existe.
+    if (etatHebergement.ia) return { mode: 'endpoint', endpoint: hosting.endpoint };
     if (config.ia?.endpoint) return { mode: 'endpoint', endpoint: config.ia.endpoint };
     if (cleLocale()) {
       return {
@@ -663,7 +681,23 @@ export async function startEditor(runtime) {
    * Questionnaire « je ne sais pas quoi mettre » : quelques faits, et le
    * module écrit la page entière.
    */
-  function ouvrirBrief() {
+  /**
+   * Rafraîchit l'état de l'hébergement s'il n'a pas encore répondu.
+   *
+   * Le diagnostic de départ peut échouer — jeton pas encore prêt, réseau
+   * hésitant — et la rédaction assistée disparaîtrait alors silencieusement
+   * alors qu'une clé est bien posée. On redemande donc au moment où la
+   * réponse compte vraiment.
+   */
+  async function rafraichirHote() {
+    if (!hosting.endpoint || etatHebergement.ok) return etatHebergement;
+    const bilan = await hosting.check().catch(() => null);
+    if (bilan) Object.assign(etatHebergement, bilan);
+    return etatHebergement;
+  }
+
+  async function ouvrirBrief() {
+    await rafraichirHote();
     openBrief({
       root, t,
       brief: model.reglages?.brief || null,
@@ -744,6 +778,38 @@ export async function startEditor(runtime) {
       }
     }
     return trouvees;
+  }
+
+  /**
+   * Réglages : les clés, saisies sans jamais ouvrir un fichier.
+   *
+   * Deux clés, deux traitements. Celle de la banque d'images est gratuite et
+   * limitée : elle rejoint les réglages du site. Celle de la rédaction est
+   * facturée : elle part vers le script de l'hébergement, ou reste sur la
+   * machine de l'administrateur — jamais dans les réglages du site.
+   */
+  async function ouvrirReglages() {
+    await rafraichirHote();
+    openReglages({
+      root, t,
+      etat: {
+        pixabay: model.reglages?.medias?.pixabay || '',
+        iaEnPlace: !!etatHebergement.ia || !!cleLocale(),
+        iaFournisseur: config.ia?.fournisseur || 'anthropic',
+        peutEndpoint: !!hosting.endpoint,
+      },
+      onPixabay: (cle) => {
+        model.setReglage('medias', { ...(model.reglages?.medias || {}), pixabay: cle });
+        media.banque?.setCle(cle);
+        markDirty();
+        library?.rafraichirBanque?.();
+      },
+      onCleIA: async ({ cle, fournisseur }) => {
+        const resultat = await hosting.setCleIA({ cle, fournisseur, modele: '' });
+        etatHebergement.ia = !!resultat.enregistre;
+      },
+      onCleIALocale: ({ cle }) => { poserCleLocale(cle); },
+    });
   }
 
   /** L'ambiance du site : polices, couleurs, formes, rythme. */
@@ -1164,6 +1230,12 @@ export async function startEditor(runtime) {
     buildShell();
     await loadPage(location.pathname);
     library.charger();
+    // Diagnostic de l'hébergement, en tâche de fond : il dit notamment si une
+    // clé de rédaction y est posée. L'éditeur s'ouvre sans l'attendre.
+    if (hosting.endpoint) {
+      hosting.check().then((bilan) => Object.assign(etatHebergement, bilan))
+        .catch(() => {});
+    }
     proposerAssistant();
   }
 

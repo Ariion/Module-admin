@@ -5,8 +5,13 @@
  * ailleurs et revenir avec un fichier de 6 Mo, l'éditeur interroge une banque
  * et pose l'image choisie dans sa bibliothèque.
  *
- * Pixabay demande une clé d'API — gratuite, personnelle. Sans clé, l'onglet
- * explique quoi faire au lieu de faire semblant.
+ * Deux sources, et l'ordre compte :
+ *   - **Openverse**, sans clé : c'est la source par défaut, celle qui marche
+ *     dès l'installation, sans que l'acquéreur ait à ouvrir un compte nulle
+ *     part. Restreinte aux licences sans obligation de mention.
+ *   - **Pixabay**, avec une clé gratuite et personnelle : plus grand
+ *     catalogue, meilleure qualité. La clé se renseigne depuis les réglages
+ *     du module, sans toucher au code.
  *
  * Ses conditions demandent aussi de ne pas se contenter de pointer leurs
  * fichiers : quand l'hébergement le permet, l'image est rapatriée dans le
@@ -14,6 +19,8 @@
  * meilleur pour la performance et la pérennité du site.
  * @module media/banque
  */
+import { createOpenverse } from './openverse.js';
+
 const POINT = 'https://pixabay.com/api/';
 
 /**
@@ -22,16 +29,25 @@ const POINT = 'https://pixabay.com/api/';
  * @returns {{id:string, disponible:boolean, chercher:Function, importer:Function}}
  */
 export function createBanque(config, backend) {
-  const cle = config.media?.pixabay || '';
+  const openverse = createOpenverse(config);
+  // La clé peut venir du fichier de configuration OU des réglages du site,
+  // saisis depuis l'éditeur. La seconde l'emporte : c'est la plus récente,
+  // et c'est celle que le client peut corriger lui-même.
+  let cle = config.media?.pixabay || '';
   const endpoint = config.media?.endpoint || '';
   // Point d'entrée surchargeable : c'est ce qui rend la recherche testable
   // sans clé ni réseau.
   const base = config.media?.banqueUrl || POINT;
 
   return {
-    id: 'pixabay',
-    get disponible() { return !!cle; },
+    get id() { return cle ? 'pixabay' : 'openverse'; },
+    /** Il y a toujours une source : sans clé, c'est Openverse. */
+    get disponible() { return !!cle || openverse.disponible; },
+    get avecCle() { return !!cle; },
     peutImporter: !!endpoint,
+
+    /** Clé saisie depuis les réglages du module. */
+    setCle(valeur) { cle = String(valeur || '').trim() || (config.media?.pixabay || ''); },
 
     /**
      * @param {string} requete termes recherchés
@@ -39,7 +55,7 @@ export function createBanque(config, backend) {
      * @returns {Promise<{total:number, images:object[]}>}
      */
     async chercher(requete, { page = 1, orientation = 'all' } = {}) {
-      if (!cle) throw new Error('Aucune clé Pixabay dans la configuration (media.pixabay).');
+      if (!cle) return openverse.chercher(requete, { page });
       const params = new URLSearchParams({
         key: cle,
         q: String(requete || '').slice(0, 100),
@@ -78,10 +94,12 @@ export function createBanque(config, backend) {
      * renvoie l'élément à ranger dans la bibliothèque.
      */
     async importer(image) {
-      const nom = (image.etiquettes.split(',')[0] || 'image').trim().replace(/\s+/g, '-');
+      const nom = (String(image.etiquettes || '').split(',')[0] || 'image')
+        .trim().replace(/\s+/g, '-').slice(0, 60) || 'image';
+      const provenance = cle ? 'pixabay' : 'openverse';
       if (!endpoint) {
         // Hébergement statique : on garde l'adresse de la banque.
-        return { url: image.url, name: nom, kind: 'image', source: 'pixabay', auteur: image.auteur };
+        return { url: image.url, name: nom, kind: 'image', source: provenance, auteur: image.auteur };
       }
       const token = await backend.idToken();
       const reponse = await fetch(endpoint + '?action=import', {
@@ -100,7 +118,7 @@ export function createBanque(config, backend) {
       }
       return {
         url: json.url, path: json.path, name: json.name || nom,
-        size: json.size, type: json.type, kind: 'image', source: 'pixabay', auteur: image.auteur,
+        size: json.size, type: json.type, kind: 'image', source: provenance, auteur: image.auteur,
       };
     },
   };

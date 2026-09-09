@@ -37,9 +37,16 @@ window.ADMIN_CONFIG = {
     adapter: 'endpoint',
     endpoint: '/admin-endpoint.php',
 
-    // Banque d'images libres de droits dans l'onglet Médias. La clé est
-    // gratuite : compte sur pixabay.com, puis pixabay.com/api/docs/.
-    // Sans elle, l'onglet explique la marche à suivre.
+    // Banque d'images libres de droits dans l'onglet Médias.
+    //
+    // SANS RIEN METTRE ICI, la recherche fonctionne déjà : elle passe par
+    // Openverse, qui ne demande aucune clé, et se limite aux licences qui
+    // n'obligent à créditer personne.
+    //
+    // Une clé Pixabay donne accès à un catalogue plus large. Elle est
+    // gratuite (compte sur pixabay.com, puis pixabay.com/api/docs/) et peut
+    // se saisir directement depuis le module : bouton « Réglages ».
+    // Voir docs/IMAGES.md.
     pixabay: '',
   },
 
@@ -47,10 +54,11 @@ window.ADMIN_CONFIG = {
   // FACULTATIF. Le questionnaire « Écrire pour moi » fonctionne déjà sans
   // rien de tout cela : les textes sont composés par le module.
   //
-  // Pour les faire écrire par une IA, la clé se met dans admin-endpoint.php
-  // (variable $IA_CLE), sur VOTRE hébergement — pas ici. Ce fichier-ci est
-  // servi à tous les visiteurs du site : une clé d'API y serait publique,
-  // et facturée à qui la trouve. Voir docs/IA.md.
+  // Pour les faire écrire par une IA, la clé se saisit depuis le module
+  // (bouton « Réglages ») : elle part vers admin-endpoint.php, sur VOTRE
+  // hébergement, et n'en revient jamais. Ce fichier-ci est servi à tous les
+  // visiteurs du site : une clé d'API y serait publique, et facturée à qui
+  // la trouve. Voir docs/IA.md.
   // ia: { endpoint: '/admin-endpoint.php' },
 
   // ------------------------------------------------- réécriture du HTML

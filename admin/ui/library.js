@@ -452,5 +452,16 @@ export function createLibrary({ vue, t, backend, media, onPicked }) {
     if (!elements.length) charger();
   }
 
-  return { charger, pick, render: charger, get pending() { return attendu; } };
+  /**
+   * La source d'images a changé (une clé vient d'être saisie) : on redessine
+   * l'onglet pour que le nouvel état — et le nom de la banque — s'y voient.
+   */
+  function rafraichirBanque() {
+    if (source === 'banque') dessiner();
+  }
+
+  return {
+    charger, pick, render: charger, rafraichirBanque,
+    get pending() { return attendu; },
+  };
 }

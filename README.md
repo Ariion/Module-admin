@@ -33,7 +33,8 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Images d'exemple** | Huit visuels dessinés en SVG à partir des couleurs de l'ambiance retenue. Aucun réseau, aucune clé d'API, aucune question de droits — de quoi voir à quoi ressemblera la page avant d'avoir ses propres photos. |
 | **Habillage complet** | Police (48 familles Google Fonts rangées par nature, chargées à la demande), taille, graisse, casse, interlignage, espacement, couleurs, marges, contour et son style, angles, ombre, opacité — et du **CSS personnalisé** avec sélecteur, pour les états `:hover`. |
 | **Placement libre** | Largeur du bloc, alignement dans la section, décalage horizontal et vertical, rotation. Le décalage est une transformée, pas une marge : le bloc bouge, la mise en page autour ne bronche pas. |
-| **Images libres de droits** | Recherche Pixabay depuis l'onglet Médias (clé d'API gratuite à renseigner). Sur un hébergement PHP, l'image choisie est rapatriée dans le dossier du site plutôt que pointée à distance. |
+| **Images libres de droits** | Recherche **sans aucune clé** via Openverse, restreinte aux licences qui n'obligent à créditer personne. Une clé Pixabay gratuite, saisie depuis les réglages du module, donne accès à un catalogue plus large. Sur un hébergement PHP, l'image choisie est rapatriée dans le dossier du site plutôt que pointée à distance. Voir [docs/IMAGES.md](docs/IMAGES.md). |
+| **Les clés se saisissent depuis le module** | Bouton *Réglages* : clé de la banque d'images, clé de rédaction. Aucun fichier à ouvrir. Les deux ne sont pas traitées pareil — celle de Pixabay est gratuite et rejoint les réglages du site ; celle de l'IA est facturée, part vers le script PHP de l'hébergement et **n'en revient jamais** (le module sait qu'une clé existe, pas laquelle). |
 | **Prévisualisation** | Le panneau s'efface, le site prend tout l'écran, et une barre noire dit où l'on est : *Mode prévisualisation*, avec *Retourner à la modification* et *Aller sur le site*. Les liens sont cliquables — on parcourt le site page par page. Si des modifications ne sont pas publiées, la barre le signale. |
 | **Blocs répétables** | Dupliquer, réordonner, supprimer une carte de la liste — dans le gabarit prévu par le développeur, sans pouvoir casser la mise en page. |
 | **Brouillon puis publication** | Enregistrement automatique du brouillon, bouton « Publier », historique des versions et restauration. |
@@ -131,11 +132,13 @@ admin/                    le module (à copier tel quel sur un site)
 │   ├── firebase-storage.js  Firebase Storage
 │   ├── endpoint.js          dossier chez le client
 │   ├── url.js               adresse saisie
+│   ├── openverse.js         banque d'images sans clé
 │   └── resize.js            recompression avant envoi
 └── ui/                   éditeur (chargé uniquement pour les administrateurs)
     ├── shell.js          coque : panneau à gauche, aperçu à droite
     ├── guide-panel.js    le guide : la page de haut en bas
     ├── brief-panel.js    questionnaire « écrire ma page »
+    ├── reglages-panel.js les clés, saisies depuis le module
     ├── theme-panel.js    choix de l'ambiance
     ├── widgets-panel.js  bibliothèque d'éléments
     ├── inspector.js      réglages de l'élément choisi
@@ -150,7 +153,7 @@ tools/admin-endpoint.php  script serveur : médias + réécriture du HTML
 tools/paquet.mjs          fabrique le dossier à téléverser chez le client
 tools/livraison.mjs       fabrique l'archive vendue à l'acquéreur
 distribution/             les fichiers destinés à l'acquéreur (licence, guides)
-docs/                     architecture, installation, mise en ligne, IA
+docs/                     architecture, installation, mise en ligne, IA, images
 ```
 
 ## Points d'architecture

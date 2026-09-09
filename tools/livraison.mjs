@@ -54,7 +54,7 @@ writeFileSync(resolve(cible, 'installation.html'),
 
 // --- La documentation, sans les liens vers ce qui n'est pas livré ----------
 mkdirSync(resolve(cible, 'docs'), { recursive: true });
-for (const doc of ['INSTALLATION.md', 'ARCHITECTURE.md', 'MISE-EN-LIGNE.md', 'IA.md']) {
+for (const doc of ['INSTALLATION.md', 'ARCHITECTURE.md', 'MISE-EN-LIGNE.md', 'IA.md', 'IMAGES.md']) {
   const texte = lire('docs/' + doc)
     // Les essais internes ne font pas partie de la livraison.
     .replace(/\s*\(voir\s*\[`essais\/[^\]]*`\]\([^)]*\)\)/g, '')

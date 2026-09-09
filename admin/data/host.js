@@ -86,6 +86,18 @@ export function createHost(config, backend) {
       return result;
     },
 
+    /**
+     * Enregistre la clé de rédaction assistée sur l'hébergement.
+     *
+     * Elle part vers le script et n'en revient jamais : l'éditeur saura
+     * seulement, par `check()`, qu'une clé est en place. C'est ce qui permet
+     * au client de la poser depuis le module sans qu'elle traîne nulle part
+     * dans le navigateur.
+     */
+    async setCleIA({ cle, fournisseur, modele }) {
+      return call('config', { cle, fournisseur, modele });
+    },
+
     /** Diagnostic : l'hébergement répond-il et sait-il écrire ? */
     async check() {
       try {
