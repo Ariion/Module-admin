@@ -89,10 +89,21 @@ export function createGuide({ vue, t, actions }) {
     return ligne;
   }
 
+  /**
+   * Entrer dans un champ met en évidence, dans l'aperçu, l'élément qu'il
+   * pilote. Sans cela on remplit un formulaire d'un côté pendant que la page
+   * change de l'autre, sans savoir où : c'est ce qui donne l'impression de
+   * deux outils au lieu d'un.
+   */
+  function relier(saisie, champ) {
+    saisie.addEventListener('focus', () => actions.viser?.(champ));
+    return saisie;
+  }
+
   function champTexte(champ, multi) {
-    const saisie = multi
+    const saisie = relier(multi
       ? h('textarea', { class: 'input input--multi', rows: 3, value: champ.valeur })
-      : h('input', { class: 'input', type: 'text', value: champ.valeur });
+      : h('input', { class: 'input', type: 'text', value: champ.valeur }), champ);
     const alerte = alerteExemple(champ, saisie);
     saisie.addEventListener('input', () => {
       champ.valeur = saisie.value;
@@ -120,6 +131,8 @@ export function createGuide({ vue, t, actions }) {
       peindre();
       majAvancement();
     };
+
+    vignette.addEventListener('click', () => actions.viser?.(champ));
 
     const exemples = h('div', { class: 'guide__exemples', hidden: true },
       actions.illustrations().map((image) => h('button', {
@@ -149,10 +162,10 @@ export function createGuide({ vue, t, actions }) {
   function champBouton(champ) {
     const { saisie, extra } = champTexte(champ, false);
     const pages = actions.liens();
-    const dest = h('input', {
+    const dest = relier(h('input', {
       class: 'input', type: 'text', value: champ.lien || '',
       placeholder: 'contact.html', list: 'guide-liens',
-    });
+    }), champ);
     dest.addEventListener('input', () => ecrire(champ, dest.value, 'lien'));
 
     const raccourcis = h('div', { class: 'guide__dest' }, pages.slice(0, 4).map((page) => h('button', {
@@ -180,12 +193,17 @@ export function createGuide({ vue, t, actions }) {
     bouton: champBouton,
   };
 
-  function rendreChamp(champ, rang) {
+  /**
+   * Un champ. L'aide n'est écrite qu'une fois par genre et par étape : la
+   * même phrase répétée sous cinq champs devient du bruit, et on cesse de la
+   * lire — donc elle cesse d'aider.
+   */
+  function rendreChamp(champ, rang, dejaExplique) {
     const fabrique = CONSTRUCTEURS[champ.genre] || ((c) => champTexte(c, false));
     const { saisie, extra } = fabrique(champ);
     return h('label', { class: 'champ' },
       h('span', { class: 'champ__nom' }, t('guideChamp_' + champ.genre, rang)),
-      h('span', { class: 'champ__aide' }, t('guideAide_' + champ.genre)),
+      dejaExplique ? null : h('span', { class: 'champ__aide' }, t('guideAide_' + champ.genre)),
       saisie,
       extra || null,
     );
@@ -230,9 +248,14 @@ export function createGuide({ vue, t, actions }) {
     return bloc;
   }
 
+  /** Nom affiché d'une étape, pour éviter de le répéter en intertitre. */
+  function nom2(etape) {
+    return etape.titre || t('guideRepli_' + etape.repli, etape.index + 1);
+  }
+
   function pasSection(etape, numero) {
     const valide = etape.restants === 0 || lues().has(etape.ref);
-    const nom = etape.titre || t('guideRepli_' + etape.repli, etape.index + 1);
+    const nom = nom2(etape);
     const bloc = h('section', { class: 'pas' + (ouvert === etape.ref ? ' pas--on' : '') },
       enTete(etape.ref, numero, nom, valide ? 'ok' : ''));
 
@@ -247,10 +270,32 @@ export function createGuide({ vue, t, actions }) {
     if (!etape.champs.length) {
       corps.appendChild(h('p', { class: 'hint', style: { marginTop: '0' } }, t('guideRienARemplir')));
     }
-    const rangs = {};
+    // Les champs sont rendus groupe par groupe — une colonne de la page fait
+    // un groupe — et le rang repart à 1 dans chacun : « Le titre » de la
+    // deuxième colonne n'est pas « Titre 4 ».
+    let groupeCourant = null;
+    let rangs = {};
+    const expliques = new Set();
+    // Un intertitre n'a de sens qu'à partir de deux groupes, et il ne répète
+    // pas le nom de l'étape : « Nous trouver » sous « Nous trouver » n'apprend
+    // rien à personne.
+    const groupes = new Set(etape.champs.map((c) => c.groupe || 0));
+    const montrerGroupes = groupes.size > 1;
+
     for (const champ of etape.champs) {
+      const groupe = champ.groupe || 0;
+      if (groupe !== groupeCourant) {
+        groupeCourant = groupe;
+        rangs = {};
+        const nom = champ.groupeNom || '';
+        if (groupe && montrerGroupes && nom.toLowerCase() !== nom2(etape).toLowerCase()) {
+          corps.appendChild(h('div', { class: 'champ__groupe' },
+            h('span', {}, nom || t('guideGroupe', groupe))));
+        }
+      }
       rangs[champ.genre] = (rangs[champ.genre] || 0) + 1;
-      corps.appendChild(rendreChamp(champ, rangs[champ.genre]));
+      corps.appendChild(rendreChamp(champ, rangs[champ.genre], expliques.has(champ.genre)));
+      expliques.add(champ.genre);
     }
 
     corps.append(

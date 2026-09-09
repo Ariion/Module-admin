@@ -10,22 +10,25 @@
 export const SHADOW_CSS = `
 :host {
   /* Neutres très légèrement bleutés : un gris pur à côté d'un accent bleu
-     paraît sale. Ceux-ci sont choisis, pas hérités. */
-  --bg:        #131519;
-  --bg-soft:   #1a1d23;
-  --bg-raise:  #22262e;
-  --bg-sunk:   #0d0f13;
-  --line:      #2a2f38;
-  --line-soft: #202530;
-  --text:      #e9edf4;
-  --muted:     #939cab;
-  --faint:     #67707e;
+     paraît sale. L'écart entre deux surfaces voisines est volontairement
+     net — trois gris à 3 % l'un de l'autre donnent une interface plate. */
+  --bg:        #101318;
+  --bg-soft:   #171b22;
+  --bg-raise:  #20252e;
+  --bg-high:   #29303a;
+  --bg-sunk:   #0a0c10;
+  --line:      #2d3440;
+  --line-soft: #1e2430;
+  --text:      #eef2f8;
+  --muted:     #9aa4b4;
+  --faint:     #6b7482;
 
   /* Deux accents qui portent une information : ce qui touche au CONTENU est
      bleu, ce qui touche à la STRUCTURE est violet. */
   --accent:     #4d8bf5;
   --accent-dim: rgba(77, 139, 245, .15);
   --accent-hi:  #7aa9ff;
+  --accent-glow: rgba(77, 139, 245, .38);
   --sect:       #a97ae8;
   --sect-dim:   rgba(169, 122, 232, .14);
 
@@ -33,14 +36,23 @@ export const SHADOW_CSS = `
   --warn:   #fbbf24;
   --danger: #f87171;
 
-  --radius:    10px;
+  --radius:    11px;
   --radius-sm: 8px;
   --radius-xs: 6px;
-  --panel:  344px;
+  --panel:  348px;
   --topbar: 48px;
   --grab:   54px;
-  --shadow:    0 12px 34px rgba(0, 0, 0, .42);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, .28);
+  --shadow:    0 18px 44px rgba(0, 0, 0, .5);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, .3);
+  --shadow-lift: 0 6px 18px rgba(0, 0, 0, .38);
+
+  /* Une seule courbe, un seul jeu de durées. C'est ce qui donne à une
+     interface l'impression d'être d'un seul tenant plutôt qu'assemblée. */
+  --ease:      cubic-bezier(.32, .72, 0, 1);
+  --ease-out:  cubic-bezier(.16, 1, .3, 1);
+  --vite:      .12s;
+  --moyen:     .22s;
+  --lent:      .38s;
 
   all: initial;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -49,6 +61,18 @@ export const SHADOW_CSS = `
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Une échelle typographique, au lieu de tout écrire à 13 px : c'est ce qui
+   fait qu'un titre se lit comme un titre sans avoir à le mettre en gras. */
+.t-titre  { font-size: 15px; font-weight: 650; letter-spacing: -.15px; }
+.t-corps  { font-size: 13px; }
+.t-petit  { font-size: 12px; }
+.t-fin    { font-size: 11.5px; color: var(--faint); line-height: 1.45; }
+
+/* Personne n'a demandé qu'on l'étourdisse. */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 * { box-sizing: border-box; }
 /* Une règle de composant ne doit jamais rendre visible un élément masqué. */
@@ -69,7 +93,12 @@ button, input, textarea, select { font: inherit; color: inherit; }
 /* ================= Panneau de gauche ================= */
 .panel {
   position: relative; display: flex; flex-direction: column; min-height: 0;
-  background: var(--bg); border-right: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  /* Une lumière qui vient d'en haut : sans elle, le panneau est un aplat,
+     et un aplat n'a pas de relief à donner à ce qu'il contient. */
+  background:
+    radial-gradient(120% 55% at 50% -10%, rgba(77,139,245,.09), transparent 70%),
+    var(--bg);
 }
 
 /* Poignée du panneau en mode feuille (mobile) : masquée sur grand écran. */
@@ -77,11 +106,17 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 .panel__head {
   display: flex; align-items: center; gap: 9px; padding: 0 16px;
-  height: var(--topbar); border-bottom: 1px solid var(--line); flex: none;
+  height: var(--topbar); border-bottom: 1px solid var(--line-soft); flex: none;
 }
 .panel__dot {
   width: 7px; height: 7px; border-radius: 50%; flex: none;
   background: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim);
+  animation: respire 3.6s var(--ease) infinite;
+}
+/* Un signe discret que le module est vivant, pas une capture d'écran. */
+@keyframes respire {
+  0%, 100% { box-shadow: 0 0 0 3px var(--accent-dim); }
+  50%      { box-shadow: 0 0 0 5px rgba(77,139,245,.07); }
 }
 .panel__name { font-weight: 600; letter-spacing: -.1px; }
 .panel__site {
@@ -99,20 +134,34 @@ button, input, textarea, select { font: inherit; color: inherit; }
   border-radius: var(--radius-sm);
 }
 .tab {
-  flex: 1; height: 32px; display: flex; align-items: center; justify-content: center; gap: 6px;
+  position: relative; isolation: isolate; flex: 1; height: 32px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   background: none; border: 0; border-radius: var(--radius-xs);
   color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 500;
-  transition: color .14s, background .14s;
+  transition: color var(--vite) var(--ease);
+}
+/* Le fond de l'onglet actif est un calque à part : il peut alors grandir
+   depuis rien plutôt que d'apparaître d'un coup. */
+.tab::before {
+  content: ''; position: absolute; inset: 0; border-radius: var(--radius-xs);
+  background: var(--bg-raise); box-shadow: var(--shadow-sm);
+  opacity: 0; transform: scale(.88); z-index: -1;
+  transition: opacity var(--moyen) var(--ease), transform var(--moyen) var(--ease-out);
 }
 .tab svg { opacity: .85; }
 .tab:hover { color: var(--text); }
-.tab[aria-selected="true"] { background: var(--bg-raise); color: var(--text); box-shadow: var(--shadow-sm); }
+.tab[aria-selected="true"] { color: var(--text); }
+.tab[aria-selected="true"]::before { opacity: 1; transform: none; }
 .tab[aria-selected="true"] svg { color: var(--accent); opacity: 1; }
 .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .views { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
-.view { display: none; padding: 14px 16px 24px; }
-.view--on { display: block; }
+.view { display: none; padding: 14px 16px 26px; }
+.view--on { display: block; animation: vueEntre var(--moyen) var(--ease-out) both; }
+@keyframes vueEntre {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: none; }
+}
 
 .panel__foot {
   flex: none; border-top: 1px solid var(--line); padding: 11px 14px 13px;
@@ -171,20 +220,31 @@ button, input, textarea, select { font: inherit; color: inherit; }
 /* ================= Boutons et champs ================= */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  height: 32px; padding: 0 12px;
+  height: 33px; padding: 0 13px;
   background: var(--bg-raise); border: 1px solid var(--line); border-radius: var(--radius-sm);
-  cursor: pointer; white-space: nowrap; font-size: 12.5px;
-  transition: background .14s, border-color .14s, color .14s, transform .08s;
+  cursor: pointer; white-space: nowrap; font-size: 12.5px; font-weight: 500;
+  transition: background var(--vite) var(--ease), border-color var(--vite) var(--ease),
+              color var(--vite) var(--ease), transform var(--vite) var(--ease),
+              box-shadow var(--vite) var(--ease);
 }
-.btn:hover { background: #2a2f38; border-color: #38404c; }
-.btn:active { transform: translateY(1px); }
+.btn:hover {
+  background: var(--bg-high); border-color: #3c4553;
+  transform: translateY(-1px); box-shadow: var(--shadow-sm);
+}
+/* Le bouton s'enfonce sous le doigt : c'est le seul retour tactile qu'on
+   puisse donner, et son absence est ce qui fait « mou ». */
+.btn:active { transform: translateY(1px) scale(.985); box-shadow: none; }
 .btn:disabled { opacity: .42; cursor: default; }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .btn--primary {
-  background: var(--accent); border-color: transparent; color: #fff; font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0,0,0,.3);
+  background: linear-gradient(180deg, #5c96f7, var(--accent));
+  border-color: transparent; color: #fff; font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.16);
 }
-.btn--primary:hover { background: #5f9af9; border-color: transparent; }
+.btn--primary:hover {
+  background: linear-gradient(180deg, #6ba2f9, #5590f6); border-color: transparent;
+  box-shadow: 0 6px 18px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.2);
+}
 .btn--sect { background: var(--sect-dim); border-color: rgba(169,122,232,.34); color: #e3d0fb; }
 .btn--sect:hover { background: rgba(169,122,232,.22); border-color: rgba(169,122,232,.5); }
 .btn--ghost { background: transparent; border-color: transparent; color: var(--muted); }
@@ -829,6 +889,45 @@ select.input { appearance: none; cursor: pointer; }
 }
 .reglages__trait { border: 0; border-top: 1px solid var(--line-soft); margin: 22px 0 18px; }
 
+/* ------------------------------------------------------------- Outils
+   Une ligne par outil, avec ce qu'il fait écrit à côté. Six boutons de même
+   taille dans un pied de panneau ne se lisent pas ; six lignes nommées, si. */
+.btn--outils {
+  justify-content: space-between; height: 38px;
+  background: var(--bg-soft); border-color: var(--line-soft); color: var(--muted);
+  font-weight: 600;
+}
+.btn--outils:hover { color: var(--text); background: var(--bg-raise); }
+
+.outils { display: grid; gap: 3px; }
+.outils__groupe {
+  font-size: 11px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--faint); margin: 15px 2px 6px;
+}
+.outils__groupe:first-child { margin-top: 2px; }
+.outil {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 11px 12px; cursor: pointer; text-align: left; color: var(--text);
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm);
+  transition: background var(--vite) var(--ease), border-color var(--vite) var(--ease),
+              transform var(--vite) var(--ease);
+}
+.outil:hover { background: var(--bg-soft); border-color: var(--line-soft); transform: translateX(2px); }
+.outil:active { transform: translateX(2px) scale(.99); }
+.outil__icone {
+  flex: none; display: grid; place-items: center; width: 32px; height: 32px;
+  border-radius: var(--radius-xs); background: var(--bg-raise); color: var(--muted);
+  transition: all var(--vite) var(--ease);
+}
+.outil:hover .outil__icone { background: var(--bg-high); color: var(--text); }
+.outil--fort .outil__icone {
+  background: var(--sect-dim); color: #cbb0f4; box-shadow: 0 0 0 1px rgba(169,122,232,.24);
+}
+.outil__texte { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.outil__nom { font-weight: 600; font-size: 13px; }
+.outil__aide { color: var(--faint); font-size: 11.5px; line-height: 1.4; }
+.outil > svg:last-child { color: var(--faint); flex: none; }
+
 /* ------------------------------------------- Questionnaire de rédaction */
 .metiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .metier {
@@ -856,92 +955,157 @@ select.input { appearance: none; cursor: pointer; }
 }
 
 /* ------------------------------------------------------------------ Guide
-   Le parcours pas à pas : une étape par section, de haut en bas. C'est la
-   première chose que voit quelqu'un qui n'a jamais fait de site, donc tout y
-   est plus grand et plus espacé qu'ailleurs dans le panneau. */
+   Le parcours pas à pas. Ce n'est pas une liste de blocs : c'est un chemin,
+   du haut de la page vers le bas. Un rail relie les étapes, les faites sont
+   éteintes, celle qu'on remplit est allumée. Sans cela, sept rectangles
+   identiques ne disent rien de l'ordre dans lequel les prendre. */
 .guide__tete {
-  position: sticky; top: 0; z-index: 2;
-  background: var(--bg); padding-bottom: 10px; margin-bottom: 4px;
+  position: sticky; top: 0; z-index: 3;
+  background: linear-gradient(var(--bg) 72%, transparent);
+  padding: 2px 0 14px; margin-bottom: 2px;
 }
 .guide__prog {
-  height: 6px; border-radius: 999px; background: var(--bg-raise); overflow: hidden;
+  height: 5px; border-radius: 999px; background: var(--bg-sunk);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.5); overflow: hidden;
 }
 .guide__jauge {
   display: block; height: 100%; width: 0%; border-radius: 999px;
   background: linear-gradient(90deg, var(--accent), var(--ok));
-  transition: width .25s ease;
+  box-shadow: 0 0 12px var(--accent-glow);
+  transition: width var(--lent) var(--ease-out);
 }
-.guide__compte { color: var(--muted); font-size: 12px; margin-top: 6px; }
-.guide__liste { display: grid; gap: 8px; }
+.guide__compte { color: var(--muted); font-size: 12px; margin-top: 7px; }
+
+/* Le rail : un trait continu derrière les pastilles. */
+.guide__liste { position: relative; display: grid; gap: 6px; }
+.guide__liste::before {
+  content: ''; position: absolute; left: 24px; top: 22px; bottom: 22px; width: 2px;
+  background: linear-gradient(var(--line-soft), var(--line-soft));
+  border-radius: 2px;
+}
 
 .pas {
-  border: 1px solid var(--line-soft); border-radius: var(--radius);
-  background: var(--bg-soft); overflow: hidden;
+  position: relative; z-index: 1;
+  border: 1px solid transparent; border-radius: var(--radius);
+  background: transparent;
+  transition: background var(--moyen) var(--ease), border-color var(--moyen) var(--ease),
+              box-shadow var(--moyen) var(--ease);
 }
-.pas--on { border-color: var(--accent); background: var(--bg-raise); }
+.pas:hover:not(.pas--on) { background: var(--bg-soft); }
+.pas--on {
+  border-color: var(--line); background: var(--bg-soft);
+  box-shadow: var(--shadow-lift);
+}
 .pas__tete {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 12px 12px; background: none; border: 0; cursor: pointer;
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 11px 12px; background: none; border: 0; cursor: pointer;
   text-align: left; color: var(--text);
 }
-.pas__tete:hover { background: var(--bg-raise); }
 .pas__num {
   flex: none; display: grid; place-items: center;
-  width: 24px; height: 24px; border-radius: 999px;
-  background: var(--bg-raise); border: 1px solid var(--line);
-  font-size: 11.5px; font-weight: 600; color: var(--muted);
+  width: 26px; height: 26px; border-radius: 999px;
+  background: var(--bg); border: 2px solid var(--line);
+  font-size: 11.5px; font-weight: 650; color: var(--faint);
+  transition: all var(--moyen) var(--ease);
 }
-.pas--on .pas__num { border-color: var(--accent); color: var(--accent-hi); }
-.pas__num--ok { background: var(--ok); border-color: var(--ok); color: #04231a; }
-.pas__nom { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+/* L'étape ouverte est la seule allumée : l'œil sait où il en est. */
+.pas--on .pas__num {
+  border-color: var(--accent); color: var(--accent-hi);
+  box-shadow: 0 0 0 4px var(--accent-dim), 0 0 14px var(--accent-glow);
+}
+.pas__num--ok {
+  background: var(--ok); border-color: var(--ok); color: #05261c;
+  box-shadow: 0 0 0 4px rgba(52,211,153,.13);
+}
+.pas--on .pas__num--ok { border-color: var(--ok); color: #05261c; }
+.pas__nom {
+  flex: 1; min-width: 0; font-weight: 600; font-size: 13px; overflow-wrap: anywhere;
+  transition: color var(--vite) var(--ease);
+}
+/* Ce qui est fait s'efface : il reste ce qu'il y a à faire. */
+.pas__num--ok ~ .pas__nom { color: var(--muted); font-weight: 500; }
 .pas__reste {
   flex: none; font-size: 11px; color: var(--warn);
-  background: rgba(251,191,36,.12); border-radius: 999px; padding: 2px 8px;
+  background: rgba(251,191,36,.12); border: 1px solid rgba(251,191,36,.22);
+  border-radius: 999px; padding: 2px 9px; white-space: nowrap;
 }
-.pas__corps { padding: 2px 12px 14px; display: grid; gap: 12px; }
-.pas--fin .pas__corps { gap: 8px; }
+.pas__tete svg:last-child { color: var(--faint); transition: transform var(--moyen) var(--ease); }
+.pas--on .pas__tete svg:last-child { color: var(--muted); }
 
-.champ { display: grid; gap: 4px; }
-.input--multi { min-height: 68px; resize: vertical; line-height: 1.5; }
-.champ__nom { font-weight: 600; }
-.champ__nom--sous { margin-top: 8px; }
+.pas__corps {
+  padding: 2px 13px 15px 49px; display: grid; gap: 14px;
+  animation: pasOuvre var(--moyen) var(--ease-out) both;
+}
+@keyframes pasOuvre {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+.pas--fin .pas__corps { gap: 7px; }
+
+/* Le nom d'une colonne de la page, au-dessus de ses champs. */
+.champ__groupe {
+  display: flex; align-items: center; gap: 9px;
+  margin: 6px 0 -4px; font-size: 11px; font-weight: 650;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--faint);
+}
+.champ__groupe::after {
+  content: ''; flex: 1; height: 1px; background: var(--line-soft);
+}
+.champ { display: grid; gap: 5px; }
+.champ__nom { display: block; font-weight: 600; font-size: 12.5px; }
+.champ__aide { display: block; }
+.champ__nom--sous { margin-top: 10px; }
 .champ__aide { color: var(--faint); font-size: 11.5px; line-height: 1.45; }
+.input--multi { min-height: 70px; resize: vertical; line-height: 1.55; }
 .champ__exemple {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  color: var(--warn); font-size: 11.5px; margin-top: 2px;
+  color: var(--warn); font-size: 11.5px; margin-top: 1px;
+  animation: vueEntre var(--moyen) var(--ease-out) both;
 }
 .lien {
   background: none; border: 0; padding: 0; cursor: pointer;
-  color: var(--accent-hi); text-decoration: underline;
+  color: var(--accent-hi); text-decoration: underline; text-underline-offset: 2px;
 }
+.lien:hover { color: #9dc0ff; }
 
-.guide__image { display: grid; gap: 8px; }
+.guide__image { display: grid; gap: 9px; }
 .guide__vign {
-  height: 96px; border-radius: var(--radius-sm); border: 1px solid var(--line);
+  height: 104px; border-radius: var(--radius-sm); border: 1px solid var(--line);
   background-size: cover; background-position: center; background-color: var(--bg-sunk);
   display: grid; place-items: center; color: var(--faint); font-size: 11.5px;
+  transition: border-color var(--vite) var(--ease);
 }
 .guide__vign--vide { border-style: dashed; }
 .guide__imageActions { display: flex; gap: 7px; }
 .guide__imageActions > * { flex: 1; }
 .guide__exemples {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 2px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 1px;
+  animation: vueEntre var(--moyen) var(--ease-out) both;
 }
 .guide__exemple {
-  height: 44px; border-radius: var(--radius-xs); border: 1px solid var(--line);
+  height: 46px; border-radius: var(--radius-xs); border: 1px solid var(--line);
   background-size: cover; background-position: center; cursor: pointer;
+  transition: transform var(--vite) var(--ease), border-color var(--vite) var(--ease),
+              box-shadow var(--vite) var(--ease);
 }
-.guide__exemple:hover { border-color: var(--accent); }
+.guide__exemple:hover {
+  border-color: var(--accent); transform: translateY(-2px) scale(1.03);
+  box-shadow: var(--shadow-sm);
+}
 .guide__dest { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
 .puce {
   border: 1px solid var(--line); background: var(--bg-soft); color: var(--muted);
-  border-radius: 999px; padding: 3px 10px; font-size: 11.5px; cursor: pointer;
+  border-radius: 999px; padding: 4px 11px; font-size: 11.5px; cursor: pointer;
+  transition: all var(--vite) var(--ease);
 }
-.puce:hover { color: var(--text); border-color: var(--accent); }
+.puce:hover { color: var(--text); border-color: var(--accent); background: var(--accent-dim); }
 .guide__fait {
-  display: flex; align-items: center; gap: 8px;
-  color: var(--muted); cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 9px; padding: 9px 11px;
+  border: 1px solid var(--line-soft); border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--muted); cursor: pointer; user-select: none;
+  transition: all var(--vite) var(--ease);
 }
+.guide__fait:hover { border-color: var(--line); color: var(--text); }
 
 /* ------------------------------------------------------------------ Thèmes */
 .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

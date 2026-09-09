@@ -69,19 +69,40 @@ export function estRempli(champ) {
 /** Champs d'une section ajoutée : un parcours de son arbre de widgets. */
 function champsWidgets(tree) {
   const champs = [];
-  const parcourir = (noeuds) => {
+
+  /**
+   * Une section en trois colonnes produisait « Le titre, Titre 2, Le texte,
+   * Titre 3, Texte 2 » : une liste à plat où plus rien ne dit quel texte va
+   * avec quel titre. Chaque colonne devient donc un groupe, nommé par son
+   * propre titre — c'est ainsi que le client voit sa page.
+   */
+  const parcourir = (noeuds, groupe) => {
     for (const noeud of noeuds || []) {
+      const propre = noeud.type === 'column' ? { rang: groupe.rang + 1 } : groupe;
       const fabrique = CHAMPS_WIDGET[noeud.type];
       if (fabrique) {
         champs.push({
           source: 'widget', key: noeud.key, exemple: !!noeud.props?.exemple,
+          groupe: propre.rang || 0,
           ...fabrique(noeud),
         });
       }
-      if (noeud.children) parcourir(noeud.children);
+      if (noeud.children) parcourir(noeud.children, propre);
+      if (noeud.type === 'column') groupe.rang = propre.rang;
     }
   };
-  parcourir(tree.children || []);
+  parcourir(tree.children || [], { rang: 0 });
+
+  // Le nom d'un groupe est le premier titre qu'il contient : « Pains au
+  // levain » plutôt que « Colonne 2 ».
+  const noms = new Map();
+  for (const champ of champs) {
+    if (champ.genre !== 'titre' || noms.has(champ.groupe)) continue;
+    const texte = String(champ.valeur || '').replace(/<[^>]*>/g, '').trim();
+    if (texte) noms.set(champ.groupe, texte.length > 30 ? texte.slice(0, 28) + '…' : texte);
+  }
+  for (const champ of champs) champ.groupeNom = noms.get(champ.groupe) || '';
+
   return champs;
 }
 

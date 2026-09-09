@@ -19,6 +19,7 @@ import { createWidgetsPanel } from './widgets-panel.js';
 import { createGuide } from './guide-panel.js';
 import { openTheme } from './theme-panel.js';
 import { openReglages } from './reglages-panel.js';
+import { openOutils } from './outils-panel.js';
 import { createLibrary } from './library.js';
 import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
@@ -202,6 +203,16 @@ export async function startEditor(runtime) {
         },
         setValue: (entry, patch) => setValue(entry, patch),
         pickMedia: (rappel, accept) => { shell.showView('medias'); library.pick(rappel, accept); },
+        // Montre, dans l'aperçu, l'élément que ce champ pilote. Le module
+        // connaît deux origines : un widget qu'il a posé, ou un élément du
+        // code du client détecté par le scanner.
+        viser: (champ) => {
+          const el = champ.source === 'widget'
+            ? model.doc.querySelector(`[data-admin-widget="${champ.key}"]`)
+            : champ.entry?.el;
+          if (!el?.isConnected) return;
+          overlay.reveal(el, 'center');
+        },
         reveal: (ref) => {
           const etape = guide.etapes.find((e) => e.ref === ref);
           if (!etape?.el) return;
@@ -257,33 +268,10 @@ export async function startEditor(runtime) {
     shell.onPageClick(() => ouvrirPages());
 
     shell.setFootExtra([
-      h('div', { class: 'row row--wrap', style: { marginBottom: '10px' } },
-        h('button', {
-          class: 'btn btn--sect', type: 'button',
-          onclick: () => openPageTemplates({
-            root, t,
-            onApply: (id, remplacer) => appliquerModelePage(id, remplacer),
-            onWizard: () => ouvrirAssistant(),
-          }),
-        }, icon('pages', 13), t('pageTemplates')),
-        h('button', {
-          class: 'btn btn--sect', type: 'button', title: t('briefTitre'),
-          onclick: () => ouvrirBrief(),
-        }, icon('pencil', 13), t('briefCourt')),
-        h('button', {
-          class: 'btn', type: 'button', title: t('themeTitre'), onclick: () => ouvrirTheme(),
-        }, icon('palette', 13), t('themeCourt')),
-        h('button', {
-          class: 'btn', type: 'button', title: t('reglagesTitre'),
-          onclick: () => ouvrirReglages(),
-        }, icon('sliders', 13), t('reglagesCourt')),
-        h('button', {
-          class: 'btn', type: 'button', title: t('legalTitle'), onclick: () => ouvrirLegal(),
-        }, icon('code', 13), t('legalCourt')),
-        h('button', {
-          class: 'btn', type: 'button', title: t('boutiqueTitre'), onclick: () => ouvrirBoutique(),
-        }, icon('grid', 13), t('boutiqueCourt')),
-      ),
+      h('button', {
+        class: 'btn btn--wide btn--outils', type: 'button',
+        onclick: () => ouvrirOutils(),
+      }, icon('sliders', 14), t('outilsCourt'), icon('up', 12)),
     ]);
 
     shell.setActions([
@@ -809,6 +797,29 @@ export async function startEditor(runtime) {
         etatHebergement.ia = !!resultat.enregistre;
       },
       onCleIALocale: ({ cle }) => { poserCleLocale(cle); },
+    });
+  }
+
+  /**
+   * Les outils du site. Ils tenaient dans le pied du panneau, six boutons
+   * côte à côte sans hiérarchie ; ils ont maintenant une fenêtre où chacun
+   * est nommé et expliqué.
+   */
+  function ouvrirOutils() {
+    openOutils({
+      root, t,
+      actions: {
+        brief: () => ouvrirBrief(),
+        modeles: () => openPageTemplates({
+          root, t,
+          onApply: (id, remplacer) => appliquerModelePage(id, remplacer),
+          onWizard: () => ouvrirAssistant(),
+        }),
+        theme: () => ouvrirTheme(),
+        boutique: () => ouvrirBoutique(),
+        legal: () => ouvrirLegal(),
+        reglages: () => ouvrirReglages(),
+      },
     });
   }
 

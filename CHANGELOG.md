@@ -1,5 +1,41 @@
 # Journal des versions
 
+## 1.6.1
+
+**Refonte de l'interface — elle était plate, et elle l'était vraiment**
+- Tout était écrit à 12-13 px sur trois gris à 3 % les uns des autres : rien
+  ne guidait l'œil. Une échelle typographique, des surfaces réellement
+  distinctes et une lumière venue du haut donnent enfin du relief.
+- Rien ne bougeait. Une seule courbe d'accélération et un seul jeu de durées
+  sont désormais appliqués partout : entrée des vues, ouverture d'une étape,
+  survol et enfoncement des boutons, remplissage de la jauge. Le réglage
+  système « animations réduites » est respecté.
+- **Le guide devient un chemin** : un rail relie les étapes, celles qui sont
+  faites s'éteignent, celle qu'on remplit s'allume. Sept rectangles
+  identiques ne disaient pas dans quel ordre les prendre.
+- **Le panneau et la page se parlent enfin.** Entrer dans un champ met en
+  évidence, dans l'aperçu, l'élément qu'il pilote et l'amène à l'écran. On
+  remplissait un formulaire d'un côté pendant que la page changeait de
+  l'autre, sans savoir où.
+
+**Le pied du panneau n'est plus un tiroir à bazar**
+- Six boutons de même taille et de même couleur — Modèles, Écrire pour moi,
+  Ambiance, Réglages, Pages légales, Boutique — sont remplacés par un seul
+  bouton **Outils du site**, qui ouvre une liste où chacun a un intitulé et
+  une phrase disant à quoi il sert, groupés par moment : construire, allure,
+  contenu, module.
+
+**Le guide se lit**
+- Dans une section en colonnes, les champs étaient à plat : « Le titre,
+  Titre 2, Le texte, Titre 3, Texte 2 ». Chaque colonne forme maintenant un
+  groupe, nommé par son propre titre.
+- La même phrase d'aide n'est plus répétée sous cinq champs : elle n'est
+  écrite qu'une fois par genre et par étape.
+
+**Corrections**
+- L'onglet actif masquait son propre libellé : on ne lisait plus « Guide ».
+- L'intitulé d'un lien de bouton et son explication se chevauchaient.
+
 ## 1.6.0
 
 **Une banque d'images sans clé**
