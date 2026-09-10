@@ -83,6 +83,13 @@ directement dans l'aperçu, et le champ du panneau. Puis reprend les 62
 touches une par une. Sert à répondre sans hésiter à « telle lettre ne
 s'écrit pas » : le script dit exactement laquelle, et où.
 
+Et pour savoir si le module est seulement en cause, ouvrez
+[`essais/clavier.html`](essais/clavier.html) dans le navigateur qui pose
+problème : cette page ne charge ni le module ni aucune bibliothèque, et dit
+pour chaque touche si elle est arrivée, si quelque chose l'a bloquée, et si un
+caractère a réellement été écrit. Une lettre qui se perd déjà là vient du
+navigateur, d'une extension ou du clavier — pas du module.
+
 ## Mettre en ligne
 
 ```bash

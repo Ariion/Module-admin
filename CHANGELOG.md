@@ -1,5 +1,28 @@
 # Journal des versions
 
+## 1.12.3
+
+**Une page pour savoir d'où vient une lettre qui manque**
+
+`essais/clavier.html` — à ouvrir directement dans le navigateur qui pose
+problème. Elle ne charge **ni le module ni aucune bibliothèque** : rien que
+quelques lignes de code qui écoutent le clavier. Pour chaque touche, elle dit
+
+- si la touche est bien arrivée jusqu'à la page,
+- si quelque chose l'a **annulée** au passage,
+- si un caractère a réellement été écrit,
+- et si une touche modificatrice (Ctrl, Alt, Cmd) était enfoncée — une lettre
+  accompagnée de Ctrl ne s'écrit pas, elle déclenche un raccourci.
+
+Le bilan tire la conclusion à votre place : une lettre qui se perd sur cette
+page ne peut pas venir du module, puisqu'il n'y est pas. Le cas le plus
+fréquent est une extension du navigateur qui bloque la touche — la page le
+dit et propose de rouvrir en navigation privée pour le vérifier.
+
+Vérifiée en simulant précisément le défaut signalé : une extension qui bloque
+le « c » minuscule. La page tape `abcdef`, obtient `abdef`, et nomme la
+touche fautive.
+
 ## 1.12.2
 
 **Un outil pour répondre à « telle lettre ne s'écrit pas »**

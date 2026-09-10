@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnostic clavier — où passe la touche ?</title>
+<style>
+  :root{ --encre:#15181d; --doux:#5b6472; --trait:#e5e8ec; --fond:#fff; --fond-doux:#f6f7f9;
+         --ok:#16a34a; --ko:#dc2626; --accent:#2563eb; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--encre);
+       background:var(--fond);padding:28px 20px 60px}
+  main{max-width:860px;margin:0 auto}
+  h1{font-size:1.6rem;letter-spacing:-.02em;margin-bottom:6px}
+  h2{font-size:1.05rem;margin:26px 0 8px}
+  p{color:var(--doux);margin-bottom:10px}
+  .zone{border:2px solid var(--trait);border-radius:8px;padding:14px 16px;min-height:74px;
+        font-size:17px;background:var(--fond-doux);outline:none}
+  .zone:focus{border-color:var(--accent);background:#fff}
+  .barre{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+  button{font:inherit;padding:8px 14px;border:1px solid var(--trait);background:#fff;
+         border-radius:7px;cursor:pointer}
+  button.fort{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:10px}
+  th,td{border:1px solid var(--trait);padding:5px 8px;text-align:left;vertical-align:top}
+  th{background:var(--fond-doux);font-weight:600}
+  td.ko{color:var(--ko);font-weight:600}
+  td.ok{color:var(--ok)}
+  .verdict{margin-top:14px;padding:12px 14px;border-radius:8px;border:1px solid var(--trait);
+           background:var(--fond-doux);white-space:pre-wrap}
+  code{background:var(--fond-doux);padding:1px 5px;border-radius:4px;font-size:.92em}
+  .journal{max-height:260px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+           font-size:12px;border:1px solid var(--trait);border-radius:8px;padding:10px;margin-top:10px}
+</style>
+</head>
+<body>
+<main>
+<h1>Où passe la touche ?</h1>
+<p>Cette page ne contient <strong>que</strong> le code ci-dessous : ni le module,
+ni aucune bibliothèque. Si une touche s'y perd déjà, le module n'y est pour rien
+— la cause est dans le navigateur, une extension, ou le clavier.</p>
+
+<h2>1. Tapez ici</h2>
+<p>Tapez l'alphabet en minuscules, puis en majuscules. Prenez votre temps.</p>
+<div class="zone" contenteditable="true" spellcheck="false" id="zone"></div>
+
+<div class="barre">
+  <button type="button" class="fort" id="bilan">Voir le bilan</button>
+  <button type="button" id="vider">Vider</button>
+  <span id="compte" style="color:var(--doux)"></span>
+</div>
+
+<h2>2. Bilan</h2>
+<div class="verdict" id="verdict">Tapez quelque chose, puis cliquez sur « Voir le bilan ».</div>
+
+<h2>3. Le détail, touche par touche</h2>
+<p>Une ligne par touche pressée. <code>annulé</code> veut dire que quelque chose
+a bloqué la touche ; <code>texte inséré</code> dit si un caractère est
+réellement arrivé dans la zone.</p>
+<div class="journal" id="journal"></div>
+</main>
+
+<script>
+(function () {
+  var zone = document.getElementById('zone');
+  var journal = document.getElementById('journal');
+  var verdict = document.getElementById('verdict');
+  var compte = document.getElementById('compte');
+  var lignes = [];
+  var attente = null;
+
+  function ajouter(l) {
+    lignes.push(l);
+    compte.textContent = lignes.length + ' touche(s) enregistrée(s)';
+    var div = document.createElement('div');
+    div.textContent = l.touche + '  code=' + l.code + '  keyCode=' + l.keyCode
+      + (l.mods ? '  [' + l.mods + ']' : '')
+      + (l.annule ? '  ANNULÉ' : '')
+      + '  → ' + (l.insere === null ? '(en attente)' : l.insere ? 'texte inséré' : 'RIEN INSÉRÉ');
+    if (l.annule || l.insere === false) div.style.color = '#dc2626';
+    journal.appendChild(div);
+    journal.scrollTop = journal.scrollHeight;
+  }
+
+  zone.addEventListener('keydown', function (e) {
+    // On ne s'intéresse qu'aux touches qui doivent écrire un caractère.
+    if (e.key.length !== 1) return;
+    var mods = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.metaKey && 'Meta',
+      e.shiftKey && 'Maj'].filter(Boolean).join('+');
+    var ligne = { touche: JSON.stringify(e.key), code: e.code, keyCode: e.keyCode,
+      mods: mods, annule: false, insere: null };
+    attente = ligne;
+    // Un autre gestionnaire a-t-il bloqué la touche ? On regarde APRÈS que
+    // tout le monde s'est exprimé, à la fin du tour.
+    setTimeout(function () {
+      ligne.annule = e.defaultPrevented;
+      if (ligne.insere === null) ligne.insere = false;
+      if (attente === ligne) attente = null;
+      redessiner();
+    }, 0);
+    ajouter(ligne);
+  }, false);
+
+  zone.addEventListener('input', function () {
+    if (attente) attente.insere = true;
+  }, false);
+
+  function redessiner() {
+    var dernier = journal.lastChild;
+    if (!dernier) return;
+    var l = lignes[lignes.length - 1];
+    dernier.textContent = l.touche + '  code=' + l.code + '  keyCode=' + l.keyCode
+      + (l.mods ? '  [' + l.mods + ']' : '')
+      + (l.annule ? '  ANNULÉ' : '')
+      + '  → ' + (l.insere ? 'texte inséré' : 'RIEN INSÉRÉ');
+    dernier.style.color = (l.annule || !l.insere) ? '#dc2626' : '';
+  }
+
+  document.getElementById('vider').addEventListener('click', function () {
+    lignes = []; journal.textContent = ''; zone.textContent = '';
+    verdict.textContent = 'Tapez quelque chose, puis cliquez sur « Voir le bilan ».';
+    compte.textContent = ''; zone.focus();
+  });
+
+  document.getElementById('bilan').addEventListener('click', function () {
+    if (!lignes.length) { verdict.textContent = 'Rien n’a encore été tapé.'; return; }
+    var perdues = lignes.filter(function (l) { return !l.insere; });
+    var annulees = perdues.filter(function (l) { return l.annule; });
+    var texte = 'Touches enregistrées : ' + lignes.length + '\n'
+      + 'Texte obtenu : ' + JSON.stringify(zone.textContent) + '\n\n';
+
+    // Une touche modificatrice restée enfoncée transforme une lettre en
+    // raccourci : « c » devient Ctrl+C, qui copie au lieu d'écrire.
+    var collees = lignes.filter(function (l) { return /Ctrl|Alt|Meta/.test(l.mods); });
+
+    if (!perdues.length) {
+      texte += 'Toutes les touches ont écrit un caractère.\n\n'
+        + 'Cette page n’a donc rien à se reprocher, et votre clavier non plus.\n'
+        + 'Si une lettre manque quand même sur votre site, deux possibilités :\n'
+        + '  • le module : lancez « npm run essai-clavier -- <adresse du site> »,\n'
+        + '    il tape les 62 touches dans l’éditeur et dit laquelle ne passe pas ;\n'
+        + '  • une extension qui n’agit que sur votre site, pas sur cette page.';
+    } else {
+      var noms = perdues.map(function (l) { return l.touche; }).join(' ');
+      texte += 'N’ONT RIEN ÉCRIT : ' + noms + '\n\n';
+      texte += annulees.length
+        ? 'Et elles ont été ANNULÉES : du code les a bloquées au passage.\n'
+          + 'Le code de cette page ne bloque aucune touche — c’est donc quelque\n'
+          + 'chose d’ajouté par le navigateur qui le fait, une extension le plus\n'
+          + 'souvent. Rouvrez cette page en navigation privée, extensions\n'
+          + 'désactivées : si la lettre revient, vous tenez le coupable.'
+        : 'Sans être annulées : la touche est bien arrivée, mais le navigateur\n'
+          + 'n’a rien inséré. C’est un problème de saisie du navigateur ou du\n'
+          + 'système — logiciel de clavier, correcteur, raccourci global.';
+    }
+
+    if (collees.length) {
+      texte += '\n\nATTENTION : ' + collees.length + ' touche(s) ont été reçues avec '
+        + 'Ctrl, Alt ou Cmd\nenfoncé. Une lettre accompagnée de Ctrl n’écrit pas, '
+        + 'elle déclenche un\nraccourci — Ctrl+C copie, par exemple. Une touche '
+        + 'modificatrice restée\ncoincée suffit à faire disparaître une lettre. '
+        + 'Appuyez sur Ctrl, Alt et\nMaj une fois chacune, puis réessayez.';
+    }
+
+    var manquantes = [];
+    'abcdefghijklmnopqrstuvwxyz'.split('').forEach(function (c) {
+      var essais = lignes.filter(function (l) { return l.touche === '"' + c + '"'; });
+      if (essais.length && essais.every(function (l) { return !l.insere; })) manquantes.push(c);
+    });
+    if (manquantes.length) {
+      texte += '\n\nLettres tapées qui n’écrivent JAMAIS rien : ' + manquantes.join(' ');
+    }
+    verdict.textContent = texte;
+  });
+
+  zone.focus();
+})();
+</script>
+</body>
+</html>
