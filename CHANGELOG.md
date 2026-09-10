@@ -1,5 +1,28 @@
 # Journal des versions
 
+## 1.13.1
+
+**Le diagnostic clavier dit maintenant QUAND la touche est annulée**
+
+Savoir qu'une touche est annulée ne suffit pas : il faut savoir par qui. La
+même touche est donc relevée à plusieurs moments de sa course, et la colonne
+**Annulée** tranche entre deux cas :
+
+- **« avant la page »** — la touche était déjà annulée avant que le moindre
+  code de la page ait tourné, module compris. La page ne peut pas en être la
+  cause : c'est une extension du navigateur, ou le navigateur.
+- **« dans la page »** — quelque chose qui écoute dans la page l'a prise. Ce
+  n'est toujours pas le module, qui ne retient qu'Échap et Entrée, et
+  seulement pendant l'édition d'un texte.
+
+Dans les deux cas le bilan donne la marche à suivre : rouvrir dans une
+fenêtre InPrivate, puis désactiver les extensions une par une — les
+correcteurs orthographiques et assistants d'écriture d'abord.
+
+Le rapport copiable porte la colonne en plus, ainsi que `isTrusted` : une
+touche qui n'est pas « fiable » n'a pas été tapée par un humain, elle a été
+simulée par du code.
+
 ## 1.13.0
 
 **« Une lettre ne s'écrit pas » — le module sait maintenant répondre**
