@@ -55,32 +55,46 @@ export function redigerPage(brief, { images = [], textes = null } = {}) {
 
   const sections = [];
 
-  // --- 1. L'accroche ------------------------------------------------
-  sections.push(section([
+  // --- 1. L'accroche, en bandeau plein cadre --------------------------
+  // Une section ordinaire poserait le titre sur un fond uni. C'est la
+  // différence entre une page et un document : ici l'image porte la page et
+  // le texte se pose dessus.
+  sections.push(w('hero', {
+    image: image(0), hauteur: 'grande', voile: 48, align: 'center', texte: 'clair',
+  }, [
+    ...(brief.ville ? [w('etiquette', { text: brief.ville, align: 'center', exemple: false })] : []),
     w('heading', { text: brief.activite, level: ton.titrage, align: 'center', exemple: false }),
     w('text', { html: echapper(accroche), align: 'center', exemple: !accrocheEcrite }),
-    w('spacer', { height: 22 }),
+    w('spacer', { height: 24 }),
     w('button', {
       text: 'Nous contacter', href: lienContact(brief), align: 'center', exemple: false,
     }),
-  ], { padding: ton.heroPadding }));
+  ]));
 
   // --- 2. Ce que vous proposez ---------------------------------------
   sections.push(section([
+    w('etiquette', { text: nomMetier(brief), align: 'center', exemple: false }),
     w('heading', { text: titreOffres(brief), level: 'h2', align: 'center', exemple: false }),
-    w('spacer', { height: 26 }),
-    w('columns', { count: Math.min(3, prestations.length) || 1 },
-      prestations.slice(0, 3).map((p) => [
-        w('heading', { text: p.titre, level: 'h3', exemple: !p.propre && !p.titre }),
+    w('spacer', { height: 28 }),
+    w('columns', { count: Math.min(3, prestations.length) || 1, gap: 20 },
+      prestations.slice(0, 3).map((p, rang) => [
+        // Une carte quand on a une image à mettre dessous : le titre se pose
+        // sur le visuel au lieu de le suivre. Sinon, titre puis texte.
+        ...(images[rang + 1]
+          ? [w('carte', {
+            image: images[rang + 1], titre: p.titre, sousTitre: '', hauteur: 320, exemple: false,
+          })]
+          : [w('heading', { text: p.titre, level: 'h3', exemple: !p.propre && !p.titre })]),
         w('text', { html: echapper(p.texte), exemple: !p.propre }),
       ])),
-  ]));
+  ], { padding: 88 }));
 
   // --- 3. Qui vous êtes ----------------------------------------------
   sections.push(section([
-    w('columns', { count: 2, gap: 44 }, [
-      [w('image', { src: image(0), alt: brief.activite, exemple: false })],
+    w('columns', { count: 2, gap: 54, ratio: '1-2' }, [
+      [w('image', { src: image(4), alt: brief.activite, exemple: false })],
       [
+        w('etiquette', { text: 'Notre histoire', exemple: false }),
         w('heading', { text: 'Qui nous sommes', level: 'h2', exemple: false }),
         w('text', { html: echapper(presentation), exemple: !textes?.presentation }),
         ...(atouts.length ? [
@@ -91,15 +105,9 @@ export function redigerPage(brief, { images = [], textes = null } = {}) {
     ]),
   ]));
 
-  // --- 4. En images ----------------------------------------------------
-  if (images.length > 1) {
-    sections.push(section([
-      w('heading', { text: 'En images', level: 'h2', align: 'center', exemple: false }),
-      w('spacer', { height: 22 }),
-      w('columns', { count: 3, gap: 16 },
-        [1, 2, 3].map((rang) => [w('image', { src: image(rang), alt: '', exemple: false })])),
-    ]));
-  }
+  // Plus de section « En images » : les visuels sont désormais DANS les
+  // cartes des prestations et dans le bandeau. Une galerie en plus ne faisait
+  // que rallonger la page sans rien composer.
 
   // --- 5. Nous trouver -------------------------------------------------
   sections.push(section([
@@ -116,7 +124,7 @@ export function redigerPage(brief, { images = [], textes = null } = {}) {
 
   return {
     sections,
-    besoinImages: 4,
+    besoinImages: 5,
     requetes: motsClesPhotos(brief),
   };
 }
@@ -139,6 +147,18 @@ function fusionnerPrestations(prestations, proposees) {
       propre: true,
     };
   });
+}
+
+/**
+ * L'étiquette au-dessus du titre de section. La ville est déjà dans le
+ * bandeau : la répéter deux écrans plus bas ne dit rien de neuf.
+ */
+function nomMetier(brief) {
+  if (brief.metier === 'boutique') return 'Notre sélection';
+  if (brief.metier === 'association') return 'Sur le terrain';
+  if (brief.metier === 'hebergement') return 'Le lieu';
+  if (brief.metier === 'restaurant' || brief.metier === 'alimentaire') return 'À la carte';
+  return 'Nos prestations';
 }
 
 /** Titre de la section des prestations, adapté à ce qu'on vend. */

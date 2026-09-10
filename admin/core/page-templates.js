@@ -14,6 +14,56 @@ const T = (texte) => ({ html: texte });
 
 export const PAGE_TEMPLATES = [
   {
+    id: 'editorial',
+    pour: ['vitrine', 'portfolio'], resume: 3,
+    apercu: ['bar', 'trio', 'duo', 'bar'],
+    build: () => [
+      // Un bandeau plein cadre : l'image porte la page, le texte se pose
+      // dessus. C'est la première chose qu'on voit sur les mises en page
+      // qu'on admire, et une section ordinaire ne sait pas le faire.
+      w('hero', { hauteur: 'grande', voile: 45, align: 'center' }, [
+        w('etiquette', { text: 'Depuis 1974', align: 'center' }),
+        w('heading', { text: 'Le titre de votre site', level: 'h2', align: 'center' }),
+        w('text', { ...T('Une phrase qui dit en quelques mots ce que vous proposez.'), align: 'center' }),
+        w('spacer', { height: 24 }),
+        w('button', { text: 'Nous découvrir', href: '#suite', align: 'center' }),
+      ]),
+
+      section([
+        w('etiquette', { text: 'Ce que nous faisons', align: 'center' }),
+        w('heading', { text: 'Trois façons de nous rencontrer', level: 'h2', align: 'center' }),
+        w('spacer', { height: 30 }),
+        // Des cartes, pas une image suivie d'un titre : le texte est POSÉ sur
+        // l'image, ce qui est une composition et non un empilement.
+        w('columns', { count: 3, gap: 18 }, [
+          [w('carte', { titre: 'Premier lieu', sousTitre: 'CATÉGORIE', hauteur: 340 })],
+          [w('carte', { titre: 'Deuxième lieu', sousTitre: 'CATÉGORIE', hauteur: 340 })],
+          [w('carte', { titre: 'Troisième lieu', sousTitre: 'CATÉGORIE', hauteur: 340 })],
+        ]),
+      ], { padding: 88 }),
+
+      section([
+        // Deux tiers / un tiers : c'est le déséquilibre qui fait respirer une
+        // page. Deux colonnes égales donnent toujours l'air d'un gabarit.
+        w('columns', { count: 2, gap: 54, ratio: '2-1' }, [
+          [
+            w('etiquette', { text: 'Notre histoire' }),
+            w('heading', { text: 'Qui nous sommes', level: 'h2' }),
+            w('text', T('Racontez votre parcours, ce qui vous distingue, et pourquoi on vient chez vous plutôt qu’ailleurs.')),
+          ],
+          [w('image', { alt: '' })],
+        ]),
+      ], { padding: 88 }),
+
+      w('hero', { hauteur: 'moyenne', voile: 55, align: 'center' }, [
+        w('heading', { text: 'Une phrase qui donne envie', level: 'h2', align: 'center' }),
+        w('spacer', { height: 20 }),
+        w('button', { text: 'Nous contacter', href: 'contact.html', align: 'center' }),
+      ]),
+    ],
+  },
+
+  {
     id: 'onepage',
     pour: ['vitrine'], resume: 3,
     apercu: ['bar', 'trio', 'duo', 'trio'],

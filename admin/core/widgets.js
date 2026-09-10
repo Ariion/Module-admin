@@ -18,7 +18,21 @@ import { applyStyleObject } from './style.js';
 import { catalogueFiltre, prixLisible, boutonAchat } from './boutique.js';
 
 /** Catégories affichées dans le panneau, dans l'ordre. */
-export const CATEGORIES = ['structure', 'basique', 'media', 'boutique'];
+/** Hauteurs du bandeau d'accueil. « plein » vise la hauteur de l'écran. */
+const HAUTEURS_HERO = { moyenne: '46vh', grande: '70vh', plein: '100vh' };
+
+/** Proportions possibles pour deux colonnes. */
+const RATIOS = { '1-2': '1fr 2fr', '2-1': '2fr 1fr', '1-3': '1fr 3fr', '3-1': '3fr 1fr' };
+
+/** Les pistes d'une grille de colonnes, selon le nombre et la proportion. */
+function pistesColonnes(p) {
+  const nombre = Math.max(1, Math.min(4, p.count || 2));
+  // Une proportion ne veut rien dire au-delà de deux colonnes.
+  if (nombre === 2 && RATIOS[p.ratio]) return RATIOS[p.ratio];
+  return `repeat(${nombre}, minmax(0, 1fr))`;
+}
+
+export const CATEGORIES = ['mise-en-page', 'structure', 'basique', 'media', 'boutique'];
 
 /**
  * Définition d'un widget.
@@ -34,6 +48,61 @@ export const WIDGETS = {
     ],
   },
 
+  /**
+   * Le bandeau d'accueil : une image plein cadre, un voile, du texte par
+   * dessus. C'est ce qui manquait le plus — toutes les mises en page qu'on
+   * admire commencent par là, et une section ordinaire ne sait pas le faire :
+   * elle centre une boîte sur un fond uni.
+   */
+  hero: {
+    category: 'mise-en-page', icon: 'image', container: true,
+    defaults: () => ({
+      image: '', voile: 45, hauteur: 'grande', align: 'center', texte: 'clair',
+      maxWidth: 900, padding: 24,
+    }),
+    fields: [
+      { key: 'image', type: 'media', label: 'heroImage', accept: 'image' },
+      { key: 'hauteur', type: 'select', label: 'heroHauteur',
+        options: ['moyenne', 'grande', 'plein'] },
+      { key: 'voile', type: 'number', label: 'heroVoile', min: 0, max: 90, step: 5 },
+      { key: 'texte', type: 'select', label: 'heroTexte', options: ['clair', 'sombre'] },
+      { key: 'align', type: 'align', label: 'alignLabel' },
+      { key: 'maxWidth', type: 'number', label: 'blockWidth', min: 320, max: 1600, step: 20 },
+    ],
+  },
+
+  /**
+   * Une carte média : l'image ET son titre, en un seul bloc, le texte posé
+   * sur le bas de l'image. Empiler « image » puis « titre » donne autre
+   * chose — deux blocs qui se suivent, pas une carte.
+   */
+  carte: {
+    category: 'mise-en-page', icon: 'image',
+    defaults: () => ({
+      image: '', titre: 'Un lieu', sousTitre: 'PAYS', href: '', hauteur: 300,
+    }),
+    fields: [
+      { key: 'image', type: 'media', label: 'carteImage', accept: 'image' },
+      { key: 'titre', type: 'text', label: 'carteTitre' },
+      { key: 'sousTitre', type: 'text', label: 'carteSousTitre' },
+      { key: 'hauteur', type: 'number', label: 'carteHauteur', min: 140, max: 700, step: 10 },
+      { key: 'href', type: 'text', label: 'linkHref' },
+    ],
+  },
+
+  /**
+   * L'étiquette : trois mots en capitales espacées au-dessus d'un titre.
+   * C'est un détail, et c'est le détail qui sépare une page d'un document.
+   */
+  etiquette: {
+    category: 'mise-en-page', icon: 'text',
+    defaults: () => ({ text: 'Depuis 1974', align: 'left' }),
+    fields: [
+      { key: 'text', type: 'text', label: 'textLabel' },
+      { key: 'align', type: 'align', label: 'alignLabel' },
+    ],
+  },
+
   column: {
     category: 'structure', icon: 'columns', container: true, hidden: true,
     defaults: () => ({}),
@@ -42,9 +111,13 @@ export const WIDGETS = {
 
   columns: {
     category: 'structure', icon: 'columns', container: true, columns: true,
-    defaults: () => ({ count: 2, gap: 28 }),
+    defaults: () => ({ count: 2, gap: 28, ratio: 'egal' }),
     fields: [
       { key: 'count', type: 'select', label: 'columnCount', options: [2, 3, 4] },
+      // Deux colonnes strictement égales sont ce qui donne l'air « gabarit ».
+      // Un texte à côté d'une image veut presque toujours un déséquilibre.
+      { key: 'ratio', type: 'select', label: 'columnRatio',
+        options: ['egal', '1-2', '2-1', '1-3', '3-1'] },
       { key: 'gap', type: 'number', label: 'gapLabel', min: 0, max: 120, step: 4 },
     ],
   },
@@ -219,6 +292,130 @@ export function renderWidget(noeud, doc, contexte = {}) {
       break;
     }
 
+    case 'hero': {
+      el = doc.createElement('section');
+      el.style.position = 'relative';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.style.minHeight = HAUTEURS_HERO[p.hauteur] || HAUTEURS_HERO.grande;
+      el.style.overflow = 'hidden';
+      // La feuille du site met presque toujours du rembourrage sur `section`
+      // et contraint `section > *` à une largeur maximale. Sur un bandeau
+      // plein cadre, cela laisserait le voile au centre et l'image nue sur
+      // les bords. On neutralise donc les deux, ici seulement.
+      el.style.padding = '0';
+
+      const fond = safeImageUrl(p.image);
+      if (fond) {
+        el.style.backgroundImage = `url("${fond.replace(/"/g, '%22')}")`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+      }
+
+      // Le voile est ce qui rend le texte lisible sur n'importe quelle photo.
+      // Sans lui, une image claire avale un titre blanc.
+      const voile = Math.max(0, Math.min(90, Number(p.voile ?? 45)));
+      if (fond && voile) {
+        const rideau = doc.createElement('div');
+        rideau.setAttribute('aria-hidden', 'true');
+        rideau.style.cssText = 'position:absolute;inset:0;max-width:none;margin:0;';
+        rideau.style.background = p.texte === 'sombre'
+          ? `rgba(255,255,255,${voile / 100})`
+          : `rgba(0,0,0,${voile / 100})`;
+        el.appendChild(rideau);
+      }
+
+      const dedans = doc.createElement('div');
+      dedans.style.position = 'relative';
+      dedans.style.width = '100%';
+      dedans.style.maxWidth = (p.maxWidth || 900) + 'px';
+      dedans.style.margin = '0 auto';
+      dedans.style.padding = '64px 24px';
+      appliquerAlignement(dedans, p.align || 'center');
+      rendreEnfants(noeud.children, dedans, doc, contexte);
+      el.appendChild(dedans);
+
+      // La feuille de style du site fixe la couleur des titres : hériter ne
+      // suffirait pas. On la pose donc sur chaque descendant qui n'en a pas
+      // déjà une à lui.
+      if (fond) {
+        const encre = p.texte === 'sombre' ? '#12141a' : '#ffffff';
+        dedans.style.color = encre;
+        for (const enfant of dedans.querySelectorAll('*')) {
+          if (!enfant.style.color) enfant.style.color = 'inherit';
+        }
+      }
+
+      // Un titre de bandeau n'a pas la taille d'un titre de section. La
+      // feuille du site plafonne les h2 autour de 35 px ; sur une image plein
+      // cadre, c'est ce qui fait « document » plutôt que « page ». On grossit,
+      // sans écraser une taille que le client aurait choisie lui-même.
+      for (const titre of dedans.querySelectorAll('h1, h2, h3')) {
+        if (titre.style.fontSize) continue;
+        titre.style.fontSize = 'clamp(2.4rem, 6.5vw, 4.8rem)';
+        titre.style.lineHeight = '1.05';
+      }
+      break;
+    }
+
+    case 'carte': {
+      const lien = safeUrl(p.href);
+      el = doc.createElement(lien ? 'a' : 'div');
+      if (lien) { el.setAttribute('href', lien); el.style.textDecoration = 'none'; }
+      el.style.position = 'relative';
+      el.style.display = 'flex';
+      el.style.flexDirection = 'column';
+      el.style.justifyContent = 'flex-end';
+      el.style.minHeight = Math.max(140, Math.min(700, Number(p.hauteur) || 300)) + 'px';
+      el.style.overflow = 'hidden';
+      el.style.color = '#fff';
+
+      const visuel = safeImageUrl(p.image);
+      if (visuel) {
+        el.style.backgroundImage = `url("${visuel.replace(/"/g, '%22')}")`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+      } else {
+        el.style.background = '#20242c';
+      }
+
+      // Un dégradé plutôt qu'un voile uniforme : l'image reste visible en
+      // haut, le texte reste lisible en bas.
+      const ombre = doc.createElement('span');
+      ombre.setAttribute('aria-hidden', 'true');
+      ombre.style.cssText = 'position:absolute;inset:0;'
+        + 'background:linear-gradient(transparent 35%, rgba(0,0,0,.72));';
+      el.appendChild(ombre);
+
+      const pied = doc.createElement('span');
+      pied.style.cssText = 'position:relative;display:block;padding:22px 22px 20px;';
+      if (p.titre) {
+        const titre = doc.createElement('strong');
+        titre.textContent = remplacerJetons(p.titre);
+        titre.style.cssText = 'display:block;font-size:1.3em;line-height:1.2;color:inherit;';
+        pied.appendChild(titre);
+      }
+      if (p.sousTitre) {
+        const sous = doc.createElement('span');
+        sous.textContent = remplacerJetons(p.sousTitre);
+        sous.style.cssText = 'display:block;margin-top:6px;font-size:.72em;'
+          + 'letter-spacing:.16em;text-transform:uppercase;opacity:.82;color:inherit;';
+        pied.appendChild(sous);
+      }
+      el.appendChild(pied);
+      break;
+    }
+
+    case 'etiquette': {
+      el = doc.createElement('p');
+      el.textContent = remplacerJetons(p.text);
+      el.style.cssText = 'font-size:.74em;letter-spacing:.18em;text-transform:uppercase;'
+        + 'margin:0 0 14px;opacity:.7;';
+      appliquerAlignement(el, p.align);
+      break;
+    }
+
     case 'column': {
       el = doc.createElement('div');
       el.style.minWidth = '0';
@@ -229,7 +426,7 @@ export function renderWidget(noeud, doc, contexte = {}) {
     case 'columns': {
       el = doc.createElement('div');
       el.style.display = 'grid';
-      el.style.gridTemplateColumns = `repeat(${Math.max(1, Math.min(4, p.count || 2))}, minmax(0, 1fr))`;
+      el.style.gridTemplateColumns = pistesColonnes(p);
       el.style.gap = (p.gap ?? 28) + 'px';
       rendreEnfants(noeud.children, el, doc, contexte);
       break;

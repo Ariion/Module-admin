@@ -1,5 +1,35 @@
 # Journal des versions
 
+## 1.8.0
+
+**Composer une page, et plus seulement l'empiler**
+
+Le vocabulaire du module se résumait à « des blocs les uns sous les
+autres, dans une colonne centrée ». Aucune des mises en page qu'on admire
+sur Behance ou Pinterest n'est faite comme ça, et aucun réglage de couleur
+n'y changeait rien : le manque était structurel.
+
+- **Bandeau d'accueil** : une image plein cadre, un voile réglable, le
+  texte posé dessus. Hauteur moyenne, grande ou plein écran. C'est ce par
+  quoi commencent toutes les références. Une section ordinaire ne savait
+  pas le faire : elle centre une boîte sur un fond uni.
+- **Carte image** : le titre est POSÉ sur l'image, avec un dégradé qui le
+  rend lisible. Empiler « image » puis « titre » donnait deux blocs qui se
+  suivent, pas une carte.
+- **Colonnes en proportions** : un tiers / deux tiers, trois quarts / un
+  quart. Deux colonnes strictement égales sont ce qui donne l'air
+  « gabarit ».
+- **Étiquette** : trois mots en capitales espacées au-dessus d'un titre.
+  C'est un détail, et c'est le détail qui sépare une page d'un document.
+- Nouveau modèle de page **Éditorial**, construit avec ces quatre-là.
+- **Le questionnaire s'en sert** : « Écrire ma page » produit désormais un
+  bandeau plein cadre, des cartes pour les prestations et des colonnes
+  déséquilibrées, au lieu d'une suite de blocs centrés.
+
+**Corrections**
+- Les listes déroulantes des réglages affichaient leur valeur brute
+  (« moyenne », « 1-2 ») au lieu d'un libellé lisible.
+
 ## 1.7.0
 
 **Tout recommencer**

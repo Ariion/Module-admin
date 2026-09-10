@@ -152,6 +152,17 @@ export function createInspector({ vue, t, actions }) {
   }
 
   function champWidget(noeud, f) {
+    /**
+     * Le libellé d'un choix. Une liste déroulante affichait sa valeur brute —
+     * « moyenne », « 1-2 » — ce qui ne veut rien dire pour le client. On
+     * cherche une traduction, et on retombe sur la valeur s'il n'y en a pas.
+     */
+    const libelleOption = (base, option) => {
+      const cle = `${base}_${option}`;
+      const traduit = t(cle);
+      return traduit === cle ? String(option) : traduit;
+    };
+
     const valeur = noeud.props[f.key];
     const ecrire = (v) => actions.setWidgetProps(noeud.key, { [f.key]: v });
 
@@ -159,7 +170,9 @@ export function createInspector({ vue, t, actions }) {
       case 'select':
         return champ(t(f.label), h('select', {
           class: 'input', onchange: (e) => ecrire(e.target.value),
-        }, f.options.map((o) => h('option', { value: o, selected: String(o) === String(valeur) }, String(o)))));
+        }, f.options.map((o) => h('option', {
+          value: o, selected: String(o) === String(valeur),
+        }, libelleOption(f.label, o)))));
 
       case 'number':
         return champ(t(f.label), h('input', {
