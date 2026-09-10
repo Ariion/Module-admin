@@ -17,6 +17,7 @@ import { paths } from './data/schema.js';
 import { setDebug, debug, safe } from './core/log.js';
 import { actionsDe, attacherActions } from './core/actions.js';
 import { poserPanier } from './core/boutique.js';
+import { animerApparitions } from './core/effets.js';
 import { ready, emitter } from './core/util.js';
 
 const EDITOR_SESSION_KEY = 'admin:editing';
@@ -94,11 +95,28 @@ class AdminRuntime {
     }, null, 'actions');
     // Le panier n'est chargé que si le site en a un, et une seule fois.
     safe(() => poserPanier(document, this.model.reglages?.boutique), null, 'panier');
+    // Du contenu vient d'arriver : il a pu apporter de nouveaux blocs animés.
+    this.animer();
     this.snapshot = snapshot;
     debug('contenu appliqué depuis', origin, result);
     this.events.emit('applied', { snapshot, origin, ...result });
     safe(() => this.config.onApplied?.({ origin, ...result }), null, 'onApplied');
     return result;
+  }
+
+  /**
+   * Fait apparaître les blocs animés quand ils entrent dans l'écran.
+   *
+   * Appelée au démarrage ET après chaque application de contenu : sur une
+   * page régénérée les blocs sont déjà dans le HTML, sur une page vivante ils
+   * arrivent avec l'instantané. Rien n'est masqué si le navigateur ne sait pas
+   * observer, ou si le visiteur a demandé moins d'animations.
+   */
+  animer() {
+    safe(() => {
+      this.detacherAnimations?.();
+      this.detacherAnimations = animerApparitions(document);
+    }, null, 'animations');
   }
 
   /** Récupère le contenu publié (lecture publique, sans SDK). */
@@ -195,6 +213,10 @@ async function boot() {
     // concerne, mais les deux visent des éléments distincts.
     if (cachedCommun) safe(() => runtime.apply(cachedCommun, 'cache-commun'), null, 'apply-cache-commun');
     if (cached) safe(() => runtime.apply(cached, 'cache'), null, 'apply-cache');
+    // Les apparitions ne dépendent pas du contenu : sur une page régénérée,
+    // les blocs animés sont DÉJÀ dans le HTML et il n'y a rien à appliquer.
+    // Les installer ici, c'est les faire marcher même sans réseau.
+    if (!editorRequested(config)) runtime.animer();
     if (editorRequested(config)) runtime.openEditor().catch((err) => console.error('[admin]', err));
   });
 

@@ -13,9 +13,13 @@ import {
   sectionFieldKey, ops as sectionOps,
 } from './sections.js';
 import { createWidget, renderWidget, findWidget, removeWidget, WIDGETS } from './widgets.js';
-import { compileCustomCss, writeCustomSheet } from './style.js';
+import { compileCustomCss, writeCustomSheet, applyStyleObject } from './style.js';
 import { writeFontLink } from './fonts.js';
 import { writeThemeSheet, policesDuTheme } from './theme.js';
+import { cssDesEffets, writeEffetsSheet } from './effets.js';
+
+/** Réglages qui décident de la classe d'effets d'un bloc. */
+const EFFETS_CLES = ['survol', 'clic', 'entree', 'dureeEffet'];
 import { findPageTemplate } from './page-templates.js';
 import { clone, equal, uid } from './util.js';
 import { debug, safe } from './log.js';
@@ -196,6 +200,7 @@ export class PageModel {
 
     this.refreshTheme();
     this.refreshCustomCss();
+    this.refreshEffets();
     this.refreshFonts();
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
     return { applied, orphans: [...this.orphans.values()] };
@@ -397,6 +402,7 @@ export class PageModel {
 
     this.rerenderSection(cible.record.key);
     this.refreshCustomCss();
+    this.refreshEffets();
     this.refreshFonts();
     return true;
   }
@@ -431,6 +437,26 @@ export class PageModel {
    */
   refreshTheme() {
     safe(() => writeThemeSheet(this.doc, this.reglages?.theme), null, 'theme');
+  }
+
+  /**
+   * Réunit les effets de la page dans leur propre feuille.
+   *
+   * Séparée du CSS personnalisé parce qu'elle contient des règles d'écran et
+   * des pseudo-éléments, que l'assainisseur du CSS saisi à la main refuse —
+   * à juste titre : celui-là vient du client, celui-ci vient de nous.
+   */
+  refreshEffets() {
+    const morceaux = [];
+    for (const valeur of this.styles.values()) morceaux.push(cssDesEffets(valeur));
+    const parcourir = (noeuds) => {
+      for (const noeud of noeuds || []) {
+        if (noeud.props?.style) morceaux.push(cssDesEffets(noeud.props.style));
+        if (noeud.children) parcourir(noeud.children);
+      }
+    };
+    for (const record of this.widgetSections()) parcourir([record.tree]);
+    safe(() => writeEffetsSheet(this.doc, morceaux), null, 'effets');
   }
 
   /**
@@ -506,6 +532,13 @@ export class PageModel {
     applyValue(el, 'style', { ...patch });
     if ('customCss' in patch) this.refreshCustomCss();
     if ('fontFamily' in patch) this.refreshFonts();
+    // La classe des effets dépend de TOUT l'habillage, pas du seul réglage
+    // qu'on vient de toucher : la recalculer sur la fusion évite de perdre le
+    // survol quand on choisit ensuite l'effet de clic.
+    if (EFFETS_CLES.some((cle) => cle in patch)) {
+      applyStyleObject(el, fusion, { groupes: ['effets'] });
+      this.refreshEffets();
+    }
     return fusion;
   }
 

@@ -32,6 +32,7 @@ import { openLegal } from './legal-panel.js';
 import { openBoutique } from './boutique-panel.js';
 import { filePathOf, labelOf } from '../core/pages.js';
 import { ouvrirAction } from '../core/actions.js';
+import { animerApparitions } from '../core/effets.js';
 import { etapesDuGuide } from '../core/guide.js';
 import { illustrations } from '../core/illustrations.js';
 import { remettreAZero, remettreLeSiteAZero } from '../core/reset.js';
@@ -297,6 +298,7 @@ export async function startEditor(runtime) {
   }
 
   let guide = null;
+  let detacherAnimations = null;
   let hoteBibliotheque = null;
   let hoteInspecteur = null;
   let retourBibliotheque = null;
@@ -1257,9 +1259,15 @@ export async function startEditor(runtime) {
     if (state.editing) {
       overlay.enable();
       shell.setPreview(false);
+      // En édition, rien n'est masqué : un bloc qu'on modifie doit se voir.
+      detacherAnimations?.();
+      detacherAnimations = null;
     } else {
       textEditor.commit();
       overlay.disable();
+      // En prévisualisation, la page se comporte comme pour le visiteur —
+      // c'est le seul endroit où juger une apparition au défilement.
+      detacherAnimations = safe(() => animerApparitions(model.doc), null, 'animations');
       shell.setPreview(true, {
         retour: () => togglePreview(false),
         site: () => ouvrirLeSite(),

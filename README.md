@@ -38,6 +38,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Images libres de droits** | Recherche **sans aucune clé** via Openverse, restreinte aux licences qui n'obligent à créditer personne. Une clé Pixabay gratuite, saisie depuis les réglages du module, donne accès à un catalogue plus large. Sur un hébergement PHP, l'image choisie est rapatriée dans le dossier du site plutôt que pointée à distance. Voir [docs/IMAGES.md](docs/IMAGES.md). |
 | **Les clés se saisissent depuis le module** | Bouton *Réglages* : clé de la banque d'images, clé de rédaction. Aucun fichier à ouvrir. Les deux ne sont pas traitées pareil — celle de Pixabay est gratuite et rejoint les réglages du site ; celle de l'IA est facturée, part vers le script PHP de l'hébergement et **n'en revient jamais** (le module sait qu'une clé existe, pas laquelle). |
 | **Prévisualisation** | Le panneau s'efface, le site prend tout l'écran, et une barre noire dit où l'on est : *Mode prévisualisation*, avec *Retourner à la modification* et *Aller sur le site*. Les liens sont cliquables — on parcourt le site page par page. Si des modifications ne sont pas publiées, la barre le signale. |
+| **Effets et animations** | Une bibliothèque dans l'habillage de chaque bloc : **au survol** (s'élever, grandir, s'éclaircir, zoomer l'image à l'intérieur, souligner d'un trait qui se déploie…), **au clic** (s'enfoncer, éclair), et **à l'apparition au défilement** (fondu, monter, glisser…), avec quatre vitesses. Survol et clic sont du CSS pur : ils marchent même sans le module. L'apparition est conditionnée à une marque que seul le module pose — **sans JavaScript, le bloc reste simplement visible**. Tout respecte « animations réduites ». |
 | **Blocs répétables** | Dupliquer, réordonner, supprimer une carte de la liste — dans le gabarit prévu par le développeur, sans pouvoir casser la mise en page. |
 | **Brouillon puis publication** | Enregistrement automatique du brouillon, bouton « Publier », historique des versions et restauration. |
 | **Tout recommencer** | Un outil rend au site son code d'origine — cette page seulement, ou le site entier avec l'ambiance et le catalogue. La fenêtre montre ce qui est effacé et ce qui ne l'est pas : le code du client, la bibliothèque média et l'historique restent intacts. L'opération publie un contenu vide au lieu de supprimer quoi que ce soit, donc **on peut revenir en arrière depuis l'historique**. |
@@ -126,6 +127,7 @@ admin/                    le module (à copier tel quel sur un site)
 ├── core/guide.js         le parcours pas à pas, déduit de la page
 ├── core/reset.js         rendre au site son code d'origine
 ├── core/reperes.js       repères d'alignement et distances (sans DOM)
+├── core/effets.js        survol, clic, apparition au défilement
 ├── core/illustrations.js images d'exemple dessinées d'après l'ambiance
 ├── core/page-templates.js modèles de page entière
 ├── core/fonts.js         polices et chargement à la demande

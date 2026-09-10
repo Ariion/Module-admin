@@ -13,6 +13,7 @@
  */
 import { hash } from './util.js';
 import { safeImageUrl } from './sanitize.js';
+import { CATALOGUE, DUREES, classeDesEffets, CLASSE_ANIMEE, ENTREE } from './effets.js';
 import { fontStack, fontName } from './fonts.js';
 
 export const CUSTOM_STYLE_ID = 'admin-custom-css';
@@ -59,9 +60,17 @@ export const STYLE_FIELDS = [
   { group: 'place', key: 'decalageX', virtuel: true, type: 'number', unit: 'px', label: 'offsetX', min: -400, max: 400, step: 1 },
   { group: 'place', key: 'decalageY', virtuel: true, type: 'number', unit: 'px', label: 'offsetY', min: -400, max: 400, step: 1 },
   { group: 'place', key: 'rotation', virtuel: true, type: 'number', unit: 'deg', label: 'rotationLabel', min: -180, max: 180, step: 1 },
+
+  // Les effets ne s'écrivent pas en style en ligne : ils demandent des états
+  // (`:hover`, `:active`) et parfois une règle d'écran. Ils sont donc
+  // virtuels ici, et produisent une classe et une feuille à part.
+  { group: 'effets', key: 'survol', virtuel: true, type: 'select', label: 'effetSurvol', options: CATALOGUE.survol },
+  { group: 'effets', key: 'clic', virtuel: true, type: 'select', label: 'effetClic', options: CATALOGUE.clic },
+  { group: 'effets', key: 'entree', virtuel: true, type: 'select', label: 'effetEntree', options: CATALOGUE.entree },
+  { group: 'effets', key: 'dureeEffet', virtuel: true, type: 'select', label: 'effetDuree', options: DUREES },
 ];
 
-export const STYLE_GROUPS = ['colors', 'type', 'space', 'border', 'place'];
+export const STYLE_GROUPS = ['colors', 'type', 'space', 'border', 'place', 'effets'];
 
 const PAR_CLE = new Map(STYLE_FIELDS.map((f) => [f.key, f]));
 
@@ -141,6 +150,34 @@ export function applyStyleObject(el, style, options = {}) {
     change = appliquerPlacement(el, style) || change;
   }
   if ('customCss' in style) change = appliquerClassePerso(el, style.customCss) || change;
+  if (!groupes || groupes.includes('effets')) change = appliquerClasseEffets(el, style) || change;
+  return change;
+}
+
+/**
+ * Pose la classe des effets, et la marque d'animation quand le bloc doit
+ * apparaître au défilement.
+ *
+ * La marque est une CLASSE et non un attribut : les attributs `data-admin-*`
+ * sont retirés à la régénération du HTML, alors qu'une classe survit. Sans
+ * cela, un site régénéré perdrait ses apparitions.
+ */
+function appliquerClasseEffets(el, style) {
+  const nouvelle = classeDesEffets(style);
+  const ancienne = Array.from(el.classList).find((c) => c.startsWith('admin-e-'));
+  const animee = !!ENTREE[style?.entree];
+  let change = false;
+
+  if (ancienne !== nouvelle) {
+    if (ancienne) el.classList.remove(ancienne);
+    if (nouvelle) el.classList.add(nouvelle);
+    change = true;
+  }
+  if (el.classList.contains(CLASSE_ANIMEE) !== animee) {
+    el.classList.toggle(CLASSE_ANIMEE, animee);
+    if (!animee) el.removeAttribute('data-admin-vu');
+    change = true;
+  }
   return change;
 }
 

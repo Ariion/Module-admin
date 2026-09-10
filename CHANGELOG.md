@@ -1,5 +1,38 @@
 # Journal des versions
 
+## 1.11.0
+
+**Bibliothèque d'effets et d'animations**
+- Nouveau groupe **Effets et animations** dans l'habillage de chaque bloc,
+  avec trois familles et une vitesse.
+- **Au survol** : s'élever avec une ombre, grandir, rétrécir, s'éclaircir,
+  s'assombrir, faire apparaître un contour, pencher, zoomer l'image à
+  l'intérieur, souligner d'un trait qui se déploie.
+- **Au clic** : s'enfoncer, descendre et s'assombrir, éclair lumineux.
+- **À l'apparition, au défilement** : fondu, monter, descendre, glisser
+  depuis la gauche ou la droite, grandir en fondu.
+- Quatre vitesses, de vive à lente.
+
+**Ce que ça ne casse pas**
+- Le survol et le clic sont du **CSS pur** : ils survivent à la régénération
+  du HTML et continuent de fonctionner si le module est retiré du site.
+- L'apparition est le seul effet qui demande le module. Son état masqué est
+  conditionné à une marque que seul le module pose sur `<html>` : **sans
+  JavaScript, sans le module, ou avec « animations réduites » activé, le
+  bloc reste simplement visible**. Aucun contenu ne peut disparaître.
+- Tout est enveloppé dans `prefers-reduced-motion`.
+- En édition rien n'est masqué — un bloc qu'on modifie doit se voir. Les
+  apparitions se jouent dans la **prévisualisation**, comme chez le visiteur.
+
+**Corrections**
+- Deux effets sur un même bloc écrasaient mutuellement leur `transition` :
+  s'élever au survol puis s'enfoncer au clic donnait un survol à 90 ms. Les
+  déclarations sont désormais rassemblées par sélecteur, et la transition du
+  clic vit sur l'état enfoncé.
+- L'observateur d'apparitions n'était installé qu'après une application de
+  contenu. Sur une page régénérée — où les blocs sont déjà dans le HTML et où
+  il n'y a rien à appliquer — les animations ne se déclenchaient jamais.
+
 ## 1.10.0
 
 **Des repères pendant qu'on déplace un bloc**

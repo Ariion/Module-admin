@@ -579,6 +579,7 @@ export function createInspector({ vue, t, actions }) {
       groupes.push(groupe(t('grp_' + nom), iconeGroupe(nom),
         () => [
           nom === 'place' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('placeHint')) : null,
+          nom === 'effets' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('effetsHint')) : null,
           ...champs.map((f) => champStyle(f, valeurs[f.key], ecrire)),
         ],
         nom === 'colors' ? ouvertPremier !== false : false));
@@ -608,7 +609,7 @@ export function createInspector({ vue, t, actions }) {
   }
 
   function iconeGroupe(nom) {
-    return { colors: 'palette', type: 'heading', space: 'spacer', border: 'section', place: 'drag' }[nom] || 'palette';
+    return { colors: 'palette', type: 'heading', space: 'spacer', border: 'section', place: 'drag', effets: 'eye' }[nom] || 'palette';
   }
 
   function champStyle(f, valeur, ecrire) {
@@ -634,7 +635,8 @@ export function createInspector({ vue, t, actions }) {
           class: 'input', onchange: (e) => ecrit(e.target.value),
         }, f.options.map((o) => h('option', {
           value: o, selected: String(o) === String(valeur ?? ''),
-        }, o === '' ? t('inherited') : etiquetteOption(o)))));
+        }, o === '' ? t(f.group === 'effets' ? 'effetAucun' : 'inherited')
+          : etiquetteOption(o, f)))));
       case 'align':
         return champ(t(f.label), h('div', { class: 'seg' },
           ['left', 'center', 'right'].map((a) => h('button', {
@@ -661,8 +663,15 @@ export function createInspector({ vue, t, actions }) {
     }
   }
 
-  function etiquetteOption(o) {
+  function etiquetteOption(o, f) {
     if (['gauche', 'centre', 'droite'].includes(o)) return t('placement_' + o);
+    // Un effet porte un nom, pas une valeur technique : « Élever » plutôt
+    // que « elever ». On cherche la traduction, on retombe sur la valeur.
+    if (f?.label) {
+      const cle = `${f.label}_${o}`;
+      const traduit = t(cle);
+      if (traduit !== cle) return traduit;
+    }
     const court = String(o);
     return court.length > 22 ? t('shadowPreset') : court;
   }
