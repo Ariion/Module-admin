@@ -1249,6 +1249,38 @@ select.input { appearance: none; cursor: pointer; }
 .theme[aria-pressed="true"] .theme__nom { color: var(--text); }
 .theme__portee { margin-top: 12px; }
 
+/* --- Diagnostic clavier ------------------------------------------------ */
+.clav {
+  position: fixed; right: 16px; bottom: 16px; z-index: 40;
+  width: min(430px, 46vw); max-height: 62vh; display: flex; flex-direction: column;
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); pointer-events: auto;
+}
+.clav__tete {
+  display: flex; align-items: center; gap: 8px; padding: 9px 10px 9px 13px;
+  border-bottom: 1px solid var(--line-soft); font-size: 12.5px; font-weight: 600;
+}
+.clav__corps { flex: 1; min-height: 0; overflow: auto; padding: 13px; }
+.clav__pied {
+  display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+  border-top: 1px solid var(--line-soft);
+}
+@media (max-width: 700px) {
+  .clav { right: 8px; left: 8px; width: auto; max-height: 52vh; }
+}
+.clav__verdict {
+  white-space: pre-wrap; padding: 12px 14px; border-radius: var(--radius);
+  border: 1px solid var(--line-soft); background: var(--bg-soft);
+  font-size: 12.5px; line-height: 1.55; margin-bottom: 14px;
+}
+.clav__table { border-collapse: collapse; width: 100%; font-size: 11.5px; }
+.clav__table th, .clav__table td {
+  border: 1px solid var(--line-soft); padding: 4px 7px; text-align: left; vertical-align: top;
+}
+.clav__table th { background: var(--bg-soft); font-weight: 600; }
+.clav__ko { color: var(--danger); font-weight: 600; }
+.clav__ok { color: var(--ok); }
+
 @media (max-width: 700px) {
   .themes { grid-template-columns: repeat(2, 1fr); }
   .guide__exemples { grid-template-columns: repeat(3, 1fr); }

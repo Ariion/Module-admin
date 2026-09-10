@@ -1,5 +1,32 @@
 # Journal des versions
 
+## 1.13.0
+
+**« Une lettre ne s'écrit pas » — le module sait maintenant répondre**
+
+Nouvel outil, dans **Outils du site**. Une fenêtre flottante — pas une fenêtre
+modale : on continue d'écrire pendant qu'elle relève. Chaque touche pressée y
+apparaît, dans le panneau comme dans la page, avec :
+
+- **où** elle a été pressée (panneau ou page) et dans quel champ,
+- si du code l'a **annulée** au passage,
+- si un caractère a **réellement été écrit**,
+- si **Ctrl, Alt ou Cmd** était enfoncé — une lettre accompagnée de Ctrl
+  n'écrit pas, elle déclenche un raccourci ; une touche modificatrice restée
+  coincée suffit à faire disparaître une lettre.
+
+Le bilan sépare les quatre endroits où un caractère peut se perdre, et dit
+lequel : avant la page (extension, logiciel de clavier, système), dans la
+page (du code l'annule), au navigateur (rien n'est inséré), ou dans le
+module. Une touche pressée qui n'apparaît nulle part dans le relevé n'est
+jamais parvenue jusqu'à la page — c'est déjà une réponse.
+
+Bouton **Copier le rapport** : le relevé complet, plus le navigateur et la
+langue, en texte brut, à coller dans un message.
+
+Vérifié en simulant le défaut signalé — une extension qui bloque le « c » :
+la fenêtre nomme la touche, la marque ANNULÉE, et conclut.
+
 ## 1.12.3
 
 **Une page pour savoir d'où vient une lettre qui manque**

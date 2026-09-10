@@ -42,6 +42,7 @@ export const GROUPES_OUTILS = [
     id: 'module',
     outils: [
       { cle: 'reglages', icone: 'sliders' },
+      { cle: 'clavier', icone: 'search' },
       // En dernier, et signalé : c'est la seule ligne qui défait du travail.
       { cle: 'reset', icone: 'history', danger: true },
     ],

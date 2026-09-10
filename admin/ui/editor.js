@@ -21,6 +21,7 @@ import { openTheme } from './theme-panel.js';
 import { openReglages } from './reglages-panel.js';
 import { openOutils } from './outils-panel.js';
 import { openReset } from './reset-panel.js';
+import { openClavier } from './clavier-panel.js';
 import { createLibrary } from './library.js';
 import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
@@ -903,6 +904,11 @@ export async function startEditor(runtime) {
    * côte à côte sans hiérarchie ; ils ont maintenant une fenêtre où chacun
    * est nommé et expliqué.
    */
+  /** Diagnostic clavier : où se perd une touche qui ne s'écrit pas. */
+  function ouvrirClavier() {
+    openClavier({ root, t, docApercu: model?.doc || null });
+  }
+
   function ouvrirOutils() {
     openOutils({
       root, t,
@@ -917,6 +923,7 @@ export async function startEditor(runtime) {
         boutique: () => ouvrirBoutique(),
         legal: () => ouvrirLegal(),
         reglages: () => ouvrirReglages(),
+        clavier: () => ouvrirClavier(),
         reset: () => ouvrirReset(),
       },
     });
