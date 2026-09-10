@@ -1,5 +1,16 @@
 # Journal des versions
 
+## 1.8.1
+
+**Correction : l'habillage d'un bouton ne se voyait pas**
+- Un bouton est un lien seul dans un bloc ; c'est le LIEN qu'on voit à
+  l'écran. L'habillage était appliqué au bloc qui le centre, donc changer
+  la couleur, la forme ou la bordure d'un bouton n'avait aucun effet
+  visible.
+- Désormais, le placement du bloc dans sa section reste sur le bloc, et
+  tout le reste — couleurs, typographie, bordures, arrondi — va sur le
+  lien. Un bouton peut enfin devenir un cercle, un contour, un lien nu.
+
 ## 1.8.0
 
 **Composer une page, et plus seulement l'empiler**

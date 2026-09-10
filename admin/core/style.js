@@ -106,13 +106,23 @@ function versCss(champ, brut) {
  * Applique un objet de réglages à un élément.
  * @returns {boolean} true si quelque chose a changé
  */
-export function applyStyleObject(el, style) {
+/**
+ * @param {Element} el
+ * @param {object} style
+ * @param {{groupes?: string[]}} [options] n'appliquer que ces groupes. Sert
+ *   aux éléments composés d'une enveloppe et d'un contenu — un bouton, par
+ *   exemple : le PLACEMENT concerne le bloc dans sa section, le reste
+ *   concerne le lien lui-même.
+ */
+export function applyStyleObject(el, style, options = {}) {
   if (!el || !style || typeof style !== 'object') return false;
+  const groupes = options.groupes || null;
+  const retenu = (champ) => !groupes || groupes.includes(champ.group);
   let change = false;
 
   for (const [cle, brut] of Object.entries(style)) {
     const champ = PAR_CLE.get(cle);
-    if (!champ || champ.virtuel) continue;
+    if (!champ || champ.virtuel || !retenu(champ)) continue;
 
     const css = versCss(champ, brut);
     if (css === null) continue;
@@ -126,7 +136,10 @@ export function applyStyleObject(el, style) {
     if (el.style[champ.css] !== css) { el.style[champ.css] = css; change = true; }
   }
 
-  if (COMPOSES.some((cle) => cle in style)) change = appliquerPlacement(el, style) || change;
+  const placeVoulu = !groupes || groupes.includes('place');
+  if (placeVoulu && COMPOSES.some((cle) => cle in style)) {
+    change = appliquerPlacement(el, style) || change;
+  }
   if ('customCss' in style) change = appliquerClassePerso(el, style.customCss) || change;
   return change;
 }

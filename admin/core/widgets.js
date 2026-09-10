@@ -18,6 +18,15 @@ import { applyStyleObject } from './style.js';
 import { catalogueFiltre, prixLisible, boutonAchat } from './boutique.js';
 
 /** Catégories affichées dans le panneau, dans l'ordre. */
+/**
+ * Éléments dont l'habillage vise un enfant plutôt que l'enveloppe.
+ * Le bouton est le seul cas aujourd'hui, et c'en est un vrai : ce qu'on voit
+ * à l'écran est le lien, pas le bloc qui le centre.
+ */
+const CIBLES_STYLE = {
+  button: (el) => el.querySelector('a'),
+};
+
 /** Hauteurs du bandeau d'accueil. « plein » vise la hauteur de l'écran. */
 const HAUTEURS_HERO = { moyenne: '46vh', grande: '70vh', plein: '100vh' };
 
@@ -668,7 +677,18 @@ export function renderWidget(noeud, doc, contexte = {}) {
   }
 
   // Habillage propre au widget : même schéma que pour les éléments du site.
-  if (p.style) applyStyleObject(el, p.style);
+  if (p.style) {
+    // Un bouton est un lien seul dans un bloc : c'est le LIEN qu'on voit.
+    // Sans cette distinction, changer la couleur ou la forme d'un bouton
+    // habillait l'enveloppe invisible et ne se voyait nulle part.
+    const interieur = CIBLES_STYLE[noeud.type]?.(el);
+    if (interieur) {
+      applyStyleObject(el, p.style, { groupes: ['place', 'space'] });
+      applyStyleObject(interieur, p.style, { groupes: ['colors', 'type', 'border'] });
+    } else {
+      applyStyleObject(el, p.style);
+    }
+  }
 
   el.setAttribute('data-admin-widget', noeud.key);
   el.setAttribute('data-admin-type', noeud.type);
