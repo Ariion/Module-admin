@@ -1,5 +1,23 @@
 # Journal des versions
 
+## 1.10.0
+
+**Des repères pendant qu'on déplace un bloc**
+- Une ligne apparaît dès qu'un bord ou un centre du bloc tombe sur celui de
+  sa section ou d'un voisin, et le bloc s'y **accroche**. Le centre a sa
+  propre couleur : c'est l'alignement qu'on cherche le plus souvent, il doit
+  être reconnaissable d'un coup d'œil.
+- Les **distances aux voisins d'en face** s'affichent en même temps, avec la
+  valeur en pixels. Un voisin en diagonale n'est pas mesuré : il n'apprend
+  rien et ne ferait que du bruit.
+- **Alt** désactive l'aimant, pour poser le bloc exactement où l'on veut.
+  **Maj** bloque toujours un seul axe.
+- La géométrie vit dans `core/reperes.js`, sans DOM : elle se vérifie sans
+  navigateur.
+- Les voisins et la section sont mesurés une seule fois, au début du geste :
+  relire la mise en page à chaque pixel serait le seul vrai coût du
+  mécanisme, et il est évitable.
+
 ## 1.9.0
 
 **Une poignée pour poser les blocs où on veut**

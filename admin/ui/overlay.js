@@ -8,6 +8,7 @@
  */
 import { h, icon, clear } from './el.js';
 import { applyStyleObject } from '../core/style.js';
+import { reperesDe, accrocher, ecarts, translater, TOLERANCE } from '../core/reperes.js';
 
 const LABELS = { text: 'text', image: 'image', link: 'link', background: 'background' };
 
@@ -41,8 +42,26 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
   const ligneDepot = h('div', { class: 'dropline' });
   const zonesVides = [];
   const mesure = h('span', { class: 'dragnum' });
-  layer.append(cadreWidget, outilsWidget, ligneDepot, mesure);
+  // Les repères d'alignement : deux lignes, et jusqu'à quatre mesures
+  // d'écart. Toutes sont créées une fois et réutilisées — en créer à chaque
+  // mouvement de souris ferait ramer le glissement.
+  const ligneX = h('span', { class: 'guide guide--v' });
+  const ligneY = h('span', { class: 'guide guide--h' });
+  const cotes = Array.from({ length: 4 }, () => ({
+    trait: h('span', { class: 'cote' }),
+    valeur: h('span', { class: 'cote__n' }),
+  }));
+  layer.append(cadreWidget, outilsWidget, ligneDepot, ligneX, ligneY, mesure);
+  for (const c of cotes) layer.append(c.trait, c.valeur);
   cacher(cadreWidget); cacher(outilsWidget); cacher(ligneDepot); cacher(mesure);
+  cacher(ligneX); cacher(ligneY);
+  for (const c of cotes) { cacher(c.trait); cacher(c.valeur); }
+
+  /** Efface tous les repères du glissement. */
+  function effacerReperes() {
+    cacher(ligneX); cacher(ligneY);
+    for (const c of cotes) { cacher(c.trait); cacher(c.valeur); }
+  }
 
   let widgetSurvole = null;
   let typeEnCours = null;
@@ -284,11 +303,27 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
       event.preventDefault();
       event.stopPropagation();
       const base = styleDe();
+
+      // Les voisins et la section ne bougent pas pendant le geste : on les
+      // mesure une fois. Lire la mise en page à chaque pixel serait le seul
+      // vrai coût de ce mécanisme, et il est évitable.
+      const section = el.closest('[data-admin-section], section') || el.parentElement;
+      const freres = [];
+      for (const voisin of el.parentElement?.children || []) {
+        if (voisin === el) continue;
+        const r = voisin.getBoundingClientRect();
+        if (r.width && r.height) freres.push(r);
+      }
+
       geste = {
         x: event.clientX, y: event.clientY,
         dx: Number(base.decalageX) || 0,
         dy: Number(base.decalageY) || 0,
         base,
+        rect: el.getBoundingClientRect(),
+        freres,
+        reperes: reperesDe(section?.getBoundingClientRect(), freres),
+        section: section?.getBoundingClientRect(),
       };
       poignee.setPointerCapture(event.pointerId);
       poignee.classList.add('wtools__grab--on');
@@ -301,16 +336,29 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
       const brutX = geste.dx + (event.clientX - geste.x);
       const brutY = geste.dy + (event.clientY - geste.y);
       const horizontal = Math.abs(event.clientX - geste.x) >= Math.abs(event.clientY - geste.y);
-      const x = borne(event.shiftKey && !horizontal ? geste.dx : brutX);
-      const y = borne(event.shiftKey && horizontal ? geste.dy : brutY);
+      let x = borne(event.shiftKey && !horizontal ? geste.dx : brutX);
+      let y = borne(event.shiftKey && horizontal ? geste.dy : brutY);
+
+      // Où le bloc serait s'il suivait la souris sans rien d'autre.
+      let vise = translater(geste.rect, x - geste.dx, y - geste.dy);
+
+      // Alt enfoncée : on veut poser le bloc exactement là, sans aimant.
+      const prise = event.altKey
+        ? { dx: 0, dy: 0, ligneX: null, ligneY: null }
+        : accrocher(vise, geste.reperes, TOLERANCE);
+      if (prise.dx) x = borne(x + prise.dx);
+      if (prise.dy) y = borne(y + prise.dy);
+      vise = translater(geste.rect, x - geste.dx, y - geste.dy);
 
       geste.dernier = { decalageX: x, decalageY: y };
       applyStyleObject(el, { ...geste.base, ...geste.dernier });
-      mesure.textContent = `${x > 0 ? '+' : ''}${x} · ${y > 0 ? '+' : ''}${y}`;
-      const cadreRect = el.getBoundingClientRect();
+
       const decalage = origin();
-      mesure.style.left = (decalage.x + cadreRect.left) + 'px';
-      mesure.style.top = (decalage.y + cadreRect.top - 26) + 'px';
+      mesure.textContent = `${x > 0 ? '+' : ''}${x} · ${y > 0 ? '+' : ''}${y}`;
+      mesure.style.left = (decalage.x + vise.left) + 'px';
+      mesure.style.top = (decalage.y + vise.top - 26) + 'px';
+
+      dessinerReperes(prise, vise, geste, decalage);
       placer(cadreWidget, el);
     });
 
@@ -320,6 +368,7 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
       geste = null;
       poignee.classList.remove('wtools__grab--on');
       cacher(mesure);
+      effacerReperes();
       try { poignee.releasePointerCapture(event.pointerId); } catch { /* déjà relâché */ }
       // Rien n'a bougé : on ne salit pas l'historique pour un simple clic.
       if (fini) onWidgetMove?.(key, fini);
@@ -329,6 +378,57 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     poignee.addEventListener('pointercancel', finir);
 
     return poignee;
+  }
+
+  /**
+   * Dessine les repères du glissement : les lignes d'alignement et les
+   * distances aux voisins d'en face.
+   */
+  function dessinerReperes(prise, vise, geste, decalage) {
+    const section = geste.section;
+
+    if (prise.ligneX && section) {
+      ligneX.style.left = (decalage.x + prise.ligneX.ligne) + 'px';
+      ligneX.style.top = (decalage.y + Math.min(section.top, vise.top) - 12) + 'px';
+      ligneX.style.height = (Math.max(section.bottom, vise.bottom)
+        - Math.min(section.top, vise.top) + 24) + 'px';
+      ligneX.classList.toggle('guide--centre', prise.ligneX.type === 'centre');
+      montrer(ligneX);
+    } else cacher(ligneX);
+
+    if (prise.ligneY && section) {
+      ligneY.style.top = (decalage.y + prise.ligneY.ligne) + 'px';
+      ligneY.style.left = (decalage.x + Math.min(section.left, vise.left) - 12) + 'px';
+      ligneY.style.width = (Math.max(section.right, vise.right)
+        - Math.min(section.left, vise.left) + 24) + 'px';
+      ligneY.classList.toggle('guide--centre', prise.ligneY.type === 'centre');
+      montrer(ligneY);
+    } else cacher(ligneY);
+
+    const mesures = ecarts(vise, geste.freres);
+    cotes.forEach((cote, i) => {
+      const e = mesures[i];
+      if (!e) { cacher(cote.trait); cacher(cote.valeur); return; }
+      const taille = Math.round(e.taille);
+      if (e.axe === 'v') {
+        cote.trait.style.left = (decalage.x + e.centre) + 'px';
+        cote.trait.style.top = (decalage.y + e.de) + 'px';
+        cote.trait.style.height = (e.a - e.de) + 'px';
+        cote.trait.style.width = '';
+        cote.valeur.style.left = (decalage.x + e.centre + 6) + 'px';
+        cote.valeur.style.top = (decalage.y + (e.de + e.a) / 2 - 9) + 'px';
+      } else {
+        cote.trait.style.top = (decalage.y + e.centre) + 'px';
+        cote.trait.style.left = (decalage.x + e.de) + 'px';
+        cote.trait.style.width = (e.a - e.de) + 'px';
+        cote.trait.style.height = '';
+        cote.valeur.style.left = (decalage.x + (e.de + e.a) / 2 - 12) + 'px';
+        cote.valeur.style.top = (decalage.y + e.centre - 22) + 'px';
+      }
+      cote.trait.classList.toggle('cote--h', e.axe === 'h');
+      cote.valeur.textContent = taille + ' px';
+      montrer(cote.trait); montrer(cote.valeur);
+    });
   }
 
   /** Dessine une invite de dépôt sur chaque conteneur vide. */
@@ -481,6 +581,7 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
   const reposition = () => {
     if (!actif) {
       for (const n of [cadre, cadreActif, cadreWidget, cadreSection, ...FLOTTANTS]) cacher(n);
+      effacerReperes();
       return;
     }
     placer(cadre, survole?.el);

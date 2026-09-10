@@ -1002,6 +1002,37 @@ select.input { appearance: none; cursor: pointer; }
 .outil__aide { color: var(--faint); font-size: 11.5px; line-height: 1.4; }
 .outil > svg:last-child { color: var(--faint); flex: none; }
 
+/* ----------------------------------------- Repères d'alignement
+   Les lignes qui apparaissent pendant qu'on déplace un bloc. Fines, vives,
+   et sans ombre : un repère doit se voir sans peser sur ce qu'on regarde. */
+.guide {
+  position: absolute; z-index: 5; pointer-events: none;
+  background: var(--sect);
+}
+.guide--v { width: 1px; }
+.guide--h { height: 1px; }
+/* Le centre se distingue d'un simple bord aligné : c'est l'accroche qu'on
+   cherche le plus souvent, elle mérite d'être reconnaissable. */
+.guide--centre { background: #ff5db1; box-shadow: 0 0 6px rgba(255,93,177,.6); }
+
+.cote {
+  position: absolute; z-index: 5; pointer-events: none;
+  width: 1px; background: repeating-linear-gradient(
+    to bottom, var(--accent-hi) 0 3px, transparent 3px 6px);
+}
+.cote--h {
+  height: 1px; width: auto;
+  background: repeating-linear-gradient(
+    to right, var(--accent-hi) 0 3px, transparent 3px 6px);
+}
+.cote__n {
+  position: absolute; z-index: 6; pointer-events: none;
+  padding: 1px 6px; border-radius: 4px;
+  background: var(--accent); color: #fff;
+  font-size: 10.5px; font-weight: 650; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* --------------------------------------------- Poignée de déplacement
    On attrape le bloc et on le pose où on veut dans sa section. Le curseur
    dit ce qui va se passer avant même qu'on clique — c'est ce qui fait la
