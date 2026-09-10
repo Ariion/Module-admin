@@ -190,7 +190,10 @@ export function createInspector({ vue, t, actions }) {
     };
 
     const valeur = noeud.props[f.key];
-    const ecrire = (v) => actions.setWidgetProps(noeud.key, { [f.key]: v });
+    // Le panneau affiche déjà ce qu'on vient de saisir : le redessiner à
+    // chaque frappe ne servirait qu'à reprendre le focus du champ. Les
+    // réglages qui font apparaître d'autres champs appellent `render` eux-mêmes.
+    const ecrire = (v) => actions.setWidgetProps(noeud.key, { [f.key]: v }, { garderPanneau: true });
 
     switch (f.type) {
       case 'select':

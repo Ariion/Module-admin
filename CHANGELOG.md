@@ -1,5 +1,26 @@
 # Journal des versions
 
+## 1.12.1
+
+**On peut écrire, tout simplement**
+
+Signalé : « quand j'écris, ça ne fait qu'une lettre par lettre, je suis
+obligé de recliquer pour modifier une lettre — pareil pour l'espace ou
+supprimer ». Le panneau se redessinait à chaque frappe et reprenait le
+curseur du champ : une lettre, puis plus rien.
+
+- Un réglage saisi depuis le panneau **ne redessine plus le panneau**. Il
+  affiche déjà ce qu'on vient d'écrire ; seul l'aperçu a besoin d'être mis à
+  jour. Plus de redessin, plus de curseur perdu.
+- Filet de sécurité pour tout le reste : quand un panneau se redessine
+  vraiment, le champ en cours de saisie **retrouve le curseur, exactement à
+  la position où il était** — au milieu d'un mot comme à la fin. Vaut aussi
+  pour la recherche de la bibliothèque et pour les champs du Guide.
+
+Vérifié au navigateur : une phrase entière tapée d'un trait, une correction
+insérée au milieu, deux retours arrière — tout se comporte comme dans
+n'importe quel formulaire.
+
 ## 1.12.0
 
 **Animer une carte AVEC sa légende**

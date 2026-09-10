@@ -171,10 +171,10 @@ export async function startEditor(runtime) {
           } catch { /* index média indisponible */ }
           return resultat;
         },
-        setWidgetProps: (key, patch) => {
+        setWidgetProps: (key, patch, options) => {
           if (!model.setWidgetProps(key, patch)) return;
           markDirty();
-          apresStructure(key);
+          apresStructure(key, options);
         },
         widgetOp: (key, op, arg) => widgetOp(key, op, arg),
         widgetElement: (key) => model.doc.querySelector(`[data-admin-widget="${key}"]`),
@@ -356,19 +356,26 @@ export async function startEditor(runtime) {
   }
 
   /** Rafraîchit l'aperçu après une modification d'arbre, puis resélectionne. */
-  function apresStructure(key) {
+  /**
+   * @param {object} [options]
+   * @param {boolean} [options.garderPanneau] ne pas redessiner l'inspecteur —
+   *   la modification vient de lui, il affiche déjà la bonne valeur.
+   */
+  function apresStructure(key, options = {}) {
     overlay.refresh(model);
     navigator.render(model);
     guide?.render();
-    if (key) selectWidget(key);
+    if (key) selectWidget(key, options);
   }
 
-  function selectWidget(key) {
+  function selectWidget(key, options = {}) {
     const cible = model.findWidgetNode(key);
     if (!cible) return;
     const el = model.doc.querySelector(`[data-admin-widget="${key}"]`);
     if (el) overlay.setActive(el);
-    inspector.render({ widget: cible.noeud, el });
+    // Redessiner le panneau à chaque frappe reprenait le focus du champ :
+    // on tapait une lettre, puis il fallait recliquer pour la suivante.
+    if (!options.garderPanneau) inspector.render({ widget: cible.noeud, el });
     showInspector();
   }
 

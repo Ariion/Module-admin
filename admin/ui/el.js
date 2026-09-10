@@ -60,12 +60,59 @@ function conteneurDefilant(node) {
 export function rendreSansSauter(node, rendu) {
   const boite = conteneurDefilant(node);
   const avant = boite ? boite.scrollTop : 0;
+  const saisie = releverSaisie(node);
   rendu();
+  reposerSaisie(node, saisie);
   if (!boite || !avant) return;
   // Après remplissage le contenu peut être plus court : on se cale au plus
   // bas possible plutôt que de forcer une position qui n'existe plus.
   const max = Math.max(0, boite.scrollHeight - boite.clientHeight);
   boite.scrollTop = Math.min(avant, max);
+}
+
+/** Le champ en cours de saisie, repéré par sa place dans l'arbre. */
+function releverSaisie(node) {
+  const racine = node.getRootNode?.();
+  const actif = racine?.activeElement;
+  if (!actif || actif === node || !node.contains(actif)) return null;
+
+  // Un chemin d'indices : sur un redessin de la MÊME chose, l'arbre reprend
+  // la même forme, et le champ se retrouve à la même place.
+  const chemin = [];
+  for (let el = actif; el && el !== node; el = el.parentElement) {
+    chemin.unshift(Array.prototype.indexOf.call(el.parentElement.children, el));
+  }
+  const selectionnable = /^(INPUT|TEXTAREA)$/.test(actif.tagName)
+    && !/^(checkbox|radio|color|range|file)$/.test(actif.type || '');
+  return {
+    chemin, balise: actif.tagName,
+    debut: selectionnable ? actif.selectionStart : null,
+    fin: selectionnable ? actif.selectionEnd : null,
+  };
+}
+
+/**
+ * Rend le curseur au champ où l'on était en train d'écrire.
+ *
+ * Sans cela, un panneau qui se redessine à chaque frappe reprend le focus
+ * après chaque lettre : on tape un caractère, et il faut recliquer pour le
+ * suivant. La position du curseur est reposée telle quelle, sinon on
+ * écrirait à la fin d'un mot qu'on corrigeait au milieu.
+ */
+function reposerSaisie(node, saisie) {
+  if (!saisie) return;
+  let el = node;
+  for (const index of saisie.chemin) {
+    el = el?.children?.[index];
+    if (!el) return;
+  }
+  // L'arbre a changé de forme : mieux vaut ne rien faire que voler le focus
+  // à un champ qui n'est pas celui d'où l'on vient.
+  if (el.tagName !== saisie.balise) return;
+  try {
+    el.focus({ preventScroll: true });
+    if (saisie.debut != null) el.setSelectionRange(saisie.debut, saisie.fin);
+  } catch { /* champ qui n'accepte ni focus ni sélection */ }
 }
 
 /** Icônes SVG inline (aucune police ni fichier externe). */
