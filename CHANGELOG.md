@@ -1,5 +1,27 @@
 # Journal des versions
 
+## 1.12.0
+
+**Animer une carte AVEC sa légende**
+
+Signalé : un effet de survol posé sur une carte image fait monter l'image,
+mais le texte juste en dessous reste immobile — « ça fait étrange ». C'est
+que l'effet visait la carte seule, alors que ce qu'on voit comme *une* carte
+est en réalité deux blocs empilés dans une colonne.
+
+Il manquait simplement de quoi viser l'ensemble. Deux chemins, désormais :
+
+- **Dans la barre d'outils du bloc**, un bouton en forme de cadre sélectionne
+  le bloc qui contient celui-ci — sa colonne, presque toujours. On y pose
+  l'effet, et tout monte ensemble : image et légende.
+- **Dans le groupe *Effets et animations***, un bouton « Animer tout le
+  groupe (colonne) » propose directement le même raccourci, à l'endroit où
+  la question se pose. Il n'apparaît que quand il y a bien un ensemble à
+  animer : un bloc seul dans son conteneur n'en a pas.
+
+Rien n'est deviné à votre place : le module propose, vous choisissez. Un
+effet sur la carte seule reste possible, si c'est ce que vous voulez.
+
 ## 1.11.3
 
 **Un groupe de réglages qu'on a ouvert reste ouvert**

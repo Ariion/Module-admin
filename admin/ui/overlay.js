@@ -285,13 +285,24 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
       onclick: (e) => { e.preventDefault(); e.stopPropagation(); action(); },
     }, icon(nom, 12));
 
-    outilsWidget.append(
+    // Le bloc qui contient celui-ci — presque toujours sa colonne. Sans ce
+    // raccourci, un effet posé sur une carte laissait sa légende immobile :
+    // il fallait pouvoir viser l'ensemble, et rien ne le permettait.
+    const parent = el.parentElement?.closest('[data-admin-widget]') || null;
+    const typeParent = parent?.getAttribute('data-admin-type');
+    const versParent = parent && typeParent !== 'section'
+      ? bouton('parent', t('selectParent', t('w_' + typeParent)),
+        () => onWidgetSelect?.(parent.getAttribute('data-admin-widget')))
+      : null;
+
+    outilsWidget.append(...[
       poigneeDeplacement(key, el),
       h('span', { class: 'wtools__name' }, t('w_' + type)),
+      versParent,
       bouton('up', t('moveUp'), () => onWidgetOp(key, 'move', -1)),
       bouton('down', t('moveDown'), () => onWidgetOp(key, 'move', 1)),
       bouton('trash', t('remove'), () => onWidgetOp(key, 'remove')),
-    );
+    ].filter(Boolean));
     outilsWidget.style.left = (decalage.x + rect.left) + 'px';
     outilsWidget.style.top = (decalage.y + Math.max(rect.top - 27, 2)) + 'px';
     montrer(outilsWidget);

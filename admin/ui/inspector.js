@@ -310,7 +310,25 @@ export function createInspector({ vue, t, actions }) {
         return { ...effectifs, ...(noeud.props.style || {}) };
       },
       (patch) => actions.setWidgetProps(noeud.key, { style: patch }),
+      undefined,
+      { ensemble: () => blocAutour(noeud.key) },
     );
+  }
+
+  /**
+   * Le bloc qui entoure celui-ci, s'il en contient d'autres. Une section a
+   * ses propres réglages ailleurs, et un bloc seul dans son conteneur n'a
+   * pas d'« ensemble » à animer : dans les deux cas, rien à proposer.
+   */
+  function blocAutour(key) {
+    const el = actions.widgetElement?.(key);
+    const parent = el?.parentElement?.closest('[data-admin-widget]');
+    if (!parent) return null;
+    const type = parent.getAttribute('data-admin-type');
+    if (type === 'section') return null;
+    const voisins = Array.from(parent.children).filter((n) => n.hasAttribute('data-admin-widget'));
+    if (voisins.length < 2) return null;
+    return { key: parent.getAttribute('data-admin-widget'), nom: t('w_' + type) };
   }
 
   // ---------------------------------------------------------- structure
@@ -605,11 +623,29 @@ export function createInspector({ vue, t, actions }) {
 
   // -------------------------------------------------------------- style
   /**
+   * « Appliquer plutôt à tout le groupe ».
+   *
+   * Un effet posé sur une carte laisse sa légende immobile — la carte monte,
+   * le texte en dessous reste. Neuf fois sur dix c'est l'ensemble qu'on veut
+   * animer. Le raccourci ne devine rien : il propose, et sélectionne le bloc
+   * qui contient celui-ci pour qu'on y pose l'effet.
+   *
+   * @param {{key:string, nom:string}|null} parent
+   */
+  function boutonEnsemble(parent) {
+    if (!parent) return null;
+    return h('button', {
+      class: 'btn btn--wide', type: 'button', style: { marginBottom: '12px' },
+      onclick: () => actions.selectWidget(parent.key),
+    }, icon('parent', 13), t('effetsEnsemble', parent.nom));
+  }
+
+  /**
    * Panneau d'habillage, construit à partir du schéma partagé. Le même code
    * sert aux éléments du site et aux widgets : seules les fonctions de
    * lecture et d'écriture changent.
    */
-  function panneauStyle(lire, ecrire, ouvertPremier) {
+  function panneauStyle(lire, ecrire, ouvertPremier, options = {}) {
     const valeurs = lire();
     const groupes = [];
 
@@ -620,6 +656,7 @@ export function createInspector({ vue, t, actions }) {
         () => [
           nom === 'place' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('placeHint')) : null,
           nom === 'effets' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('effetsHint')) : null,
+          nom === 'effets' ? boutonEnsemble(options.ensemble?.()) : null,
           ...champs.map((f) => champStyle(f, valeurs[f.key], ecrire)),
         ],
         nom === 'colors' ? ouvertPremier !== false : false));

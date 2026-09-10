@@ -178,6 +178,7 @@ export async function startEditor(runtime) {
         },
         widgetOp: (key, op, arg) => widgetOp(key, op, arg),
         widgetElement: (key) => model.doc.querySelector(`[data-admin-widget="${key}"]`),
+        selectWidget: (key) => selectWidget(key),
       },
     });
 
