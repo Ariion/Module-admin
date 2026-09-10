@@ -13,18 +13,9 @@ import { h, icon, clear } from './el.js';
 import { openModal } from './modal.js';
 import { INTENTIONS, composerPropositions } from '../core/page-templates.js';
 import { rendreChoixTheme } from './theme-panel.js';
+import { apercuPage } from './apercu-page.js';
 
 const MODES = ['une', 'plusieurs'];
-
-/** Petit schéma de la trame : une barre par section. */
-function apercu(formes) {
-  return h('span', { class: 'pagetpl__preview' }, formes.map((forme) => {
-    if (forme === 'bar') return h('span', { class: 'pagetpl__band' });
-    const n = forme === 'duo' ? 2 : 3;
-    return h('span', { class: 'pagetpl__row' },
-      Array.from({ length: n }, () => h('span', { class: 'pagetpl__cell' })));
-  }));
-}
 
 /**
  * @param {object} options
@@ -144,7 +135,7 @@ export function openWizard({ root, t, onApply, onSkip, onBrief, peutCreerPages =
           'aria-pressed': index === choisie ? 'true' : 'false',
           onclick: () => { choisie = index; dessiner(); },
         },
-          apercu(proposition.apercu),
+          apercuPage(proposition.apercu, theme),
           h('span', { class: 'assist__propMain' },
             h('span', { class: 'assist__propTitre' }, t('wizardProp_' + proposition.id)),
             h('span', { class: 'assist__propMeta' },

@@ -16,7 +16,7 @@ export const PAGE_TEMPLATES = [
   {
     id: 'editorial',
     pour: ['vitrine', 'portfolio'], resume: 3,
-    apercu: ['bar', 'trio', 'duo', 'bar'],
+    apercu: ['hero', { type: 'cartes', n: 3 }, { type: 'duo', ratio: '2-1' }, 'hero'],
     build: () => [
       // Un bandeau plein cadre : l'image porte la page, le texte se pose
       // dessus. C'est la première chose qu'on voit sur les mises en page
@@ -66,7 +66,7 @@ export const PAGE_TEMPLATES = [
   {
     id: 'onepage',
     pour: ['vitrine'], resume: 3,
-    apercu: ['bar', 'trio', 'duo', 'trio'],
+    apercu: ['hero', 'texte', { type: 'cartes', n: 3 }, { type: 'duo', image: 'gauche' }],
     build: () => [
       section([
         w('heading', { text: 'Le titre de votre site', level: 'h2', align: 'center' }),
@@ -116,7 +116,7 @@ export const PAGE_TEMPLATES = [
   {
     id: 'vente',
     pour: ['vente'], resume: 3,
-    apercu: ['bar', 'trio', 'duo', 'bar'],
+    apercu: ['hero', { type: 'cartes', n: 3 }, 'bande', { type: 'duo', ratio: '1-2' }],
     build: () => [
       section([
         w('heading', { text: 'La promesse, en une phrase', level: 'h2', align: 'center' }),
@@ -158,7 +158,7 @@ export const PAGE_TEMPLATES = [
   {
     id: 'portfolio',
     pour: ['portfolio'], resume: 2,
-    apercu: ['bar', 'trio', 'trio', 'duo'],
+    apercu: ['texte', { type: 'cartes', n: 3 }, { type: 'cartes', n: 3 }, 'bande'],
     build: () => [
       section([
         w('heading', { text: 'Mon travail', level: 'h2' }),
@@ -181,7 +181,7 @@ export const PAGE_TEMPLATES = [
   {
     id: 'contact',
     pour: ['contact'], resume: 2,
-    apercu: ['bar', 'duo', 'bar'],
+    apercu: ['texte', { type: 'duo', ratio: '1-1' }, 'bande'],
     build: () => [
       section([
         w('heading', { text: 'Nous contacter', level: 'h2' }),
@@ -208,7 +208,7 @@ export const PAGE_TEMPLATES = [
   {
     id: 'apropos',
     pour: ['histoire'], resume: 2,
-    apercu: ['bar', 'duo', 'trio'],
+    apercu: ['hero', { type: 'duo', image: 'gauche' }, { type: 'cartes', n: 3 }],
     build: () => [
       section([
         w('heading', { text: 'Notre histoire', level: 'h2', align: 'center' }),
@@ -235,7 +235,7 @@ export const PAGE_TEMPLATES = [
   {
     id: 'article',
     pour: ['article'], resume: 2,
-    apercu: ['bar', 'bar', 'duo'],
+    apercu: ['texte', { type: 'photo', hauteur: 30 }, 'texte', 'bande'],
     build: () => [
       section([
         w('heading', { text: 'Le titre de votre article', level: 'h2' }),

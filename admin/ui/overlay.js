@@ -7,10 +7,11 @@
  * @module ui/overlay
  */
 import { h, icon, clear } from './el.js';
+import { applyStyleObject } from '../core/style.js';
 
 const LABELS = { text: 'text', image: 'image', link: 'link', background: 'background' };
 
-export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSectionOp, onAddSection, onReposition, onWidgetOp, onWidgetDrop, onWidgetSelect }) {
+export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSectionOp, onAddSection, onReposition, onWidgetOp, onWidgetDrop, onWidgetSelect, onWidgetMove, widgetStyle }) {
   let doc = null;
   let win = null;
   let model = null;
@@ -39,8 +40,9 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
   const outilsWidget = h('div', { class: 'wtools' });
   const ligneDepot = h('div', { class: 'dropline' });
   const zonesVides = [];
-  layer.append(cadreWidget, outilsWidget, ligneDepot);
-  cacher(cadreWidget); cacher(outilsWidget); cacher(ligneDepot);
+  const mesure = h('span', { class: 'dragnum' });
+  layer.append(cadreWidget, outilsWidget, ligneDepot, mesure);
+  cacher(cadreWidget); cacher(outilsWidget); cacher(ligneDepot); cacher(mesure);
 
   let widgetSurvole = null;
   let typeEnCours = null;
@@ -247,6 +249,7 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     }, icon(nom, 12));
 
     outilsWidget.append(
+      poigneeDeplacement(key, el),
       h('span', { class: 'wtools__name' }, t('w_' + type)),
       bouton('up', t('moveUp'), () => onWidgetOp(key, 'move', -1)),
       bouton('down', t('moveDown'), () => onWidgetOp(key, 'move', 1)),
@@ -255,6 +258,77 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     outilsWidget.style.left = (decalage.x + rect.left) + 'px';
     outilsWidget.style.top = (decalage.y + Math.max(rect.top - 27, 2)) + 'px';
     montrer(outilsWidget);
+  }
+
+  /**
+   * La poignée : on attrape le bloc et on le pose où on veut dans sa section.
+   *
+   * Le déplacement est une TRANSFORMÉE, pas une marge — c'est ce qui permet
+   * de bouger un bloc sans que la mise en page autour ne bronche, et donc
+   * sans casser le site. Pendant le geste, on écrit directement dans le DOM
+   * de l'aperçu : régénérer la section à chaque pixel serait saccadé. Le
+   * modèle n'est mis à jour qu'au relâchement.
+   */
+  function poigneeDeplacement(key, el) {
+    const poignee = h('button', {
+      class: 'btn btn--sm btn--icon wtools__grab', type: 'button',
+      title: t('dragMove'), 'aria-label': t('dragMove'),
+    }, icon('drag', 13));
+
+    let geste = null;
+
+    const styleDe = () => ({ ...(widgetStyle?.(key) || {}) });
+    const borne = (v) => Math.max(-400, Math.min(400, Math.round(v)));
+
+    poignee.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const base = styleDe();
+      geste = {
+        x: event.clientX, y: event.clientY,
+        dx: Number(base.decalageX) || 0,
+        dy: Number(base.decalageY) || 0,
+        base,
+      };
+      poignee.setPointerCapture(event.pointerId);
+      poignee.classList.add('wtools__grab--on');
+      montrer(mesure);
+    });
+
+    poignee.addEventListener('pointermove', (event) => {
+      if (!geste) return;
+      // Maj enfoncée : on ne bouge que sur un axe, comme partout ailleurs.
+      const brutX = geste.dx + (event.clientX - geste.x);
+      const brutY = geste.dy + (event.clientY - geste.y);
+      const horizontal = Math.abs(event.clientX - geste.x) >= Math.abs(event.clientY - geste.y);
+      const x = borne(event.shiftKey && !horizontal ? geste.dx : brutX);
+      const y = borne(event.shiftKey && horizontal ? geste.dy : brutY);
+
+      geste.dernier = { decalageX: x, decalageY: y };
+      applyStyleObject(el, { ...geste.base, ...geste.dernier });
+      mesure.textContent = `${x > 0 ? '+' : ''}${x} · ${y > 0 ? '+' : ''}${y}`;
+      const cadreRect = el.getBoundingClientRect();
+      const decalage = origin();
+      mesure.style.left = (decalage.x + cadreRect.left) + 'px';
+      mesure.style.top = (decalage.y + cadreRect.top - 26) + 'px';
+      placer(cadreWidget, el);
+    });
+
+    const finir = (event) => {
+      if (!geste) return;
+      const fini = geste.dernier;
+      geste = null;
+      poignee.classList.remove('wtools__grab--on');
+      cacher(mesure);
+      try { poignee.releasePointerCapture(event.pointerId); } catch { /* déjà relâché */ }
+      // Rien n'a bougé : on ne salit pas l'historique pour un simple clic.
+      if (fini) onWidgetMove?.(key, fini);
+      reposition();
+    };
+    poignee.addEventListener('pointerup', finir);
+    poignee.addEventListener('pointercancel', finir);
+
+    return poignee;
   }
 
   /** Dessine une invite de dépôt sur chaque conteneur vide. */

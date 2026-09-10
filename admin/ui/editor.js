@@ -250,6 +250,17 @@ export async function startEditor(runtime) {
       onAddSection: (afterRef) => ouvrirNouvelleSection(afterRef),
       onReposition: () => textEditor?.reposition(),
       onWidgetSelect: (key) => selectWidget(key),
+      // La poignée a besoin de connaître l'habillage courant du bloc pour
+      // repartir de sa position, et de savoir où l'écrire au relâchement.
+      widgetStyle: (key) => model.findWidgetNode(key)?.noeud?.props?.style || {},
+      onWidgetMove: (key, placement) => {
+        if (!model.setWidgetProps(key, { style: placement })) return;
+        markDirty();
+        overlay.refresh(model);
+        navigator.render(model);
+        guide?.render();
+        selectWidget(key);
+      },
       onWidgetOp: (key, op, arg) => widgetOp(key, op, arg),
       onWidgetDrop: (type, parentKey, index) => {
         const key = model.insertWidget(type, parentKey, index);
@@ -888,7 +899,7 @@ export async function startEditor(runtime) {
       actions: {
         brief: () => ouvrirBrief(),
         modeles: () => openPageTemplates({
-          root, t,
+          root, t, theme: model.reglages?.theme || null,
           onApply: (id, remplacer) => appliquerModelePage(id, remplacer),
           onWizard: () => ouvrirAssistant(),
         }),

@@ -10,18 +10,9 @@
 import { h, icon } from './el.js';
 import { openModal } from './modal.js';
 import { PAGE_TEMPLATES } from '../core/page-templates.js';
+import { apercuPage } from './apercu-page.js';
 
-/** Petit schéma de la trame : une barre par section. */
-function apercu(formes) {
-  return h('span', { class: 'pagetpl__preview' }, formes.map((forme) => {
-    if (forme === 'bar') return h('span', { class: 'pagetpl__band' });
-    const n = forme === 'duo' ? 2 : 3;
-    return h('span', { class: 'pagetpl__row' },
-      Array.from({ length: n }, () => h('span', { class: 'pagetpl__cell' })));
-  }));
-}
-
-export function openPageTemplates({ root, t, onApply, onWizard }) {
+export function openPageTemplates({ root, t, onApply, onWizard, theme = null }) {
   const corps = h('div', {},
     h('p', { class: 'hint', style: { marginTop: '0' } }, t('pageTplHint')),
     onWizard ? h('button', {
@@ -29,7 +20,7 @@ export function openPageTemplates({ root, t, onApply, onWizard }) {
       onclick: () => { modal.close(); onWizard(); },
     }, icon('sliders', 13), t('wizardRestart')) : null,
     h('div', { class: 'pagetpls' }, PAGE_TEMPLATES.map((modele) => h('div', { class: 'pagetpl' },
-      apercu(modele.apercu),
+      apercuPage(modele.apercu, theme),
       h('div', { class: 'pagetpl__main' },
         h('div', { class: 'pagetpl__title' }, t('page_' + modele.id)),
         h('div', { class: 'pagetpl__meta' }, t('pageTplSections', modele.build().length)),

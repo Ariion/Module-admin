@@ -1,5 +1,29 @@
 # Journal des versions
 
+## 1.9.0
+
+**Une poignée pour poser les blocs où on veut**
+- Chaque bloc sélectionné porte une poignée : on l'attrape et on le pose où
+  l'on veut dans sa section, à la souris. Une étiquette affiche le décalage
+  pendant le geste ; Maj bloque un seul axe.
+- Le déplacement est une **transformée**, pas une marge : le bloc bouge, la
+  mise en page autour ne bronche pas, et le site ne peut pas se casser.
+- Pendant le geste, l'aperçu est écrit directement — régénérer la section à
+  chaque pixel serait saccadé. Le modèle n'est mis à jour qu'au relâchement,
+  et rien n'est enregistré si le bloc n'a pas bougé.
+- Le décalage se règle toujours au pixel près dans l'onglet Habillage : la
+  poignée s'ajoute au réglage, elle ne le remplace pas.
+
+**Des modèles qu'on reconnaît avant de cliquer**
+- Les miniatures des modèles de page étaient des barres grises. Ce sont
+  maintenant de vraies petites pages : bandeau photographique avec voile et
+  bouton, rangées de cartes avec leur image et leur légende, colonnes
+  déséquilibrées, bandes colorées.
+- Elles prennent **les couleurs de l'ambiance choisie** et les visuels
+  dessinés par le module : ce qu'on voit dans la fenêtre ressemble à ce
+  qu'on obtiendra.
+- Les sept modèles ont été redécrits avec ce vocabulaire.
+
 ## 1.8.1
 
 **Correction : l'habillage d'un bouton ne se voyait pas**

@@ -535,7 +535,7 @@ select.input { appearance: none; cursor: pointer; }
 .tpl__label { font-size: 12px; line-height: 1.3; }
 
 /* ---- Modèles de page entière ---- */
-.pagetpls { display: grid; gap: 9px; }
+.pagetpls { display: grid; gap: 10px; }
 .pagetpl {
   display: flex; align-items: center; gap: 13px; padding: 12px 13px;
   background: var(--bg-soft); border: 1px solid var(--line-soft); border-radius: var(--radius);
@@ -889,6 +889,43 @@ select.input { appearance: none; cursor: pointer; }
 }
 .reglages__trait { border: 0; border-top: 1px solid var(--line-soft); margin: 22px 0 18px; }
 
+/* ------------------------------------------------- Miniature de modèle
+   Une vraie petite page — photo, cartes, colonnes — plutôt qu'un schéma de
+   barres grises. C'est ce qui permet de se projeter avant de cliquer. */
+.mini {
+  width: 108px; flex: none; display: flex; flex-direction: column;
+  border: 1px solid var(--line-soft); border-radius: 6px; overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.mini__hero {
+  position: relative; display: block; background-size: cover; background-position: center;
+}
+.mini__voile { position: absolute; inset: 0; background: rgba(0,0,0,.42); }
+.mini__heroTexte {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+}
+.mini__pastille { display: block; width: 20px; height: 6px; border-radius: 999px; margin-top: 2px; }
+.mini__trait { display: block; border-radius: 2px; }
+.mini__bloc { display: flex; flex-direction: column; gap: 3px; padding: 7px 8px; }
+.mini__centre { align-items: center; }
+.mini__duo { display: grid; gap: 6px; align-items: center; }
+.mini__col { display: flex; flex-direction: column; gap: 3px; }
+.mini__rang { display: flex; gap: 4px; margin-top: 2px; }
+.mini__carte {
+  position: relative; flex: 1; display: block; border-radius: 3px; overflow: hidden;
+}
+.mini__photo {
+  display: block; width: 100%; border-radius: 3px;
+  background-size: cover; background-position: center;
+}
+.mini__carteTexte {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 4px;
+  background: linear-gradient(transparent, rgba(0,0,0,.7));
+  display: flex; flex-direction: column;
+}
+.mini__bande { display: flex; flex-direction: column; gap: 3px; padding: 9px 8px; }
+
 /* ------------------------------------------------- Tout recommencer */
 .outil--danger .outil__icone { background: rgba(248,113,113,.12); color: #fca5a5; }
 .outil--danger:hover { background: rgba(248,113,113,.08); border-color: rgba(248,113,113,.28); }
@@ -964,6 +1001,21 @@ select.input { appearance: none; cursor: pointer; }
 .outil__nom { font-weight: 600; font-size: 13px; }
 .outil__aide { color: var(--faint); font-size: 11.5px; line-height: 1.4; }
 .outil > svg:last-child { color: var(--faint); flex: none; }
+
+/* --------------------------------------------- Poignée de déplacement
+   On attrape le bloc et on le pose où on veut dans sa section. Le curseur
+   dit ce qui va se passer avant même qu'on clique — c'est ce qui fait la
+   différence entre « on peut » et « on ose ». */
+.wtools__grab { cursor: grab; touch-action: none; }
+.wtools__grab:hover { background: var(--sect-dim); border-color: rgba(169,122,232,.5); color: #cbb0f4; }
+.wtools__grab--on { cursor: grabbing; background: var(--sect); color: #fff; border-color: var(--sect); }
+.dragnum {
+  position: absolute; z-index: 6; pointer-events: none;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--sect); color: #fff;
+  font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums;
+  box-shadow: var(--shadow-sm); white-space: nowrap;
+}
 
 /* ------------------------------------------- Questionnaire de rédaction */
 .metiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
