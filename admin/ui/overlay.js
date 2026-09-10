@@ -163,6 +163,24 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     return null;
   }
 
+  /**
+   * L'élément est-il assez visible pour qu'on n'ait pas à bouger ?
+   *
+   * « Assez » et non « entièrement » : un bloc plus haut que la fenêtre ne
+   * serait jamais entièrement visible, et on le ferait défiler sans fin.
+   */
+  function estBienVisible(el) {
+    if (!win) return false;
+    const rect = el.getBoundingClientRect();
+    const hauteur = win.innerHeight || 0;
+    if (!hauteur) return false;
+    const haut = Math.max(rect.top, 0);
+    const bas = Math.min(rect.bottom, hauteur);
+    const dedans = bas - haut;
+    // Visible d'au moins la moitié de sa hauteur, ou d'un tiers d'écran.
+    return dedans > 0 && (dedans >= rect.height * 0.5 || dedans >= hauteur / 3);
+  }
+
   function placer(noeud, el) {
     if (!el || !el.isConnected) { cacher(noeud); return; }
     const decalage = origin();
@@ -706,9 +724,22 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
     /** Sections de la page, telles que l'aperçu les voit. */
     get sections() { return sections; },
     setActive(el) { selectionne = el || null; placer(cadreActif, selectionne); },
-    /** Fait défiler l'aperçu jusqu'à un élément et le met en évidence. */
-    reveal(el, block = 'center') {
+    /**
+     * Amène un élément à l'écran — mais SEULEMENT s'il n'y est pas déjà.
+     *
+     * Faire défiler à chaque fois est ce qui donne l'impression que la page
+     * saute sous les doigts : on entre dans un champ, l'aperçu bouge, on
+     * perd de vue ce qu'on était en train de regarder. Un élément déjà
+     * visible n'a aucune raison d'être « révélé ».
+     *
+     * @param {Element} el
+     * @param {string} block
+     * @param {{force?:boolean}} [options] force le défilement même si
+     *   l'élément est visible — utile quand on vient de le créer.
+     */
+    reveal(el, block = 'center', options = {}) {
       if (!el || !el.isConnected) return;
+      if (!options.force && estBienVisible(el)) { reposition(); return; }
       el.scrollIntoView({ block, behavior: 'smooth' });
       // Le défilement est animé : on repositionne pendant et après, sinon
       // les contours et les zones de dépôt resteraient à l'ancienne place.

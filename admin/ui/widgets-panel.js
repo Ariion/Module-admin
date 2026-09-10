@@ -6,7 +6,7 @@
  * dessus pour l'ajouter à la zone active.
  * @module ui/widgets-panel
  */
-import { h, icon, clear } from './el.js';
+import { h, icon, clear, rendreSansSauter } from './el.js';
 import { WIDGETS, CATEGORIES } from '../core/widgets.js';
 import { TEMPLATES } from '../core/templates.js';
 
@@ -33,6 +33,11 @@ export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, 
   }
 
   function dessiner() {
+    // Filtrer la liste ne doit pas renvoyer en haut du panneau.
+    rendreSansSauter(corps, peindre);
+  }
+
+  function peindre() {
     clear(corps);
     let total = 0;
 

@@ -6,7 +6,7 @@
  * désigne une ; le module en déduit polices, couleurs, formes et rythme.
  * @module ui/theme-panel
  */
-import { h, icon, clear } from './el.js';
+import { h, icon, clear, rendreSansSauter } from './el.js';
 import { openModal } from './modal.js';
 import { THEMES, themeById } from '../core/theme.js';
 import { fontStack } from '../core/fonts.js';
@@ -46,7 +46,11 @@ function vignette(theme) {
 export function rendreChoixTheme({ hote, t, valeur, siteExistant, onChange }) {
   let etat = { portee: siteExistant ? 'blocs' : 'site', ...(valeur || {}) };
 
-  const dessiner = () => {
+  // Choisir un thème redessine la grille : sans garde, le panneau du guide
+  // remonterait en haut à chaque essai de palette.
+  const dessiner = () => rendreSansSauter(hote, peindre);
+
+  const peindre = () => {
     clear(hote);
 
     const grille = h('div', { class: 'themes' }, THEMES.map((theme) => h('button', {

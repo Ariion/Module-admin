@@ -32,6 +32,42 @@ export function clear(node) {
   while (node.firstChild) node.removeChild(node.firstChild);
 }
 
+/** Remonte jusqu'au conteneur qui défile réellement autour d'un élément. */
+function conteneurDefilant(node) {
+  const vue = node?.ownerDocument?.defaultView;
+  if (!vue) return null;
+  let courant = node.parentElement;
+  while (courant) {
+    const style = vue.getComputedStyle(courant);
+    if (/(auto|scroll)/.test(style.overflowY) && courant.scrollHeight > courant.clientHeight) return courant;
+    courant = courant.parentElement;
+  }
+  return null;
+}
+
+/**
+ * Reconstruit un morceau de panneau SANS renvoyer la personne en haut.
+ *
+ * Beaucoup de réglages se redessinent entièrement quand on les change (un
+ * choix qui en fait apparaître un autre, par exemple). Vider le conteneur
+ * remet son défilement à zéro : on se retrouve en haut du panneau alors
+ * qu'on était en train de régler quelque chose tout en bas. On note donc
+ * la position avant, et on la repose après.
+ *
+ * @param {Element} node conteneur qui va être vidé puis rempli
+ * @param {Function} rendu ce qui le remplit
+ */
+export function rendreSansSauter(node, rendu) {
+  const boite = conteneurDefilant(node);
+  const avant = boite ? boite.scrollTop : 0;
+  rendu();
+  if (!boite || !avant) return;
+  // Après remplissage le contenu peut être plus court : on se cale au plus
+  // bas possible plutôt que de forcer une position qui n'existe plus.
+  const max = Math.max(0, boite.scrollHeight - boite.clientHeight);
+  boite.scrollTop = Math.min(avant, max);
+}
+
 /** Icônes SVG inline (aucune police ni fichier externe). */
 export function icon(name, size = 14) {
   const paths = {

@@ -11,7 +11,7 @@
  * Les vues Éléments et Structure restent là pour qui veut aller plus loin.
  * @module ui/guide-panel
  */
-import { h, icon, clear } from './el.js';
+import { h, icon, clear, rendreSansSauter } from './el.js';
 import { avancement, estExemple } from '../core/guide.js';
 import { rendreChoixTheme } from './theme-panel.js';
 
@@ -352,15 +352,19 @@ export function createGuide({ vue, t, actions }) {
 
   // ------------------------------------------------------------------ rendu
   function render() {
-    etapes = actions.etapes();
-    clear(liste);
+    // Le guide se redessine en entier à chaque ouverture d'étape ou case
+    // cochée : sans précaution, on repartirait du haut de la liste.
+    rendreSansSauter(liste, () => {
+      etapes = actions.etapes();
+      clear(liste);
 
-    let numero = 1;
-    liste.appendChild(pasTheme(numero++));
-    for (const etape of etapes) liste.appendChild(pasSection(etape, numero++));
-    liste.appendChild(pasFin(numero));
+      let numero = 1;
+      liste.appendChild(pasTheme(numero++));
+      for (const etape of etapes) liste.appendChild(pasSection(etape, numero++));
+      liste.appendChild(pasFin(numero));
 
-    majAvancement();
+      majAvancement();
+    });
   }
 
   /** Ouvre l'étape correspondant à une section, sans rien remplir d'office. */

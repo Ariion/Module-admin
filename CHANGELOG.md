@@ -1,5 +1,34 @@
 # Journal des versions
 
+## 1.11.1
+
+**L'aperçu et le panneau restent où on les a laissés**
+
+Signalé : « quand je fais une modif quelconque depuis le panel gauche, ça me
+remet à chaque fois tout en haut ». C'était deux défauts distincts, corrigés
+tous les deux.
+
+- **L'aperçu ne défile plus sans raison.** Le lien panneau → page, qui montre
+  dans le site l'élément piloté par le champ où l'on entre, faisait défiler
+  l'aperçu à chaque fois. Il ne le fait désormais que si l'élément n'est pas
+  déjà à l'écran (au moins la moitié de sa hauteur, ou un tiers de l'écran).
+  Un défilement reste forcé là où il est utile : une section qu'on vient de
+  créer, de dupliquer ou de déplacer, et l'ouverture de la feuille sur
+  téléphone.
+- **Le panneau de gauche ne repart plus en haut.** Beaucoup de réglages se
+  redessinent en entier quand on les change (un choix qui en fait apparaître
+  un autre, une case cochée dans le guide, un filtre dans la liste des
+  éléments, un thème essayé). Vider le conteneur remettait son défilement à
+  zéro. La position est maintenant relevée avant et reposée après, dans
+  l'inspecteur, le guide, la grille des thèmes et la liste des éléments.
+
+**Détail**
+
+L'inspecteur comparait l'ancienne et la nouvelle sélection par identité
+d'objet ; l'éditeur en reconstruit un neuf à chaque réglage de widget, si
+bien que le panneau se croyait toujours devant une nouvelle sélection. La
+comparaison porte désormais sur ce qui est visé.
+
 ## 1.11.0
 
 **Bibliothèque d'effets et d'animations**

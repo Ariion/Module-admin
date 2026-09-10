@@ -7,7 +7,7 @@
  * ni ne repositionne rien. La mise en page reste au développeur.
  * @module ui/inspector
  */
-import { h, icon, clear } from './el.js';
+import { h, icon, clear, rendreSansSauter } from './el.js';
 import { safeImageUrl } from '../core/sanitize.js';
 import { WIDGETS } from '../core/widgets.js';
 import { TYPES_ACTION, MODELES_ACTION, normaliserAction, actionActive } from '../core/actions.js';
@@ -20,7 +20,31 @@ const TITRES = { text: 'text', link: 'link', image: 'image', background: 'backgr
 export function createInspector({ vue, t, actions }) {
   let selection = null;
 
+  /**
+   * Deux sélections désignent-elles la même chose ? L'éditeur reconstruit un
+   * objet neuf à chaque fois (après un réglage de widget, par exemple) : on
+   * compare donc ce qui est visé, pas l'identité de l'objet.
+   */
+  function memeCible(a, b) {
+    if (!a || !b) return false;
+    if (a.widget || b.widget) return a.widget?.key != null && a.widget.key === b.widget?.key;
+    return a.el === b.el
+      && a.entry === b.entry
+      && a.collection === b.collection
+      && a.itemIndex === b.itemIndex;
+  }
+
+  /**
+   * Redessine l'inspecteur. Redessiner la MÊME sélection (un réglage qui en
+   * fait apparaître un autre) doit laisser le panneau où il est ; passer à
+   * une autre sélection repart naturellement du haut.
+   */
   function render(prochaine) {
+    if (memeCible(prochaine, selection)) rendreSansSauter(vue, () => dessiner(prochaine));
+    else dessiner(prochaine);
+  }
+
+  function dessiner(prochaine) {
     selection = prochaine;
     clear(vue);
 

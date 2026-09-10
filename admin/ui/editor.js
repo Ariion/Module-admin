@@ -219,7 +219,7 @@ export async function startEditor(runtime) {
         reveal: (ref) => {
           const etape = guide.etapes.find((e) => e.ref === ref);
           if (!etape?.el) return;
-          etape.el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          overlay.reveal(etape.el, 'start');
           overlay.setActive(etape.el);
         },
         addSection: () => ouvrirNouvelleSection(null),
@@ -513,10 +513,10 @@ export async function startEditor(runtime) {
     if (!sel || !sel.el) { inspector.render(null); overlay.setActive(null); return; }
     textEditor.commit();
     overlay.setActive(sel.el);
-    if (options.reveal) overlay.reveal(sel.el);
+    if (options.reveal) overlay.reveal(sel.el, 'center', { force: true });
     // Sur téléphone, le panneau va recouvrir le bas de l'écran : on remonte
     // l'élément choisi dans la bande qui reste visible.
-    else if (shell.isCompact()) overlay.reveal(sel.el, 'start');
+    else if (shell.isCompact()) overlay.reveal(sel.el, 'start', { force: true });
     showInspector();
 
     const section = model.sectionList().find((x) => x.el === sel.el) || null;
@@ -1066,7 +1066,7 @@ export async function startEditor(runtime) {
     await autosave.flush();
     await loadPage(urlCourante());
     const el = model.doc.querySelector(`[data-admin-section="${key}"]`);
-    if (el) { overlay.reveal(el); overlay.setActive(el); }
+    if (el) { overlay.reveal(el, 'center', { force: true }); overlay.setActive(el); }
     notify(t('templateAdded'));
   }
 
@@ -1083,7 +1083,7 @@ export async function startEditor(runtime) {
     // dessus, l'utilisateur ne verrait rien se passer.
     const el = model.doc.querySelector(`[data-admin-section="${key}"]`);
     if (el) {
-      overlay.reveal(el);
+      overlay.reveal(el, 'center', { force: true });
       overlay.setActive(el);
     }
     if (!options.silencieux) {
@@ -1120,7 +1120,8 @@ export async function startEditor(runtime) {
       ? model.sectionList().find((x) => x.ref === 'ins:' + model.sections.add.slice(-1)[0]?.key)
       : model.sectionList().find((x) => x.ref === ref);
     if (cible) {
-      overlay.reveal(cible.el);
+      const bouge = op === 'duplicate' || op === 'move' || op === 'add';
+      overlay.reveal(cible.el, 'center', { force: bouge });
       overlay.setActive(cible.el);
     }
     notify(t(op === 'hide' ? 'sectionRemoved' : op === 'duplicate' ? 'sectionDuplicated' : 'sectionMoved'));
