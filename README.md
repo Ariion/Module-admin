@@ -70,6 +70,19 @@ passage. S'il part d'une page vide, un assistant lui pose deux questions et
 construit la page. S'il a déjà un site, son code reste intact — le module s'y
 accroche.
 
+## Vérifier la saisie
+
+```bash
+npm i -D playwright && npx playwright install chromium
+npm run essai-clavier -- http://localhost:8080/index.html
+```
+
+Tape tout l'alphabet — minuscules et majuscules —, les chiffres, les accents
+et la ponctuation, dans les deux endroits où l'on écrit : le texte
+directement dans l'aperçu, et le champ du panneau. Puis reprend les 62
+touches une par une. Sert à répondre sans hésiter à « telle lettre ne
+s'écrit pas » : le script dit exactement laquelle, et où.
+
 ## Mettre en ligne
 
 ```bash

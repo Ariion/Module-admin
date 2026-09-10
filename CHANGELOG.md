@@ -1,5 +1,28 @@
 # Journal des versions
 
+## 1.12.2
+
+**Un outil pour répondre à « telle lettre ne s'écrit pas »**
+
+```bash
+npm run essai-clavier -- http://localhost:8080/index.html
+```
+
+Tape tout l'alphabet — minuscules ET majuscules —, les chiffres, les accents
+et la ponctuation, dans les deux endroits où l'on écrit : le texte
+directement dans l'aperçu, et le champ du panneau. Reprend ensuite les 62
+touches **une par une**, ce qui est la seule façon de repérer une touche qui,
+seule, ne passe pas. Le script dit exactement laquelle, et où.
+
+**Résultat sur ce dépôt**, 29 séries sur 29 : aucun caractère perdu. Les 62
+touches passent, dans un titre comme dans un paragraphe, sur un site codé à
+la main comme sur un site de vente, curseur au début du texte comme à la fin,
+et aussi bien dans le champ du panneau que sur la page.
+
+Autrement dit, la perte de caractères signalée était bien celle corrigée en
+1.12.1 : le champ perdait le curseur après chaque frappe, et les lettres
+tapées ensuite n'arrivaient nulle part.
+
 ## 1.12.1
 
 **On peut écrire, tout simplement**
