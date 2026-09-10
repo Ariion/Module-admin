@@ -16,7 +16,7 @@
  */
 import { PageModel } from './model.js';
 import { BAKE_PARAM } from './config.js';
-import { loadFrame } from './frame.js';
+import { loadFrame, reveillerFeuilles } from './frame.js';
 import { debug, warn } from './log.js';
 
 /** Marqueur qui distingue un fichier régénéré du code source d'origine. */
@@ -39,6 +39,10 @@ const ATTRS_CONSERVES = new Set(['data-admin-section', 'data-admin-ref']);
 
 /** Retire du document régénéré tout ce que le module y a laissé. */
 function clean(doc, pageId) {
+  // Par sécurité : la régénération n'attend pas le rendu, donc aucune feuille
+  // ne devrait être endormie ici. Si cela changeait un jour, le fichier écrit
+  // ne perdrait pas pour autant la balise du client.
+  reveillerFeuilles(doc);
   for (const node of doc.querySelectorAll('[data-admin-ui]')) node.remove();
   for (const node of doc.querySelectorAll('#admin-document-style')) node.remove();
   for (const node of doc.querySelectorAll('*')) {

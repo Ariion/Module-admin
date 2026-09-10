@@ -25,21 +25,51 @@ function ownStylesheets(doc) {
   return n;
 }
 
+/** Attribut où l'on met de côté le `rel` d'une feuille mise en sommeil. */
+const ATTR_REL = 'data-admin-rel';
+
+/** Valeur de `rel` qui ne déclenche aucun téléchargement ni aucun rendu. */
+const REL_SOMMEIL = 'admin-sommeil';
+
 /**
- * Retire les feuilles de style d'un autre domaine qui n'ont pas répondu.
+ * Endort les feuilles de style d'un autre domaine qui n'ont pas répondu.
+ *
+ * Elles bloquent le premier rendu : sans cela l'aperçu resterait blanc. Mais
+ * les SUPPRIMER serait pire que le mal — c'est le HTML du client, et l'export
+ * manuel repart de ce document : une police lente lui coûterait sa balise
+ * `<link>`, définitivement. On remplace donc chaque feuille par une copie
+ * inerte, au même endroit et avec la même adresse. Le chargement en cours
+ * part avec l'élément détaché ; `reveillerFeuilles` rend son rôle à la copie
+ * au moment d'écrire le fichier.
+ *
  * N'agit que sur le document d'aperçu, jamais sur le site publié.
  */
 function dropForeignStylesheets(doc) {
-  const retirees = [];
+  const endormies = [];
   for (const link of Array.from(doc.querySelectorAll('link[rel~="stylesheet"][href]'))) {
     try {
       const href = new URL(link.getAttribute('href'), doc.baseURI);
       if (href.origin === location.origin) continue;
-      retirees.push(href.host);
-      link.remove();
+      const inerte = link.cloneNode(false);
+      inerte.setAttribute(ATTR_REL, link.getAttribute('rel'));
+      inerte.setAttribute('rel', REL_SOMMEIL);
+      link.replaceWith(inerte);
+      endormies.push(href.host);
     } catch { /* href illisible */ }
   }
-  return retirees;
+  return endormies;
+}
+
+/**
+ * Rend son `rel` à chaque feuille endormie. À appeler sur tout document —
+ * ou toute copie de document — destiné à être écrit sur le disque.
+ * @param {Document|Element} racine
+ */
+export function reveillerFeuilles(racine) {
+  for (const link of racine.querySelectorAll('link[' + ATTR_REL + ']')) {
+    link.setAttribute('rel', link.getAttribute(ATTR_REL));
+    link.removeAttribute(ATTR_REL);
+  }
 }
 
 /**
@@ -129,7 +159,7 @@ export function loadFrame({
 
       const bloquantes = dropForeignStylesheets(doc);
       if (bloquantes.length) {
-        console.warn('[admin] aperçu : feuille(s) de style distante(s) sans réponse, ignorée(s) —', bloquantes);
+        console.warn('[admin] aperçu : feuille(s) de style distante(s) sans réponse, endormie(s) —', bloquantes);
       }
       finish();
     }, 40);

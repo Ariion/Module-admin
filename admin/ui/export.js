@@ -10,6 +10,7 @@
  */
 import { h } from './el.js';
 import { openModal } from './modal.js';
+import { reveillerFeuilles } from '../core/frame.js';
 
 function download(filename, content, type) {
   const url = URL.createObjectURL(new Blob([content], { type }));
@@ -28,6 +29,11 @@ function download(filename, content, type) {
  */
 export function freezePage({ doc = document, scriptMarkers = ['/admin/', 'admin-config', 'admin/runtime'] } = {}) {
   const clone = doc.documentElement.cloneNode(true);
+
+  // Une feuille de style tierce trop lente a pu être endormie pour que
+  // l'aperçu s'affiche. Le fichier exporté, lui, doit la retrouver intacte :
+  // sans cela une police de CDN capricieuse coûterait au site sa balise.
+  reveillerFeuilles(clone);
 
   for (const node of clone.querySelectorAll('[data-admin-ui]')) node.remove();
   for (const node of clone.querySelectorAll('#admin-document-style')) node.remove();

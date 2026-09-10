@@ -1,5 +1,28 @@
 # Journal des versions
 
+## 1.11.2
+
+**Une police lente ne peut plus coûter sa balise au site**
+
+Trouvé en vérifiant l'export : quand une feuille de style d'un autre domaine
+— typiquement Google Fonts — ne répondait pas, le module la retirait de
+l'aperçu pour ne pas laisser l'écran blanc. Or l'**export manuel** repart de
+ce document : le fichier figé perdait alors la balise `<link>` du client,
+définitivement. C'est la voie de secours des hébergements sans PHP, celle
+qu'on emprunte précisément quand ça va mal.
+
+- La feuille n'est plus retirée mais **endormie** : remplacée sur place par
+  une copie inerte qui garde son adresse. Le téléchargement bloquant part
+  avec l'élément détaché, l'aperçu s'affiche comme avant.
+- L'export et la régénération lui rendent son rôle avant d'écrire le
+  fichier. Aucune trace du module ne subsiste dans le HTML produit.
+- La régénération automatique (`bake`) n'attendait pas le rendu et n'était
+  donc pas concernée ; le garde-fou y est tout de même posé.
+
+Vérifié hors ligne, où le cas se produit à chaque chargement : l'aperçu
+s'affiche, et `essais/domaine-lamartine/site-fige/index.html` se régénère à
+l'identique, balise de polices comprise.
+
 ## 1.11.1
 
 **L'aperçu et le panneau restent où on les a laissés**
