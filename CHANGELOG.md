@@ -1,5 +1,22 @@
 # Journal des versions
 
+## 1.11.3
+
+**Un groupe de réglages qu'on a ouvert reste ouvert**
+
+Signalé : « je modifie l'effet d'un bloc, et hop, le bloc *Effets et
+animations* se referme ». Le panneau se redessine à chaque réglage, et les
+groupes repliables repartaient de leur état par défaut — replié. Essayer un
+effet, c'est justement en enchaîner plusieurs : il fallait rouvrir le groupe
+entre chaque essai.
+
+- Chaque groupe (*Contenu*, *Couleurs*, *Texte*, *Espacements*, *Bordures*,
+  *Placement*, *Effets et animations*, *CSS*, *Bloc*, *Section*, *Au clic*)
+  se souvient s'il était ouvert, pour toute la session d'édition.
+- La mémoire suit d'un bloc à l'autre : on garde *Effets et animations*
+  ouvert et on passe d'un titre à un bouton sans le rouvrir.
+- Un groupe qu'on replie reste replié, de la même manière.
+
 ## 1.11.2
 
 **Une police lente ne peut plus coûter sa balise au site**

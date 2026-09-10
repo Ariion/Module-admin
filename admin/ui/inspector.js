@@ -19,6 +19,8 @@ const TITRES = { text: 'text', link: 'link', image: 'image', background: 'backgr
 
 export function createInspector({ vue, t, actions }) {
   let selection = null;
+  // Groupes ouverts ou repliés, retenus pour toute la session d'édition.
+  const plis = new Map();
 
   /**
    * Deux sélections désignent-elles la même chose ? L'éditeur reconstruit un
@@ -73,11 +75,11 @@ export function createInspector({ vue, t, actions }) {
       ));
     }
 
-    if (entry) vue.appendChild(groupe(t('content'), 'text', () => champsContenu(entry), true));
+    if (entry) vue.appendChild(groupe('contenu', t('content'), 'text', () => champsContenu(entry), true));
     for (const bloc of champsStyle(el)) vue.appendChild(bloc);
-    if (collection) vue.appendChild(groupe(t('block'), 'layers', () => champsBloc(collection, itemIndex), true));
+    if (collection) vue.appendChild(groupe('bloc', t('block'), 'layers', () => champsBloc(collection, itemIndex), true));
     if (selection.section) {
-      vue.appendChild(groupe(t('sectionGroup'), 'section', () => champsSection(selection.section), !entry, true));
+      vue.appendChild(groupe('section', t('sectionGroup'), 'section', () => champsSection(selection.section), !entry, true));
     }
   }
 
@@ -147,11 +149,11 @@ export function createInspector({ vue, t, actions }) {
     ));
 
     if (def.fields.length) {
-      vue.appendChild(groupe(t('content'), def.icon, () => def.fields.map((f) => champWidget(noeud, f)), true));
+      vue.appendChild(groupe('contenu', t('content'), def.icon, () => def.fields.map((f) => champWidget(noeud, f)), true));
     }
     // Un bouton inséré peut, lui aussi, ouvrir une fenêtre plutôt que partir.
     if (noeud.type === 'button') {
-      vue.appendChild(groupe(t('actionGroup'), 'grid',
+      vue.appendChild(groupe('action', t('actionGroup'), 'grid',
         () => champsAction(
           () => noeud.props.action,
           (action) => actions.setWidgetProps(noeud.key, { action })),
@@ -346,13 +348,27 @@ export function createInspector({ vue, t, actions }) {
     return 'text';
   }
 
-  /** Section repliable. */
-  function groupe(titre, nomIcone, contenu, ouvert, structure) {
+  /**
+   * Section repliable, qui se souvient si on l'avait ouverte.
+   *
+   * Le panneau se redessine à chaque réglage. Sans mémoire, on ouvrait
+   * « Effets et animations », on essayait un effet, et le groupe se
+   * refermait sous les doigts — alors qu'essayer, c'est justement enchaîner
+   * les réglages. Ce qu'on a ouvert reste ouvert, d'un bloc à l'autre.
+   *
+   * @param {string} id identifiant stable du groupe (sert de clé de mémoire)
+   */
+  function groupe(id, titre, nomIcone, contenu, ouvert, structure) {
+    const ouvre = plis.has(id) ? plis.get(id) : !!ouvert;
     const corps = h('div', { class: 'group__body' }, contenu());
-    const bloc = h('div', { class: 'group' + (structure ? ' group--sect' : ''), 'data-open': ouvert ? 'true' : 'false' },
+    const bloc = h('div', { class: 'group' + (structure ? ' group--sect' : ''), 'data-open': ouvre ? 'true' : 'false' },
       h('button', {
         class: 'group__head', type: 'button',
-        onclick: () => bloc.setAttribute('data-open', bloc.getAttribute('data-open') === 'true' ? 'false' : 'true'),
+        onclick: () => {
+          const desormais = bloc.getAttribute('data-open') !== 'true';
+          bloc.setAttribute('data-open', desormais ? 'true' : 'false');
+          plis.set(id, desormais);
+        },
       }, icon(nomIcone, 13), h('span', {}, titre), icon('down', 12)),
       corps,
     );
@@ -400,7 +416,7 @@ export function createInspector({ vue, t, actions }) {
         t('linkTarget'),
       ),
       boutonRevert(() => actions.revertContent(entry)),
-      groupe(t('actionGroup'), 'grid',
+      groupe('action', t('actionGroup'), 'grid',
         () => champsAction(() => valeur.action, (action) => actions.setContent(entry, { action })),
         actionActive(normaliserAction(valeur.action))),
     ];
@@ -600,7 +616,7 @@ export function createInspector({ vue, t, actions }) {
     for (const nom of STYLE_GROUPS) {
       const champs = STYLE_FIELDS.filter((f) => f.group === nom);
       if (!champs.length) continue;
-      groupes.push(groupe(t('grp_' + nom), iconeGroupe(nom),
+      groupes.push(groupe('style:' + nom, t('grp_' + nom), iconeGroupe(nom),
         () => [
           nom === 'place' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('placeHint')) : null,
           nom === 'effets' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('effetsHint')) : null,
@@ -609,7 +625,7 @@ export function createInspector({ vue, t, actions }) {
         nom === 'colors' ? ouvertPremier !== false : false));
     }
 
-    groupes.push(groupe(t('grp_css'), 'code', () => [
+    groupes.push(groupe('style:css', t('grp_css'), 'code', () => [
       h('textarea', {
         class: 'textarea code', spellcheck: 'false', value: valeurs.customCss || '',
         placeholder: 'selector { border-radius: 12px; }\nselector:hover { transform: translateY(-4px); }',

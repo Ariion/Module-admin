@@ -1,6 +1,6 @@
 {
   "name": "module-admin",
-  "version": "1.11.2",
+  "version": "1.11.3",
   "description": "Interface d'édition visuelle pour sites statiques codés à la main. Firebase, aucun serveur, aucun build.",
   "type": "module",
   "private": true,
