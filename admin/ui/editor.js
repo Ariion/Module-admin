@@ -27,6 +27,7 @@ import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
+import { typePourPage, cheminDepuisTitre, lienVers } from '../core/types.js';
 import { openWizard } from './wizard.js';
 import { openBrief } from './brief-panel.js';
 import { openLegal } from './legal-panel.js';
@@ -138,6 +139,8 @@ export async function startEditor(runtime) {
       onTemplate: (id) => ajouterModele(id),
       onDragStart: (type) => overlay.beginDrag(type),
       onDragEnd: () => overlay.endDrag(),
+      contenus: typePourPage(runtime.config, urlCourante()),
+      onNouveauContenu: (sousTypeId) => nouveauContenu(sousTypeId),
     });
 
     inspector = createInspector({
@@ -584,6 +587,137 @@ export async function startEditor(runtime) {
     }
     markDirty();
     inspector.render(inspector.selection);
+  }
+
+  /* ════════════════════════════════════════════════════════
+     TYPES DE CONTENU
+     Créer un article, c'est trois gestes que le client ne devrait pas
+     avoir à connaître : copier une page modèle, poser une carte en tête
+     de galerie, et ouvrir la page pour écrire. On les enchaîne.
+  ════════════════════════════════════════════════════════ */
+
+  /** Demande le titre du nouveau contenu. Rien ne se crée sans lui. */
+  function demanderTitre(sousType) {
+    return new Promise((resolve) => {
+      let repondu = false;
+      const champ = h('input', { class: 'input', type: 'text', required: true });
+      const erreur = h('p', { class: 'error' });
+      const valider = (event) => {
+        event.preventDefault();
+        const titre = champ.value.trim();
+        if (!titre) { champ.focus(); return; }
+        repondu = true;
+        modal.close();
+        resolve(titre);
+      };
+      const form = h('form', { onsubmit: valider },
+        h('div', { class: 'field' },
+          h('label', { class: 'field__label' }, t('contenuTitre')),
+          champ,
+          h('p', { class: 'hint' }, t('contenuTitreAide')),
+        ),
+        erreur,
+        h('div', { style: { marginTop: '12px' } },
+          h('button', { class: 'btn btn--primary', type: 'submit' }, t('contenuCreer'))),
+      );
+      const modal = openModal({
+        root, title: sousType.nom, body: form, size: 'sm',
+        onClose: () => { if (!repondu) resolve(null); },
+      });
+      setTimeout(() => champ.focus(), 30);
+    });
+  }
+
+  /**
+   * Pose la carte du nouveau contenu en tête de galerie.
+   *
+   * On duplique la première carte plutôt que d'en fabriquer une : elle a
+   * déjà la bonne structure, et le gabarit du développeur reste maître.
+   * Seuls le titre et le lien sont réécrits — le reste (image, résumé,
+   * date) est à la main du client, qui les voit dans la page.
+   */
+  function poserCarte(type, titre, chemin) {
+    const trouverCollection = () => model.collections.find((c) => {
+      if (!type.collection) return false;
+      try { return c.container.matches(type.collection) || !!c.container.closest(type.collection); }
+      catch { return false; }
+    });
+
+    const collection = trouverCollection();
+    if (!collection) return false;
+    if (!model.applyCollectionOp(collection.id, 'duplicate', 0)) return false;
+    model.applyCollectionOp(collection.id, 'move', 1, 0);
+    model.refresh();
+
+    // Les champs d'un bloc répétable ne sont pas dans model.entries : ils
+    // appartiennent à la collection, et se relisent sur l'élément lui-même.
+    const apres = trouverCollection();
+    const carte = apres && apres.items[0];
+    if (!carte) return true;
+
+    const champs = model.fieldsIn(carte);
+    let titrePose = false;
+
+    // Le titre d'une carte est souvent un lien posé dans un intertitre : on
+    // le reconnaît à ça, et un champ de type lien porte aussi son texte.
+    // Sinon, on retombe sur le premier intertitre venu, puis sur le premier
+    // texte — la première zone de texte d'une carte étant fréquemment son
+    // étiquette de catégorie, elle n'est essayée qu'en dernier recours.
+    const lien = lienVers(chemin);
+    const dansTitre = (el) => !!(el.closest && el.closest('h1,h2,h3,h4'));
+
+    for (const [cle, entry] of champs) {
+      if (entry.role !== 'link') continue;
+      const estTitre = !titrePose && dansTitre(entry.el);
+      model.setCollectionField(
+        apres.id, 0, cle,
+        estTitre ? { href: lien, text: titre } : { href: lien },
+        entry.el, 'link',
+      );
+      if (estTitre) titrePose = true;
+    }
+    if (!titrePose) {
+      for (const [cle, entry] of champs) {
+        if (entry.role !== 'text') continue;
+        if (!/^H[1-4]$/.test(entry.el.tagName)) continue;
+        model.setCollectionField(apres.id, 0, cle, { text: titre }, entry.el, 'text');
+        titrePose = true;
+        break;
+      }
+    }
+    if (!titrePose) {
+      for (const [cle, entry] of champs) {
+        if (entry.role !== 'text') continue;
+        model.setCollectionField(apres.id, 0, cle, { text: titre }, entry.el, 'text');
+        break;
+      }
+    }
+    return true;
+  }
+
+  async function nouveauContenu(sousTypeId) {
+    const type = typePourPage(runtime.config, urlCourante());
+    const sousType = type && type.sousTypes.find((st) => st.id === sousTypeId);
+    if (!type || !sousType) return;
+    if (!hosting.enabled) { notify(t('newPageNoHost'), true); return; }
+
+    const titre = await demanderTitre(sousType);
+    if (!titre) return;
+
+    const chemin = cheminDepuisTitre(titre, sousType);
+    try {
+      // La page modèle doit avoir sa copie d'origine avant d'être recopiée.
+      await hosting.ensureSource(sousType.modele);
+      await hosting.createPage(chemin, sousType.modele);
+    } catch (err) {
+      notify(err.message || String(err), true);
+      return;
+    }
+
+    if (poserCarte(type, titre, chemin)) markDirty();
+    await autosave.flush();
+    notify(t('contenuCree'));
+    await loadPage('/' + chemin, { keepScroll: false });
   }
 
   async function collectionOp(id, op, ...args) {
