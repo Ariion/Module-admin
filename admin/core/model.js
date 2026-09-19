@@ -9,7 +9,7 @@ import { buildIndex, resolveAll, fingerprint } from './identity.js';
 import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, ops } from './collections.js';
 import { applyValue, readCurrent, readStyle } from './binder.js';
 import {
-  listSections, applySections, emptyState as emptySections, isEmpty as sectionsEmpty,
+  listSections, applySections, racineSections, emptyState as emptySections, isEmpty as sectionsEmpty,
   sectionFieldKey, ops as sectionOps,
 } from './sections.js';
 import { createWidget, renderWidget, findWidget, removeWidget, WIDGETS } from './widgets.js';
@@ -261,8 +261,13 @@ export class PageModel {
 
   /** Ajoute une section vide, prête à recevoir des widgets. */
   addBlankSection(afterRef) {
-    this.sections = sectionOps.addBlank(this.sections, afterRef);
+    this.sections = sectionOps.addBlank(this.sections, afterRef, this.dansZone());
     return this.sections.lastKey;
+  }
+
+  /** La page déclare-t-elle une zone de composition ? */
+  dansZone() {
+    return safe(() => racineSections(this.doc) !== this.doc.body, false, 'dansZone');
   }
 
   /**
