@@ -10,7 +10,8 @@ import { h, icon, clear } from './el.js';
 import { openModal } from './modal.js';
 import { discoverPages, slugPage } from '../core/pages.js';
 
-export function openPages({ root, t, doc, hosting, onOpen, onCreate, connues = [], meta = null }) {
+export function openPages({ root, t, doc, hosting, onOpen, onCreate, onDelete = null,
+  connues = [], meta = null }) {
   const pages = discoverPages(doc);
 
   // Les pages déjà ouvertes depuis l'éditeur complètent la découverte par
@@ -41,6 +42,17 @@ export function openPages({ root, t, doc, hosting, onOpen, onCreate, connues = [
           class: 'btn btn--sm', type: 'button',
           onclick: () => { modal.close(); onOpen(page.url); },
         }, t('openPage')),
+      // L'accueil reste : un site sans accueil n'est plus un site.
+      (onDelete && hosting?.enabled && !page.courante && page.path !== 'index.html')
+        ? h('button', {
+          class: 'btn btn--sm btn--danger', type: 'button', title: t('pageDelete'),
+          onclick: () => {
+            if (!confirm(t('pageDeleteConfirm', page.label))) return;
+            modal.close();
+            onDelete(page.path);
+          },
+        }, icon('trash', 12))
+        : null,
     ));
   }
 

@@ -833,6 +833,21 @@ export async function startEditor(runtime) {
         notify(t('pageCreated'));
         proposerAssistant();
       },
+      onDelete: async (chemin) => {
+        try {
+          await hosting.deletePage(chemin);
+        } catch (err) {
+          notify(err.message || String(err), true);
+          return;
+        }
+        // Elle disparaît aussi des pages retenues, sinon elle resterait
+        // proposée dans la liste alors qu'elle n'existe plus.
+        const restantes = (model.reglages?.pages || []).filter((p) => p.path !== chemin);
+        model.setReglage('pages', restantes);
+        markDirty();
+        await autosave.flush();
+        notify(t('pageDeleted'));
+      },
     });
   }
 

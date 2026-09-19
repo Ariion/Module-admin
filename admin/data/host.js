@@ -87,6 +87,18 @@ export function createHost(config, backend) {
     },
 
     /**
+     * Supprime une page et sa copie d'origine.
+     *
+     * L'éditeur sait masquer une section, mais une page créée par erreur
+     * restait en ligne sans aucun moyen de la retirer.
+     */
+    async deletePage(chemin) {
+      const result = await call('delete', { path: chemin });
+      debug('page supprimée', result.path);
+      return result;
+    },
+
+    /**
      * Enregistre la clé de rédaction assistée sur l'hébergement.
      *
      * Elle part vers le script et n'en revient jamais : l'éditeur saura
