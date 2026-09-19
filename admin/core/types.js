@@ -57,13 +57,21 @@ export function typesDe(config) {
  * page dans les deux cas.
  */
 export function typePourPage(config, pathname = location.pathname) {
-  const courant = normaliserChemin(pathname);
+  // La racine du site est index.html. On ne le fait qu'ici : une déclaration
+  // sans page d'index doit rester vide, pour être écartée plutôt que de
+  // désigner l'accueil par défaut.
+  const courant = normaliserChemin(pathname) || 'index.html';
   return typesDe(config).find((type) => type.index === courant) || null;
 }
 
 /** Chemin de fichier comparable : « /portfolio » et « portfolio.html » coïncident. */
 export function normaliserChemin(valeur) {
   let chemin = String(valeur || '').trim().replace(/\\/g, '/');
+  // On accepte aussi bien une URL complète qu'un chemin : l'éditeur transmet
+  // l'adresse de l'aperçu, la configuration un nom de fichier.
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(chemin)) {
+    try { chemin = new URL(chemin).pathname; } catch { /* on garde tel quel */ }
+  }
   chemin = chemin.replace(/^\/+/, '').replace(/[?#].*$/, '');
   if (chemin === '') return '';
   if (chemin.endsWith('/')) chemin += 'index.html';
