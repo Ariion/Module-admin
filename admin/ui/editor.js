@@ -700,6 +700,27 @@ export async function startEditor(runtime) {
     return true;
   }
 
+  /**
+   * Attend qu'une page fraîchement créée soit servie.
+   *
+   * Sur un hébergement qui reconstruit le site à chaque écriture, le fichier
+   * existe avant d'être en ligne. L'ouvrir tout de suite afficherait une page
+   * introuvable — ce qui ressemble à un échec alors que tout s'est bien passé.
+   */
+  async function attendrePage(url, limite = 150000) {
+    const debut = Date.now();
+    let attente = 2000;
+    while (Date.now() - debut < limite) {
+      await new Promise((r) => setTimeout(r, attente));
+      try {
+        const reponse = await fetch(url, { method: 'GET', cache: 'no-store' });
+        if (reponse.ok) return true;
+      } catch { /* hors ligne ou reconstruction en cours : on retente */ }
+      attente = Math.min(attente * 1.4, 8000);
+    }
+    return false;
+  }
+
   async function nouveauContenu(sousTypeId) {
     const type = typePourPage(runtime.config, urlCourante());
     const sousType = type && type.sousTypes.find((st) => st.id === sousTypeId);
@@ -721,8 +742,16 @@ export async function startEditor(runtime) {
 
     if (poserCarte(type, titre, chemin)) markDirty();
     await autosave.flush();
-    notify(t('contenuCree'));
-    await loadPage('/' + chemin, { keepScroll: false });
+
+    notify(t('contenuEnRoute'));
+    if (await attendrePage('/' + chemin)) {
+      notify(t('contenuCree'));
+      await loadPage('/' + chemin, { keepScroll: false });
+    } else {
+      // La page est créée : seule sa mise en ligne tarde. On reste sur la
+      // galerie plutôt que d'ouvrir une page introuvable.
+      notify(t('contenuLent'), true);
+    }
   }
 
   async function collectionOp(id, op, ...args) {
