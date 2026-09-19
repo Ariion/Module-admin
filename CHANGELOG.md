@@ -1,5 +1,42 @@
 # Journal des versions
 
+## 1.15.0
+
+**Annuler, rétablir, et retrouver ses pages**
+
+Deux boutons rejoignent la barre du bas, à côté de « Publier » : une flèche
+en arrière, une flèche en avant. Ctrl+Z et Ctrl+Maj+Z font la même chose,
+dans le panneau comme dans la page — sauf dans un champ de saisie, où
+l'annulation du navigateur reste la bonne : en train d'écrire, on veut
+défaire un mot, pas tout un geste.
+
+L'historique garde des états complets de la page, pas des opérations. C'est
+plus lourd en mémoire et bien plus sûr : le module n'a pas à savoir inverser
+chacune de ses commandes, et une annulation ne peut pas laisser la page à
+moitié défaite. Supprimer une section, puis l'annuler, la ramène telle
+quelle. Chaque page a son propre historique, et une frappe continue ne
+compte que pour une étape.
+
+**Les adresses sans extension étaient lues de travers**
+
+Vercel, Netlify et GitHub Pages servent `article.html` à l'adresse
+`/article` — et y redirigent même quand on demande le fichier. Le module
+lisait cette adresse comme `article/index.html`. Un article créé apparaissait
+alors deux fois dans la liste des pages, et la seconde ligne ramenait à
+l'accueil ; la publication, elle, visait un fichier qui n'existait pas.
+
+Le calcul est désormais commun à tout le module, et une adresse sans
+extension désigne `article.html`. Les listes déjà écrites se corrigent
+d'elles-mêmes : deux chemins qui désignent la même page ne font qu'une ligne.
+
+**Entrer dans un article depuis sa carte**
+
+Dans l'aperçu, cliquer un lien le sélectionne au lieu de le suivre — c'est ce
+qui permet de le modifier. Une galerie devenait donc un cul-de-sac : on
+voyait la carte de l'article sans pouvoir y entrer. Un bouton « Ouvrir cette
+page » apparaît maintenant sous l'adresse, quand le lien mène ailleurs sur le
+site.
+
 ## 1.14.0
 
 **Quatre trames d'article, et de quoi les écrire**

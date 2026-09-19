@@ -9,12 +9,54 @@
  */
 import { pageKeyFromLocation } from './dom.js';
 
-/** Chemin de fichier correspondant à une URL de page. */
+/**
+ * Chemin de fichier correspondant à une URL de page.
+ *
+ * Deux hébergements écrivent la même page de deux façons. Le classique sert
+ * `article.html` à l'adresse `/article.html`. Ceux qui gomment l'extension —
+ * Vercel, Netlify, GitHub Pages — servent ce même fichier à `/article`, et
+ * redirigent même `/article.html` vers cette adresse-là : c'est donc celle
+ * que porte le navigateur dès qu'on a suivi un lien.
+ *
+ * Une adresse sans extension désigne par conséquent `article.html`, et non
+ * `article/index.html` : un dossier se donne avec sa barre finale — les
+ * serveurs qui en servent l'index redirigent d'ailleurs vers elle.
+ *
+ * Ce chemin n'est pas décoratif : c'est le fichier que la publication
+ * réécrit, celui que la liste des pages retient, celui qu'on compare pour
+ * savoir si deux adresses parlent de la même page. Se tromper ici, c'est
+ * publier à côté et perdre le texte écrit.
+ */
 export function filePathOf(url) {
-  let chemin = new URL(url, location.href).pathname.replace(/^\/+/, '');
+  const brut = new URL(url, location.href).pathname.replace(/^\/+/, '');
+  let chemin = brut;
+  // Le chemin voyage jusqu'à l'hébergement, qui attend un nom de fichier :
+  // « mentions-légales.html », pas « mentions-l%C3%A9gales.html ».
+  try { chemin = decodeURIComponent(brut); } catch { chemin = brut; }
   if (chemin === '' || chemin.endsWith('/')) return chemin + 'index.html';
   const dernier = chemin.split('/').pop();
-  return dernier.includes('.') ? chemin : chemin + '/index.html';
+  return dernier.includes('.') ? chemin : chemin + '.html';
+}
+
+/**
+ * Deux chemins désignent-ils la même page ?
+ *
+ * `article.html` et `article/index.html` sont un seul article : une version
+ * précédente du module lisait l'adresse propre `/article` de la seconde
+ * façon, et les listes de pages retenues gardent des chemins de cette forme.
+ * Les rapprocher évite d'afficher deux lignes pour un même texte — dont une
+ * qui n'ouvre rien.
+ */
+export function memePage(a, b) {
+  return clePage(a) === clePage(b);
+}
+
+function clePage(chemin) {
+  return String(chemin || '')
+    .replace(/^\/+/, '')
+    .replace(/\/(index|default|accueil)\.html?$/i, '')
+    .replace(/\.html?$/i, '')
+    .toLowerCase() || 'index';
 }
 
 /** Titre lisible d'une page, à partir de son chemin. */

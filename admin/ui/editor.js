@@ -33,7 +33,8 @@ import { openWizard } from './wizard.js';
 import { openBrief } from './brief-panel.js';
 import { openLegal } from './legal-panel.js';
 import { openBoutique } from './boutique-panel.js';
-import { filePathOf, labelOf } from '../core/pages.js';
+import { filePathOf, labelOf, memePage } from '../core/pages.js';
+import { creerHistorique } from '../core/historique.js';
 import { ouvrirAction } from '../core/actions.js';
 import { animerApparitions } from '../core/effets.js';
 import { etapesDuGuide } from '../core/guide.js';
@@ -86,6 +87,9 @@ export async function startEditor(runtime) {
     editing: true, dirty: false, saving: false, baking: false,
     hasDraft: false, savedAt: null, baked: null, pageVierge: false,
     pageId: config.pageId, user: null, access: null,
+    // Un retour en arrière recharge la page et la réenregistre : pendant ce
+    // temps, ce n'est pas une modification de plus à retenir.
+    restauration: false,
   };
 
   let shell = null;
@@ -186,6 +190,10 @@ export async function startEditor(runtime) {
         widgetOp: (key, op, arg) => widgetOp(key, op, arg),
         widgetElement: (key) => model.doc.querySelector(`[data-admin-widget="${key}"]`),
         selectWidget: (key) => selectWidget(key),
+        pageLiee: (href) => pageLiee(href),
+        // safe() est synchrone : il laisserait passer le rejet d'une
+        // promesse, et le bouton ne ferait rien sans rien dire.
+        ouvrirPageLiee: (href) => { ouvrirPageLiee(href).catch((err) => notify(err.message || String(err), true)); },
       },
     });
 
@@ -299,6 +307,8 @@ export async function startEditor(runtime) {
     shell.setActions([
       publishButton,
       previewButton,
+      boutonDefaire,
+      boutonRefaire,
       h('button', { class: 'btn btn--icon', type: 'button', title: t('history'), onclick: history }, icon('history', 13)),
       h('button', { class: 'btn btn--icon', type: 'button', title: t('exportSite'), onclick: exporter }, icon('download', 13)),
       h('button', { class: 'btn btn--icon', type: 'button', title: t('signOut'), onclick: quit }, icon('close', 13)),
@@ -394,6 +404,16 @@ export async function startEditor(runtime) {
     class: 'btn btn--icon', type: 'button', title: t('preview'), onclick: () => togglePreview(),
   }, icon('eye', 13));
 
+  const boutonDefaire = h('button', {
+    class: 'btn btn--icon', type: 'button', title: t('defaire'), disabled: true,
+    onclick: () => parcourirHistorique('defaire'),
+  }, icon('undo', 13));
+
+  const boutonRefaire = h('button', {
+    class: 'btn btn--icon', type: 'button', title: t('refaire'), disabled: true,
+    onclick: () => parcourirHistorique('refaire'),
+  }, icon('redo', 13));
+
   // ================================================================
   //  Aperçu et modèle
   // ================================================================
@@ -406,6 +426,9 @@ export async function startEditor(runtime) {
 
     const { doc } = await shell.load(url);
     doc.head.appendChild(h('style', { 'data-admin-ui': '' }, FRAME_CSS));
+    // Le document de l'aperçu est neuf à chaque chargement : il faut lui
+    // redonner les raccourcis. Ctrl+Z doit marcher là où l'on regarde.
+    doc.addEventListener('keydown', surRaccourci);
 
     state.pageId = pageIdDe(doc);
     model = new PageModel({
@@ -431,18 +454,28 @@ export async function startEditor(runtime) {
       return { instantane: publie, brouillon: false };
     };
 
-    const commun = await charger(PAGE_COMMUNE);
-    if (commun.instantane && aDuContenu(commun.instantane)) {
-      model.applySnapshot(commun.instantane);
-    }
+    // Un retour en arrière fournit l'état à reposer. Il contient déjà tout ce
+    // que la page portait — l'en-tête et le pied communs y compris, puisque
+    // le modèle les avait absorbés — et il doit primer sur ce qui est
+    // enregistré : c'est précisément ce qu'on est en train de défaire.
+    let enregistre = false;
+    if (options.instantane) {
+      model.applySnapshot(options.instantane);
+      enregistre = aDuContenu(options.instantane);
+    } else {
+      const commun = await charger(PAGE_COMMUNE);
+      if (commun.instantane && aDuContenu(commun.instantane)) {
+        model.applySnapshot(commun.instantane);
+      }
 
-    const propre = await charger(state.pageId);
-    const instantane = propre.instantane;
-    state.hasDraft = propre.brouillon || commun.brouillon;
-    const enregistre = !!(instantane && aDuContenu(instantane));
-    if (enregistre) {
-      model.applySnapshot(instantane, { cumuler: true });
-      state.savedAt = instantane.updatedAt || null;
+      const propre = await charger(state.pageId);
+      const instantane = propre.instantane;
+      state.hasDraft = propre.brouillon || commun.brouillon;
+      enregistre = !!(instantane && aDuContenu(instantane));
+      if (enregistre) {
+        model.applySnapshot(instantane, { cumuler: true });
+        state.savedAt = instantane.updatedAt || null;
+      }
     }
 
     // Une page vierge, c'est une page de départ : presque rien à éditer, et
@@ -470,6 +503,25 @@ export async function startEditor(runtime) {
     bibliotheque?.render();
     surveillerNavigation(doc.location.href);
     if (defilement) doc.defaultView.scrollTo({ top: defilement });
+
+    // Chaque page a son propre historique. Annuler, sur un article, une
+    // modification faite sur la page d'accueil serait incompréhensible : on
+    // ne verrait même pas ce qui a changé.
+    //
+    // Mais rafraîchir la page AFFICHÉE — ce que fait toute opération de
+    // structure, supprimer une section par exemple — n'est pas changer de
+    // page : c'est précisément là qu'on veut pouvoir revenir en arrière. On
+    // ne repart donc de zéro que si la page a vraiment changé. Un retour en
+    // arrière, lui, traverse ce rechargement sans rien empiler : c'est lui
+    // qui l'a provoqué.
+    if (!options.instantane) {
+      const chemin = filePathOf(doc.location.href);
+      if (chemin !== pageHistorique) {
+        historique.vider();
+        pageHistorique = chemin;
+      }
+      historique.poser(model.toSnapshot());
+    }
     render();
     debug('aperçu prêt —', state.pageId, model.entries.size, 'éléments');
   }
@@ -821,7 +873,19 @@ export async function startEditor(runtime) {
   function memoriserPage() {
     const chemin = filePathOf(urlCourante());
     const connues = model.reglages?.pages || [];
-    if (connues.some((p) => p.path === chemin)) return;
+
+    // Une entrée peut déjà désigner cette page, mais par un autre chemin :
+    // les listes écrites par une version précédente notaient l'adresse
+    // propre « /article » comme « article/index.html ». On rectifie au
+    // passage — sans quoi la liste garde deux lignes pour un seul article,
+    // dont une qui ramène à l'accueil.
+    const ancienne = connues.find((p) => memePage(p.path, chemin));
+    if (ancienne) {
+      if (ancienne.path === chemin) return;
+      model.setReglage('pages', connues.map((p) => (p === ancienne ? { ...p, path: chemin } : p)));
+      markDirty();
+      return;
+    }
     // Une page créée hérite du titre de sa page modèle : deux entrées
     // portant le même nom ne se distingueraient pas. Le nom du fichier
     // prend alors le relais.
@@ -1059,9 +1123,13 @@ export async function startEditor(runtime) {
 
   /** Les pages que le module connaît, avec leur fichier. */
   function pagesConnues() {
-    const base = urlCourante().replace(/[^/]*$/, '');
+    // Les chemins retenus partent de la racine du site, et la clé de page se
+    // calcule sur un chemin : lui passer une URL complète fabriquerait des
+    // clés (« https_procomsolution_fr_portfolio ») qui ne correspondent à
+    // aucun brouillon — une remise à zéro du site ne toucherait rien.
+    const racine = new URL('/', urlCourante()).href;
     const connues = (model.reglages?.pages || []).map((page) => ({
-      pageId: pageKeyFromLocation(new URL(page.path, base)),
+      pageId: pageKeyFromLocation(new URL(page.path, racine).pathname),
       chemin: page.path,
     }));
     const courante = { pageId: state.pageId, chemin: filePathOf(urlCourante()) };
@@ -1365,6 +1433,33 @@ export async function startEditor(runtime) {
     return doc ? doc.location.href.split('?')[0] : location.pathname;
   }
 
+  /** Va sur la page visée par un lien de l'aperçu. */
+  async function ouvrirPageLiee(href) {
+    const url = pageLiee(href);
+    if (!url) return;
+    await autosave.flush();
+    await loadPage(url, { keepScroll: false });
+    showLibrary();
+  }
+
+  /**
+   * L'adresse d'une autre page du site visée par un lien, s'il en vise une.
+   *
+   * Sert à proposer d'y aller depuis l'inspecteur. On écarte les ancres, les
+   * adresses extérieures et le lien qui pointe sur la page déjà ouverte :
+   * proposer d'ouvrir ce qu'on regarde ne veut rien dire.
+   */
+  function pageLiee(href) {
+    const brut = String(href || '').trim();
+    if (!brut || brut.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(brut) && !/^https?:/i.test(brut)) return '';
+    const base = new URL(urlCourante(), location.href).href;
+    let url;
+    try { url = new URL(brut, base); } catch { return ''; }
+    if (url.origin !== location.origin) return '';
+    if (filePathOf(url.href) === filePathOf(base)) return '';
+    return url.origin + url.pathname;
+  }
+
   // ================================================================
   //  Brouillon et publication
   // ================================================================
@@ -1395,6 +1490,89 @@ export async function startEditor(runtime) {
     // fin de la saisie — il ferait perdre le curseur à chaque caractère.
     guide?.majAvancement();
     autosave();
+    noterHistorique();
+  }
+
+  // ================================================================
+  //  Annuler / rétablir
+  // ================================================================
+  const historique = creerHistorique();
+  /** La page à laquelle l'historique se rapporte. */
+  let pageHistorique = null;
+
+  /**
+   * Enregistre une étape, une fois la main retirée.
+   *
+   * Sans cette attente, chaque caractère tapé serait une étape : il faudrait
+   * trente Ctrl+Z pour effacer un titre. Avec elle, une étape correspond à
+   * un geste — une phrase écrite, un bloc déplacé, une image posée.
+   */
+  const noterHistorique = debounce(() => {
+    if (!model || state.restauration) return;
+    if (historique.poser(model.toSnapshot())) render();
+  }, 900);
+
+  /**
+   * Repose un état de l'historique.
+   *
+   * On recharge la page avant de l'appliquer, au lieu de défaire les
+   * modifications une à une. Un instantané se POSE sur une page intacte : le
+   * reposer sur une page déjà modifiée ne retirerait ni la section ajoutée ni
+   * le bloc supprimé — on se retrouverait avec un mélange des deux états.
+   * Repartir du fichier servi est plus lent, et c'est le seul moyen d'obtenir
+   * exactement la page d'avant.
+   */
+  async function parcourirHistorique(sens) {
+    const instantane = sens === 'defaire' ? historique.defaire() : historique.refaire();
+    if (!instantane) { notify(t(sens === 'defaire' ? 'defaireRien' : 'refaireRien')); return; }
+
+    state.restauration = true;
+    try {
+      autosave.cancel();
+      noterHistorique.cancel();
+      textEditor?.commit();
+      await loadPage(urlCourante(), { instantane });
+      // L'état retrouvé doit être enregistré à son tour, tout de suite : sinon
+      // le brouillon qu'on vient de défaire reviendrait au prochain
+      // chargement, et l'annulation n'aurait tenu que le temps d'un coup
+      // d'œil. On programme puis on force — flush() seul ne fait rien quand
+      // rien n'est en attente.
+      state.dirty = true;
+      render();
+      autosave();
+      await autosave.flush();
+      notify(t(sens === 'defaire' ? 'defaireFait' : 'refaireFait'));
+    } catch (err) {
+      notify(String(err.message || err), true);
+    } finally {
+      // Le rechargement a pu programmer une prise d'état : elle porterait sur
+      // ce qu'on vient de reposer, et effacerait le « rétablir ».
+      noterHistorique.cancel();
+      state.restauration = false;
+      render();
+    }
+  }
+
+  /**
+   * Ctrl+Z et Ctrl+Maj+Z, dans le panneau comme dans l'aperçu.
+   *
+   * Sauf dans un champ de saisie : là, l'annulation du navigateur défait la
+   * frappe caractère par caractère, ce qui est exactement ce qu'on attend en
+   * train d'écrire. Le module ne reprend la main qu'en dehors.
+   */
+  function surRaccourci(event) {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+    const touche = event.key.toLowerCase();
+    const sens = touche === 'z' ? (event.shiftKey ? 'refaire' : 'defaire')
+      : (touche === 'y' && !event.shiftKey ? 'refaire' : null);
+    if (!sens) return;
+
+    const cible = event.target;
+    if (cible?.isContentEditable) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(cible?.tagName || '')) return;
+
+    event.preventDefault();
+    parcourirHistorique(sens);
   }
 
   /**
@@ -1532,6 +1710,7 @@ export async function startEditor(runtime) {
   }
 
   function teardown() {
+    document.removeEventListener('keydown', surRaccourci);
     document.documentElement.removeAttribute('data-admin-shell');
     documentStyle.remove();
     host.remove();
@@ -1567,6 +1746,8 @@ export async function startEditor(runtime) {
     shell.setPreviewNote(!state.editing && (modifications || state.hasDraft)
       ? t('previewDraft') : '');
     publishButton.disabled = !modifications && !state.hasDraft;
+    boutonDefaire.disabled = !historique.peutDefaire() || state.restauration;
+    boutonRefaire.disabled = !historique.peutRefaire() || state.restauration;
   }
 
   // ================================================================
@@ -1574,6 +1755,7 @@ export async function startEditor(runtime) {
   // ================================================================
   async function enterEditMode() {
     runtime.markEditing(true);
+    document.addEventListener('keydown', surRaccourci);
     document.documentElement.setAttribute('data-admin-shell', '');
     buildShell();
     await loadPage(location.pathname);

@@ -162,6 +162,8 @@ export function icon(name, size = 14) {
     template: 'M4 4h16v4H4zM4 11h7v9H4zM14 11h6v9h-6z',
     music: 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
     pages: 'M8 3h9l4 4v14H8zM8 7H4v14h9',
+    undo: 'M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-5',
+    redo: 'M15 14l5-5-5-5M20 9H9a5 5 0 0 0 0 10h5',
   };
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
