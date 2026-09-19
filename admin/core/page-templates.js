@@ -433,10 +433,6 @@ export const INTENTIONS = [
   { id: 'portfolio', modele: 'portfolio' },
   { id: 'histoire', modele: 'apropos' },
   { id: 'article', modele: 'article' },
-  { id: 'interview', modele: 'interview' },
-  { id: 'portrait', modele: 'portrait' },
-  { id: 'conseil', modele: 'conseil' },
-  { id: 'actualite', modele: 'actualite' },
   { id: 'contact', modele: 'contact' },
 ];
 
