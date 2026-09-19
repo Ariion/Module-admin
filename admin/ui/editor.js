@@ -487,6 +487,15 @@ export async function startEditor(runtime) {
 
     memoriserPage();
 
+    // Le développeur a changé une liste répétable dans le code : le contenu
+    // enregistré la décrivait autrement, il a été écarté pour ne pas faire
+    // disparaître ses blocs. Sans ce mot, le client verrait ses retouches
+    // s'évaporer sans explication.
+    for (const [, ecart] of model.collectionsPerimees) {
+      notify(t('listePerimee', ecart.attendus, ecart.presents), true);
+      break;
+    }
+
     // La clé de la banque d'images peut avoir été saisie depuis le module :
     // elle vit alors dans les réglages du site, pas dans le fichier de config.
     if (model.reglages?.medias?.pixabay) media.banque?.setCle(model.reglages.medias.pixabay);

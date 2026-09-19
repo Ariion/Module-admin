@@ -6,7 +6,7 @@
  */
 import { scan } from './scanner.js';
 import { buildIndex, resolveAll, fingerprint } from './identity.js';
-import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, ops } from './collections.js';
+import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, estPerime, ops } from './collections.js';
 import { applyValue, readCurrent, readStyle } from './binder.js';
 import {
   listSections, applySections, racineSections, emptyState as emptySections, isEmpty as sectionsEmpty,
@@ -47,6 +47,9 @@ export class PageModel {
     this.pageMeta = null;
     /** @type {Map<string, object>} état des collections */
     this.collectionState = new Map();
+    // Listes dont le code a changé depuis l'enregistrement : écartées à
+    // l'affichage, signalées dans l'éditeur.
+    this.collectionsPerimees = new Map();
     /** @type {Map<string, object>} métadonnées d'identité par id */
     this.meta = new Map();
     /** @type {Map<string, object>} enregistrements non rebranchés */
@@ -163,6 +166,15 @@ export class PageModel {
       const collection = matchCollection({ id, ...record }, this.collections, usedCollections);
       if (!collection) continue;
       usedCollections.add(collection.id);
+      // Une liste dont le code a changé ne doit PAS être retenue comme état
+      // courant : la garder ferait republier, à la prochaine sauvegarde, le
+      // contenu périmé qu'on vient justement d'écarter.
+      if (estPerime(collection, record)) {
+        this.collectionsPerimees.set(collection.id, {
+          attendus: record.n, presents: collection.items.length,
+        });
+        continue;
+      }
       this.collectionState.set(collection.id, clone(record));
       safe(() => {
         const result = applyCollection(collection, record, (itemEl, fields) => {
@@ -750,6 +762,9 @@ export class PageModel {
         path: collection.print.path,
         sig: collection.print.sig,
         itemSig: collection.itemSig,
+        // Combien de blocs le code portait quand ce contenu a été relevé.
+        // C'est ce qui permet de voir, plus tard, que le code a changé.
+        n: data.n,
         items: clone(data.items),
       };
     }

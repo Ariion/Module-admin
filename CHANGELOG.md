@@ -1,5 +1,29 @@
 # Journal des versions
 
+## 1.16.0
+
+**Un contenu enregistré ne peut plus effacer les blocs du développeur**
+
+Une liste répétable est enregistrée par NUMÉRO DE POSITION : « le bloc 2, le
+bloc 3, le bloc 5 ». Ces numéros ne valent que pour la liste telle que le
+développeur l'avait écrite. Qu'il en ajoute, et ils désignent autre chose.
+
+Le module rejouait l'enregistrement quand même. Sur un site dont la galerie
+est passée de 6 à 12 articles, les visiteurs n'en voyaient plus que 5 —
+choisis par des index qui ne voulaient plus rien dire, et les sept autres
+retirés du document. Le code du développeur disparaissait sans un mot.
+
+Chaque enregistrement porte désormais `n` : combien de blocs le code comptait
+au moment où il a été relevé. Si ce nombre ne correspond plus, l'enregistrement
+est écarté et la liste du code s'affiche telle quelle. L'éditeur le dit, plutôt
+que de laisser croire à une disparition.
+
+Les enregistrements écrits avant cette version ne portent pas ce repère : rien
+ne permet de les dater, ils continuent d'être appliqués. Pour un site déjà
+touché, le bouton « Revenir aux blocs du code » — dans l'éditeur, en
+sélectionnant un bloc de la liste — remet les choses en place, et le nouvel
+enregistrement portera le repère.
+
 ## 1.15.0
 
 **Annuler, rétablir, et retrouver ses pages**
