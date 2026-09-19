@@ -44,8 +44,12 @@ export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, 
 
     // Le type de contenu d'abord : sur une page galerie, « ajouter un
     // article » est le geste qu'on vient faire, pas « poser un titre ».
-    if (contenus && onNouveauContenu) {
-      const sous = contenus.sousTypes.filter(
+    //
+    // Résolu à chaque peinture : l'aperçu change de page sans que l'éditeur
+    // redémarre, et la rubrique doit suivre.
+    const type = typeof contenus === 'function' ? contenus() : contenus;
+    if (type && onNouveauContenu) {
+      const sous = type.sousTypes.filter(
         (st) => !filtre || st.nom.toLowerCase().includes(filtre) || st.id.includes(filtre));
       if (sous.length) {
         total += sous.length;
@@ -57,7 +61,7 @@ export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, 
               if (replies.has('contenus')) replies.delete('contenus'); else replies.add('contenus');
               dessiner();
             },
-          }, h('span', {}, contenus.nom), icon('down', 12)),
+          }, h('span', {}, type.nom), icon('down', 12)),
           h('div', { class: 'wgrid' }, sous.map(vignetteContenu)),
         ));
       }

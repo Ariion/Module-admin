@@ -92,6 +92,7 @@ export async function startEditor(runtime) {
   let overlay = null;
   let textEditor = null;
   let inspector = null;
+  let bibliotheque = null;
   let navigator = null;
   let library = null;
 
@@ -133,13 +134,13 @@ export async function startEditor(runtime) {
     const vueInspecteur = h('div', {});
     hoteInspecteur.appendChild(vueInspecteur);
 
-    createWidgetsPanel({
+    bibliotheque = createWidgetsPanel({
       vue: hoteBibliotheque, t,
       onInsert: (type) => insererWidget(type),
       onTemplate: (id) => ajouterModele(id),
       onDragStart: (type) => overlay.beginDrag(type),
       onDragEnd: () => overlay.endDrag(),
-      contenus: typePourPage(runtime.config, urlCourante()),
+      contenus: () => typePourPage(runtime.config, urlCourante()),
       onNouveauContenu: (sousTypeId) => nouveauContenu(sousTypeId),
     });
 
@@ -463,6 +464,8 @@ export async function startEditor(runtime) {
     navigator.render(model);
     guide?.render();
     inspector.render(null);
+    // La page a changé : la rubrique de contenu n'est pas la même.
+    bibliotheque?.render();
     surveillerNavigation(doc.location.href);
     if (defilement) doc.defaultView.scrollTo({ top: defilement });
     render();
