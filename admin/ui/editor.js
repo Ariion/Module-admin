@@ -10,6 +10,7 @@
 import { SHADOW_CSS, DOCUMENT_CSS, FRAME_CSS } from './styles.js';
 import { createTranslator } from './i18n.js';
 import { h, icon } from './el.js';
+import { openModal } from './modal.js';
 import { createShell } from './shell.js';
 import { createOverlay } from './overlay.js';
 import { createTextEditor } from './text-edit.js';
@@ -141,7 +142,8 @@ export async function startEditor(runtime) {
       onDragStart: (type) => overlay.beginDrag(type),
       onDragEnd: () => overlay.endDrag(),
       contenus: () => typePourPage(runtime.config, urlCourante()),
-      onNouveauContenu: (sousTypeId) => nouveauContenu(sousTypeId),
+      onNouveauContenu: (sousTypeId) => nouveauContenu(sousTypeId)
+        .catch((err) => { console.error('[admin]', err); notify(err.message || String(err), true); }),
     });
 
     inspector = createInspector({
