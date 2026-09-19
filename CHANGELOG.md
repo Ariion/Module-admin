@@ -1,5 +1,36 @@
 # Journal des versions
 
+## 1.14.0
+
+**Quatre trames d'article, et de quoi les écrire**
+
+Un site qui publie régulièrement n'a pas besoin d'une page d'article, mais
+de plusieurs formes d'article. Quatre s'ajoutent aux modèles de page :
+
+- **Interview** — une suite de questions en intertitre, chacune suivie d'une
+  réponse qui va droit au but. C'est la forme que les moteurs de recherche et
+  les moteurs de réponse savent extraire : la question posée telle qu'un
+  lecteur la poserait, et l'essentiel dans les deux premières phrases.
+- **Portrait** — un récit. Les intertitres racontent une progression au lieu
+  de poser des questions, et la citation ouvre le texte comme une accroche.
+- **Conseil** — un encadré donne la réponse dès le début, les explications
+  suivent. Les pas-à-pas n'ont plus d'affichage enrichi dans Google depuis
+  2023 : ce qui compte est que la réponse soit lisible tout de suite.
+- **Actualité** — court et daté. L'essentiel dans le premier paragraphe, le
+  détail ensuite.
+
+Deux éléments les accompagnent, parce qu'aucun ne savait les poser :
+
+- **Citation** pose une phrase en exergue, avec son auteur. Rendue en
+  `<blockquote>` et `<cite>`.
+- **Encadré** pose un titre court et quelques points à retenir. Rendu en
+  `<aside>`.
+
+Comme tous les éléments, ils émettent du balisage sémantique sans classes :
+la feuille de style du site s'y applique d'elle-même. Un site qui habille
+déjà ses citations n'a rien à faire ; un site qui ne les a jamais stylées
+ajoute deux règles.
+
 ## 1.13.1
 
 **Le diagnostic clavier dit maintenant QUAND la touche est annulée**

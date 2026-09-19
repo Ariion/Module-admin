@@ -264,6 +264,163 @@ export const PAGE_TEMPLATES = [
       ]),
     ],
   },
+  /**
+   * Interview — une suite de questions en H2, chacune suivie d'une réponse
+   * qui va droit au but. C'est la forme que Google et les moteurs de réponse
+   * savent extraire : la question posée telle qu'un lecteur la poserait, et
+   * l'essentiel dans les deux premières phrases.
+   */
+  {
+    id: 'interview',
+    pour: ['article'], resume: 2,
+    apercu: ['texte', 'bande', 'texte', 'texte'],
+    build: () => [
+      section([
+        w('etiquette', { text: 'INTERVIEW' }),
+        w('heading', { text: 'Entretien avec Prénom Nom', level: 'h2' }),
+        w('text', T('<em>Publié le 1er janvier — propos recueillis par votre nom</em>')),
+        w('spacer', { height: 16 }),
+        w('image', { alt: 'Portrait de la personne interviewée' }),
+      ], { padding: 56 }),
+      section([
+        w('citation', {
+          texte: 'La phrase la plus forte de l’entretien, celle qu’on retiendra.',
+          source: 'Prénom Nom',
+        }),
+        w('spacer', { height: 24 }),
+        w('heading', { text: 'Quel est votre parcours ?', level: 'h3' }),
+        w('text', T('Répondez en deux phrases avant de développer. Le lecteur pressé — et le moteur de recherche — s’arrêtent souvent là.')),
+        w('spacer', { height: 20 }),
+        w('heading', { text: 'Qu’est-ce qui vous a décidé ?', level: 'h3' }),
+        w('text', T('La réponse, puis le détail. Une question par intertitre, formulée comme on la poserait à voix haute.')),
+        w('spacer', { height: 20 }),
+        w('heading', { text: 'Et la suite ?', level: 'h3' }),
+        w('text', T('Terminez sur un projet ou une conviction : c’est ce qui donne envie de lire l’entretien suivant.')),
+      ]),
+      section([
+        w('encadre', {
+          titre: 'À propos de Prénom Nom',
+          items: 'Sa fonction et son lieu d’exercice\nSon parcours en une ligne\nOù la retrouver',
+        }),
+      ], { padding: 48 }),
+    ],
+  },
+
+  /**
+   * Portrait — un récit, pas un questionnaire. Les intertitres racontent une
+   * progression plutôt que de poser des questions, et la citation ouvre le
+   * texte comme une accroche.
+   */
+  {
+    id: 'portrait',
+    pour: ['article'], resume: 2,
+    apercu: [{ type: 'photo', hauteur: 34 }, 'texte', 'texte', 'bande'],
+    build: () => [
+      section([
+        w('etiquette', { text: 'PORTRAIT' }),
+        w('heading', { text: 'Prénom Nom, en quelques lignes', level: 'h2' }),
+        w('text', T('<em>Publié le 1er janvier — par votre nom</em>')),
+        w('spacer', { height: 16 }),
+        w('image', { alt: 'Portrait' }),
+      ], { padding: 56 }),
+      section([
+        w('citation', {
+          texte: 'Une phrase qui dit qui est cette personne mieux qu’un paragraphe.',
+          source: 'Prénom Nom',
+        }),
+        w('spacer', { height: 24 }),
+        w('heading', { text: 'Ce qui l’a menée là', level: 'h3' }),
+        w('text', T('Le début du récit. Un portrait se lit d’une traite : préférez des paragraphes qui s’enchaînent aux listes à puces.')),
+        w('spacer', { height: 20 }),
+        w('heading', { text: 'Ce qu’elle fait aujourd’hui', level: 'h3' }),
+        w('text', T('Le cœur du sujet — son métier, sa manière de l’exercer, ce qui la distingue.')),
+        w('spacer', { height: 20 }),
+        w('heading', { text: 'Ce qu’elle prépare', level: 'h3' }),
+        w('text', T('La perspective. On referme un portrait sur un horizon, pas sur un bilan.')),
+      ]),
+      section([
+        w('columns', { count: 2, gap: 40 }, [
+          [w('heading', { text: 'En bref', level: 'h3' }),
+           w('list', { items: 'Fonction\nLieu d’exercice\nSpécialité' })],
+          [w('heading', { text: 'Pour aller plus loin', level: 'h3' }),
+           w('text', T('Un lien vers son site, son profil, ou un article qui la cite.'))],
+        ]),
+      ], { padding: 48 }),
+    ],
+  },
+
+  /**
+   * Conseil — un encadré qui donne la réponse dès le début, puis les
+   * explications. Les pas-à-pas ne produisent plus d'affichage enrichi dans
+   * Google depuis 2023 : ce qui compte est que la réponse soit lisible tout
+   * de suite, pour le lecteur comme pour les moteurs de réponse.
+   */
+  {
+    id: 'conseil',
+    pour: ['article'], resume: 2,
+    apercu: ['texte', 'bande', 'texte', 'texte'],
+    build: () => [
+      section([
+        w('etiquette', { text: 'CONSEIL' }),
+        w('heading', { text: 'La question que se pose votre lecteur', level: 'h2' }),
+        w('text', T('<em>Publié le 1er janvier — par votre nom</em>')),
+      ], { padding: 56 }),
+      section([
+        w('text', T('Le chapeau : à qui s’adresse cet article, et ce qu’il y trouvera. Deux phrases suffisent.')),
+        w('spacer', { height: 20 }),
+        w('encadre', {
+          titre: 'L’essentiel en trois points',
+          items: 'Le premier point à retenir\nLe deuxième\nLe troisième',
+        }),
+        w('spacer', { height: 24 }),
+        w('heading', { text: 'Premier point : de quoi s’agit-il ?', level: 'h3' }),
+        w('text', T('La réponse d’abord, l’explication ensuite. C’est ce qui permet d’être cité par les moteurs de réponse.')),
+        w('spacer', { height: 20 }),
+        w('heading', { text: 'Deuxième point : que faire ?', level: 'h3' }),
+        w('text', T('Du concret. Ce que le lecteur peut appliquer en sortant de la page.')),
+        w('spacer', { height: 20 }),
+        w('heading', { text: 'Quand faut-il consulter ?', level: 'h3' }),
+        w('text', T('Les signaux qui doivent alerter, et vers qui se tourner.')),
+      ]),
+      section([
+        w('heading', { text: 'Une question sur votre situation ?', level: 'h3' }),
+        w('text', T('Une phrase d’invitation, puis le bouton.')),
+        w('spacer', { height: 16 }),
+        w('button', { text: 'Me contacter', href: '#contact' }),
+      ], { padding: 48, align: 'center' }),
+    ],
+  },
+
+  /**
+   * Actualité — court et daté. L'essentiel dans le premier paragraphe, le
+   * détail ensuite : c'est la pyramide inversée du journalisme, et elle sert
+   * aussi bien le lecteur pressé que l'extraction automatique.
+   */
+  {
+    id: 'actualite',
+    pour: ['article'], resume: 1,
+    apercu: ['texte', 'texte', 'bande'],
+    build: () => [
+      section([
+        w('etiquette', { text: 'ACTUALITÉ' }),
+        w('heading', { text: 'Ce qui vient de se passer', level: 'h2' }),
+        w('text', T('<em>Publié le 1er janvier — par votre nom</em>')),
+      ], { padding: 48 }),
+      section([
+        w('text', T('<strong>Quoi, qui, quand, où.</strong> Le premier paragraphe doit suffire à comprendre l’information, même si on s’arrête là.')),
+        w('spacer', { height: 20 }),
+        w('text', T('Le deuxième paragraphe apporte le contexte : pourquoi c’est important, ce que ça change pour vos lecteurs.')),
+        w('spacer', { height: 20 }),
+        w('text', T('Le troisième donne la suite — ce qui est attendu, la date à retenir, ce qu’il faut surveiller.')),
+      ]),
+      section([
+        w('encadre', {
+          titre: 'À retenir',
+          items: 'L’information en une ligne\nLa date qui compte\nCe que ça change',
+        }),
+      ], { padding: 40 }),
+    ],
+  },
 ];
 
 /**
@@ -276,6 +433,10 @@ export const INTENTIONS = [
   { id: 'portfolio', modele: 'portfolio' },
   { id: 'histoire', modele: 'apropos' },
   { id: 'article', modele: 'article' },
+  { id: 'interview', modele: 'interview' },
+  { id: 'portrait', modele: 'portrait' },
+  { id: 'conseil', modele: 'conseil' },
+  { id: 'actualite', modele: 'actualite' },
   { id: 'contact', modele: 'contact' },
 ];
 

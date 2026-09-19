@@ -167,6 +167,32 @@ export const WIDGETS = {
     fields: [{ key: 'items', type: 'lines', label: 'itemsLabel' }],
   },
 
+  /**
+   * Citation en exergue. Rendue en <blockquote> : le site la style comme il
+   * veut, sans que le module impose une classe.
+   */
+  citation: {
+    category: 'basique', icon: 'text',
+    defaults: () => ({ texte: 'La phrase qui résume tout.', source: '' }),
+    fields: [
+      { key: 'texte', type: 'lines', label: 'quoteText' },
+      { key: 'source', type: 'text', label: 'quoteSource' },
+    ],
+  },
+
+  /**
+   * Encadré : un titre court et quelques points à retenir. Rendu en <aside>,
+   * qui dit exactement ce que c'est — un à-côté du propos principal.
+   */
+  encadre: {
+    category: 'basique', icon: 'list',
+    defaults: () => ({ titre: 'À retenir', items: 'Le premier point\nLe deuxième point' }),
+    fields: [
+      { key: 'titre', type: 'text', label: 'boxTitle' },
+      { key: 'items', type: 'lines', label: 'itemsLabel' },
+    ],
+  },
+
   divider: {
     category: 'basique', icon: 'divider',
     defaults: () => ({ width: 100 }),
@@ -478,6 +504,40 @@ export function renderWidget(noeud, doc, contexte = {}) {
         item.textContent = ligne.trim();
         el.appendChild(item);
       }
+      break;
+    }
+
+    case 'citation': {
+      el = doc.createElement('blockquote');
+      for (const ligne of String(p.texte ?? '').split('\n')) {
+        if (!ligne.trim()) continue;
+        const para = doc.createElement('p');
+        para.textContent = remplacerJetons(ligne.trim());
+        el.appendChild(para);
+      }
+      if (String(p.source ?? '').trim()) {
+        const source = doc.createElement('cite');
+        source.textContent = remplacerJetons(String(p.source).trim());
+        el.appendChild(source);
+      }
+      break;
+    }
+
+    case 'encadre': {
+      el = doc.createElement('aside');
+      if (String(p.titre ?? '').trim()) {
+        const titre = doc.createElement('strong');
+        titre.textContent = remplacerJetons(String(p.titre).trim());
+        el.appendChild(titre);
+      }
+      const liste = doc.createElement('ul');
+      for (const ligne of String(p.items ?? '').split('\n')) {
+        if (!ligne.trim()) continue;
+        const item = doc.createElement('li');
+        item.textContent = remplacerJetons(ligne.trim());
+        liste.appendChild(item);
+      }
+      if (liste.childNodes.length) el.appendChild(liste);
       break;
     }
 
