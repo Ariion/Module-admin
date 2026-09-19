@@ -641,7 +641,7 @@ export async function startEditor(runtime) {
    * Seuls le titre et le lien sont réécrits — le reste (image, résumé,
    * date) est à la main du client, qui les voit dans la page.
    */
-  function poserCarte(type, titre, chemin) {
+  function poserCarte(type, sousType, titre, chemin) {
     const trouverCollection = () => model.collections.find((c) => {
       if (!type.collection) return false;
       try { return c.container.matches(type.collection) || !!c.container.closest(type.collection); }
@@ -662,6 +662,31 @@ export async function startEditor(runtime) {
 
     const champs = model.fieldsIn(carte);
     let titrePose = false;
+    let resumePose = false;
+
+    // Une carte dupliquée est le calque de sa voisine : sans ça, le nouvel
+    // article arrive avec l'image, le résumé et la catégorie d'un autre — on
+    // croit à un doublon plutôt qu'à un article à remplir.
+    for (const [cle, entry] of champs) {
+      if (entry.role === 'image') {
+        // Une source vide est ignorée par le binder — c'est ce qui permet de
+        // changer un texte alternatif sans effacer l'image. Sans couverture
+        // déclarée, on garde donc celle de la carte copiée, que le client
+        // remplacera : une image d'un autre article saute aux yeux, une
+        // image cassée déroute.
+        model.setCollectionField(
+          apres.id, 0, cle,
+          sousType.image ? { src: sousType.image, alt: titre } : { alt: titre },
+          entry.el, 'image',
+        );
+      } else if (entry.role === 'text' && entry.el.tagName === 'SPAN') {
+        // Les étiquettes de catégorie : elles annoncent la forme choisie.
+        model.setCollectionField(apres.id, 0, cle, { text: sousType.nom }, entry.el, 'text');
+      } else if (entry.role === 'text' && entry.el.tagName === 'P' && !resumePose) {
+        model.setCollectionField(apres.id, 0, cle, { text: t('contenuResume') }, entry.el, 'text');
+        resumePose = true;
+      }
+    }
 
     // Le titre d'une carte est souvent un lien posé dans un intertitre : on
     // le reconnaît à ça, et un champ de type lien porte aussi son texte.
@@ -740,8 +765,18 @@ export async function startEditor(runtime) {
       return;
     }
 
-    if (poserCarte(type, titre, chemin)) markDirty();
+    if (poserCarte(type, sousType, titre, chemin)) markDirty();
     await autosave.flush();
+
+    // Retenue immédiatement : elle apparaît dans la liste des pages sans
+    // attendre la reconstruction, et on peut y revenir quand on veut.
+    const retenues = [...(model.reglages?.pages || [])];
+    if (!retenues.some((p) => p.path === chemin)) {
+      retenues.push({ path: chemin, label: titre.slice(0, 40) });
+      model.setReglage('pages', retenues);
+      markDirty();
+      await autosave.flush();
+    }
 
     notify(t('contenuEnRoute'));
     if (await attendrePage('/' + chemin)) {

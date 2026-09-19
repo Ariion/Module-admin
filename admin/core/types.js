@@ -16,7 +16,8 @@
  *     collection: '.articles-grid',   // le conteneur des cartes
  *     sousTypes: [
  *       { id: 'interview', nom: 'Interview', icone: 'text',
- *         modele: 'modeles/interview.html' },
+ *         modele: 'modeles/interview.html',
+ *         image: 'assets/couverture-interview.jpg' },  // facultatif
  *     ],
  *   }]
  *
@@ -42,6 +43,7 @@ export function typesDe(config) {
           id: String(sous.id || '').trim(),
           nom: String(sous.nom || sous.id || '').trim(),
           icone: String(sous.icone || 'text').trim(),
+          image: String(sous.image || '').trim(),
           modele: normaliserChemin(sous.modele),
         }))
         .filter((sous) => sous.id && sous.modele),
