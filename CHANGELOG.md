@@ -1,5 +1,18 @@
 # Journal des versions
 
+## 1.17.1
+
+**Publier ne déclenche plus une fausse alerte au tour suivant**
+
+Publier régénère le fichier avec la liste du client dedans. Le code compte
+alors ce que l'enregistrement décrit, tandis que `n` — relevé avant — retarde
+d'un tour. Le contrôle de 1.16.0 y voyait un code modifié, écartait
+l'enregistrement et avertissait le client, après chaque publication.
+
+Le code a bien changé, mais il a changé POUR cet enregistrement. Un
+enregistrement dont le nombre de blocs correspond à celui du code n'est donc
+plus tenu pour périmé.
+
 ## 1.17.0
 
 **Régénérer ne peut plus écrire une page d'erreur par-dessus une vraie page**

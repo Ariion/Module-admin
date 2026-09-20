@@ -158,7 +158,13 @@ export function readCollection(collection, fieldsOf) {
  */
 export function estPerime(collection, data) {
   if (revisionDe(collection) !== String(data?.rev || '')) return true;
-  return Number.isInteger(data?.n) && data.n !== collection.items.length;
+  if (!Number.isInteger(data?.n)) return false;
+  if (data.n === collection.items.length) return false;
+  // Publier régénère le fichier avec la liste du client dedans : le code
+  // compte alors ce que l'enregistrement décrit, et `n` — relevé avant —
+  // retarde d'un tour. Le code a bien changé, mais il a changé POUR cet
+  // enregistrement. L'écarter ici crierait au loup après chaque publication.
+  return data.items.length !== collection.items.length;
 }
 
 /** Structure d'origine (aucun ajout, suppression ni réordonnancement). */
