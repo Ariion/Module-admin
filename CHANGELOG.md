@@ -1,5 +1,16 @@
 # Journal des versions
 
+## 1.16.1
+
+**Correctif : la sauvegarde échouait sur les listes d'avant 1.16.0**
+
+Le repère `n` introduit en 1.16.0 était écrit même quand on ne le connaissait
+pas — un enregistrement antérieur n'en a pas. Firestore refuse `undefined` et
+fait échouer l'écriture ENTIÈRE : plus rien ne s'enregistrait sur ces pages.
+
+Le champ n'est désormais écrit que s'il vaut quelque chose, et l'instantané
+passe par un filet qui élimine toute valeur indéfinie avant l'envoi.
+
 ## 1.16.0
 
 **Un contenu enregistré ne peut plus effacer les blocs du développeur**

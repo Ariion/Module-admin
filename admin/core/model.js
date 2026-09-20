@@ -762,14 +762,22 @@ export class PageModel {
         path: collection.print.path,
         sig: collection.print.sig,
         itemSig: collection.itemSig,
-        // Combien de blocs le code portait quand ce contenu a été relevé.
-        // C'est ce qui permet de voir, plus tard, que le code a changé.
-        n: data.n,
         items: clone(data.items),
       };
+      // Combien de blocs le code portait quand ce contenu a été relevé. C'est
+      // ce qui permet de voir, plus tard, que le code a changé.
+      //
+      // Un enregistrement d'avant ce repère n'en a pas, et on ne peut pas le
+      // deviner : écrire `n: undefined` ferait échouer la sauvegarde entière
+      // (Firestore refuse undefined). Le champ n'existe alors pas, ce qui est
+      // exactement ce qu'il faut dire — on ne sait pas.
+      if (Number.isInteger(data.n)) collections[id].n = data.n;
     }
 
-    const instantane = { v: SNAPSHOT_VERSION, content, collections };
+    // Filet. Une valeur indéfinie, où qu'elle soit, fait échouer l'écriture
+    // ENTIÈRE côté Firestore — pas seulement le champ fautif. Le passage par
+    // JSON que fait clone() les élimine.
+    const instantane = clone({ v: SNAPSHOT_VERSION, content, collections });
     // Ajouter ou masquer une section vaut pour la page ouverte, jamais pour
     // toutes : la structure ne fait pas partie du commun.
     if (portee !== 'commun' && !sectionsEmpty(this.sections)) instantane.sections = clone(this.sections);
