@@ -76,6 +76,18 @@ function clean(doc, pageId) {
  * @returns {Promise<{html:string, applied:number, orphans:object[]}>}
  */
 export async function bakePage({ sourceUrl, snapshot, scanOptions = {}, pageId, timeout = 20000, settle = 500 }) {
+  // Un iframe « charge » une page d'erreur sans broncher : on obtient un
+  // document valide, et rien ne dit que ce n'est pas le bon. Régénérer
+  // là-dessus écrit la page d'erreur par-dessus la vraie page.
+  //
+  // C'est arrivé : l'hébergement venait de créer la copie d'origine sur le
+  // dépôt, l'hôte ne la servait pas encore, et une galerie de douze articles
+  // est devenue un « 404 ». On demande donc le fichier avant de l'ouvrir.
+  const reponse = await fetch(sourceUrl, { cache: 'no-store' }).catch(() => null);
+  if (!reponse || !reponse.ok) {
+    throw new Error(`Source illisible (${reponse ? reponse.status : 'hors ligne'}).`);
+  }
+
   const { doc, frame, sourceDoc } = await loadFrame({
     url: sourceUrl,
     param: BAKE_PARAM,

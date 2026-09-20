@@ -6,7 +6,7 @@
  */
 import { scan } from './scanner.js';
 import { buildIndex, resolveAll, fingerprint } from './identity.js';
-import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, estPerime, ops } from './collections.js';
+import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, estPerime, revisionDe, ops } from './collections.js';
 import { applyValue, readCurrent, readStyle } from './binder.js';
 import {
   listSections, applySections, racineSections, emptyState as emptySections, isEmpty as sectionsEmpty,
@@ -772,6 +772,10 @@ export class PageModel {
       // (Firestore refuse undefined). Le champ n'existe alors pas, ce qui est
       // exactement ce qu'il faut dire — on ne sait pas.
       if (Number.isInteger(data.n)) collections[id].n = data.n;
+      // La révision déclarée dans le code, s'il y en a une : c'est elle qui
+      // permet au développeur d'écarter un contenu devenu faux.
+      const rev = revisionDe(collection);
+      if (rev) collections[id].rev = rev;
     }
 
     // Filet. Une valeur indéfinie, où qu'elle soit, fait échouer l'écriture

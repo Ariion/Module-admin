@@ -1,5 +1,35 @@
 # Journal des versions
 
+## 1.17.0
+
+**Régénérer ne peut plus écrire une page d'erreur par-dessus une vraie page**
+
+La régénération ouvrait la copie d'origine dans un iframe. Un iframe charge
+une page d'erreur sans broncher : on obtient un document valide, et rien ne
+dit que ce n'est pas le bon.
+
+Sur un hébergement qui reconstruit le site à chaque écriture, la copie
+d'origine existe dans le dépôt avant d'être servie. Publier une page pour la
+première fois demandait donc un fichier pas encore en ligne, recevait la
+page 404 du site, et l'écrivait à la place de la page. Une galerie de douze
+articles est devenue un « 404 ».
+
+La source est maintenant demandée avant d'être ouverte, et une réponse qui
+n'est pas un succès arrête tout. L'éditeur attend par ailleurs que la copie
+soit réellement servie quand elle vient d'être créée.
+
+**`data-admin-rev` : écarter un contenu devenu faux**
+
+Quand le compte de blocs ne suffit pas — un contenu enregistré par une
+version antérieure à 1.16.0 ne porte pas `n`, et rien ne permet de le dater —
+le développeur peut trancher lui-même :
+
+    <div class="articles-grid" data-admin-rev="2">
+
+Tout contenu enregistré sous une autre révision est écarté, et la liste du
+code s'affiche. Une page qui ne déclare rien se comporte exactement comme
+avant : ce levier ne sert qu'à celui qui le pose.
+
 ## 1.16.1
 
 **Correctif : la sauvegarde échouait sur les listes d'avant 1.16.0**

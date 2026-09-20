@@ -1636,7 +1636,18 @@ export async function startEditor(runtime) {
     // La page régénérée est celle qu'on édite, pas celle par laquelle on est
     // entré : sans ça, publier depuis une autre page écraserait l'accueil.
     const chemin = filePathOf(urlCourante());
-    const { sourceUrl } = await hosting.ensureSource(chemin);
+    const { sourceUrl, refreshed } = await hosting.ensureSource(chemin);
+
+    // L'hébergement vient d'écrire cette copie. Sur un hôte qui reconstruit
+    // le site à chaque écriture — Vercel, Netlify — le fichier existe dans le
+    // dépôt avant d'être servi : le demander tout de suite renvoie une page
+    // d'erreur. bakePage refuse de régénérer là-dessus ; encore faut-il lui
+    // laisser le temps d'arriver, sinon publier échouerait à chaque première
+    // publication d'une page.
+    if (refreshed && !(await attendrePage(sourceUrl, 150000))) {
+      throw new Error(t('sourceLente'));
+    }
+
     const scanOptions = { ...model.scanOptions };
     delete scanOptions.doc;
     const { html, orphans } = await bakePage({

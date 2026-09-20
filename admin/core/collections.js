@@ -114,8 +114,23 @@ export function fieldKey(itemRoot, el, role) {
  * État initial d'une collection, lu dans le DOM.
  * @returns {{items: Array<{key:string, src:number, fields:object}>}}
  */
+/**
+ * Révision déclarée par le développeur sur le conteneur.
+ *
+ *   <div class="articles-grid" data-admin-rev="2">
+ *
+ * Quand le compte de blocs ne suffit pas à dire que le code a changé — sur
+ * un contenu enregistré par une version du module qui ne notait pas encore
+ * `n`, par exemple — c'est le seul moyen de le déclarer. Incrémenter ce
+ * numéro écarte tout contenu enregistré avant lui.
+ */
+export function revisionDe(collection) {
+  return String(collection?.container?.getAttribute('data-admin-rev') || '');
+}
+
 export function readCollection(collection, fieldsOf) {
   return {
+    rev: revisionDe(collection),
     // Combien de blocs le DÉVELOPPEUR avait écrits quand ce contenu a été
     // relevé. Les `src` ci-dessous sont des numéros de position dans CETTE
     // liste-là : sans ce repère, on ne peut pas savoir qu'ils ont cessé de
@@ -137,9 +152,12 @@ export function readCollection(collection, fieldsOf) {
  * désormais autre chose, et la longueur de sa liste n'est plus la bonne.
  *
  * Les enregistrements écrits avant que `n` existe ne portent pas ce repère :
- * on ne peut rien en dire, et on les applique comme avant.
+ * on ne peut rien en dire, et on les applique comme avant. C'est à ça que
+ * sert `data-admin-rev` — le développeur tranche à la main quand le module
+ * ne peut pas.
  */
 export function estPerime(collection, data) {
+  if (revisionDe(collection) !== String(data?.rev || '')) return true;
   return Number.isInteger(data?.n) && data.n !== collection.items.length;
 }
 
