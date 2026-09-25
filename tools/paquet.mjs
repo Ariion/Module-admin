@@ -48,8 +48,9 @@ if (!siteId || siteId === true) {
 if (existsSync(cible)) rmSync(cible, { recursive: true, force: true });
 mkdirSync(cible, { recursive: true });
 
-// 1. Le module, tel quel.
+// 1. Le module, tel quel, et la porte d'entrée du back-office.
 cpSync(resolve(racine, 'admin'), resolve(cible, 'admin'), { recursive: true });
+cpSync(resolve(racine, 'distribution/admin.html'), resolve(cible, 'admin.html'));
 
 // 2. La configuration, seul fichier qui diffère d'un site à l'autre.
 const lignesHote = statique ? '' : `

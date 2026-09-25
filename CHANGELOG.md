@@ -1,5 +1,51 @@
 # Journal des versions
 
+## 1.19.0
+
+**Un back-office, et un partage des rôles enfin clair**
+
+L'éditeur en direct est excellent pour modifier ce qu'on voit. Il est
+démuni pour tout le reste : on ne clique pas sur un article qui n'existe
+pas encore, on ne retrouve pas une photo mise en ligne il y a trois mois,
+on ne voit pas ses dix pages d'un coup d'œil. Ça, c'est de l'inventaire, et
+l'inventaire veut une liste.
+
+D'où une seconde porte — `admin.html`, à la racine du site — avec un
+partage des rôles visible jusque dans les boutons :
+
+- **Le back-office : le châssis.** Créer les pages, poser les sections,
+  choisir les images. Le faux texte des modèles reste en place le temps que
+  la structure tienne.
+- **L'éditeur en direct : les mots.** Titres, sous-titres, paragraphes,
+  écrits là où on les voit. Chaque ligne de la liste des pages porte donc
+  deux portes : « Structure » et « Écrire ».
+
+**Ce premier jalon pose le châssis**
+
+- Écran de connexion autonome (Firebase Auth). Rien ne s'affiche tant que
+  personne n'est identifié, et un compte sans droits sur le site le lit en
+  toutes lettres au lieu d'échouer plus loin.
+- Menu latéral à mots, pas à icônes seules : c'est lui qui répond à « où
+  suis-je, et qu'est-ce que je peux faire ».
+- **Tableau de bord** : ce qui attend d'être publié d'abord, puis
+  l'inventaire — pages, contenus, médias, produits. Les compteurs sont
+  cliquables. Un site encore vierge n'affiche pas quatre zéros : il affiche
+  par où commencer.
+- **Liste des pages** : nom, état (publié, brouillon, code d'origine),
+  sections ajoutées, et les deux portes. La page d'accueil ne se supprime
+  pas — un site sans accueil ne se rattrape pas depuis un back-office.
+- Quand l'hébergement ne sait pas écrire de fichier, la création et la
+  suppression sont désactivées **et la raison est écrite en haut**, au lieu
+  d'un bouton qui échouera.
+
+Le back-office ne charge aucun site : ni `PageModel`, ni overlay, ni
+iframe. Il parle à Firestore et à l'hébergement, et ouvre le site dans un
+onglet quand il faut écrire. Il réutilise la clé de page du runtime plutôt
+que d'en recalculer une — deux calculs qui divergent, et le back-office
+lirait des brouillons qui n'existent pas.
+
+`admin.html` part avec le paquet de livraison et avec `npm run paquet`.
+
 ## 1.18.1
 
 **Consolidation : le travail fait sur un site vivant revient dans le module**

@@ -45,7 +45,7 @@ mkdirSync(resolve(cible, 'medias'), { recursive: true });
 writeFileSync(resolve(cible, 'medias/index.html'), '', 'utf-8');
 
 // --- Les fichiers destinés à l'acquéreur -----------------------------------
-for (const fichier of ['LISEZMOI.md', 'LICENCE.txt', 'index.html',
+for (const fichier of ['LISEZMOI.md', 'LICENCE.txt', 'index.html', 'admin.html',
   'admin-config.js', 'admin-config.exemple.js']) {
   cpSync(resolve(racine, 'distribution', fichier), resolve(cible, fichier));
 }

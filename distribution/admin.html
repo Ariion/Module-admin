@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Administration</title>
+<!--
+  La porte d'entrée du module : le back-office.
+
+  À déposer à la racine du site, à côté d'index.html. Cette page ne charge
+  aucun contenu du site : elle parle à Firestore et à l'hébergement, et
+  ouvre le site dans un onglet quand il faut écrire un texte.
+
+  Rien ici n'est secret. L'accès est gardé par Firebase Auth, et les règles
+  Firestore vérifient que le compte est membre du site — pas cette page.
+-->
+</head>
+<body>
+<script src="admin-config.js"></script>
+<script type="module" src="admin/back.js"></script>
+<noscript>
+  <p style="font:15px system-ui;padding:40px;text-align:center">
+    L’administration du site a besoin de JavaScript pour fonctionner.
+    Le site, lui, s’affiche sans.
+  </p>
+</noscript>
+</body>
+</html>
