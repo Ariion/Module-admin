@@ -43,6 +43,9 @@ import { creerContenus } from './ui/back/contenus.js';
 import { creerReglagesBack, carteGenre } from './ui/back/reglages-back.js';
 import { creerMedias } from './ui/back/medias.js';
 import { creerProduits } from './ui/back/produits.js';
+import { creerApparence, documentDemo } from './ui/back/apparence.js';
+import { pageDemo } from './core/demo.js';
+import { renderWidget } from './core/widgets.js';
 import { createMedia } from './media/index.js';
 
 /** Où le site répond, vu depuis la page du back-office. */
@@ -183,6 +186,13 @@ async function demarrer() {
           if (m.id) await backend.deleteMedia(m.id).catch(() => {});
           if (media.primary?.remove) await media.primary.remove(m).catch(() => {});
         },
+      }),
+      apparence: () => creerApparence({
+        t,
+        lire: async () => (await lireCommun())?.reglages?.theme || null,
+        appliquer: (theme) => enregistrerReglages({ theme }),
+        rendreDemo: (metierId, reglage) =>
+          documentDemo(renderWidget, pageDemo(metierId, reglage), reglage),
       }),
       reglages: () => creerReglagesBack({
         t,

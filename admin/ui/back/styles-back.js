@@ -311,6 +311,45 @@ body {
 }
 .forme__aide { display: block; font-size: 12px; color: var(--pale); }
 
+/* ─── Galerie d'ambiances ────────────────────────────────────────────── */
+.demo-choix { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--doux); }
+.themes-gal {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: 18px;
+}
+.theme-carte {
+  background: var(--surface); border: 1px solid var(--trait); border-radius: var(--rayon);
+  overflow: hidden; box-shadow: var(--ombre); display: flex; flex-direction: column;
+}
+.theme-carte:hover { border-color: #c2cede; box-shadow: var(--ombre-fort); }
+.theme-carte--actif { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-pale); }
+.theme-carte__vue {
+  position: relative; height: 200px; overflow: hidden;
+  border-bottom: 1px solid var(--trait-doux); background: var(--surface-2);
+}
+/* La vignette est une vraie page rendue à 1240 px, puis réduite. Le cadre
+   ne reçoit aucun clic : la carte entière est la cible, pas l'intérieur du
+   document. */
+.theme-vignette {
+  position: absolute; top: 0; left: 0; width: 1240px; height: 1000px; border: 0;
+  transform: scale(.256); transform-origin: top left; pointer-events: none;
+  background: #fff;
+}
+.theme-carte__pied { padding: 11px 13px 0; display: flex; align-items: center; gap: 8px; }
+.theme-carte__main { flex: 1; min-width: 0; }
+.theme-carte__nom { display: block; font-weight: 640; }
+.theme-carte__police { display: block; font-size: 12px; color: var(--pale); }
+.theme-carte__actions { padding: 10px 13px 13px; display: flex; gap: 7px; }
+.theme-carte__actions .b { flex: 1; }
+
+.voile--large { padding: 3vh 3vw; }
+.voile__boite--large {
+  width: 100%; max-width: 1180px; height: 94vh; max-height: none;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.voile__boite--large .carte__tete { flex: none; }
+.voile__boite--large .carte__tete .table__meta { margin-left: auto; margin-right: 10px; }
+.demo-cadre { flex: 1; width: 100%; border: 0; background: #fff; }
+
 /* ─── Produits ───────────────────────────────────────────────────────── */
 .prod-ligne { display: flex; align-items: center; gap: 11px; }
 .prod-ligne__vignette {

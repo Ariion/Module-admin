@@ -29,7 +29,7 @@ export const RUBRIQUES = [
   { id: 'contenus', ecran: 'contenus', icone: 'list', groupe: 'contenu', besoin: 'types' },
   { id: 'produits', ecran: 'produits', icone: 'grid', groupe: 'contenu' },
   { id: 'medias', ecran: 'medias', icone: 'image', groupe: 'contenu', toujours: true },
-  { id: 'apparence', ecran: 'apparence', icone: 'palette', groupe: 'allure', aVenir: true },
+  { id: 'apparence', ecran: 'apparence', icone: 'palette', groupe: 'allure', toujours: true },
   { id: 'reglages', ecran: 'reglages', icone: 'sliders', groupe: 'module', toujours: true },
 ];
 

@@ -1,5 +1,50 @@
 # Journal des versions
 
+## 1.23.0
+
+**Apparence : une galerie d'ambiances, avec de vraies démonstrations**
+
+La galerie de thèmes de WordPress montre des captures d'écran. Une capture
+ment deux fois : elle est prise sur un site qui n'est pas le vôtre, et elle
+vieillit sans que personne s'en aperçoive.
+
+Ici chaque vignette est **le vrai rendu**, réduit — le même code, les mêmes
+couleurs, les mêmes polices que ce qu'on obtiendra en appliquant. Ce qu'on
+choisit est ce qu'on aura.
+
+**Et la page est peuplée.** Une ambiance sur une page vide ne montre rien :
+il faut un titre, un chapeau, des cartes, un bouton. Le module sait déjà
+écrire une page de restaurant, de garage ou de cabinet — c'est ce qui sert
+au parcours guidé. On s'en sert pour remplir les démonstrations.
+
+- **Un sélecteur de métier** en haut : restaurant, bâtiment, santé,
+  conseil, boutique, hébergement… douze en tout. Les neuf vignettes se
+  redessinent avec les textes de ce métier.
+- Des enseignes et des villes plausibles — « La Table du Marché à Annecy »,
+  « Delaunay Rénovation à Poitiers » — plutôt que du faux latin. *Lorem
+  ipsum* ne dit rien de ce à quoi ressemblera la page une fois remplie.
+- Le tirage est **stable** : la même ambiance et le même métier donnent
+  toujours la même démonstration. Une galerie dont les vignettes changent à
+  chaque passage empêche de comparer, ce qui est précisément ce qu'on vient
+  y faire.
+- Chaque métier a sa **silhouette de page** : un restaurant se raconte en
+  photos, un cabinet de conseil en paragraphes, une boutique en grille. Un
+  sélecteur qui ne changerait rien ferait douter de tous les autres.
+- **Prévisualiser** ouvre la page entière, en grand, avec un rappel qu'il
+  s'agit d'une démonstration. **Appliquer** est à portée de main depuis la
+  prévisualisation.
+
+**Les images appartiennent à tout le monde**, au sens strict : ce sont les
+illustrations que le module *calcule*, aux couleurs de l'ambiance choisie.
+Aucun réseau, aucun ayant droit, aucune licence à vérifier. La recherche de
+photos libres (Openverse, CC0 et domaine public) reste disponible dans la
+médiathèque pour remplacer ensuite.
+
+**Où appliquer l'ambiance** est demandé au même endroit, et le défaut est
+« sur les parties ajoutées ». Le back-office ne sait pas, sans ouvrir une
+page, si le site a déjà son propre style — et repeindre le code d'un client
+par surprise est la seule erreur irrattrapable de cet écran.
+
 ## 1.22.0
 
 **Le catalogue : la liste, et la fiche à onglets**
