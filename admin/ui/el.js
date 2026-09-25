@@ -134,6 +134,7 @@ export function icon(name, size = 14) {
     upload: 'M12 16V4M6 10l6-6 6 6M4 20h16',
     bold: 'M7 5h6a3.5 3.5 0 0 1 0 7H7zM7 12h7a3.5 3.5 0 0 1 0 7H7z',
     italic: 'M14 5h-4M14 19h-4M14 5l-4 14',
+    underline: 'M7 4v6a5 5 0 0 0 10 0V4M5 20h14',
     download: 'M12 4v12M6 10l6 6 6-6M4 20h16',
     folder: 'M3 6h6l2 2h10v10H3z',
     warn: 'M12 4 2 20h20zM12 10v4M12 17h.01',

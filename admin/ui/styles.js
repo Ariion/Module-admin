@@ -467,10 +467,29 @@ select.input { appearance: none; cursor: pointer; }
   box-shadow: var(--shadow);
 }
 .rtb {
-  position: absolute; display: flex; gap: 2px; padding: 4px; pointer-events: auto;
+  position: absolute; display: flex; flex-direction: column; gap: 4px; padding: 4px;
+  pointer-events: auto; max-width: 340px;
   background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
 }
+.rtb__outils { display: flex; gap: 2px; }
+/* Le bouton s'allume quand la sélection porte déjà cette mise en forme. */
+.rtb .btn--actif { background: var(--accent-dim); color: var(--accent-hi); }
+.rtb__volet { padding: 6px 4px 4px; border-top: 1px solid var(--line-soft); }
+.rtb__ligne { display: flex; gap: 4px; align-items: center; }
+.rtb__url {
+  flex: 1; min-width: 150px; height: 28px; padding: 0 8px;
+  background: var(--bg-sunk); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  color: var(--text); font: inherit; font-size: 12px;
+}
+.rtb__url:focus { outline: none; border-color: var(--accent); }
+.rtb__nuancier { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.rtb__pastille {
+  width: 22px; height: 22px; padding: 0; border-radius: 50%;
+  border: 2px solid var(--bg-raise); cursor: pointer; transition: transform .12s;
+}
+.rtb__pastille:hover { transform: scale(1.15); border-color: var(--text); }
+.rtb__mot { margin: 0; padding: 4px 6px; font-size: 11px; color: var(--accent-hi); }
 
 /* ================= Bibliothèque de widgets ================= */
 .search {

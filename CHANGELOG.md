@@ -1,5 +1,33 @@
 # Journal des versions
 
+## 1.18.0
+
+**Mettre en forme une partie d'un texte**
+
+La barre d'édition en ligne passe de trois commandes à cinq : gras, italique,
+**souligné**, **couleur** et lien. Toutes s'appliquent à la sélection, pas au
+bloc entier — quelques mots en couleur, un lien sur deux mots au milieu d'une
+phrase.
+
+Le lien ne fonctionnait pas. Il passait par `prompt()`, qui prend le focus et
+efface la sélection de l'aperçu : la commande n'avait plus rien sur quoi
+s'appliquer. Il y a maintenant un champ dans la barre, et la sélection est
+retenue avant chaque geste puis reposée avant d'exécuter.
+
+Même cause pour les boutons : ils ne prennent plus jamais le focus. Le module
+vit dans un shadow root, où `document.activeElement` s'arrête à l'hôte — un
+clic dans la barre passait pour une sortie d'édition et refermait l'éditeur.
+
+La couleur se choisit dans une palette, déclarée par le développeur :
+
+    texte: { couleurs: ['#112338', '#509ea4', '#3a5068'] }
+
+Six teintes justes valent mieux qu'un sélecteur libre, qui laisse poser du
+jaune fluo sur un titre. Le nettoyeur de HTML accepte désormais `style`, mais
+sur les seules balises en ligne et pour la seule propriété `color`, dont la
+valeur est validée : pas de position, pas de fond, rien qui puisse recouvrir
+la page.
+
 ## 1.17.1
 
 **Publier ne déclenche plus une fausse alerte au tour suivant**

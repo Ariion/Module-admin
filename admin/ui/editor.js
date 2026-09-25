@@ -289,6 +289,10 @@ export async function startEditor(runtime) {
 
     textEditor = createTextEditor({
       layer: shell.layer, origin: () => shell.origine(), t,
+      // Les couleurs du site, déclarées dans admin-config.js. À défaut, une
+      // palette neutre : mieux vaut six teintes sensées qu'un sélecteur qui
+      // laisse poser du jaune fluo sur un titre.
+      couleurs: runtime.config.texte?.couleurs || null,
       onCommit: (entry, valeur) => setValue(entry, valeur),
     });
 
