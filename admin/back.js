@@ -26,7 +26,8 @@ import { loadFrame } from './core/frame.js';
 import { PageModel } from './core/model.js';
 import { setDebug, debug } from './core/log.js';
 import { pageKeyFromLocation } from './core/dom.js';
-import { typesDe } from './core/types.js';
+import { typesDe, cheminDepuisTitre } from './core/types.js';
+import { poserCarte, attendrePage } from './core/contenus.js';
 import { createHost } from './data/host.js';
 import { canEdit } from './data/schema.js';
 import { h, icon, clear } from './ui/el.js';
@@ -36,6 +37,7 @@ import { creerChassis } from './ui/back/shell-back.js';
 import { creerTableau } from './ui/back/tableau.js';
 import { creerPagesListe } from './ui/back/pages-liste.js';
 import { creerStructure } from './ui/back/structure.js';
+import { creerContenus } from './ui/back/contenus.js';
 
 /** Où le site répond, vu depuis la page du back-office. */
 const RACINE = new URL('.', new URL('..', import.meta.url)).href;
@@ -155,6 +157,19 @@ async function demarrer() {
       }),
     });
 
+    chassis.ajouterEcran('contenus', {
+      libelle: t('boContenus'), icone: 'list',
+      dessiner: creerContenus({
+        t,
+        types: () => types,
+        lister: listerContenus,
+        peutCreer: () => etatHote.ok,
+        onCreer: creerContenu,
+        onEcrire: (c) => ouvrirEnDirect(c.chemin),
+        onGalerie: (type) => ouvrirEnDirect(type.index),
+      }),
+    });
+
     // La structure ne figure pas au menu : on y arrive depuis une page, et
     // une entrée de menu qui demanderait « laquelle ? » ne servirait à rien.
     chassis.ajouterEcran('structure', {
@@ -170,6 +185,16 @@ async function demarrer() {
 
     chassis.aller('tableau');
     verifierHebergement(chassis);
+
+    // La même prise que `window.Admin` côté site : de quoi inspecter, et de
+    // quoi poser un jeton à la main quand on éprouve le module. Seulement
+    // en mode bavard — rien à offrir à un visiteur de passage.
+    if (config.debug) {
+      window.AdminBack = {
+        config, backend, hebergement, chassis, types,
+        verifier: () => verifierHebergement(chassis),
+      };
+    }
   }
 
   /** Ce que l'hébergement sait faire. Demandé une fois, au démarrage. */
@@ -253,6 +278,72 @@ async function demarrer() {
     };
   }
 
+  // --- Contenus -------------------------------------------------------
+  /**
+   * Les contenus d'un type : les cartes de sa galerie.
+   *
+   * Ils n'existent dans aucune table — ce sont des blocs répétés dans le
+   * HTML de la page d'index. On ouvre donc cette page comme pour la
+   * structure, et on lit la collection déclarée.
+   */
+  async function listerContenus(type) {
+    const session = await chargerPage({ chemin: type.index });
+    try {
+      const collection = trouverGalerie(session.model, type);
+      if (!collection) return [];
+      return collection.items.map((item) => {
+        const lien = item.querySelector('a[href]');
+        const titre = item.querySelector('h1, h2, h3, h4')?.textContent?.trim()
+          || lien?.textContent?.trim() || '';
+        const href = lien?.getAttribute('href') || '';
+        return { titre, chemin: href.replace(/^\.?\//, '').split(/[?#]/)[0] };
+      }).filter((c) => c.chemin);
+    } finally {
+      session.fermer();
+    }
+  }
+
+  /** La collection déclarée par le type, dans un modèle déjà chargé. */
+  function trouverGalerie(model, type) {
+    return model.collections.find((c) => {
+      if (!type.collection) return false;
+      try { return c.container.matches(type.collection) || !!c.container.closest(type.collection); }
+      catch { return false; }
+    }) || null;
+  }
+
+  /**
+   * Crée un contenu : le fichier, la carte dans la galerie, et l'entrée
+   * dans la liste des pages. Exactement ce que fait l'éditeur en direct —
+   * et par le même code, pour que le résultat soit le même des deux côtés.
+   */
+  async function creerContenu(type, sousType, titre) {
+    const chemin = cheminDepuisTitre(titre, sousType);
+    await hebergement.ensureSource(sousType.modele);
+    await hebergement.createPage(chemin, sousType.modele);
+
+    const session = await chargerPage({ chemin: type.index });
+    try {
+      if (poserCarte(session.model, { type, sousType, titre, chemin, resume: t('contenuResume') })) {
+        await backend.saveDraft(session.pageId, session.model.toSnapshot({ portee: 'page' }));
+      }
+      // La page est retenue tout de suite : elle apparaît dans la liste sans
+      // attendre la reconstruction du site, et on peut y revenir.
+      const commun = await lireCommun();
+      const retenues = [...(commun?.reglages?.pages || [])];
+      if (!retenues.some((p) => p.path === chemin)) {
+        retenues.push({ path: chemin, label: titre.slice(0, 40) });
+        session.model.setReglage('pages', retenues);
+        await backend.saveDraft(PAGE_COMMUNE, session.model.toSnapshot({ portee: 'commun' }));
+      }
+    } finally {
+      session.fermer();
+    }
+
+    await attendrePage(new URL(chemin, RACINE).href, 60000);
+    ouvrirEnDirect(chemin);
+  }
+
   // --- Inventaire -----------------------------------------------------
   /**
    * Les pages connues du site. Elles vivent dans le document commun, celui
@@ -304,9 +395,12 @@ async function demarrer() {
     const produits = commun?.reglages?.produits?.length || 0;
     const brouillons = pages.filter((p) => p.brouillon)
       .map((p) => ({ nom: p.nom, chemin: p.chemin }));
+    const parType = await Promise.all(types.map((type) =>
+      listerContenus(type).then((l) => l.length).catch(() => 0)));
+
     return {
       pages: pages.length,
-      contenus: 0,
+      contenus: parType.reduce((a, b) => a + b, 0),
       types: types.map((x) => ({ id: x.id, nom: x.nom })),
       medias: medias.length,
       produits,

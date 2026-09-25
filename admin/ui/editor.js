@@ -28,7 +28,8 @@ import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
-import { typePourPage, cheminDepuisTitre, lienVers } from '../core/types.js';
+import { typePourPage, cheminDepuisTitre } from '../core/types.js';
+import { poserCarte, attendrePage } from '../core/contenus.js';
 import { openWizard } from './wizard.js';
 import { openBrief } from './brief-panel.js';
 import { openLegal } from './legal-panel.js';
@@ -706,111 +707,6 @@ export async function startEditor(runtime) {
    * Seuls le titre et le lien sont réécrits — le reste (image, résumé,
    * date) est à la main du client, qui les voit dans la page.
    */
-  function poserCarte(type, sousType, titre, chemin) {
-    const trouverCollection = () => model.collections.find((c) => {
-      if (!type.collection) return false;
-      try { return c.container.matches(type.collection) || !!c.container.closest(type.collection); }
-      catch { return false; }
-    });
-
-    const collection = trouverCollection();
-    if (!collection) return false;
-    if (!model.applyCollectionOp(collection.id, 'duplicate', 0)) return false;
-    model.applyCollectionOp(collection.id, 'move', 1, 0);
-    model.refresh();
-
-    // Les champs d'un bloc répétable ne sont pas dans model.entries : ils
-    // appartiennent à la collection, et se relisent sur l'élément lui-même.
-    const apres = trouverCollection();
-    const carte = apres && apres.items[0];
-    if (!carte) return true;
-
-    const champs = model.fieldsIn(carte);
-    let titrePose = false;
-    let resumePose = false;
-
-    // Une carte dupliquée est le calque de sa voisine : sans ça, le nouvel
-    // article arrive avec l'image, le résumé et la catégorie d'un autre — on
-    // croit à un doublon plutôt qu'à un article à remplir.
-    for (const [cle, entry] of champs) {
-      if (entry.role === 'image') {
-        // Une source vide est ignorée par le binder — c'est ce qui permet de
-        // changer un texte alternatif sans effacer l'image. Sans couverture
-        // déclarée, on garde donc celle de la carte copiée, que le client
-        // remplacera : une image d'un autre article saute aux yeux, une
-        // image cassée déroute.
-        model.setCollectionField(
-          apres.id, 0, cle,
-          sousType.image ? { src: sousType.image, alt: titre } : { alt: titre },
-          entry.el, 'image',
-        );
-      } else if (entry.role === 'text' && entry.el.tagName === 'SPAN') {
-        // Les étiquettes de catégorie : elles annoncent la forme choisie.
-        model.setCollectionField(apres.id, 0, cle, { text: sousType.nom }, entry.el, 'text');
-      } else if (entry.role === 'text' && entry.el.tagName === 'P' && !resumePose) {
-        model.setCollectionField(apres.id, 0, cle, { text: t('contenuResume') }, entry.el, 'text');
-        resumePose = true;
-      }
-    }
-
-    // Le titre d'une carte est souvent un lien posé dans un intertitre : on
-    // le reconnaît à ça, et un champ de type lien porte aussi son texte.
-    // Sinon, on retombe sur le premier intertitre venu, puis sur le premier
-    // texte — la première zone de texte d'une carte étant fréquemment son
-    // étiquette de catégorie, elle n'est essayée qu'en dernier recours.
-    const lien = lienVers(chemin);
-    const dansTitre = (el) => !!(el.closest && el.closest('h1,h2,h3,h4'));
-
-    for (const [cle, entry] of champs) {
-      if (entry.role !== 'link') continue;
-      const estTitre = !titrePose && dansTitre(entry.el);
-      model.setCollectionField(
-        apres.id, 0, cle,
-        estTitre ? { href: lien, text: titre } : { href: lien },
-        entry.el, 'link',
-      );
-      if (estTitre) titrePose = true;
-    }
-    if (!titrePose) {
-      for (const [cle, entry] of champs) {
-        if (entry.role !== 'text') continue;
-        if (!/^H[1-4]$/.test(entry.el.tagName)) continue;
-        model.setCollectionField(apres.id, 0, cle, { text: titre }, entry.el, 'text');
-        titrePose = true;
-        break;
-      }
-    }
-    if (!titrePose) {
-      for (const [cle, entry] of champs) {
-        if (entry.role !== 'text') continue;
-        model.setCollectionField(apres.id, 0, cle, { text: titre }, entry.el, 'text');
-        break;
-      }
-    }
-    return true;
-  }
-
-  /**
-   * Attend qu'une page fraîchement créée soit servie.
-   *
-   * Sur un hébergement qui reconstruit le site à chaque écriture, le fichier
-   * existe avant d'être en ligne. L'ouvrir tout de suite afficherait une page
-   * introuvable — ce qui ressemble à un échec alors que tout s'est bien passé.
-   */
-  async function attendrePage(url, limite = 150000) {
-    const debut = Date.now();
-    let attente = 2000;
-    while (Date.now() - debut < limite) {
-      await new Promise((r) => setTimeout(r, attente));
-      try {
-        const reponse = await fetch(url, { method: 'GET', cache: 'no-store' });
-        if (reponse.ok) return true;
-      } catch { /* hors ligne ou reconstruction en cours : on retente */ }
-      attente = Math.min(attente * 1.4, 8000);
-    }
-    return false;
-  }
-
   async function nouveauContenu(sousTypeId) {
     const type = typePourPage(runtime.config, urlCourante());
     const sousType = type && type.sousTypes.find((st) => st.id === sousTypeId);
@@ -830,7 +726,7 @@ export async function startEditor(runtime) {
       return;
     }
 
-    if (poserCarte(type, sousType, titre, chemin)) markDirty();
+    if (poserCarte(model, { type, sousType, titre, chemin, resume: t('contenuResume') })) markDirty();
     await autosave.flush();
 
     // Retenue immédiatement : elle apparaît dans la liste des pages sans

@@ -242,6 +242,44 @@ body {
 .mini__cols { display: flex; gap: 3px; flex: 1; }
 .mini__col { flex: 1; border-radius: 3px; background: #c3cfdd; }
 
+/* ─── Contenus ───────────────────────────────────────────────────────── */
+.onglets {
+  display: flex; gap: 4px; margin-bottom: 18px;
+  border-bottom: 1px solid var(--trait);
+}
+.onglet {
+  border: 0; background: none; font: inherit; font-size: 13.5px; font-weight: 600;
+  padding: 9px 14px; cursor: pointer; color: var(--doux);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.onglet:hover { color: var(--encre); }
+.onglet[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+.formes {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 11px; margin-bottom: 20px;
+}
+.forme {
+  display: flex; align-items: center; gap: 12px; text-align: left; font: inherit;
+  padding: 13px 15px; cursor: pointer; background: var(--surface);
+  border: 1px solid var(--trait); border-radius: var(--rayon); box-shadow: var(--ombre);
+}
+.forme:hover:not([disabled]) { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-pale); }
+.forme[disabled] { opacity: .55; cursor: default; }
+.forme__icone {
+  flex: none; width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center;
+  background: var(--accent-pale); color: var(--accent);
+}
+.forme__main { flex: 1; min-width: 0; }
+.forme__nom { display: block; font-weight: 620; }
+.forme__plus { flex: none; color: var(--pale); }
+.forme:hover:not([disabled]) .forme__plus { color: var(--accent); }
+.forme__titre {
+  font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--pale); font-weight: 700; margin-bottom: 9px;
+}
+.forme__aide { display: block; font-size: 12px; color: var(--pale); }
+
 /* ─── Fenêtre de choix ───────────────────────────────────────────────── */
 .voile {
   position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;

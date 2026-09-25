@@ -1,5 +1,45 @@
 # Journal des versions
 
+## 1.20.0
+
+**Les contenus : articles, portraits, réalisations**
+
+Un contenu n'est pas une page, du point de vue de celui qui écrit. Il a une
+forme (« un portrait »), il vit dans une galerie, et il a une fiche à lui.
+Que le module fabrique tout ça avec un fichier `.html` copié d'un modèle
+est un détail d'implémentation — le mot « page » n'apparaît donc nulle part
+sur cet écran.
+
+- **La liste** est lue dans la galerie elle-même : titre et fichier de
+  chaque carte. Aucune table ne tient cet inventaire, il n'existe que dans
+  le HTML de la page d'index.
+- **Un bouton par forme déclarée** — Interview, Portrait… On demande le
+  titre, et le module s'occupe du reste : copier le modèle, poser la carte
+  en tête de galerie, retenir la page, attendre que le site soit remonté,
+  puis ouvrir l'éditeur pour écrire.
+- Plusieurs types ? Des **onglets**, pas un menu déroulant : un menu cache
+  ce que le site sait faire.
+- Sans type déclaré, l'écran n'affiche pas une liste vide : il explique ce
+  qui manque, où ça se déclare, et à qui le demander.
+
+**Un module partagé plutôt que deux copies**
+
+Poser une carte dans une galerie faite du code du client demande quatre-
+vingts lignes d'heuristiques — reconnaître le titre, l'image, le résumé, la
+catégorie, et vider ce qui appartenait à la carte voisine. Ce code vivait
+dans l'éditeur en direct. Il est désormais dans `core/contenus.js`, appelé
+par les deux : créer un article doit donner exactement le même résultat
+depuis le back-office et depuis la page.
+
+**Au passage**
+
+- Le tableau de bord compte enfin les contenus, type par type.
+- `window.AdminBack` en mode bavard : la même prise que `window.Admin` côté
+  site, pour inspecter et pour éprouver le module.
+- Le bouton de création porte le nom de la forme, sans article. « Nouvel
+  interview » ou « nouvelle interview » dépend d'un genre que la
+  déclaration ne donne pas ; l'intention est dans le titre au-dessus.
+
 ## 1.19.1
 
 **L'écran Structure : poser le châssis d'une page**
