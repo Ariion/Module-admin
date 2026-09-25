@@ -1,5 +1,53 @@
 # Journal des versions
 
+## 1.21.0
+
+**Le menu s'adapte au site : on coche ce qu'on veut faire**
+
+Montrer huit rubriques à quelqu'un qui n'a jamais fait de site, c'est lui
+demander de deviner lesquelles le concernent. La réponse est souvent
+« deux ». Le module posait déjà la question — « Présenter mon activité /
+Vendre un produit / Publier un article » — dans l'assistant de première
+visite, mais la réponse ne servait qu'à proposer des mises en page, puis
+elle était oubliée.
+
+Elle décide maintenant de ce qu'on voit.
+
+- **Au premier passage**, le tableau de bord pose la question en grand, à
+  la place de l'inventaire : des compteurs à zéro n'apprennent rien à
+  quelqu'un qui n'a pas encore commencé.
+- **Le genre allume des rubriques.** « Vendre des produits » fait
+  apparaître Produits, « Publier des articles » fait apparaître Contenus.
+  Ce qui n'est pas coché n'est pas grisé : il n'est pas là.
+- **Paramètres → Les rubriques du menu** reprend la main, case par case, et
+  n'oblige jamais à repasser par le genre. Cocher un genre de plus n'éteint
+  rien de ce qu'on avait allumé à la main : un raccourci qui enferme est
+  pire que pas de raccourci.
+- **Trois rubriques ne s'éteignent pas** — Pages, Médias, Paramètres. Sans
+  elles il n'y a plus de site à administrer, et plus de quoi les rallumer.
+- Ce qui est annoncé mais pas encore construit porte la mention
+  **« bientôt »**. Une case qu'on coche et qui ne change rien fait douter
+  de tout le reste.
+
+Changer une rubrique refait **le menu seulement** : on reste sur l'écran
+où l'on est. Reconstruire tout le back-office renverrait au tableau de bord
+à chaque case cochée — exactement quand on est en train de régler quelque
+chose.
+
+**La médiathèque, en pleine page**
+
+L'éditeur en direct a déjà une bibliothèque, dans un panneau de 340 px :
+elle sert à *choisir* une image. Ici on ne choisit pas, on **range** — on
+cherche, on fait le tri. Grille qui montre vraiment les images, filtres par
+famille, recherche, dépôt de fichiers sur toute la surface, ajout par
+adresse, copie de l'adresse, suppression. Les trois sources sont fusionnées
+sur la seule clé qu'elles partagent, l'adresse : l'index de la base, le
+dossier réellement hébergé chez le client (ce qui rend visibles les
+fichiers déposés en FTP), et ce qu'on dépose ici.
+
+Retirer un média prévient que les pages qui l'affichent déjà ne seront pas
+modifiées — elles pointeraient vers une adresse morte.
+
 ## 1.20.0
 
 **Les contenus : articles, portraits, réalisations**

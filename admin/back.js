@@ -28,9 +28,11 @@ import { setDebug, debug } from './core/log.js';
 import { pageKeyFromLocation } from './core/dom.js';
 import { typesDe, cheminDepuisTitre } from './core/types.js';
 import { poserCarte, attendrePage } from './core/contenus.js';
+import { rubriquesActives, rubrique, appliquerGenres, genreChoisi } from './core/rubriques.js';
 import { createHost } from './data/host.js';
 import { canEdit } from './data/schema.js';
 import { h, icon, clear } from './ui/el.js';
+import { safeUrl } from './core/sanitize.js';
 import { createTranslator } from './ui/i18n.js';
 import { CSS_BACK } from './ui/back/styles-back.js';
 import { creerChassis } from './ui/back/shell-back.js';
@@ -38,6 +40,9 @@ import { creerTableau } from './ui/back/tableau.js';
 import { creerPagesListe } from './ui/back/pages-liste.js';
 import { creerStructure } from './ui/back/structure.js';
 import { creerContenus } from './ui/back/contenus.js';
+import { creerReglagesBack, carteGenre } from './ui/back/reglages-back.js';
+import { creerMedias } from './ui/back/medias.js';
+import { createMedia } from './media/index.js';
 
 /** Où le site répond, vu depuis la page du back-office. */
 const RACINE = new URL('.', new URL('..', import.meta.url)).href;
@@ -64,6 +69,7 @@ async function demarrer() {
 
   const backend = await creerBackend(config);
   const hebergement = createHost(config, backend);
+  const media = createMedia(config, backend);
   const types = typesDe(config);
 
   // --- Connexion ------------------------------------------------------
@@ -128,25 +134,10 @@ async function demarrer() {
   }
 
   // --- Le back-office lui-même ----------------------------------------
-  function ouvrirBackOffice() {
-    const chassis = creerChassis({
-      hote, t, nomSite: config.siteId,
-      onQuitter: () => backend.signOut(),
-      onVoirSite: () => window.open(RACINE, '_blank', 'noopener'),
-    });
-
-    chassis.ajouterEcran('tableau', {
-      libelle: t('boTableau'), icone: 'grid',
-      dessiner: creerTableau({
-        t, etat: inventaire, aller: chassis.aller,
-        onGuide: () => ouvrirEnDirect('', { guide: true }),
-      }),
-    });
-
-    chassis.ajouterGroupe(t('boGroupeContenu'));
-    chassis.ajouterEcran('pages', {
-      libelle: t('boPages'), icone: 'pages', badge: true,
-      dessiner: creerPagesListe({
+  /** Les écrans que porte chaque rubrique. Une rubrique éteinte n'existe pas. */
+  function ecransDe(chassis) {
+    return {
+      pages: () => creerPagesListe({
         t,
         lister: listerPages,
         peutCreer: () => etatHote.ok,
@@ -155,11 +146,7 @@ async function demarrer() {
         onEcrire: (p) => ouvrirEnDirect(p.chemin),
         onSupprimer: () => { /* confirmation : prochaine étape */ },
       }),
-    });
-
-    chassis.ajouterEcran('contenus', {
-      libelle: t('boContenus'), icone: 'list',
-      dessiner: creerContenus({
+      contenus: () => creerContenus({
         t,
         types: () => types,
         lister: listerContenus,
@@ -168,7 +155,67 @@ async function demarrer() {
         onEcrire: (c) => ouvrirEnDirect(c.chemin),
         onGalerie: (type) => ouvrirEnDirect(type.index),
       }),
+      medias: () => creerMedias({
+        t,
+        lister: listerMedias,
+        peutTeleverser: () => !!media.primary?.canUpload,
+        televerser: async (f) => {
+          const item = await media.primary.upload(f);
+          try { await backend.addMedia(item); } catch { /* index indisponible */ }
+          return item;
+        },
+        ajouterUrl: async (url) => {
+          const propre = safeUrl(url);
+          if (!propre) return;
+          await backend.addMedia({ url: propre, name: propre.split('/').pop() || propre });
+        },
+        supprimer: async (m) => {
+          if (m.id) await backend.deleteMedia(m.id).catch(() => {});
+          if (media.primary?.remove) await media.primary.remove(m).catch(() => {});
+        },
+      }),
+      reglages: () => creerReglagesBack({
+        t,
+        reglages: async () => (await lireCommun())?.reglages || null,
+        aDesTypes: () => types.length > 0,
+        enregistrer: enregistrerRubriques,
+      }),
+    };
+  }
+
+  async function ouvrirBackOffice() {
+    const chassis = creerChassis({
+      hote, t, nomSite: config.siteId,
+      onQuitter: () => backend.signOut(),
+      onVoirSite: () => window.open(RACINE, '_blank', 'noopener'),
     });
+
+    // Le menu ne montre que ce que le site sait faire. Le reste n'est pas
+    // grisé : il n'est pas là, et il apparaîtra le jour où on le cochera.
+    const fabriques = ecransDe(chassis);
+
+    async function poserMenu() {
+      chassis.viderMenu();
+      chassis.ajouterEcran('tableau', {
+        libelle: t('boTableau'), icone: 'grid',
+        dessiner: creerTableau({
+          t, etat: inventaire, aller: chassis.aller,
+          onGuide: () => ouvrirEnDirect('', { guide: true }),
+          genre: () => carteGenre({ t, onChoisir: choisirGenres }),
+        }),
+      });
+      let groupe = null;
+      for (const id of rubriquesActives((await lireCommun())?.reglages)) {
+        const r = rubrique(id);
+        const fabrique = fabriques[id];
+        if (!r || !fabrique) continue;
+        if (r.groupe !== groupe) { chassis.ajouterGroupe(t('boGroupe_' + r.groupe)); groupe = r.groupe; }
+        chassis.ajouterEcran(r.ecran, { libelle: t('rub_' + r.id), icone: r.icone, dessiner: fabrique() });
+      }
+    }
+    chassisCourant = chassis;
+    refaireMenu = poserMenu;
+    await poserMenu();
 
     // La structure ne figure pas au menu : on y arrive depuis une page, et
     // une entrée de menu qui demanderait « laquelle ? » ne servirait à rien.
@@ -278,6 +325,38 @@ async function demarrer() {
     };
   }
 
+  /**
+   * Retient le genre et les rubriques dans le document commun, puis remonte
+   * le back-office : le menu est construit au démarrage, et une rubrique
+   * qu'on vient d'allumer doit apparaître sans avoir à recharger la page.
+   */
+  async function enregistrerRubriques({ genres, rubriques }) {
+    const commun = await lireCommun();
+    const instantane = {
+      ...(commun || { v: 1, content: {}, collections: {} }),
+      reglages: { ...(commun?.reglages || {}), genres, rubriques },
+    };
+    await backend.saveDraft(PAGE_COMMUNE, instantane);
+    await refaireMenu?.();
+  }
+
+  /** Posée par le back-office une fois ouvert : refait le menu sans plus. */
+  let refaireMenu = null;
+
+  /** Le choix fait depuis le tableau de bord, au premier passage. */
+  async function choisirGenres(genres) {
+    const commun = await lireCommun();
+    await enregistrerRubriques({
+      genres,
+      rubriques: appliquerGenres(commun?.reglages, genres),
+    });
+    // Le tableau de bord vient de perdre sa raison d'être : on le redessine
+    // pour qu'il montre l'inventaire au lieu de reposer la question.
+    chassisCourant?.aller('tableau');
+  }
+
+  let chassisCourant = null;
+
   // --- Contenus -------------------------------------------------------
   /**
    * Les contenus d'un type : les cartes de sa galerie.
@@ -344,6 +423,27 @@ async function demarrer() {
     ouvrirEnDirect(chemin);
   }
 
+  /**
+   * Les médias, fusionnés sur l'adresse.
+   *
+   * L'index de la base ignore ce qui a été déposé en FTP ; le dossier
+   * hébergé ignore les adresses ajoutées à la main. Il faut les deux, et
+   * l'adresse est la seule clé que les deux partagent.
+   */
+  async function listerMedias() {
+    const [index, dossier] = await Promise.all([
+      backend.listMedia?.(300).catch(() => []) ?? [],
+      media.primary?.list ? media.primary.list().catch(() => []) : [],
+    ]);
+    const parUrl = new Map();
+    for (const item of [...index, ...dossier]) {
+      if (!item?.url) continue;
+      const cle = String(item.url);
+      parUrl.set(cle, { ...(parUrl.get(cle) || {}), ...item });
+    }
+    return [...parUrl.values()];
+  }
+
   // --- Inventaire -----------------------------------------------------
   /**
    * Les pages connues du site. Elles vivent dans le document commun, celui
@@ -389,7 +489,7 @@ async function demarrer() {
   async function inventaire() {
     const [pages, medias, commun] = await Promise.all([
       listerPages().catch(() => []),
-      backend.listMedia?.(200).catch(() => []) ?? [],
+      listerMedias().catch(() => []),
       lireCommun(),
     ]);
     const produits = commun?.reglages?.produits?.length || 0;
@@ -407,6 +507,7 @@ async function demarrer() {
       brouillons,
       exemples: 0,
       vierge: !pages.some((p) => p.publie || p.brouillon),
+      genreChoisi: genreChoisi(commun?.reglages),
     };
   }
 

@@ -64,6 +64,7 @@ export function creerChassis({ hote, t, nomSite, onQuitter, onVoirSite }) {
       class: 'bo__lien', type: 'button', onclick: () => aller(id),
     }, icon(icone, 15), h('span', {}, libelle), pastille);
     if (bouton) menu.appendChild(bouton);
+    if (courant === id && bouton) bouton.setAttribute('aria-current', 'page');
     ecrans.set(id, { bouton, dessiner, badge: pastille, parent: cache ? null : id });
   }
 
@@ -101,8 +102,21 @@ export function creerChassis({ hote, t, nomSite, onQuitter, onVoirSite }) {
     ecran.badge.hidden = !nombre;
   }
 
+  /**
+   * Repart d'un menu vide, en gardant les écrans et la place où l'on est.
+   *
+   * Changer les rubriques change le menu, pas la page qu'on regarde :
+   * reconstruire tout le back-office renverrait au tableau de bord à chaque
+   * case cochée, ce qui est exactement ce qu'on ne veut pas quand on est en
+   * train de régler quelque chose.
+   */
+  function viderMenu() {
+    clear(menu);
+    for (const [, e] of ecrans) e.bouton = null;
+  }
+
   return {
-    ajouterGroupe, ajouterEcran, aller, majBadge,
+    ajouterGroupe, ajouterEcran, aller, majBadge, viderMenu,
     get courant() { return courant; },
     rafraichir: () => courant && aller(courant),
   };

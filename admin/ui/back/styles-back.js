@@ -242,6 +242,37 @@ body {
 .mini__cols { display: flex; gap: 3px; flex: 1; }
 .mini__col { flex: 1; border-radius: 3px; background: #c3cfdd; }
 
+/* ─── Genres et rubriques ────────────────────────────────────────────── */
+.genres { display: grid; grid-template-columns: repeat(auto-fit, minmax(214px, 1fr)); gap: 10px; }
+.genre {
+  display: flex; align-items: flex-start; gap: 10px; padding: 12px 13px; cursor: pointer;
+  border: 1px solid var(--trait); border-radius: var(--rayon-sm); background: var(--surface);
+}
+.genre:hover { border-color: var(--accent); }
+.genre input { margin-top: 3px; flex: none; accent-color: var(--accent); width: 16px; height: 16px; }
+.genre__main { min-width: 0; }
+.genre__nom { display: block; font-weight: 620; }
+.genre__aide { display: block; font-size: 12.5px; color: var(--doux); }
+.genre:has(input:checked) { border-color: var(--accent); background: var(--accent-pale); }
+
+/* Sur le bandeau bleu du tableau de bord, les cases gardent leur lisibilité. */
+.genres--clair .genre { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.3); }
+.genres--clair .genre:hover { border-color: #fff; }
+.genres--clair .genre:has(input:checked) { background: rgba(255,255,255,.26); border-color: #fff; }
+.genres--clair .genre__aide { color: rgba(255,255,255,.82); }
+
+.rubrique {
+  display: flex; align-items: center; gap: 11px; padding: 10px 2px; cursor: pointer;
+  border-bottom: 1px solid var(--trait-doux);
+}
+.rubrique:last-child { border-bottom: 0; }
+.rubrique input { flex: none; accent-color: var(--accent); width: 16px; height: 16px; }
+.rubrique input:disabled { opacity: .5; }
+.rubrique__icone { flex: none; color: var(--doux); display: grid; place-items: center; }
+.rubrique__main { min-width: 0; }
+.rubrique__nom { display: block; font-weight: 600; }
+.rubrique__aide { display: block; font-size: 12.5px; color: var(--pale); }
+
 /* ─── Contenus ───────────────────────────────────────────────────────── */
 .onglets {
   display: flex; gap: 4px; margin-bottom: 18px;
@@ -279,6 +310,43 @@ body {
   color: var(--pale); font-weight: 700; margin-bottom: 9px;
 }
 .forme__aide { display: block; font-size: 12px; color: var(--pale); }
+
+/* ─── Médiathèque ────────────────────────────────────────────────────── */
+.barre-medias {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.barre-medias .saisie { width: auto; min-width: 220px; margin-left: auto; }
+.onglets--plein { margin-bottom: 0; border-bottom: 0; }
+.onglets--plein .onglet {
+  border: 1px solid var(--trait); border-radius: 999px; padding: 6px 13px; margin: 0;
+  background: var(--surface);
+}
+.onglets--plein .onglet[aria-selected="true"] {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+
+.carte.depot { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-pale); }
+
+.grille-medias {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 14px; padding: 16px;
+}
+.media {
+  border: 1px solid var(--trait); border-radius: var(--rayon-sm);
+  overflow: hidden; background: var(--surface);
+}
+.media:hover { border-color: #c2cede; }
+.media__vue {
+  height: 118px; display: grid; place-items: center; overflow: hidden;
+  background: var(--surface-2); color: var(--pale);
+}
+.media__vue img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media__pied { padding: 8px 10px; display: flex; align-items: center; gap: 6px; }
+.media__nom {
+  flex: 1; min-width: 0; font-size: 12px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.media__actions { flex: none; display: flex; gap: 3px; }
 
 /* ─── Fenêtre de choix ───────────────────────────────────────────────── */
 .voile {

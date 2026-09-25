@@ -20,7 +20,7 @@ import { teteEcran } from './shell-back.js';
  * @param {Function} options.aller navigation vers un autre écran
  * @param {Function} options.onGuide ouvre le parcours de création
  */
-export function creerTableau({ t, etat, aller, onGuide }) {
+export function creerTableau({ t, etat, aller, onGuide, genre }) {
   return async function dessiner(page) {
     page.appendChild(teteEcran(t('boTableau'), t('boTableauAide')));
 
@@ -30,9 +30,13 @@ export function creerTableau({ t, etat, aller, onGuide }) {
     const inv = await etat();
     chargement.remove();
 
-    // Un site encore vide n'a pas besoin de compteurs à zéro : il a besoin
-    // qu'on lui dise par où commencer, une fois, en grand.
-    if (inv.vierge) {
+    // La première question est celle du genre de site : c'est elle qui
+    // décide de ce qu'on verra à gauche. Tant qu'on n'y a pas répondu, le
+    // menu ne montre que le socle, et proposer « commencer » avant serait
+    // envoyer quelqu'un construire sans lui avoir demandé quoi.
+    if (!inv.genreChoisi) {
+      page.appendChild(genre());
+    } else if (inv.vierge) {
       page.appendChild(h('div', { class: 'depart' },
         h('h2', {}, t('boDepartTitre')),
         h('p', {}, t('boDepartAide')),
