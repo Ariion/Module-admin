@@ -116,7 +116,15 @@ export async function startEditor(runtime) {
   //  Construction de l'interface
   // ================================================================
   function buildShell() {
-    shell = createShell({ root, t, config, onDevice: () => setTimeout(() => overlay?.reposition(), 240) });
+    shell = createShell({
+      root, t, config,
+      onDevice: () => {
+        setTimeout(() => overlay?.reposition(), 240);
+        // Le panneau montre les valeurs du format : il doit se redessiner,
+        // sinon on réglerait le téléphone en lisant les chiffres de l'écran.
+        if (inspector?.selection) inspector.render(inspector.selection);
+      },
+    });
 
     // Le Guide passe en premier : c'est la vue qui s'ouvre au démarrage, et
     // celle qui suffit à quelqu'un qui découvre. Les autres restent à côté.
@@ -158,8 +166,14 @@ export async function startEditor(runtime) {
         setContent: (entry, patch) => setValue(entry, patch),
         revertContent: (entry) => revert(entry),
         styleOf: (el) => model.styleOf(el),
+        rawStyle: (el) => model.rawStyle(el),
         setStyle: (el, patch) => { model.setStyle(el, patch); markDirty(); overlay.reposition(); },
         resetStyle: (el) => { model.clearStyle(el); markDirty(); },
+        // Le format réglé EST le format regardé : le panneau et le cadre
+        // d'aperçu lisent la même valeur, et le bouton du panneau change le
+        // cadre plutôt que d'ouvrir un second réglage à tenir à jour.
+        ecranActif: () => shell.device,
+        choisirEcran: (id) => shell.setDevice(id),
         collectionOp: (id, op, ...args) => collectionOp(id, op, ...args),
         sections: () => model.sectionList(),
         sectionIndex: (ref) => model.sectionList().findIndex((x) => x.ref === ref),

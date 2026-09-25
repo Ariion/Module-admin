@@ -12,6 +12,7 @@ import { safeImageUrl } from '../core/sanitize.js';
 import { WIDGETS } from '../core/widgets.js';
 import { TYPES_ACTION, MODELES_ACTION, normaliserAction, actionActive } from '../core/actions.js';
 import { STYLE_FIELDS, STYLE_GROUPS, readStyleValues } from '../core/style.js';
+import { ECRANS, ECRAN_BASE, surchargesDe, fusionnerEcrans } from '../core/ecrans.js';
 import { TEMPLATES } from '../core/templates.js';
 import { FONTS, GROUPES_POLICE } from '../core/fonts.js';
 
@@ -314,7 +315,7 @@ export function createInspector({ vue, t, actions }) {
       },
       (patch) => actions.setWidgetProps(noeud.key, { style: patch }),
       undefined,
-      { ensemble: () => blocAutour(noeud.key) },
+      { ensemble: () => blocAutour(noeud.key), brut: () => noeud.props.style || {} },
     );
   }
 
@@ -659,23 +660,55 @@ export function createInspector({ vue, t, actions }) {
    * lecture et d'écriture changent.
    */
   function panneauStyle(lire, ecrire, ouvertPremier, options = {}) {
+    // Le format réglé est celui qu'on regarde : changer le cadre d'aperçu
+    // change ce qu'on règle. Demander les deux séparément serait le moyen sûr
+    // de régler le téléphone en croyant régler l'ordinateur.
+    const format = actions.ecranActif?.() || ECRAN_BASE;
+    const brut = options.brut?.() || {};
+    const surcharges = surchargesDe(brut, format);
+    const surEcran = format !== ECRAN_BASE;
+
+    // Sur un format étroit, un champ montre la valeur qui s'y appliquera :
+    // sa surcharge s'il en a une, sinon celle héritée du format plus large.
     const valeurs = lire();
-    const groupes = [];
+    if (surEcran) {
+      for (const f of ECRANS) {
+        if (f.base) continue;
+        Object.assign(valeurs, surchargesDe(brut, f.id));
+        if (f.id === format) break;
+      }
+    }
+
+    // Écrire sur un format, c'est ranger une surcharge — jamais toucher la
+    // valeur de base, qui doit rester celle du grand écran.
+    const ecrireFormat = !surEcran ? ecrire : (patch) => {
+      ecrire({ ecrans: fusionnerEcrans(brut.ecrans, format, patch) });
+    };
+
+    const groupes = [selecteurEcran(format, surcharges, brut, ecrire)];
 
     for (const nom of STYLE_GROUPS) {
       const champs = STYLE_FIELDS.filter((f) => f.group === nom);
       if (!champs.length) continue;
+      // Les effets valent pour tous les écrans : ils demandent des états
+      // (`:hover`) et non une largeur. Ils continuent donc d'écrire la base,
+      // et le panneau le dit plutôt que de laisser croire le contraire.
+      const global = nom === 'effets';
+      const ecrit = global ? ecrire : ecrireFormat;
       groupes.push(groupe('style:' + nom, t('grp_' + nom), iconeGroupe(nom),
         () => [
           nom === 'place' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('placeHint')) : null,
           nom === 'effets' ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('effetsHint')) : null,
+          surEcran && global ? h('p', { class: 'hint', style: { margin: '0 0 12px' } }, t('ecranToujours')) : null,
           nom === 'effets' ? boutonEnsemble(options.ensemble?.()) : null,
-          ...champs.map((f) => champStyle(f, valeurs[f.key], ecrire)),
+          ...champs.map((f) => champStyle(f, valeurs[f.key], ecrit,
+            surEcran && !global && f.key in surcharges)),
         ],
         nom === 'colors' ? ouvertPremier !== false : false));
     }
 
     groupes.push(groupe('style:css', t('grp_css'), 'code', () => [
+      surEcran ? h('p', { class: 'hint', style: { margin: '0 0 10px' } }, t('ecranToujours')) : null,
       h('textarea', {
         class: 'textarea code', spellcheck: 'false', value: valeurs.customCss || '',
         placeholder: 'selector { border-radius: 12px; }\nselector:hover { transform: translateY(-4px); }',
@@ -686,10 +719,54 @@ export function createInspector({ vue, t, actions }) {
 
     groupes.push(h('button', {
       class: 'btn btn--wide', type: 'button', style: { marginTop: '4px' },
-      onclick: () => { ecrire(remiseAZero()); render(selection); },
-    }, icon('history', 13), t('resetStyle')));
+      // Sur un format étroit, « rétablir » ne défait que ce format : on ne
+      // perd pas l'habillage du grand écran en corrigeant un téléphone.
+      onclick: () => {
+        ecrire(surEcran ? { ecrans: fusionnerEcrans(brut.ecrans, format, vidangeEcran(surcharges)) }
+          : remiseAZero());
+        render(selection);
+      },
+    }, icon('history', 13), surEcran ? t('ecranRemise') : t('resetStyle')));
 
     return groupes;
+  }
+
+  /**
+   * Le choix du format réglé, en tête du panneau d'habillage.
+   *
+   * Il est aussi un compte rendu : une pastille dit sur quels formats ce bloc
+   * porte déjà des valeurs à lui. Sans elle, une valeur réglée pour le
+   * téléphone serait invisible depuis le grand écran — et on la chercherait
+   * longtemps.
+   */
+  function selecteurEcran(format, surcharges, brut, ecrire) {
+    const nombre = Object.keys(surcharges).length;
+    const boutons = ECRANS.map((e) => {
+      const marque = !e.base && Object.keys(surchargesDe(brut, e.id)).length > 0;
+      return h('button', {
+        class: 'seg__btn' + (marque ? ' seg__btn--marque' : ''), type: 'button',
+        'aria-pressed': e.id === format ? 'true' : 'false',
+        title: t('ecran_' + e.id),
+        onclick: () => actions.choisirEcran?.(e.id),
+      }, icon(e.icone, 13), h('span', {}, t('ecran_' + e.id)));
+    });
+
+    return h('div', { class: 'ecrans' },
+      h('div', { class: 'field__label' }, t('ecranReglage')),
+      h('div', { class: 'seg seg--ecrans' }, boutons),
+      h('p', { class: 'hint', style: { margin: '8px 0 0' } },
+        format === ECRAN_BASE ? t('ecranBaseAide') : t('ecranAide', t('ecran_' + format))),
+      format !== ECRAN_BASE && nombre
+        ? h('p', { class: 'hint hint--fort', style: { margin: '6px 0 0' } }, t('ecranCompte', nombre))
+        : null,
+    );
+  }
+
+  /** De quoi effacer toutes les surcharges d'un format. */
+  function vidangeEcran(surcharges) {
+    const vide = {};
+    for (const cle of Object.keys(surcharges)) vide[cle] = '';
+    return vide;
   }
 
   function remiseAZero() {
@@ -702,8 +779,9 @@ export function createInspector({ vue, t, actions }) {
     return { colors: 'palette', type: 'heading', space: 'spacer', border: 'section', place: 'drag', effets: 'eye' }[nom] || 'palette';
   }
 
-  function champStyle(f, valeur, ecrire) {
+  function champStyle(f, valeur, ecrire, surcharge = false) {
     const ecrit = (v) => ecrire({ [f.key]: v });
+    const champ = (libelle, controle) => champMarque(libelle, controle, surcharge);
     switch (f.type) {
       case 'color':
         return champ(t(f.label), couleur(valeur, ecrit));
@@ -770,6 +848,8 @@ export function createInspector({ vue, t, actions }) {
     return panneauStyle(
       () => actions.styleOf(el),
       (patch) => actions.setStyle(el, patch),
+      undefined,
+      { brut: () => actions.rawStyle?.(el) || {} },
     );
   }
 
@@ -831,6 +911,22 @@ export function createInspector({ vue, t, actions }) {
   // ------------------------------------------------------------- outils
   function champ(libelle, controle) {
     return h('div', { class: 'field' }, h('label', { class: 'field__label' }, libelle), controle);
+  }
+
+  /**
+   * Un champ d'habillage, marqué quand le format réglé lui donne une valeur à
+   * lui. La marque répond à la seule question qu'on se pose devant un panneau
+   * de format : « est-ce que j'ai touché à celui-là ? »
+   */
+  function champMarque(libelle, controle, surcharge) {
+    if (!surcharge) return champ(libelle, controle);
+    return h('div', { class: 'field field--surcharge' },
+      h('label', { class: 'field__label' },
+        h('span', {}, libelle),
+        h('span', { class: 'field__marque', title: t('ecranModifie') }, icon('check', 10)),
+      ),
+      controle,
+    );
   }
 
   function boutonRevert(onClick) {

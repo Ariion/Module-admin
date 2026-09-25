@@ -1,5 +1,46 @@
 # Journal des versions
 
+## 1.25.0
+
+**Un réglage par format d'écran**
+
+Un titre à 2,6rem est juste sur un écran large et illisible sur un
+téléphone. Jusqu'ici le module ne savait donner qu'une valeur par réglage :
+on choisissait donc la moins mauvaise des deux.
+
+**Le format réglé est le format regardé.** Les trois boutons du cadre
+d'aperçu existaient déjà ; ils règlent désormais. On passe le cadre en
+téléphone, on change la taille du titre, et cette taille ne vaut que pour
+les téléphones. Pas de second réglage à tenir d'accord avec le premier :
+c'est le même.
+
+**Seul ce qu'on change est enregistré.** Un champ laissé tel quel sur mobile
+garde la valeur du grand écran. Un champ vidé cesse d'être une surcharge et
+rend la main à cette valeur — sans quoi il n'y aurait aucun moyen de revenir
+en arrière autrement qu'en remettant tout l'habillage à zéro. Le bouton
+« rétablir » ne défait que le format affiché.
+
+**On voit où l'on a touché.** Une pastille sur chaque bouton de format dit
+qu'il porte des valeurs à lui, même quand on ne le regarde pas — sinon un
+réglage de téléphone serait introuvable depuis le grand écran. Et dans le
+panneau, chaque champ surchargé est marqué.
+
+**Les effets et le CSS personnalisé valent pour tous les écrans** : ils
+demandent des états (`:hover`), pas une largeur. Le panneau le dit plutôt
+que de laisser croire le contraire.
+
+*Sous le capot.* Une seule fonction traduit un réglage en CSS, et elle sert
+les deux sorties : le style en ligne du format de base et les règles
+`@media` des autres. Les faire calculer séparément était la garantie qu'au
+premier réglage ajouté, l'un saurait l'écrire et l'autre pas. Les largeurs
+de l'aperçu dérivent du même tableau que les points de rupture, pour que le
+cadre ne puisse pas montrer un état que le site n'aura jamais.
+
+`npm run essai-ecrans` éprouve le tout dans un vrai navigateur : la cascade
+contre le style en ligne, la propriété composée dont un format n'annule
+qu'un morceau, l'aperçu en cadre étroit dans une fenêtre large, et
+l'aller-retour par l'instantané publié.
+
 ## 1.24.0
 
 **Le back-office est complet**

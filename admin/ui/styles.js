@@ -352,6 +352,35 @@ button, input, textarea, select { font: inherit; color: inherit; }
 }
 .seg__btn:hover { color: var(--text); background: var(--bg-soft); }
 .seg__btn[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+/* Choix du format d'écran réglé */
+.ecrans { margin-bottom: 14px; }
+.seg--ecrans .seg__btn {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  height: 30px; position: relative;
+}
+.seg--ecrans .seg__btn span { font-size: 11px; }
+/* Un format qui porte déjà des valeurs à lui le dit, même quand il n'est pas
+   celui qu'on regarde : sinon un réglage de téléphone serait introuvable
+   depuis le grand écran. */
+.seg__btn--marque::after {
+  content: ''; position: absolute; top: 3px; right: 3px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+}
+.seg__btn--marque[aria-pressed="true"]::after { background: #fff; }
+.hint--fort { color: var(--accent-hi, var(--accent)); font-weight: 500; }
+.field--surcharge .field__label {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+}
+.field--surcharge .input,
+.field--surcharge .textarea,
+.field--surcharge .seg,
+.field--surcharge .color__swatch { border-color: var(--accent); }
+.field__marque {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; flex: none; border-radius: 50%;
+  background: var(--accent); color: #fff;
+}
 select.input { appearance: none; cursor: pointer; }
 
 /* Sélecteur de couleur */

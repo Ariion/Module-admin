@@ -14,6 +14,7 @@
 import { hash } from './util.js';
 import { safeImageUrl } from './sanitize.js';
 import { CATALOGUE, DUREES, classeDesEffets, CLASSE_ANIMEE, ENTREE } from './effets.js';
+import { ECRANS, classeDesEcrans, classeEcransPosee, surchargesDe, styleDeLEcran } from './ecrans.js';
 import { fontStack, fontName } from './fonts.js';
 
 export const CUSTOM_STYLE_ID = 'admin-custom-css';
@@ -126,32 +127,62 @@ function versCss(champ, brut) {
 export function applyStyleObject(el, style, options = {}) {
   if (!el || !style || typeof style !== 'object') return false;
   const groupes = options.groupes || null;
-  const retenu = (champ) => !groupes || groupes.includes(champ.group);
   let change = false;
+
+  for (const { prop, value, cles } of declarationsDe(style, { groupes })) {
+    if (!value) {
+      if (el.style[prop]) { el.style[prop] = ''; change = true; }
+      continue;
+    }
+    // Une bordure sans style ne s'affiche pas.
+    if (cles[0] === 'borderWidth' && !el.style.borderStyle) el.style.borderStyle = 'solid';
+    if (el.style[prop] !== value) { el.style[prop] = value; change = true; }
+  }
+
+  if ('customCss' in style) change = appliquerClassePerso(el, style.customCss) || change;
+  if ('ecrans' in style) change = appliquerClasseEcrans(el, style) || change;
+  if (!groupes || groupes.includes('effets')) change = appliquerClasseEffets(el, style) || change;
+  return change;
+}
+
+/**
+ * Les déclarations CSS que produit un objet de réglages.
+ *
+ * C'est le seul endroit qui traduit un réglage en CSS, et il sert DEUX
+ * sorties : le style en ligne du format de base, et les règles d'écran des
+ * autres formats. Les faire calculer séparément était la garantie qu'au
+ * premier réglage ajouté, l'un saurait l'écrire et l'autre pas.
+ *
+ * `cles` dit de quels réglages vient la déclaration. Une seule propriété peut
+ * en résumer trois — une `transform` porte le décalage et la rotation — et
+ * les règles d'écran ont besoin de le savoir pour n'écrire que ce que le
+ * format surcharge vraiment.
+ *
+ * Une valeur vide est conservée : elle signifie « rends la main au CSS du
+ * site », ce qui n'est pas la même chose qu'une absence.
+ *
+ * @param {object} style
+ * @param {{groupes?: string[]}} [options]
+ * @returns {{prop: string, value: string, cles: string[]}[]}
+ */
+export function declarationsDe(style, options = {}) {
+  if (!style || typeof style !== 'object') return [];
+  const groupes = options.groupes || null;
+  const retenu = (champ) => !groupes || groupes.includes(champ.group);
+  const sorties = [];
 
   for (const [cle, brut] of Object.entries(style)) {
     const champ = PAR_CLE.get(cle);
     if (!champ || champ.virtuel || !retenu(champ)) continue;
-
     const css = versCss(champ, brut);
     if (css === null) continue;
-
-    if (!css) {
-      if (el.style[champ.css]) { el.style[champ.css] = ''; change = true; }
-      continue;
-    }
-    // Une bordure sans style ne s'affiche pas.
-    if (cle === 'borderWidth' && !el.style.borderStyle) el.style.borderStyle = 'solid';
-    if (el.style[champ.css] !== css) { el.style[champ.css] = css; change = true; }
+    sorties.push({ prop: champ.css, value: css, cles: [cle] });
   }
 
-  const placeVoulu = !groupes || groupes.includes('place');
-  if (placeVoulu && COMPOSES.some((cle) => cle in style)) {
-    change = appliquerPlacement(el, style) || change;
+  if ((!groupes || groupes.includes('place')) && COMPOSES.some((cle) => cle in style)) {
+    sorties.push(...declarationsPlacement(style));
   }
-  if ('customCss' in style) change = appliquerClassePerso(el, style.customCss) || change;
-  if (!groupes || groupes.includes('effets')) change = appliquerClasseEffets(el, style) || change;
-  return change;
+  return sorties;
 }
 
 /**
@@ -190,9 +221,7 @@ const COMPOSES = ['placement', 'decalageX', 'decalageY', 'rotation'];
  * transformée, pas une marge : rien ne bouge autour, et la mise en page du
  * site reste intacte.
  */
-function appliquerPlacement(el, style) {
-  let change = false;
-
+function declarationsPlacement(style) {
   const nombre = (cle) => {
     const valeur = Number(style[cle]);
     return Number.isFinite(valeur) && String(style[cle] ?? '') !== '' ? valeur : 0;
@@ -203,16 +232,76 @@ function appliquerPlacement(el, style) {
   const angle = nombre('rotation');
   if (x || y) morceaux.push(`translate(${x}px, ${y}px)`);
   if (angle) morceaux.push(`rotate(${angle}deg)`);
-  const transform = morceaux.join(' ');
-  if (el.style.transform !== transform) { el.style.transform = transform; change = true; }
+
+  // Les trois réglages sont cités ensemble : surcharger la seule rotation sur
+  // mobile doit réécrire la transformée entière, décalage de base compris.
+  const sorties = [{ prop: 'transform', value: morceaux.join(' '), cles: TRANSFORMEE }];
 
   if ('placement' in style) {
     const marges = { gauche: ['0', 'auto'], centre: ['auto', 'auto'], droite: ['auto', '0'] }[style.placement];
     const [gauche, droite] = marges || ['', ''];
-    if (el.style.marginLeft !== gauche) { el.style.marginLeft = gauche; change = true; }
-    if (el.style.marginRight !== droite) { el.style.marginRight = droite; change = true; }
+    sorties.push({ prop: 'marginLeft', value: gauche, cles: ['placement'] });
+    sorties.push({ prop: 'marginRight', value: droite, cles: ['placement'] });
   }
-  return change;
+  return sorties;
+}
+
+const TRANSFORMEE = ['decalageX', 'decalageY', 'rotation'];
+
+/**
+ * Pose la classe portant les règles d'écran. Comme pour les effets, c'est une
+ * classe et non un attribut `data-admin-*` : la régénération du HTML retire
+ * les attributs du module et garde les classes, donc un site régénéré garde
+ * ses réglages de téléphone.
+ */
+function appliquerClasseEcrans(el, style) {
+  const ancienne = classeEcransPosee(el);
+  const nouvelle = classeDesEcrans(style);
+  if (ancienne === (nouvelle || null)) return false;
+  if (ancienne) el.classList.remove(ancienne);
+  if (nouvelle) el.classList.add(nouvelle);
+  return true;
+}
+
+/**
+ * Les règles d'écran d'un style, prêtes à écrire dans la feuille.
+ *
+ * Le `!important` n'est pas une facilité : le format de base vit en style en
+ * ligne, et un style en ligne bat n'importe quelle règle de classe. Sans lui,
+ * une valeur réglée pour le téléphone ne s'appliquerait jamais. Il ne porte
+ * que sur les propriétés réellement surchargées, et sur la classe du module
+ * seulement — le CSS du client n'est pas concerné.
+ */
+export function cssDesEcrans(style) {
+  const classe = classeDesEcrans(style);
+  if (!classe) return '';
+  const regles = [];
+
+  for (const format of ECRANS) {
+    if (format.base) continue;
+    const touchees = Object.keys(surchargesDe(style, format.id));
+    if (!touchees.length) continue;
+
+    // On part des valeurs EFFECTIVES du format — base comprise — puis on ne
+    // retient que les propriétés que ce format surcharge. Une transformée
+    // composée reste donc complète, sans réécrire ce qu'on n'a pas touché.
+    const effectif = styleDeLEcran(style, format.id);
+    const decl = [];
+    for (const { prop, value, cles } of declarationsDe(effectif)) {
+      if (!value || !cles.some((cle) => touchees.includes(cle))) continue;
+      decl.push(kebab(prop) + ': ' + value + ' !important');
+    }
+    if (touchees.includes('borderWidth') && !effectif.borderStyle) {
+      decl.push('border-style: solid !important');
+    }
+    if (decl.length) regles.push(`@media ${format.media} { .${classe} { ${decl.join('; ')} } }`);
+  }
+  return regles.join('\n');
+}
+
+/** `paddingBlock` en `padding-block`. */
+function kebab(prop) {
+  return prop.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
 }
 
 /** Classe unique portant le CSS personnalisé d'un élément. */

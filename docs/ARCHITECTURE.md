@@ -272,6 +272,34 @@ du contenu, avec le rôle `style`, et retrouvées par le chemin de l'élément :
 le scanner ne remonte pas les conteneurs, un résolveur direct par chemin prend
 le relais. Celles des widgets vivent dans leur arbre.
 
+#### Formats d'écran
+
+Un réglage peut prendre **une valeur par format** (`core/ecrans.js`). Le format
+de base — l'ordinateur — reste en style en ligne ; les autres sont rangés dans
+un sous-objet `ecrans`, et seuls les réglages réellement changés y figurent.
+
+Un style en ligne bat n'importe quelle règle de classe : les règles d'écran
+sont donc écrites en `!important`, sur la classe `admin-r-…` du module
+uniquement. Sans cela, une valeur réglée pour le téléphone ne s'appliquerait
+jamais — sans rien signaler.
+
+Une seule fonction traduit un réglage en CSS (`declarationsDe`), et elle sert
+les deux sorties : le style en ligne de la base et les règles `@media` des
+autres formats. Chaque déclaration dit de quels réglages elle vient, parce
+qu'une propriété peut en résumer trois — une `transform` porte le décalage et
+la rotation — et qu'un format ne doit réécrire que ce qu'il surcharge, sans
+perdre le reste de la composition.
+
+Les largeurs de l'aperçu **dérivent du même tableau** que les points de
+rupture (`DEVICES` est construit depuis `ECRANS`) : régler le téléphone dans
+le cadre montre ce qu'un téléphone affichera. Les définir deux fois, c'était
+garantir qu'un jour l'aperçu mentirait. Le format réglé dans le panneau EST le
+format regardé dans le cadre — un seul état, pas deux à tenir d'accord.
+
+`tools/essai-ecrans.mjs` éprouve tout cela dans un vrai navigateur : la
+cascade contre le style en ligne, la propriété composée, l'aperçu en iframe
+étroite dans une fenêtre large, et l'aller-retour par l'instantané publié.
+
 ---
 
 ## 3. Deux chemins de chargement

@@ -11,12 +11,19 @@
 import { h, icon, clear } from './el.js';
 import { loadFrame } from '../core/frame.js';
 import { PREVIEW_PARAM } from '../core/config.js';
+import { ECRANS } from '../core/ecrans.js';
 
-export const DEVICES = {
-  desktop: { largeur: '100%', label: 'Ordinateur', icone: 'desktop' },
-  tablet: { largeur: '820px', label: 'Tablette', icone: 'tablet' },
-  mobile: { largeur: '390px', label: 'Mobile', icone: 'mobile' },
-};
+/**
+ * Les formats de l'aperçu, dérivés du tableau des écrans.
+ *
+ * La largeur du cadre et le point de rupture qui s'y applique viennent donc
+ * de la même source : régler le téléphone dans l'aperçu montre exactement ce
+ * qu'un téléphone affichera. Les définir deux fois, c'était garantir qu'un
+ * jour l'aperçu mentirait.
+ */
+export const DEVICES = Object.fromEntries(ECRANS.map((e) => [e.id, {
+  largeur: e.apercu, label: 'ecran_' + e.id, icone: e.icone,
+}]));
 
 export function createShell({ root, t, config, onDevice }) {
   const vues = new Map();
@@ -98,7 +105,7 @@ export function createShell({ root, t, config, onDevice }) {
   let previsuAvant = null;
   for (const [cle, def] of Object.entries(DEVICES)) {
     boutonsAppareil.appendChild(h('button', {
-      class: 'device', type: 'button', title: def.label,
+      class: 'device', type: 'button', title: t(def.label),
       'aria-pressed': cle === appareil ? 'true' : 'false',
       onclick: () => setDevice(cle),
     }, icon(def.icone, 13)));

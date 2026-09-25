@@ -14,6 +14,8 @@ import {
 } from './sections.js';
 import { createWidget, renderWidget, findWidget, removeWidget, WIDGETS } from './widgets.js';
 import { compileCustomCss, writeCustomSheet, applyStyleObject } from './style.js';
+import { cssDesEcrans } from './style.js';
+import { writeEcransSheet } from './ecrans.js';
 import { writeFontLink } from './fonts.js';
 import { writeThemeSheet, policesDuTheme } from './theme.js';
 import { cssDesEffets, writeEffetsSheet } from './effets.js';
@@ -213,6 +215,7 @@ export class PageModel {
     this.refreshTheme();
     this.refreshCustomCss();
     this.refreshEffets();
+    this.refreshEcrans();
     this.refreshFonts();
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
     return { applied, orphans: [...this.orphans.values()] };
@@ -401,6 +404,9 @@ export class PageModel {
     if (!cible) return false;
     // L'habillage est un sous-objet : on le fusionne au lieu de l'écraser.
     const style = patch.style ? { ...(cible.noeud.props.style || {}), ...patch.style } : cible.noeud.props.style;
+    // Plus aucune surcharge de format : la clé disparaît au lieu de rester à
+    // `undefined` dans l'instantané publié.
+    if (style && 'ecrans' in style && !style.ecrans) delete style.ecrans;
     cible.noeud.props = { ...cible.noeud.props, ...patch, ...(style ? { style } : {}) };
     // Le texte n'est plus celui du modèle : le guide cesse de le réclamer.
     if (['text', 'html', 'items'].some((cle) => patch[cle] !== undefined)) {
@@ -420,6 +426,7 @@ export class PageModel {
     this.rerenderSection(cible.record.key);
     this.refreshCustomCss();
     this.refreshEffets();
+    this.refreshEcrans();
     this.refreshFonts();
     return true;
   }
@@ -498,6 +505,26 @@ export class PageModel {
   }
 
   /**
+   * Réunit les règles de format d'écran de la page dans une feuille unique.
+   *
+   * Le format de base vit en style en ligne ; les autres demandent une règle
+   * `@media`, qui ne peut pas s'écrire sur un attribut `style`. Même
+   * mécanisme que les effets, et pour la même raison.
+   */
+  refreshEcrans() {
+    const morceaux = [];
+    for (const valeur of this.styles.values()) morceaux.push(cssDesEcrans(valeur));
+    const parcourir = (noeuds) => {
+      for (const noeud of noeuds || []) {
+        if (noeud.props?.style) morceaux.push(cssDesEcrans(noeud.props.style));
+        if (noeud.children) parcourir(noeud.children);
+      }
+    };
+    for (const record of this.widgetSections()) parcourir([record.tree]);
+    safe(() => writeEcransSheet(this.doc, morceaux), null, 'ecrans');
+  }
+
+  /**
    * Charge les polices réellement employées dans la page. La balise produite
    * est conservée à la régénération du HTML : le site garde ses polices même
    * une fois le module retiré.
@@ -529,6 +556,19 @@ export class PageModel {
     return cible;
   }
 
+  /**
+   * La surcharge ENREGISTRÉE d'un élément, sans le CSS du site.
+   *
+   * `styleOf` mêle les deux, ce qui est juste pour préremplir un champ mais
+   * faux pour savoir ce que le client a réglé lui-même — et les formats
+   * d'écran ont besoin de cette distinction : un champ hérité et un champ
+   * surchargé se ressemblent, et ne doivent pas s'enregistrer pareil.
+   */
+  rawStyle(el) {
+    const cible = this.styleTarget(el);
+    return this.styles.get(cible.print.id) || {};
+  }
+
   /** Style courant d'un élément : surcharge enregistrée, sinon le CSS du site. */
   styleOf(el) {
     const cible = this.styleTarget(el);
@@ -548,6 +588,7 @@ export class PageModel {
     else this.styles.delete(cible.print.id);
     applyValue(el, 'style', { ...patch });
     if ('customCss' in patch) this.refreshCustomCss();
+    if ('ecrans' in patch) this.refreshEcrans();
     if ('fontFamily' in patch) this.refreshFonts();
     // La classe des effets dépend de TOUT l'habillage, pas du seul réglage
     // qu'on vient de toucher : la recalculer sur la fusion évite de perdre le
