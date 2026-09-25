@@ -18,6 +18,7 @@
  * qui les décocherait par curiosité n'aurait plus de quoi les rallumer.
  * @module core/rubriques
  */
+import { INTENTIONS } from './page-templates.js';
 
 /**
  * Le catalogue. `ecran` est l'identifiant de l'écran du back-office, `toujours`
@@ -34,17 +35,12 @@ export const RUBRIQUES = [
 ];
 
 /**
- * Les genres de site proposés à la première visite. Plusieurs peuvent être
- * cochés : une boutique qui tient aussi un journal est un cas courant, pas
- * une exception à traiter à part.
+ * Ce que le client veut faire — la même liste que celle de l'assistant de
+ * première visite. Elle y sert à proposer des mises en page ; ici, à
+ * allumer les rubriques du menu. Un seul vocabulaire, pour que les deux ne
+ * puissent pas diverger.
  */
-export const GENRES = [
-  { id: 'vitrine', allume: [] },
-  { id: 'boutique', allume: ['produits'] },
-  { id: 'presse', allume: ['contenus'] },
-  { id: 'portfolio', allume: ['contenus'] },
-  { id: 'association', allume: ['contenus'] },
-];
+export const GENRES = INTENTIONS;
 
 /** Les rubriques qui ne se décochent pas. */
 export const SOCLE = RUBRIQUES.filter((r) => r.toujours).map((r) => r.id);

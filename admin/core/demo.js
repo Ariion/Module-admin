@@ -81,11 +81,8 @@ export function pageDemo(metierId, theme = null, graine = 0) {
 }
 
 /**
- * Les bandes qui résument une page, pour la vignette d'une carte.
- *
- * On ne rend pas la page entière dans chaque carte : neuf iframes qui
- * chargent des polices distantes rendent la galerie lente et saccadée. La
- * vignette est dessinée, la prévisualisation est réelle.
+ * La suite de bandes qui résume une page — silhouette utile partout où l'on
+ * veut évoquer une mise en page sans la rendre.
  */
 export function bandesDemo(metierId) {
   return SILHOUETTES[metierId] || SILHOUETTES.autre;

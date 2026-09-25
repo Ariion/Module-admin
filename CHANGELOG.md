@@ -1,5 +1,50 @@
 # Journal des versions
 
+## 1.24.0
+
+**Le back-office est complet**
+
+Les deux derniers boutons muets, et la couture qui manquait.
+
+**Créer une page.** Un nom, et le nom de fichier se déduit — montré au fur
+et à mesure de la frappe. Le client n'a pas à le choisir, mais il a le
+droit de le voir : c'est l'adresse que porteront ses liens, et celle qu'il
+retrouvera en FTP. On peut partir d'une page vierge ou **copier une page
+existante**, ce qui garde en-tête, pied et mise en page — il ne reste que
+les textes à changer.
+
+**Supprimer une page** demande de **recopier son nom**. Une case à cocher
+se coche sans lire ; un nom recopié ne se recopie pas par distraction. La
+fenêtre dit ce qui va être effacé, que les liens vers cette page ne mèneront
+plus nulle part, et que le contenu reste dans l'historique. La page
+d'accueil n'a pas de bouton de suppression.
+
+**Un seul vocabulaire**
+
+Il y avait deux listes pour la même question : les six « intentions » de
+l'assistant de première visite (« Vendre des produits », « Publier des
+articles »…) et cinq « genres » inventés pour les paramètres. Elles
+auraient fini par dire des choses différentes — l'assistant proposant une
+boutique que le menu ne montre pas.
+
+Il n'en reste qu'une. Chaque intention porte maintenant **ce qu'elle
+propose** (`modele`, pour l'assistant) et **ce qu'elle allume** (`allume`,
+pour le menu). Les libellés existaient déjà : ceux que j'avais ajoutés ont
+disparu.
+
+**Correction : la suppression de page ne pouvait pas marcher**
+
+Les deux scripts serveur donnaient deux sens au même mot. Côté PHP,
+`action=delete` retire un **média** du dossier des images ; côté Vercel,
+elle supprimait une **page**. Le client appelait `delete` pour supprimer
+une page : sur PHP, il visait le dossier des médias, où le fichier n'est
+jamais — d'où un refus systématique.
+
+Une action `delete-page` distincte existe maintenant des deux côtés, avec
+ses propres garde-fous : l'accueil ne part pas, les modèles non plus, et la
+copie du code d'origine part avec la page — la garder ferait réapparaître
+un fantôme si une page du même nom était recréée.
+
 ## 1.23.0
 
 **Apparence : une galerie d'ambiances, avec de vraies démonstrations**

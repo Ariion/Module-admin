@@ -14,6 +14,7 @@
  */
 import { h, icon } from '../el.js';
 import { teteEcran, listeVide } from './shell-back.js';
+import { slugPage } from '../../core/pages.js';
 
 /**
  * @param {object} options
@@ -27,8 +28,11 @@ import { teteEcran, listeVide } from './shell-back.js';
  */
 export function creerPagesListe({ t, lister, peutCreer, onCreer, onStructure, onEcrire, onSupprimer }) {
   return async function dessiner(page, cheminVise = null) {
+    let pages = [];
+
     const creer = h('button', {
-      class: 'b b--fort', type: 'button', disabled: !peutCreer(), onclick: () => onCreer(),
+      class: 'b b--fort', type: 'button', disabled: !peutCreer(),
+      onclick: () => demanderPage(),
     }, icon('plus', 14), t('boPageCreer'));
 
     page.appendChild(teteEcran(t('boPages'), t('boPagesAide'), creer));
@@ -42,12 +46,12 @@ export function creerPagesListe({ t, lister, peutCreer, onCreer, onStructure, on
     page.appendChild(carte);
     carte.appendChild(h('div', { class: 'charge' }, t('boChargement')));
 
-    const pages = await lister();
+    pages = await lister();
     carte.replaceChildren();
 
     if (!pages.length) {
       carte.appendChild(listeVide('pages', t('boPagesVideLong'),
-        peutCreer() ? h('button', { class: 'b b--fort', type: 'button', onclick: () => onCreer() },
+        peutCreer() ? h('button', { class: 'b b--fort', type: 'button', onclick: () => demanderPage() },
           icon('plus', 14), t('boPageCreer')) : null));
       return;
     }
@@ -86,11 +90,122 @@ export function creerPagesListe({ t, lister, peutCreer, onCreer, onStructure, on
             class: 'b b--sm b--danger b--icone', type: 'button',
             title: t('boPageSupprimer'), 'aria-label': t('boPageSupprimer'),
             disabled: !peutCreer(),
-            onclick: () => onSupprimer(p),
+            onclick: () => confirmerSuppression(p),
           }, icon('trash', 13)),
         ),
       );
       return rang;
+    }
+
+    /**
+     * Créer une page : un nom, et le fichier se déduit.
+     *
+     * On montre le nom de fichier au fur et à mesure de la frappe. Le
+     * client n'a pas à le choisir, mais il a le droit de le voir : c'est
+     * l'adresse que porteront ses liens, et il la retrouvera en FTP.
+     */
+    function demanderPage() {
+      const nom = h('input', { class: 'saisie', type: 'text', placeholder: t('boPageNomExemple') });
+      const fichier = h('span', { class: 'rubrique__aide' }, slugPage(''));
+      const erreur = h('p', { class: 'erreur' });
+
+      nom.addEventListener('input', () => { fichier.textContent = slugPage(nom.value); });
+
+      const depuis = h('select', { class: 'saisie' },
+        h('option', { value: '' }, t('boPageVierge')),
+        ...pages.map((p) => h('option', { value: p.chemin }, t('boPageCopier', p.nom))));
+
+      const bouton = h('button', { class: 'b b--fort', type: 'button' },
+        icon('plus', 13), t('boPageCreer'));
+
+      const valider = async () => {
+        const titre = nom.value.trim();
+        if (!titre) { erreur.textContent = t('boPageNomManquant'); nom.focus(); return; }
+        erreur.textContent = '';
+        bouton.disabled = nom.disabled = depuis.disabled = true;
+        bouton.replaceChildren(icon('upload', 13), document.createTextNode(t('boCreationEnCours')));
+        try {
+          await onCreer({ nom: titre, chemin: slugPage(titre), depuis: depuis.value || null });
+          voile.remove();
+        } catch (err) {
+          erreur.textContent = String(err?.message || err);
+          bouton.disabled = nom.disabled = depuis.disabled = false;
+          bouton.replaceChildren(icon('plus', 13), document.createTextNode(t('boPageCreer')));
+          nom.focus();
+        }
+      };
+      bouton.addEventListener('click', valider);
+      nom.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); valider(); }
+      });
+
+      const voile = h('div', {
+        class: 'voile', onclick: (e) => { if (e.target === voile) voile.remove(); },
+      }, h('div', { class: 'voile__boite', style: { width: 'min(480px, 100%)' } },
+        h('div', { class: 'carte__tete' }, icon('pages', 14), h('span', {}, t('boPageCreer')),
+          h('button', {
+            class: 'b b--sm b--nu b--icone', type: 'button', onclick: () => voile.remove(),
+          }, icon('close', 13))),
+        h('div', { class: 'carte__corps' },
+          h('label', { class: 'champ' },
+            h('span', { class: 'champ__nom' }, t('boPageNom')), nom, fichier),
+          h('label', { class: 'champ' },
+            h('span', { class: 'champ__nom' }, t('boPageDepuis')), depuis,
+            h('span', { class: 'rubrique__aide' }, t('boPageDepuisAide'))),
+          erreur,
+          h('div', { style: { display: 'flex', gap: '8px', marginTop: '14px' } },
+            bouton,
+            h('button', { class: 'b', type: 'button', onclick: () => voile.remove() }, t('cancel')),
+          ),
+        ),
+      ));
+      document.body.appendChild(voile);
+      nom.focus();
+    }
+
+    /**
+     * Supprimer une page efface un fichier. On demande donc le nom, écrit à
+     * la main : une case à cocher se coche sans lire, un nom recopié ne se
+     * recopie pas par distraction.
+     */
+    function confirmerSuppression(p) {
+      const saisie = h('input', { class: 'saisie', type: 'text', placeholder: p.nom });
+      const erreur = h('p', { class: 'erreur' });
+      const bouton = h('button', { class: 'b b--danger', type: 'button', disabled: true },
+        icon('trash', 13), t('boPageSupprimer'));
+
+      saisie.addEventListener('input', () => {
+        bouton.disabled = saisie.value.trim().toLowerCase() !== p.nom.trim().toLowerCase();
+      });
+
+      bouton.addEventListener('click', async () => {
+        bouton.disabled = true;
+        try { await onSupprimer(p); voile.remove(); }
+        catch (err) { erreur.textContent = String(err?.message || err); bouton.disabled = false; }
+      });
+
+      const voile = h('div', {
+        class: 'voile', onclick: (e) => { if (e.target === voile) voile.remove(); },
+      }, h('div', { class: 'voile__boite', style: { width: 'min(480px, 100%)' } },
+        h('div', { class: 'carte__tete' }, icon('warn', 14),
+          h('span', {}, t('boPageSupprimerTitre', p.nom)),
+          h('button', {
+            class: 'b b--sm b--nu b--icone', type: 'button', onclick: () => voile.remove(),
+          }, icon('close', 13))),
+        h('div', { class: 'carte__corps' },
+          h('div', { class: 'note', style: { marginBottom: '14px' } }, icon('warn', 14),
+            h('span', {}, t('boPageSupprimerAvertissement', p.chemin))),
+          h('label', { class: 'champ' },
+            h('span', { class: 'champ__nom' }, t('boPageSupprimerConfirme', p.nom)), saisie),
+          erreur,
+          h('div', { style: { display: 'flex', gap: '8px', marginTop: '14px' } },
+            bouton,
+            h('button', { class: 'b', type: 'button', onclick: () => voile.remove() }, t('cancel')),
+          ),
+        ),
+      ));
+      document.body.appendChild(voile);
+      saisie.focus();
     }
 
     function etatDe(p) {

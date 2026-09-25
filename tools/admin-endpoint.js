@@ -12,6 +12,7 @@
  *   POST ?action=source  {path}         → {sourceUrl, refreshed}
  *   POST ?action=page    {path, html}   → {written, bytes, path}
  *   POST ?action=create  {path, from}   → {created, path}
+ *   POST ?action=delete-page {path}     → {deleted, path}
  *   POST ?action=config  {...}          → 501 (voir plus bas)
  *
  * Authentification : jeton d'identité Firebase en Authorization: Bearer.
@@ -332,11 +333,16 @@ const actions = {
   /**
    * Supprime une page et sa copie d'origine.
    *
+   * Le nom est « delete-page » et non « delete » : côté PHP, `delete`
+   * retire un MÉDIA. Deux endpoints qui donnent deux sens au même mot,
+   * c'est un client qui marche sur l'un et échoue sur l'autre — ce qui est
+   * exactement arrivé.
+   *
    * Trois pages ne peuvent pas partir : l'accueil, parce qu'un site sans
    * accueil n'est plus un site ; les modèles, parce qu'ils servent à créer
    * les suivantes ; et tout ce qui n'est pas une page.
    */
-  async delete({ body }) {
+  async ['delete-page']({ body }) {
     const paths = resolvePagePath(body.path);
     if (paths.file === 'index.html') {
       throw httpError("La page d'accueil ne peut pas être supprimée.", 400);

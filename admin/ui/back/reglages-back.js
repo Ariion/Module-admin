@@ -62,8 +62,8 @@ export function creerReglagesBack({ t, reglages, enregistrer, aDesTypes }) {
       grilleGenres.appendChild(h('label', { class: 'genre' + (genres.has(genre.id) ? ' genre--on' : '') },
         coche,
         h('span', { class: 'genre__main' },
-          h('span', { class: 'genre__nom' }, t('genre_' + genre.id)),
-          h('span', { class: 'genre__aide' }, t('genreAide_' + genre.id)),
+          h('span', { class: 'genre__nom' }, t('intention_' + genre.id)),
+          h('span', { class: 'genre__aide' }, t('intention_' + genre.id + '_aide')),
         ),
       ));
     }
@@ -147,8 +147,8 @@ export function carteGenre({ t, onChoisir }) {
     });
     return h('label', { class: 'genre' }, coche,
       h('span', { class: 'genre__main' },
-        h('span', { class: 'genre__nom' }, t('genre_' + genre.id)),
-        h('span', { class: 'genre__aide' }, t('genreAide_' + genre.id)),
+        h('span', { class: 'genre__nom' }, t('intention_' + genre.id)),
+        h('span', { class: 'genre__aide' }, t('intention_' + genre.id + '_aide')),
       ));
   }));
 

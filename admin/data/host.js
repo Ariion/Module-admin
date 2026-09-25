@@ -96,7 +96,10 @@ export function createHost(config, backend) {
      * restait en ligne sans aucun moyen de la retirer.
      */
     async deletePage(chemin) {
-      const result = await call('delete', { path: chemin });
+      // « delete-page », pas « delete » : ce dernier retire un média du
+      // dossier des images, et rendait donc toute suppression de page
+      // impossible — le fichier visé n'y est jamais.
+      const result = await call('delete-page', { path: chemin });
       debug('page supprimée', result.path);
       return result;
     },

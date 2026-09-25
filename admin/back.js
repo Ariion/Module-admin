@@ -145,10 +145,10 @@ async function demarrer() {
         t,
         lister: listerPages,
         peutCreer: () => etatHote.ok,
-        onCreer: () => { /* écran de création : prochaine étape */ },
+        onCreer: creerPage,
         onStructure: (p) => chassis.aller('structure', p),
         onEcrire: (p) => ouvrirEnDirect(p.chemin),
-        onSupprimer: () => { /* confirmation : prochaine étape */ },
+        onSupprimer: supprimerPage,
       }),
       contenus: () => creerContenus({
         t,
@@ -427,6 +427,43 @@ async function demarrer() {
   }
 
   let chassisCourant = null;
+
+  // --- Pages ----------------------------------------------------------
+  /**
+   * Crée une page, éventuellement en copiant une page existante.
+   *
+   * La page est retenue dans les réglages tout de suite : elle apparaît
+   * dans la liste sans attendre que l'hébergement ait fini de remonter le
+   * site, et on peut y revenir même si la mise en ligne tarde.
+   */
+  async function creerPage({ nom, chemin, depuis }) {
+    if (depuis) await hebergement.ensureSource(depuis);
+    await hebergement.createPage(chemin, depuis || undefined);
+
+    const commun = await lireCommun();
+    const retenues = [...(commun?.reglages?.pages || [])];
+    if (!retenues.some((p) => p.path === chemin)) {
+      retenues.push({ path: chemin, label: nom.slice(0, 40) });
+      await enregistrerReglages({ pages: retenues });
+    }
+    await attendrePage(new URL(chemin, RACINE).href, 60000);
+    chassisCourant?.aller('pages', chemin);
+  }
+
+  /**
+   * Supprime une page : le fichier, puis son souvenir.
+   *
+   * Le brouillon et la version publiée restent en base. C'est voulu : ils
+   * ne coûtent rien, et ils permettent de retrouver ce qu'il y avait
+   * dessus si la suppression était une erreur.
+   */
+  async function supprimerPage(p) {
+    await hebergement.deletePage(p.chemin);
+    const commun = await lireCommun();
+    const retenues = (commun?.reglages?.pages || []).filter((x) => x.path !== p.chemin);
+    await enregistrerReglages({ pages: retenues });
+    chassisCourant?.aller('pages');
+  }
 
   // --- Contenus -------------------------------------------------------
   /**

@@ -427,13 +427,22 @@ export const PAGE_TEMPLATES = [
  * Les intentions proposées par l'assistant de démarrage, dans l'ordre où
  * elles sont présentées. Chacune pointe vers le modèle qui la sert.
  */
+/**
+ * Ce que le client veut faire de son site.
+ *
+ * Une seule liste, et elle sert deux fois : à l'assistant de première
+ * visite, qui en tire des propositions de mise en page (`modele`), et au
+ * back-office, qui en tire les rubriques du menu (`allume`). Deux listes
+ * auraient fini par dire des choses différentes — l'assistant proposant
+ * une boutique que le menu ne montre pas, par exemple.
+ */
 export const INTENTIONS = [
-  { id: 'vitrine', modele: 'onepage' },
-  { id: 'vente', modele: 'vente' },
-  { id: 'portfolio', modele: 'portfolio' },
-  { id: 'histoire', modele: 'apropos' },
-  { id: 'article', modele: 'article' },
-  { id: 'contact', modele: 'contact' },
+  { id: 'vitrine', modele: 'onepage', allume: [] },
+  { id: 'vente', modele: 'vente', allume: ['produits'] },
+  { id: 'portfolio', modele: 'portfolio', allume: ['contenus'] },
+  { id: 'histoire', modele: 'apropos', allume: [] },
+  { id: 'article', modele: 'article', allume: ['contenus'] },
+  { id: 'contact', modele: 'contact', allume: [] },
 ];
 
 /**

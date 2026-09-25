@@ -719,4 +719,31 @@ if ($action === 'create') {
     ok(['created' => true, 'path' => basename($cible['file'])]);
 }
 
+// La suppression d'une PAGE, à ne pas confondre avec « delete », qui retire
+// un média. Deux fichiers, deux dossiers, deux garde-fous : les mélanger
+// laisserait un chemin de page atteindre le dossier des médias.
+if ($action === 'delete-page') {
+    currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    if (!$ALLOW_BAKE) {
+        fail('La suppression de pages est désactivée sur ce site.', 403);
+    }
+    $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+    $cible = resolvePagePath((string) ($body['path'] ?? ''), $SITE_ROOT);
+
+    if (basename($cible['file']) === 'index.html') {
+        fail('La page d’accueil ne peut pas être supprimée.', 403);
+    }
+    if (!is_file($cible['file'])) {
+        fail('Page introuvable.', 404);
+    }
+    if (!@unlink($cible['file'])) {
+        fail('Suppression impossible : vérifiez les droits du dossier.', 500);
+    }
+    // La copie du code d'origine part avec la page : la garder ferait
+    // réapparaître un fantôme si une page du même nom était recréée.
+    if (is_file($cible['source'])) @unlink($cible['source']);
+
+    ok(['deleted' => true, 'path' => basename($cible['file'])]);
+}
+
 fail('Action inconnue.', 404);
