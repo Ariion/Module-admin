@@ -311,6 +311,25 @@ body {
 }
 .forme__aide { display: block; font-size: 12px; color: var(--pale); }
 
+/* ─── Produits ───────────────────────────────────────────────────────── */
+.prod-ligne { display: flex; align-items: center; gap: 11px; }
+.prod-ligne__vignette {
+  flex: none; width: 40px; height: 40px; border-radius: 7px; object-fit: cover;
+  background: var(--surface-2); border: 1px solid var(--trait);
+}
+.prod-ligne__vide { display: grid; place-items: center; color: var(--pale); }
+.prod-photo {
+  display: block; width: 100%; max-width: 380px; max-height: 240px;
+  object-fit: cover; border-radius: var(--rayon-sm); border: 1px solid var(--trait);
+}
+.prod-photo--vide {
+  height: 160px; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--pale);
+}
+.duo { display: grid; grid-template-columns: 1fr 140px; gap: 12px; }
+@media (max-width: 620px) { .duo { grid-template-columns: 1fr; } }
+.carte__corps > .champ:last-child { margin-bottom: 0; }
+
 /* ─── Médiathèque ────────────────────────────────────────────────────── */
 .barre-medias {
   display: flex; align-items: center; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;

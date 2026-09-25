@@ -127,12 +127,31 @@ export function creerContenus({ t, types, lister, peutCreer, onCreer, onEcrire, 
       const saisie = h('input', { class: 'saisie', type: 'text', placeholder: t('contenuTitreAide') });
       const erreur = h('p', { class: 'erreur' });
 
+      const bouton = h('button', { class: 'b b--fort', type: 'button' },
+        icon('plus', 13), t('contenuCreer'));
+
       const valider = async () => {
         const titre = saisie.value.trim();
         if (!titre) { erreur.textContent = t('boTitreManquant'); saisie.focus(); return; }
-        voile.remove();
-        await onCreer(type, sousType, titre);
+        // La fenêtre ne se ferme qu'une fois la page créée. Fermer d'abord,
+        // c'est laisser quelqu'un devant un écran inchangé quand le nom est
+        // déjà pris ou que l'hébergement refuse.
+        erreur.textContent = '';
+        bouton.disabled = true;
+        saisie.disabled = true;
+        bouton.replaceChildren(icon('upload', 13), document.createTextNode(t('boCreationEnCours')));
+        try {
+          await onCreer(type, sousType, titre);
+          voile.remove();
+        } catch (err) {
+          erreur.textContent = String(err?.message || err);
+          bouton.disabled = false;
+          saisie.disabled = false;
+          bouton.replaceChildren(icon('plus', 13), document.createTextNode(t('contenuCreer')));
+          saisie.focus();
+        }
       };
+      bouton.addEventListener('click', valider);
 
       const voile = h('div', {
         class: 'voile', onclick: (e) => { if (e.target === voile) voile.remove(); },
@@ -150,8 +169,7 @@ export function creerContenus({ t, types, lister, peutCreer, onCreer, onEcrire, 
           erreur,
           h('p', { class: 'table__meta' }, t('boCreationAide')),
           h('div', { class: 'row', style: { display: 'flex', gap: '8px', marginTop: '14px' } },
-            h('button', { class: 'b b--fort', type: 'button', onclick: valider },
-              icon('plus', 13), t('contenuCreer')),
+            bouton,
             h('button', { class: 'b', type: 'button', onclick: () => voile.remove() }, t('cancel')),
           ),
         ),

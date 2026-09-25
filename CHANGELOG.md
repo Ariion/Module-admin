@@ -1,5 +1,46 @@
 # Journal des versions
 
+## 1.22.0
+
+**Le catalogue : la liste, et la fiche à onglets**
+
+Deux écrans en un, comme dans toutes les boutiques que le client a déjà
+vues. Un tableau où l'on retrouve d'un coup d'œil ce qu'on vend — vignette,
+prix, catégorie, en vente ou retiré — et une fiche où l'on remplit.
+
+La fiche est **à onglets** : *Description*, *Prix et stock*, *Paiement*,
+*Photo*. Un produit a une quinzaine de réglages dont dix ne servent qu'une
+fois ; les empiler dans un formulaire unique donne un mur. Tout s'enregistre
+au fil de la saisie, et le titre de l'écran suit le nom qu'on tape — garder
+« Nouveau produit » en haut d'une fiche qu'on vient de nommer fait douter
+de ce qui a été retenu.
+
+Le mode d'encaissement — page de paiement externe ou panier sur le site —
+est un réglage de boutique, pas de produit : il est donc en haut de la
+liste, une fois, et non répété quinze fois.
+
+Le paiement reste délégué : le module tient la fiche, le bouton emmène
+l'acheteur chez le vendeur (Stripe, Gumroad, Lemon Squeezy, PayPal, ou
+n'importe quelle adresse). Rien n'est encaissé sur le site — c'est ce qui
+permet de vendre depuis un hébergement statique sans rien devoir à
+personne.
+
+**Choisir une photo sans perdre sa fiche**
+
+La médiathèque s'ouvre en fenêtre par-dessus la fiche. Une fiche à moitié
+remplie ne doit pas se perdre parce qu'on a voulu poser une image.
+
+**Correction : une création qui échouait en silence**
+
+Créer un contenu dont le titre est déjà pris fermait la fenêtre et ne
+changeait rien à l'écran — l'erreur n'allait que dans la console. La
+fenêtre reste maintenant ouverte, le bouton passe à « Création… », et le
+refus s'affiche en toutes lettres : « Une page porte déjà ce nom. »
+
+Au passage, les réglages du site s'écrivent désormais par fusion plutôt
+qu'en remplaçant le document commun — qui porte aussi l'en-tête, le pied,
+les pages connues et l'ambiance.
+
 ## 1.21.0
 
 **Le menu s'adapte au site : on coche ce qu'on veut faire**

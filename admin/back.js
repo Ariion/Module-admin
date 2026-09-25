@@ -42,6 +42,7 @@ import { creerStructure } from './ui/back/structure.js';
 import { creerContenus } from './ui/back/contenus.js';
 import { creerReglagesBack, carteGenre } from './ui/back/reglages-back.js';
 import { creerMedias } from './ui/back/medias.js';
+import { creerProduits } from './ui/back/produits.js';
 import { createMedia } from './media/index.js';
 
 /** Où le site répond, vu depuis la page du back-office. */
@@ -154,6 +155,15 @@ async function demarrer() {
         onCreer: creerContenu,
         onEcrire: (c) => ouvrirEnDirect(c.chemin),
         onGalerie: (type) => ouvrirEnDirect(type.index),
+      }),
+      produits: () => creerProduits({
+        t,
+        lire: async () => {
+          const reglages = (await lireCommun())?.reglages || {};
+          return { produits: reglages.produits || [], boutique: reglages.boutique || {} };
+        },
+        enregistrer: ({ produits, boutique }) => enregistrerReglages({ produits, boutique }),
+        choisirMedia: choisirMedia,
       }),
       medias: () => creerMedias({
         t,
@@ -330,14 +340,65 @@ async function demarrer() {
    * le back-office : le menu est construit au démarrage, et une rubrique
    * qu'on vient d'allumer doit apparaître sans avoir à recharger la page.
    */
-  async function enregistrerRubriques({ genres, rubriques }) {
+  /**
+   * Écrit des réglages dans le document commun, en gardant le reste.
+   *
+   * Le commun porte l'en-tête, le pied, les pages connues, l'ambiance, le
+   * catalogue et les rubriques : écraser le document au lieu d'y fondre le
+   * changement ferait disparaître tout ce qu'on n'a pas nommé.
+   */
+  async function enregistrerReglages(patch) {
     const commun = await lireCommun();
-    const instantane = {
+    await backend.saveDraft(PAGE_COMMUNE, {
       ...(commun || { v: 1, content: {}, collections: {} }),
-      reglages: { ...(commun?.reglages || {}), genres, rubriques },
-    };
-    await backend.saveDraft(PAGE_COMMUNE, instantane);
+      reglages: { ...(commun?.reglages || {}), ...patch },
+    });
+  }
+
+  async function enregistrerRubriques({ genres, rubriques }) {
+    await enregistrerReglages({ genres, rubriques });
     await refaireMenu?.();
+  }
+
+  /**
+   * Choisir une image depuis la médiathèque, sans quitter l'écran courant.
+   * Une fiche produit à moitié remplie ne doit pas se perdre parce qu'on a
+   * voulu poser une photo.
+   */
+  function choisirMedia() {
+    return new Promise((resoudre) => {
+      const voile = h('div', {
+        class: 'voile', onclick: (e) => { if (e.target === voile) { voile.remove(); resoudre(null); } },
+      });
+      const corps = h('div', { class: 'carte__corps', style: { maxHeight: '58vh', overflow: 'auto' } });
+      voile.appendChild(h('div', { class: 'voile__boite' },
+        h('div', { class: 'carte__tete' }, icon('image', 14), h('span', {}, t('chooseMedia')),
+          h('button', {
+            class: 'b b--sm b--nu b--icone', type: 'button',
+            onclick: () => { voile.remove(); resoudre(null); },
+          }, icon('close', 13))),
+        corps,
+      ));
+      document.body.appendChild(voile);
+
+      listerMedias().then((medias) => {
+        const images = medias.filter((m) => /\.(jpe?g|png|gif|webp|avif|svg)(\?|$)/i.test(m.url || ''));
+        clear(corps);
+        if (!images.length) {
+          corps.appendChild(h('p', { class: 'table__meta' }, t('boMediasVideLong')));
+          return;
+        }
+        corps.appendChild(h('div', { class: 'grille-medias', style: { padding: '0' } },
+          images.map((m) => h('button', {
+            class: 'media', type: 'button', style: { cursor: 'pointer', textAlign: 'left' },
+            onclick: () => { voile.remove(); resoudre(m.url); },
+          },
+            h('div', { class: 'media__vue' }, h('img', { src: m.url, alt: '', loading: 'lazy' })),
+            h('div', { class: 'media__pied' },
+              h('span', { class: 'media__nom' }, m.name || m.url)),
+          ))));
+      });
+    });
   }
 
   /** Posée par le back-office une fois ouvert : refait le menu sans plus. */
