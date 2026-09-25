@@ -1,5 +1,40 @@
 # Journal des versions
 
+## 1.19.1
+
+**L'écran Structure : poser le châssis d'une page**
+
+C'est l'écran qui justifie le back-office. Empiler un bandeau, trois
+colonnes, une galerie et un pied d'appel n'a pas besoin de montrer les
+textes : ça se décide sur des formes. On empile ici, on va écrire ensuite.
+
+- La page est listée section par section, avec une **vignette** qui dit
+  d'un coup d'œil si c'est un bandeau, une grille ou un bloc de texte, et
+  la mention de son origine : venue du code du site, ou ajoutée depuis le
+  module.
+- Monter, descendre, dupliquer, retirer. Une section retirée n'est pas
+  perdue : elle s'affiche sous la liste et se remet d'un clic.
+- **Ajouter une section** ouvre une galerie de mises en page — des formes,
+  pas des noms : « Deux colonnes » ne dit rien tant qu'on ne l'a pas vue.
+  La section arrive remplie du texte d'exemple, qu'on remplacera sur la
+  page.
+- Chaque geste enregistre le brouillon, et le dit.
+
+**Ce que ça a coûté, et pourquoi**
+
+Une opération de structure n'est pas jouée sur le document : elle est
+*enregistrée* dans l'instantané. Le seul moyen honnête d'en voir le
+résultat est de repartir du fichier d'origine et de tout réappliquer —
+empiler les transformations sur un document déjà modifié finirait de
+travers. L'écran remonte donc la page à chaque geste, exactement comme le
+fait l'éditeur en direct.
+
+C'est aussi le seul écran du back-office qui charge le site : les sections
+écrites à la main n'existent nulle part ailleurs que dans le HTML, aucune
+base ne les connaît. L'iframe d'analyse vit hors écran et le châssis la
+referme en quittant l'écran — un écran peut désormais rendre de quoi se
+nettoyer.
+
 ## 1.19.0
 
 **Un back-office, et un partage des rôles enfin clair**

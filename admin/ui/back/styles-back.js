@@ -210,6 +210,64 @@ body {
 .vide svg { opacity: .35; margin-bottom: 10px; }
 .vide p { margin-bottom: 14px; }
 
+/* ─── Structure d'une page ───────────────────────────────────────────── */
+.pile { display: flex; flex-direction: column; }
+.rang {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+  border-bottom: 1px solid var(--trait-doux);
+}
+.rang:last-child { border-bottom: 0; }
+.rang:hover { background: var(--surface-2); }
+.rang__num {
+  flex: none; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--trait);
+  display: grid; place-items: center; font-size: 11.5px; font-weight: 650; color: var(--doux);
+}
+.rang__apercu { flex: none; }
+.rang__main { flex: 1; min-width: 0; }
+.rang__nom { font-weight: 620; }
+.rang__actions { flex: none; display: flex; gap: 5px; }
+.retirees { display: flex; flex-wrap: wrap; gap: 7px; }
+
+/* La vignette : trois traits suffisent à distinguer un bandeau d'une grille. */
+.mini {
+  display: flex; flex-direction: column; gap: 3px; justify-content: center;
+  width: 62px; height: 42px; padding: 6px; border-radius: 5px;
+  background: var(--surface-2); border: 1px solid var(--trait);
+}
+.mini__titre { display: block; height: 5px; width: 72%; border-radius: 2px; background: #9fb0c6; }
+.mini__ligne { display: block; height: 3px; border-radius: 2px; background: #d3dbe6; }
+.mini__ligne--court { width: 58%; }
+.mini__image { display: block; flex: 1; border-radius: 3px; background: #c3cfdd; }
+.mini__cols { display: flex; gap: 3px; flex: 1; }
+.mini__col { flex: 1; border-radius: 3px; background: #c3cfdd; }
+
+/* ─── Fenêtre de choix ───────────────────────────────────────────────── */
+.voile {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;
+  padding: 22px; background: rgba(16,22,32,.45); backdrop-filter: blur(2px);
+}
+.voile__boite {
+  width: min(680px, 100%); max-height: 84vh; overflow: auto;
+  background: var(--surface); border-radius: var(--rayon); box-shadow: var(--ombre-fort);
+}
+.voile__boite .carte__tete .b { margin-left: auto; }
+
+.modeles { display: grid; grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); gap: 12px; }
+.modele {
+  border: 1px solid var(--trait); border-radius: var(--rayon-sm); background: var(--surface);
+  padding: 10px; cursor: pointer; font: inherit; text-align: left;
+}
+.modele:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-pale); }
+.modele__forme {
+  display: flex; flex-direction: column; gap: 5px; height: 64px; padding: 9px;
+  border-radius: 5px; background: var(--surface-2); margin-bottom: 8px;
+}
+.modele__barre { display: block; height: 6px; width: 62%; border-radius: 3px; background: #9fb0c6; }
+.modele__cols { display: flex; gap: 5px; flex: 1; }
+.modele__col { flex: 1; border-radius: 3px; background: #c9d4e1; }
+.modele__nom { font-size: 12.5px; font-weight: 600; }
+
 /* ─── Connexion ──────────────────────────────────────────────────────── */
 .entree {
   min-height: 100vh; display: grid; place-items: center; padding: 20px;

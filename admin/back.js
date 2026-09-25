@@ -21,7 +21,9 @@
  * écran en a besoin.
  * @module back
  */
-import { resolveConfig } from './core/config.js';
+import { resolveConfig, PREVIEW_PARAM, PAGE_COMMUNE } from './core/config.js';
+import { loadFrame } from './core/frame.js';
+import { PageModel } from './core/model.js';
 import { setDebug, debug } from './core/log.js';
 import { pageKeyFromLocation } from './core/dom.js';
 import { typesDe } from './core/types.js';
@@ -33,6 +35,7 @@ import { CSS_BACK } from './ui/back/styles-back.js';
 import { creerChassis } from './ui/back/shell-back.js';
 import { creerTableau } from './ui/back/tableau.js';
 import { creerPagesListe } from './ui/back/pages-liste.js';
+import { creerStructure } from './ui/back/structure.js';
 
 /** Où le site répond, vu depuis la page du back-office. */
 const RACINE = new URL('.', new URL('..', import.meta.url)).href;
@@ -146,9 +149,22 @@ async function demarrer() {
         lister: listerPages,
         peutCreer: () => etatHote.ok,
         onCreer: () => { /* écran de création : prochaine étape */ },
-        onStructure: (p) => ouvrirEnDirect(p.chemin, { structure: true }),
+        onStructure: (p) => chassis.aller('structure', p),
         onEcrire: (p) => ouvrirEnDirect(p.chemin),
         onSupprimer: () => { /* confirmation : prochaine étape */ },
+      }),
+    });
+
+    // La structure ne figure pas au menu : on y arrive depuis une page, et
+    // une entrée de menu qui demanderait « laquelle ? » ne servirait à rien.
+    chassis.ajouterEcran('structure', {
+      libelle: t('boStructure'), icone: 'layers', cache: true,
+      dessiner: creerStructure({
+        t,
+        ouvrirPage: chargerPage,
+        enregistrer: (pageId, instantane) => backend.saveDraft(pageId, instantane),
+        onEcrire: (p) => ouvrirEnDirect(p.chemin),
+        onRetour: () => chassis.aller('pages'),
       }),
     });
 
@@ -179,6 +195,62 @@ async function demarrer() {
     if (options.guide) url.searchParams.set('guide', '');
     if (options.structure) url.searchParams.set('structure', '');
     window.open(url.href, '_blank', 'noopener');
+  }
+
+  /**
+   * Charge une page hors écran et en construit le modèle — le même que
+   * celui de l'éditeur, appliqué dans le même ordre : le document commun
+   * d'abord (en-tête, pied), la page ensuite.
+   *
+   * L'iframe doit être RENDUE pour que la mise en page soit calculée : on
+   * la pousse hors du cadre plutôt que de la masquer.
+   */
+  async function chargerPage(cible) {
+    const url = new URL(cible.chemin || 'index.html', RACINE).href;
+    const pageId = cleDePage(cible.chemin);
+    const style = 'position:fixed;left:-20000px;top:0;width:1280px;height:900px;'
+      + 'opacity:0;pointer-events:none;border:0;';
+
+    let cadre = null;
+    let modele = null;
+
+    /**
+     * (Re)construit le modèle à partir du FICHIER, puis réapplique tout.
+     *
+     * Une opération de structure — ajouter, déplacer, masquer — est
+     * enregistrée dans l'instantané, pas jouée sur le DOM. Le seul moyen
+     * honnête de voir le résultat est de repartir de la source et de tout
+     * réappliquer, exactement comme le fait l'éditeur. Empiler les
+     * transformations sur un document déjà modifié finirait de travers.
+     */
+    async function construire(instantane = null) {
+      const precedent = cadre;
+      const { doc, frame } = await loadFrame({ url, param: PREVIEW_PARAM, style });
+      precedent?.remove();
+      cadre = frame;
+      if (!doc) throw new Error(t('boStructureIllisible'));
+
+      modele = new PageModel({ ...config.scan, doc }).refresh();
+
+      const commun = await lireCommun();
+      if (commun) modele.applySnapshot(commun);
+      const propre = instantane
+        || await backend.loadDraft(pageId).catch(() => null)
+        || await backend.loadPublished(pageId).catch(() => null);
+      if (propre) modele.applySnapshot(propre, { cumuler: true });
+      return modele;
+    }
+
+    await construire();
+
+    return {
+      pageId,
+      get model() { return modele; },
+      // On repart de l'instantané qu'on vient d'écrire, sans le relire :
+      // la base a pu ne pas avoir fini d'enregistrer.
+      recharger: (instantane) => construire(instantane),
+      fermer: () => cadre?.remove(),
+    };
   }
 
   // --- Inventaire -----------------------------------------------------
@@ -216,8 +288,8 @@ async function demarrer() {
 
   async function lireCommun() {
     const [brouillon, publie] = await Promise.all([
-      backend.loadDraft('__commun').catch(() => null),
-      backend.loadPublished('__commun').catch(() => null),
+      backend.loadDraft(PAGE_COMMUNE).catch(() => null),
+      backend.loadPublished(PAGE_COMMUNE).catch(() => null),
     ]);
     return brouillon || publie;
   }
