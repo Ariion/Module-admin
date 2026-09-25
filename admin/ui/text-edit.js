@@ -198,9 +198,14 @@ export function createTextEditor({ layer, origin, t, onCommit, couleurs = null }
    * l'édition : sans ce détour, saisir une adresse de lien refermerait
    * l'éditeur avant d'avoir pu la valider.
    */
-  function surSortie() {
+  function surSortie(event) {
+    // Quel élément perd le focus : passer d'un bloc à l'autre fait partir
+    // celui-ci pendant que le suivant prend déjà la main. Sans cette
+    // comparaison, on refermerait le NOUVEAU bloc au lieu de valider
+    // l'ancien — un clic sur deux n'ouvrait rien.
+    const partant = event.currentTarget;
     setTimeout(() => {
-      if (!courant) return;
+      if (!courant || courant.el !== partant) return;
       if (saisieEnCours || barre.contains(elementActif())) return;
       commit();
     }, 0);

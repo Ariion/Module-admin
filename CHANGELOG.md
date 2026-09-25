@@ -1,5 +1,18 @@
 # Journal des versions
 
+## 1.18.1
+
+**Un clic sur deux n'ouvrait pas l'édition**
+
+Passer d'un bloc à l'autre fait perdre le focus au premier pendant que le
+second prend déjà la main. Le garde-fou de sortie introduit en 1.18.0
+vérifiait qu'une édition était en cours, sans vérifier LAQUELLE : il
+refermait donc le bloc qu'on venait d'ouvrir.
+
+De l'extérieur, cela ressemblait à des types de blocs non éditables — un
+intertitre ici, une puce là — alors que c'était simplement un clic sur deux,
+au hasard de l'ordre. La sortie ne vise plus que le bloc réellement quitté.
+
 ## 1.18.0
 
 **Mettre en forme une partie d'un texte**
