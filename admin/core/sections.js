@@ -9,7 +9,11 @@
  *     veut reprendre une mise en page que le développeur a déjà écrite.
  *
  * Dans les deux cas la section ajoutée vit à côté du balisage du développeur,
- * jamais dedans : la mise en page du site reste intacte.
+ * jamais dedans — à une exception près, et elle est déclarée : un conteneur
+ * portant `data-admin-zone` désigne l'endroit où le client peut composer
+ * librement. Sur une page d'article, c'est le corps du texte : on veut
+ * pouvoir y poser un intertitre ou une image, et y déplacer un bloc. Le
+ * principe tient, puisque c'est le développeur qui ouvre la porte.
  *
  * Les opérations de structure sont appliquées APRÈS le contenu : les
  * empreintes des éléments sont calculées sur la page d'origine, donc insérer
@@ -23,10 +27,21 @@ import { findTemplate } from './templates.js';
 
 const IGNORE = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'LINK', 'BR'];
 
+/**
+ * Où vivent les sections.
+ *
+ * Le corps de la page par défaut. Si le développeur a marqué un conteneur
+ * d'un `data-admin-zone`, c'est lui : les sections y sont listées, ajoutées
+ * et réordonnées, et le reste de la page n'est plus manipulable.
+ */
+export function racineSections(doc = document) {
+  return doc.querySelector('[data-admin-zone]') || doc.body;
+}
+
 /** Sections de premier niveau de la page, dans l'ordre du document. */
 export function listSections(doc = document) {
   const sections = [];
-  for (const el of Array.from(doc.body.children)) {
+  for (const el of Array.from(racineSections(doc).children)) {
     if (IGNORE.includes(el.tagName)) continue;
     if (el.hasAttribute('data-admin-ui')) continue;
     // Une section ajoutée est listée même vide : sans cela on ne pourrait ni
@@ -69,6 +84,15 @@ export function labelOf(el) {
   const titre = el.querySelector('h1, h2, h3');
   if (titre && titre.textContent.trim()) {
     return titre.textContent.replace(/\s+/g, ' ').trim().slice(0, 42);
+  }
+  // Dans une zone de composition, une section est un bloc de texte et non un
+  // pan de page : son nom de balise ne dit rien. On prend ses premiers mots,
+  // qui sont ce que la personne reconnaît dans la page.
+  const propre = el.textContent.replace(/\s+/g, ' ').trim();
+  if (propre) return propre.slice(0, 42) + (propre.length > 42 ? '…' : '');
+  if (el.querySelector('img')) {
+    const img = el.querySelector('img');
+    return img.getAttribute('alt')?.trim().slice(0, 42) || 'Image';
   }
   const nom = el.getAttribute('id') || Array.from(el.classList)[0];
   return nom || el.tagName.toLowerCase();
@@ -115,8 +139,9 @@ export function applySections(doc, state, applyFields, contexte = {}) {
     if (existant) {
       existant.replaceWith(el);
     } else {
-      const apres = parRef.get(record.after) || parRef.get(record.from) || doc.body.lastElementChild;
-      if (apres) apres.after(el); else doc.body.appendChild(el);
+      const racine = racineSections(doc);
+      const apres = parRef.get(record.after) || parRef.get(record.from) || racine.lastElementChild;
+      if (apres) apres.after(el); else racine.appendChild(el);
     }
 
     parRef.set('ins:' + record.key, el);
@@ -182,8 +207,12 @@ export const ops = {
   },
 
   /** Ajoute une section vide, prête à recevoir des widgets. */
-  addBlank(state, after) {
-    const record = { kind: 'widgets', key: uid('s'), after, tree: createWidget('section') };
+  addBlank(state, after, dansZone = false) {
+    const tree = createWidget('section');
+    // Dans une zone de composition, la section n'est qu'un contenant : la
+    // largeur et les marges d'une section de pleine page y feraient un trou.
+    if (dansZone) Object.assign(tree.props, { maxWidth: 2000, padding: 0 });
+    const record = { kind: 'widgets', key: uid('s'), after, tree };
     return { ...state, add: [...state.add, record], lastKey: record.key };
   },
 

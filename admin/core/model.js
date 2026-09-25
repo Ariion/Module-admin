@@ -6,10 +6,10 @@
  */
 import { scan } from './scanner.js';
 import { buildIndex, resolveAll, fingerprint } from './identity.js';
-import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, ops } from './collections.js';
+import { detectCollections, readCollection, fieldKey, applyCollection, matchCollection, estPerime, revisionDe, ops } from './collections.js';
 import { applyValue, readCurrent, readStyle } from './binder.js';
 import {
-  listSections, applySections, emptyState as emptySections, isEmpty as sectionsEmpty,
+  listSections, applySections, racineSections, emptyState as emptySections, isEmpty as sectionsEmpty,
   sectionFieldKey, ops as sectionOps,
 } from './sections.js';
 import { createWidget, renderWidget, findWidget, removeWidget, WIDGETS } from './widgets.js';
@@ -47,6 +47,9 @@ export class PageModel {
     this.pageMeta = null;
     /** @type {Map<string, object>} état des collections */
     this.collectionState = new Map();
+    // Listes dont le code a changé depuis l'enregistrement : écartées à
+    // l'affichage, signalées dans l'éditeur.
+    this.collectionsPerimees = new Map();
     /** @type {Map<string, object>} métadonnées d'identité par id */
     this.meta = new Map();
     /** @type {Map<string, object>} enregistrements non rebranchés */
@@ -163,6 +166,15 @@ export class PageModel {
       const collection = matchCollection({ id, ...record }, this.collections, usedCollections);
       if (!collection) continue;
       usedCollections.add(collection.id);
+      // Une liste dont le code a changé ne doit PAS être retenue comme état
+      // courant : la garder ferait republier, à la prochaine sauvegarde, le
+      // contenu périmé qu'on vient justement d'écarter.
+      if (estPerime(collection, record)) {
+        this.collectionsPerimees.set(collection.id, {
+          attendus: record.n, presents: collection.items.length,
+        });
+        continue;
+      }
       this.collectionState.set(collection.id, clone(record));
       safe(() => {
         const result = applyCollection(collection, record, (itemEl, fields) => {
@@ -261,8 +273,13 @@ export class PageModel {
 
   /** Ajoute une section vide, prête à recevoir des widgets. */
   addBlankSection(afterRef) {
-    this.sections = sectionOps.addBlank(this.sections, afterRef);
+    this.sections = sectionOps.addBlank(this.sections, afterRef, this.dansZone());
     return this.sections.lastKey;
+  }
+
+  /** La page déclare-t-elle une zone de composition ? */
+  dansZone() {
+    return safe(() => racineSections(this.doc) !== this.doc.body, false, 'dansZone');
   }
 
   /**
@@ -747,9 +764,24 @@ export class PageModel {
         itemSig: collection.itemSig,
         items: clone(data.items),
       };
+      // Combien de blocs le code portait quand ce contenu a été relevé. C'est
+      // ce qui permet de voir, plus tard, que le code a changé.
+      //
+      // Un enregistrement d'avant ce repère n'en a pas, et on ne peut pas le
+      // deviner : écrire `n: undefined` ferait échouer la sauvegarde entière
+      // (Firestore refuse undefined). Le champ n'existe alors pas, ce qui est
+      // exactement ce qu'il faut dire — on ne sait pas.
+      if (Number.isInteger(data.n)) collections[id].n = data.n;
+      // La révision déclarée dans le code, s'il y en a une : c'est elle qui
+      // permet au développeur d'écarter un contenu devenu faux.
+      const rev = revisionDe(collection);
+      if (rev) collections[id].rev = rev;
     }
 
-    const instantane = { v: SNAPSHOT_VERSION, content, collections };
+    // Filet. Une valeur indéfinie, où qu'elle soit, fait échouer l'écriture
+    // ENTIÈRE côté Firestore — pas seulement le champ fautif. Le passage par
+    // JSON que fait clone() les élimine.
+    const instantane = clone({ v: SNAPSHOT_VERSION, content, collections });
     // Ajouter ou masquer une section vaut pour la page ouverte, jamais pour
     // toutes : la structure ne fait pas partie du commun.
     if (portee !== 'commun' && !sectionsEmpty(this.sections)) instantane.sections = clone(this.sections);

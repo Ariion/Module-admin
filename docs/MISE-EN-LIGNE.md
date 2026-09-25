@@ -13,24 +13,32 @@ Comptez **30 minutes** la première fois, 5 pour les sites suivants.
 | Édition, blocs répétables, sections, éléments | ✅ | ✅ |
 | Brouillon, publication, historique | ✅ | ✅ |
 | Bibliothèque média avec **téléversement** | ✅ dossier `/medias` du site | ❌ adresse uniquement |
-| **Réécriture du `.html` à la publication** | ✅ | ❌ impossible |
-| **Création de pages** depuis l'éditeur | ✅ | ❌ |
+| **Réécriture du `.html` à la publication** | ✅ | ✅ via `tools/admin-endpoint.js` |
+| **Création de pages** depuis l'éditeur | ✅ | ✅ via `tools/admin-endpoint.js` |
 | Mise en route | 30 min | 20 min |
 
 **Si vous ne voulez rien payer**, prenez le statique : tout le module
-fonctionne sauf la réécriture du `.html`, le téléversement des médias et la
-création de pages. La marche à suivre est dans
+fonctionne, seul le téléversement des médias reste indisponible (les images
+se posent par adresse). La marche à suivre est dans
 [`essais/vercel/LISEZMOI.md`](../essais/vercel/LISEZMOI.md), et l'export
 manuel (icône ⤓ du panneau) permet de figer la page dans le dépôt quand vous
 le décidez. Attention : le plan *Hobby* de Vercel exclut l'usage commercial —
 pour des sites clients, **Netlify** ou **Cloudflare Pages**, tout aussi
 gratuits, l'autorisent.
 
+**Sur Vercel, Netlify ou Cloudflare Pages**, `tools/admin-endpoint.js` rend la
+réécriture possible malgré le disque en lecture seule : « écrire un fichier »
+y veut dire **committer dans le dépôt GitHub**, ce qui déclenche un
+redéploiement. Déposez-le en `api/admin-endpoint.js` et renseignez quatre
+variables d'environnement (`GITHUB_TOKEN` à portée réduite — *Contents: read
+and write* sur ce dépôt uniquement —, `GITHUB_REPO`, `FIREBASE_PROJECT_ID`,
+`SITE_ID`). L'authentification est la même que celle du script PHP : jeton
+Firebase vérifié, puis appartenance au site dans Firestore.
+
 **Sinon, prenez l'hébergement PHP** (2 à 5 € par mois). C'est celui de vos
 clients, et le seul qui exerce ce qui fait la valeur du module : le site garde
-son contenu même si le module est retiré. Un statique ne peut pas réécrire un
-fichier — après déploiement ses fichiers sont en lecture seule, et une
-fonction serverless n'écrit que dans `/tmp`, effacé à la fin de l'appel.
+son contenu même si le module est retiré. Le chemin PHP reste le plus direct : il
+écrit le fichier sur place, sans jeton GitHub ni redéploiement à attendre.
 
 Le reste de ce guide décrit la voie PHP.
 

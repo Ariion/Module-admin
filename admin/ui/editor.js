@@ -10,6 +10,7 @@
 import { SHADOW_CSS, DOCUMENT_CSS, FRAME_CSS } from './styles.js';
 import { createTranslator } from './i18n.js';
 import { h, icon } from './el.js';
+import { openModal } from './modal.js';
 import { createShell } from './shell.js';
 import { createOverlay } from './overlay.js';
 import { createTextEditor } from './text-edit.js';
@@ -27,11 +28,13 @@ import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
+import { typePourPage, cheminDepuisTitre, lienVers } from '../core/types.js';
 import { openWizard } from './wizard.js';
 import { openBrief } from './brief-panel.js';
 import { openLegal } from './legal-panel.js';
 import { openBoutique } from './boutique-panel.js';
-import { filePathOf, labelOf } from '../core/pages.js';
+import { filePathOf, labelOf, memePage } from '../core/pages.js';
+import { creerHistorique } from '../core/historique.js';
 import { ouvrirAction } from '../core/actions.js';
 import { animerApparitions } from '../core/effets.js';
 import { etapesDuGuide } from '../core/guide.js';
@@ -84,6 +87,9 @@ export async function startEditor(runtime) {
     editing: true, dirty: false, saving: false, baking: false,
     hasDraft: false, savedAt: null, baked: null, pageVierge: false,
     pageId: config.pageId, user: null, access: null,
+    // Un retour en arrière recharge la page et la réenregistre : pendant ce
+    // temps, ce n'est pas une modification de plus à retenir.
+    restauration: false,
   };
 
   let shell = null;
@@ -91,6 +97,7 @@ export async function startEditor(runtime) {
   let overlay = null;
   let textEditor = null;
   let inspector = null;
+  let bibliotheque = null;
   let navigator = null;
   let library = null;
 
@@ -132,12 +139,15 @@ export async function startEditor(runtime) {
     const vueInspecteur = h('div', {});
     hoteInspecteur.appendChild(vueInspecteur);
 
-    createWidgetsPanel({
+    bibliotheque = createWidgetsPanel({
       vue: hoteBibliotheque, t,
       onInsert: (type) => insererWidget(type),
       onTemplate: (id) => ajouterModele(id),
       onDragStart: (type) => overlay.beginDrag(type),
       onDragEnd: () => overlay.endDrag(),
+      contenus: () => typePourPage(runtime.config, urlCourante()),
+      onNouveauContenu: (sousTypeId) => nouveauContenu(sousTypeId)
+        .catch((err) => { console.error('[admin]', err); notify(err.message || String(err), true); }),
     });
 
     inspector = createInspector({
@@ -180,6 +190,10 @@ export async function startEditor(runtime) {
         widgetOp: (key, op, arg) => widgetOp(key, op, arg),
         widgetElement: (key) => model.doc.querySelector(`[data-admin-widget="${key}"]`),
         selectWidget: (key) => selectWidget(key),
+        pageLiee: (href) => pageLiee(href),
+        // safe() est synchrone : il laisserait passer le rejet d'une
+        // promesse, et le bouton ne ferait rien sans rien dire.
+        ouvrirPageLiee: (href) => { ouvrirPageLiee(href).catch((err) => notify(err.message || String(err), true)); },
       },
     });
 
@@ -275,6 +289,10 @@ export async function startEditor(runtime) {
 
     textEditor = createTextEditor({
       layer: shell.layer, origin: () => shell.origine(), t,
+      // Les couleurs du site, déclarées dans admin-config.js. À défaut, une
+      // palette neutre : mieux vaut six teintes sensées qu'un sélecteur qui
+      // laisse poser du jaune fluo sur un titre.
+      couleurs: runtime.config.texte?.couleurs || null,
       onCommit: (entry, valeur) => setValue(entry, valeur),
     });
 
@@ -293,6 +311,8 @@ export async function startEditor(runtime) {
     shell.setActions([
       publishButton,
       previewButton,
+      boutonDefaire,
+      boutonRefaire,
       h('button', { class: 'btn btn--icon', type: 'button', title: t('history'), onclick: history }, icon('history', 13)),
       h('button', { class: 'btn btn--icon', type: 'button', title: t('exportSite'), onclick: exporter }, icon('download', 13)),
       h('button', { class: 'btn btn--icon', type: 'button', title: t('signOut'), onclick: quit }, icon('close', 13)),
@@ -388,6 +408,16 @@ export async function startEditor(runtime) {
     class: 'btn btn--icon', type: 'button', title: t('preview'), onclick: () => togglePreview(),
   }, icon('eye', 13));
 
+  const boutonDefaire = h('button', {
+    class: 'btn btn--icon', type: 'button', title: t('defaire'), disabled: true,
+    onclick: () => parcourirHistorique('defaire'),
+  }, icon('undo', 13));
+
+  const boutonRefaire = h('button', {
+    class: 'btn btn--icon', type: 'button', title: t('refaire'), disabled: true,
+    onclick: () => parcourirHistorique('refaire'),
+  }, icon('redo', 13));
+
   // ================================================================
   //  Aperçu et modèle
   // ================================================================
@@ -400,6 +430,9 @@ export async function startEditor(runtime) {
 
     const { doc } = await shell.load(url);
     doc.head.appendChild(h('style', { 'data-admin-ui': '' }, FRAME_CSS));
+    // Le document de l'aperçu est neuf à chaque chargement : il faut lui
+    // redonner les raccourcis. Ctrl+Z doit marcher là où l'on regarde.
+    doc.addEventListener('keydown', surRaccourci);
 
     state.pageId = pageIdDe(doc);
     model = new PageModel({
@@ -425,18 +458,28 @@ export async function startEditor(runtime) {
       return { instantane: publie, brouillon: false };
     };
 
-    const commun = await charger(PAGE_COMMUNE);
-    if (commun.instantane && aDuContenu(commun.instantane)) {
-      model.applySnapshot(commun.instantane);
-    }
+    // Un retour en arrière fournit l'état à reposer. Il contient déjà tout ce
+    // que la page portait — l'en-tête et le pied communs y compris, puisque
+    // le modèle les avait absorbés — et il doit primer sur ce qui est
+    // enregistré : c'est précisément ce qu'on est en train de défaire.
+    let enregistre = false;
+    if (options.instantane) {
+      model.applySnapshot(options.instantane);
+      enregistre = aDuContenu(options.instantane);
+    } else {
+      const commun = await charger(PAGE_COMMUNE);
+      if (commun.instantane && aDuContenu(commun.instantane)) {
+        model.applySnapshot(commun.instantane);
+      }
 
-    const propre = await charger(state.pageId);
-    const instantane = propre.instantane;
-    state.hasDraft = propre.brouillon || commun.brouillon;
-    const enregistre = !!(instantane && aDuContenu(instantane));
-    if (enregistre) {
-      model.applySnapshot(instantane, { cumuler: true });
-      state.savedAt = instantane.updatedAt || null;
+      const propre = await charger(state.pageId);
+      const instantane = propre.instantane;
+      state.hasDraft = propre.brouillon || commun.brouillon;
+      enregistre = !!(instantane && aDuContenu(instantane));
+      if (enregistre) {
+        model.applySnapshot(instantane, { cumuler: true });
+        state.savedAt = instantane.updatedAt || null;
+      }
     }
 
     // Une page vierge, c'est une page de départ : presque rien à éditer, et
@@ -447,6 +490,15 @@ export async function startEditor(runtime) {
       && model.sectionList().filter((x) => !x.ref.startsWith('ins:')).length <= 3;
 
     memoriserPage();
+
+    // Le développeur a changé une liste répétable dans le code : le contenu
+    // enregistré la décrivait autrement, il a été écarté pour ne pas faire
+    // disparaître ses blocs. Sans ce mot, le client verrait ses retouches
+    // s'évaporer sans explication.
+    for (const [, ecart] of model.collectionsPerimees) {
+      notify(t('listePerimee', ecart.attendus, ecart.presents), true);
+      break;
+    }
 
     // La clé de la banque d'images peut avoir été saisie depuis le module :
     // elle vit alors dans les réglages du site, pas dans le fichier de config.
@@ -460,8 +512,29 @@ export async function startEditor(runtime) {
     navigator.render(model);
     guide?.render();
     inspector.render(null);
+    // La page a changé : la rubrique de contenu n'est pas la même.
+    bibliotheque?.render();
     surveillerNavigation(doc.location.href);
     if (defilement) doc.defaultView.scrollTo({ top: defilement });
+
+    // Chaque page a son propre historique. Annuler, sur un article, une
+    // modification faite sur la page d'accueil serait incompréhensible : on
+    // ne verrait même pas ce qui a changé.
+    //
+    // Mais rafraîchir la page AFFICHÉE — ce que fait toute opération de
+    // structure, supprimer une section par exemple — n'est pas changer de
+    // page : c'est précisément là qu'on veut pouvoir revenir en arrière. On
+    // ne repart donc de zéro que si la page a vraiment changé. Un retour en
+    // arrière, lui, traverse ce rechargement sans rien empiler : c'est lui
+    // qui l'a provoqué.
+    if (!options.instantane) {
+      const chemin = filePathOf(doc.location.href);
+      if (chemin !== pageHistorique) {
+        historique.vider();
+        pageHistorique = chemin;
+      }
+      historique.poser(model.toSnapshot());
+    }
     render();
     debug('aperçu prêt —', state.pageId, model.entries.size, 'éléments');
   }
@@ -586,6 +659,201 @@ export async function startEditor(runtime) {
     inspector.render(inspector.selection);
   }
 
+  /* ════════════════════════════════════════════════════════
+     TYPES DE CONTENU
+     Créer un article, c'est trois gestes que le client ne devrait pas
+     avoir à connaître : copier une page modèle, poser une carte en tête
+     de galerie, et ouvrir la page pour écrire. On les enchaîne.
+  ════════════════════════════════════════════════════════ */
+
+  /** Demande le titre du nouveau contenu. Rien ne se crée sans lui. */
+  function demanderTitre(sousType) {
+    return new Promise((resolve) => {
+      let repondu = false;
+      const champ = h('input', { class: 'input', type: 'text', required: true });
+      const erreur = h('p', { class: 'error' });
+      const valider = (event) => {
+        event.preventDefault();
+        const titre = champ.value.trim();
+        if (!titre) { champ.focus(); return; }
+        repondu = true;
+        modal.close();
+        resolve(titre);
+      };
+      const form = h('form', { onsubmit: valider },
+        h('div', { class: 'field' },
+          h('label', { class: 'field__label' }, t('contenuTitre')),
+          champ,
+          h('p', { class: 'hint' }, t('contenuTitreAide')),
+        ),
+        erreur,
+        h('div', { style: { marginTop: '12px' } },
+          h('button', { class: 'btn btn--primary', type: 'submit' }, t('contenuCreer'))),
+      );
+      const modal = openModal({
+        root, title: sousType.nom, body: form, size: 'sm',
+        onClose: () => { if (!repondu) resolve(null); },
+      });
+      setTimeout(() => champ.focus(), 30);
+    });
+  }
+
+  /**
+   * Pose la carte du nouveau contenu en tête de galerie.
+   *
+   * On duplique la première carte plutôt que d'en fabriquer une : elle a
+   * déjà la bonne structure, et le gabarit du développeur reste maître.
+   * Seuls le titre et le lien sont réécrits — le reste (image, résumé,
+   * date) est à la main du client, qui les voit dans la page.
+   */
+  function poserCarte(type, sousType, titre, chemin) {
+    const trouverCollection = () => model.collections.find((c) => {
+      if (!type.collection) return false;
+      try { return c.container.matches(type.collection) || !!c.container.closest(type.collection); }
+      catch { return false; }
+    });
+
+    const collection = trouverCollection();
+    if (!collection) return false;
+    if (!model.applyCollectionOp(collection.id, 'duplicate', 0)) return false;
+    model.applyCollectionOp(collection.id, 'move', 1, 0);
+    model.refresh();
+
+    // Les champs d'un bloc répétable ne sont pas dans model.entries : ils
+    // appartiennent à la collection, et se relisent sur l'élément lui-même.
+    const apres = trouverCollection();
+    const carte = apres && apres.items[0];
+    if (!carte) return true;
+
+    const champs = model.fieldsIn(carte);
+    let titrePose = false;
+    let resumePose = false;
+
+    // Une carte dupliquée est le calque de sa voisine : sans ça, le nouvel
+    // article arrive avec l'image, le résumé et la catégorie d'un autre — on
+    // croit à un doublon plutôt qu'à un article à remplir.
+    for (const [cle, entry] of champs) {
+      if (entry.role === 'image') {
+        // Une source vide est ignorée par le binder — c'est ce qui permet de
+        // changer un texte alternatif sans effacer l'image. Sans couverture
+        // déclarée, on garde donc celle de la carte copiée, que le client
+        // remplacera : une image d'un autre article saute aux yeux, une
+        // image cassée déroute.
+        model.setCollectionField(
+          apres.id, 0, cle,
+          sousType.image ? { src: sousType.image, alt: titre } : { alt: titre },
+          entry.el, 'image',
+        );
+      } else if (entry.role === 'text' && entry.el.tagName === 'SPAN') {
+        // Les étiquettes de catégorie : elles annoncent la forme choisie.
+        model.setCollectionField(apres.id, 0, cle, { text: sousType.nom }, entry.el, 'text');
+      } else if (entry.role === 'text' && entry.el.tagName === 'P' && !resumePose) {
+        model.setCollectionField(apres.id, 0, cle, { text: t('contenuResume') }, entry.el, 'text');
+        resumePose = true;
+      }
+    }
+
+    // Le titre d'une carte est souvent un lien posé dans un intertitre : on
+    // le reconnaît à ça, et un champ de type lien porte aussi son texte.
+    // Sinon, on retombe sur le premier intertitre venu, puis sur le premier
+    // texte — la première zone de texte d'une carte étant fréquemment son
+    // étiquette de catégorie, elle n'est essayée qu'en dernier recours.
+    const lien = lienVers(chemin);
+    const dansTitre = (el) => !!(el.closest && el.closest('h1,h2,h3,h4'));
+
+    for (const [cle, entry] of champs) {
+      if (entry.role !== 'link') continue;
+      const estTitre = !titrePose && dansTitre(entry.el);
+      model.setCollectionField(
+        apres.id, 0, cle,
+        estTitre ? { href: lien, text: titre } : { href: lien },
+        entry.el, 'link',
+      );
+      if (estTitre) titrePose = true;
+    }
+    if (!titrePose) {
+      for (const [cle, entry] of champs) {
+        if (entry.role !== 'text') continue;
+        if (!/^H[1-4]$/.test(entry.el.tagName)) continue;
+        model.setCollectionField(apres.id, 0, cle, { text: titre }, entry.el, 'text');
+        titrePose = true;
+        break;
+      }
+    }
+    if (!titrePose) {
+      for (const [cle, entry] of champs) {
+        if (entry.role !== 'text') continue;
+        model.setCollectionField(apres.id, 0, cle, { text: titre }, entry.el, 'text');
+        break;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Attend qu'une page fraîchement créée soit servie.
+   *
+   * Sur un hébergement qui reconstruit le site à chaque écriture, le fichier
+   * existe avant d'être en ligne. L'ouvrir tout de suite afficherait une page
+   * introuvable — ce qui ressemble à un échec alors que tout s'est bien passé.
+   */
+  async function attendrePage(url, limite = 150000) {
+    const debut = Date.now();
+    let attente = 2000;
+    while (Date.now() - debut < limite) {
+      await new Promise((r) => setTimeout(r, attente));
+      try {
+        const reponse = await fetch(url, { method: 'GET', cache: 'no-store' });
+        if (reponse.ok) return true;
+      } catch { /* hors ligne ou reconstruction en cours : on retente */ }
+      attente = Math.min(attente * 1.4, 8000);
+    }
+    return false;
+  }
+
+  async function nouveauContenu(sousTypeId) {
+    const type = typePourPage(runtime.config, urlCourante());
+    const sousType = type && type.sousTypes.find((st) => st.id === sousTypeId);
+    if (!type || !sousType) return;
+    if (!hosting.enabled) { notify(t('newPageNoHost'), true); return; }
+
+    const titre = await demanderTitre(sousType);
+    if (!titre) return;
+
+    const chemin = cheminDepuisTitre(titre, sousType);
+    try {
+      // La page modèle doit avoir sa copie d'origine avant d'être recopiée.
+      await hosting.ensureSource(sousType.modele);
+      await hosting.createPage(chemin, sousType.modele);
+    } catch (err) {
+      notify(err.message || String(err), true);
+      return;
+    }
+
+    if (poserCarte(type, sousType, titre, chemin)) markDirty();
+    await autosave.flush();
+
+    // Retenue immédiatement : elle apparaît dans la liste des pages sans
+    // attendre la reconstruction, et on peut y revenir quand on veut.
+    const retenues = [...(model.reglages?.pages || [])];
+    if (!retenues.some((p) => p.path === chemin)) {
+      retenues.push({ path: chemin, label: titre.slice(0, 40) });
+      model.setReglage('pages', retenues);
+      markDirty();
+      await autosave.flush();
+    }
+
+    notify(t('contenuEnRoute'));
+    if (await attendrePage('/' + chemin)) {
+      notify(t('contenuCree'));
+      await loadPage('/' + chemin, { keepScroll: false });
+    } else {
+      // La page est créée : seule sa mise en ligne tarde. On reste sur la
+      // galerie plutôt que d'ouvrir une page introuvable.
+      notify(t('contenuLent'), true);
+    }
+  }
+
   async function collectionOp(id, op, ...args) {
     if (op === 'reset') {
       if (!model.resetCollection(id)) return;
@@ -618,7 +886,19 @@ export async function startEditor(runtime) {
   function memoriserPage() {
     const chemin = filePathOf(urlCourante());
     const connues = model.reglages?.pages || [];
-    if (connues.some((p) => p.path === chemin)) return;
+
+    // Une entrée peut déjà désigner cette page, mais par un autre chemin :
+    // les listes écrites par une version précédente notaient l'adresse
+    // propre « /article » comme « article/index.html ». On rectifie au
+    // passage — sans quoi la liste garde deux lignes pour un seul article,
+    // dont une qui ramène à l'accueil.
+    const ancienne = connues.find((p) => memePage(p.path, chemin));
+    if (ancienne) {
+      if (ancienne.path === chemin) return;
+      model.setReglage('pages', connues.map((p) => (p === ancienne ? { ...p, path: chemin } : p)));
+      markDirty();
+      return;
+    }
     // Une page créée hérite du titre de sa page modèle : deux entrées
     // portant le même nom ne se distingueraient pas. Le nom du fichier
     // prend alors le relais.
@@ -664,6 +944,21 @@ export async function startEditor(runtime) {
         showLibrary();
         notify(t('pageCreated'));
         proposerAssistant();
+      },
+      onDelete: async (chemin) => {
+        try {
+          await hosting.deletePage(chemin);
+        } catch (err) {
+          notify(err.message || String(err), true);
+          return;
+        }
+        // Elle disparaît aussi des pages retenues, sinon elle resterait
+        // proposée dans la liste alors qu'elle n'existe plus.
+        const restantes = (model.reglages?.pages || []).filter((p) => p.path !== chemin);
+        model.setReglage('pages', restantes);
+        markDirty();
+        await autosave.flush();
+        notify(t('pageDeleted'));
       },
     });
   }
@@ -841,9 +1136,13 @@ export async function startEditor(runtime) {
 
   /** Les pages que le module connaît, avec leur fichier. */
   function pagesConnues() {
-    const base = urlCourante().replace(/[^/]*$/, '');
+    // Les chemins retenus partent de la racine du site, et la clé de page se
+    // calcule sur un chemin : lui passer une URL complète fabriquerait des
+    // clés (« https_exemple_fr_portfolio ») qui ne correspondent à
+    // aucun brouillon — une remise à zéro du site ne toucherait rien.
+    const racine = new URL('/', urlCourante()).href;
     const connues = (model.reglages?.pages || []).map((page) => ({
-      pageId: pageKeyFromLocation(new URL(page.path, base)),
+      pageId: pageKeyFromLocation(new URL(page.path, racine).pathname),
       chemin: page.path,
     }));
     const courante = { pageId: state.pageId, chemin: filePathOf(urlCourante()) };
@@ -1147,6 +1446,33 @@ export async function startEditor(runtime) {
     return doc ? doc.location.href.split('?')[0] : location.pathname;
   }
 
+  /** Va sur la page visée par un lien de l'aperçu. */
+  async function ouvrirPageLiee(href) {
+    const url = pageLiee(href);
+    if (!url) return;
+    await autosave.flush();
+    await loadPage(url, { keepScroll: false });
+    showLibrary();
+  }
+
+  /**
+   * L'adresse d'une autre page du site visée par un lien, s'il en vise une.
+   *
+   * Sert à proposer d'y aller depuis l'inspecteur. On écarte les ancres, les
+   * adresses extérieures et le lien qui pointe sur la page déjà ouverte :
+   * proposer d'ouvrir ce qu'on regarde ne veut rien dire.
+   */
+  function pageLiee(href) {
+    const brut = String(href || '').trim();
+    if (!brut || brut.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(brut) && !/^https?:/i.test(brut)) return '';
+    const base = new URL(urlCourante(), location.href).href;
+    let url;
+    try { url = new URL(brut, base); } catch { return ''; }
+    if (url.origin !== location.origin) return '';
+    if (filePathOf(url.href) === filePathOf(base)) return '';
+    return url.origin + url.pathname;
+  }
+
   // ================================================================
   //  Brouillon et publication
   // ================================================================
@@ -1177,6 +1503,89 @@ export async function startEditor(runtime) {
     // fin de la saisie — il ferait perdre le curseur à chaque caractère.
     guide?.majAvancement();
     autosave();
+    noterHistorique();
+  }
+
+  // ================================================================
+  //  Annuler / rétablir
+  // ================================================================
+  const historique = creerHistorique();
+  /** La page à laquelle l'historique se rapporte. */
+  let pageHistorique = null;
+
+  /**
+   * Enregistre une étape, une fois la main retirée.
+   *
+   * Sans cette attente, chaque caractère tapé serait une étape : il faudrait
+   * trente Ctrl+Z pour effacer un titre. Avec elle, une étape correspond à
+   * un geste — une phrase écrite, un bloc déplacé, une image posée.
+   */
+  const noterHistorique = debounce(() => {
+    if (!model || state.restauration) return;
+    if (historique.poser(model.toSnapshot())) render();
+  }, 900);
+
+  /**
+   * Repose un état de l'historique.
+   *
+   * On recharge la page avant de l'appliquer, au lieu de défaire les
+   * modifications une à une. Un instantané se POSE sur une page intacte : le
+   * reposer sur une page déjà modifiée ne retirerait ni la section ajoutée ni
+   * le bloc supprimé — on se retrouverait avec un mélange des deux états.
+   * Repartir du fichier servi est plus lent, et c'est le seul moyen d'obtenir
+   * exactement la page d'avant.
+   */
+  async function parcourirHistorique(sens) {
+    const instantane = sens === 'defaire' ? historique.defaire() : historique.refaire();
+    if (!instantane) { notify(t(sens === 'defaire' ? 'defaireRien' : 'refaireRien')); return; }
+
+    state.restauration = true;
+    try {
+      autosave.cancel();
+      noterHistorique.cancel();
+      textEditor?.commit();
+      await loadPage(urlCourante(), { instantane });
+      // L'état retrouvé doit être enregistré à son tour, tout de suite : sinon
+      // le brouillon qu'on vient de défaire reviendrait au prochain
+      // chargement, et l'annulation n'aurait tenu que le temps d'un coup
+      // d'œil. On programme puis on force — flush() seul ne fait rien quand
+      // rien n'est en attente.
+      state.dirty = true;
+      render();
+      autosave();
+      await autosave.flush();
+      notify(t(sens === 'defaire' ? 'defaireFait' : 'refaireFait'));
+    } catch (err) {
+      notify(String(err.message || err), true);
+    } finally {
+      // Le rechargement a pu programmer une prise d'état : elle porterait sur
+      // ce qu'on vient de reposer, et effacerait le « rétablir ».
+      noterHistorique.cancel();
+      state.restauration = false;
+      render();
+    }
+  }
+
+  /**
+   * Ctrl+Z et Ctrl+Maj+Z, dans le panneau comme dans l'aperçu.
+   *
+   * Sauf dans un champ de saisie : là, l'annulation du navigateur défait la
+   * frappe caractère par caractère, ce qui est exactement ce qu'on attend en
+   * train d'écrire. Le module ne reprend la main qu'en dehors.
+   */
+  function surRaccourci(event) {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+    const touche = event.key.toLowerCase();
+    const sens = touche === 'z' ? (event.shiftKey ? 'refaire' : 'defaire')
+      : (touche === 'y' && !event.shiftKey ? 'refaire' : null);
+    if (!sens) return;
+
+    const cible = event.target;
+    if (cible?.isContentEditable) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(cible?.tagName || '')) return;
+
+    event.preventDefault();
+    parcourirHistorique(sens);
   }
 
   /**
@@ -1231,7 +1640,18 @@ export async function startEditor(runtime) {
     // La page régénérée est celle qu'on édite, pas celle par laquelle on est
     // entré : sans ça, publier depuis une autre page écraserait l'accueil.
     const chemin = filePathOf(urlCourante());
-    const { sourceUrl } = await hosting.ensureSource(chemin);
+    const { sourceUrl, refreshed } = await hosting.ensureSource(chemin);
+
+    // L'hébergement vient d'écrire cette copie. Sur un hôte qui reconstruit
+    // le site à chaque écriture — Vercel, Netlify — le fichier existe dans le
+    // dépôt avant d'être servi : le demander tout de suite renvoie une page
+    // d'erreur. bakePage refuse de régénérer là-dessus ; encore faut-il lui
+    // laisser le temps d'arriver, sinon publier échouerait à chaque première
+    // publication d'une page.
+    if (refreshed && !(await attendrePage(sourceUrl, 150000))) {
+      throw new Error(t('sourceLente'));
+    }
+
     const scanOptions = { ...model.scanOptions };
     delete scanOptions.doc;
     const { html, orphans } = await bakePage({
@@ -1314,6 +1734,7 @@ export async function startEditor(runtime) {
   }
 
   function teardown() {
+    document.removeEventListener('keydown', surRaccourci);
     document.documentElement.removeAttribute('data-admin-shell');
     documentStyle.remove();
     host.remove();
@@ -1349,6 +1770,8 @@ export async function startEditor(runtime) {
     shell.setPreviewNote(!state.editing && (modifications || state.hasDraft)
       ? t('previewDraft') : '');
     publishButton.disabled = !modifications && !state.hasDraft;
+    boutonDefaire.disabled = !historique.peutDefaire() || state.restauration;
+    boutonRefaire.disabled = !historique.peutRefaire() || state.restauration;
   }
 
   // ================================================================
@@ -1356,6 +1779,7 @@ export async function startEditor(runtime) {
   // ================================================================
   async function enterEditMode() {
     runtime.markEditing(true);
+    document.addEventListener('keydown', surRaccourci);
     document.documentElement.setAttribute('data-admin-shell', '');
     buildShell();
     await loadPage(location.pathname);

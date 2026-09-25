@@ -13,13 +13,16 @@
  * @module data/host
  */
 import { debug, warn } from '../core/log.js';
+import { filePathOf } from '../core/pages.js';
 
-/** Chemin du fichier correspondant à l'URL courante. */
+/**
+ * Chemin du fichier correspondant à l'URL courante.
+ *
+ * Même calcul que pour n'importe quelle autre page : deux règles différentes,
+ * c'est publier la page ouverte à un endroit et la retrouver à un autre.
+ */
 export function defaultPagePath(pathname = location.pathname) {
-  let path = decodeURIComponent(pathname || '/').replace(/^\/+/, '');
-  if (path === '' || path.endsWith('/')) return path + 'index.html';
-  const last = path.split('/').pop();
-  return last.includes('.') ? path : path + '/index.html';
+  return filePathOf(pathname || '/');
 }
 
 export function createHost(config, backend) {
@@ -83,6 +86,18 @@ export function createHost(config, backend) {
     async createPage(chemin, depuis) {
       const result = await call('create', { path: chemin, from: depuis || pagePath });
       debug('page créée', result.path);
+      return result;
+    },
+
+    /**
+     * Supprime une page et sa copie d'origine.
+     *
+     * L'éditeur sait masquer une section, mais une page créée par erreur
+     * restait en ligne sans aucun moyen de la retirer.
+     */
+    async deletePage(chemin) {
+      const result = await call('delete', { path: chemin });
+      debug('page supprimée', result.path);
       return result;
     },
 

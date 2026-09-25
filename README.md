@@ -51,6 +51,10 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Boutique** | Un catalogue de produits — physiques (avec poids) ou virtuels — géré depuis le module : nom, description, prix, devise, image, catégorie. Le paiement est délégué : Stripe Payment Link, Gumroad, Lemon Squeezy, PayPal, ou n'importe quelle adresse de vente. Le bouton emmène l'acheteur chez le vendeur, rien n'est encaissé sur le site. Au choix, un panier Snipcart sur le site. Deux éléments : **Catalogue** (tous les produits, ou une catégorie) et **Produit** (une fiche seule). |
 | **Bibliothèque média interne** | Onglet « Médias » : glisser-déposer des fichiers, ajout par adresse (une image du site, une vidéo YouTube, un MP3 hébergé ailleurs), recherche, filtres par famille — images, vidéos, audio, fichiers — copie de l'adresse et suppression. Elle alimente tous les réglages qui demandent un média. |
 | **Images sans abonnement** | Firebase Storage, ou un simple dossier sur l'hébergement du client (script PHP fourni), ou une adresse saisie à la main. Le script PHP accepte aussi l'audio et la vidéo (48 Mo), servis depuis le domaine du site. |
+| **Annuler / refaire** | Ctrl+Z et Ctrl+Maj+Z. L'historique garde des **états complets** de la page plutôt que des opérations : un retour en arrière ne peut pas laisser la page à moitié défaite. |
+| **Types de contenu** | Articles, portraits, interviews… Le développeur déclare une fois dans `admin-config.js` la galerie, le conteneur des cartes et le modèle de page ; le client n'a plus qu'un bouton par forme de contenu, et ne voit jamais qu'il crée une page. |
+| **Écriture dans la page** | Gras, italique, souligné, couleur du texte, et un volet de lien complet — adresse vérifiée, nouvel onglet, retrait. L'état des boutons suit la sélection. Le nettoyage n'accepte `style` que sur les balises de texte, et la seule propriété `color`. |
+| **Publier sans PHP** | `tools/admin-endpoint.js` porte le script PHP sur Vercel : le disque y est en lecture seule, donc « écrire un fichier » veut dire committer dans le dépôt GitHub. Même contrat, même authentification Firebase. |
 
 ## Vendre le module
 

@@ -419,12 +419,22 @@ export function createInspector({ vue, t, actions }) {
 
   function champsLien(entry, valeur) {
     const libelle = typeof valeur.html === 'string' ? entry.el.textContent : (valeur.text ?? '');
+    // Dans l'aperçu, cliquer un lien le sélectionne au lieu de le suivre —
+    // c'est ce qui permet de le modifier. Mais une galerie devient alors un
+    // cul-de-sac : on voit la carte de l'article sans pouvoir entrer dedans.
+    // Ce bouton rouvre le passage, quand le lien mène bien à une autre page
+    // du site.
+    const pageVisee = actions.pageLiee?.(valeur.href);
     return [
       champ(t('linkUrl'), h('input', {
         class: 'input', type: 'text', value: valeur.href || '',
         placeholder: 'https://…, /page.html, #ancre, mailto:…',
         onchange: (e) => actions.setContent(entry, { href: e.target.value }),
       })),
+      pageVisee ? h('button', {
+        class: 'btn btn--wide', type: 'button', style: { marginBottom: '12px' },
+        onclick: () => actions.ouvrirPageLiee(valeur.href),
+      }, icon('pages', 13), t('linkOpenPage')) : null,
       champ(t('linkLabel'), h('input', {
         class: 'input', type: 'text', value: libelle,
         onchange: (e) => actions.setContent(entry, { text: e.target.value, html: undefined }),

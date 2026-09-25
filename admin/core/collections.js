@@ -15,6 +15,7 @@
 import { hash, uid } from './util.js';
 import { children } from './dom.js';
 import { signature, pathBetween, anchorOf } from './identity.js';
+import { warn } from './log.js';
 
 const IGNORE_ATTR = 'data-admin-ignore';
 const NO_COLLECTION_ATTR = 'data-admin-no-repeat';
@@ -113,14 +114,57 @@ export function fieldKey(itemRoot, el, role) {
  * État initial d'une collection, lu dans le DOM.
  * @returns {{items: Array<{key:string, src:number, fields:object}>}}
  */
+/**
+ * Révision déclarée par le développeur sur le conteneur.
+ *
+ *   <div class="articles-grid" data-admin-rev="2">
+ *
+ * Quand le compte de blocs ne suffit pas à dire que le code a changé — sur
+ * un contenu enregistré par une version du module qui ne notait pas encore
+ * `n`, par exemple — c'est le seul moyen de le déclarer. Incrémenter ce
+ * numéro écarte tout contenu enregistré avant lui.
+ */
+export function revisionDe(collection) {
+  return String(collection?.container?.getAttribute('data-admin-rev') || '');
+}
+
 export function readCollection(collection, fieldsOf) {
   return {
+    rev: revisionDe(collection),
+    // Combien de blocs le DÉVELOPPEUR avait écrits quand ce contenu a été
+    // relevé. Les `src` ci-dessous sont des numéros de position dans CETTE
+    // liste-là : sans ce repère, on ne peut pas savoir qu'ils ont cessé de
+    // désigner les mêmes blocs. Voir applyCollection().
+    n: collection.items.length,
     items: collection.items.map((item, index) => ({
       key: 'i' + index,
       src: index,
       fields: fieldsOf ? fieldsOf(item, index) : {},
     })),
   };
+}
+
+/**
+ * Le code a-t-il changé sous ce contenu enregistré ?
+ *
+ * Un enregistrement décrit la liste par NUMÉRO DE POSITION dans le HTML du
+ * développeur. Si celui-ci ajoute ou retire des blocs, ces numéros désignent
+ * désormais autre chose, et la longueur de sa liste n'est plus la bonne.
+ *
+ * Les enregistrements écrits avant que `n` existe ne portent pas ce repère :
+ * on ne peut rien en dire, et on les applique comme avant. C'est à ça que
+ * sert `data-admin-rev` — le développeur tranche à la main quand le module
+ * ne peut pas.
+ */
+export function estPerime(collection, data) {
+  if (revisionDe(collection) !== String(data?.rev || '')) return true;
+  if (!Number.isInteger(data?.n)) return false;
+  if (data.n === collection.items.length) return false;
+  // Publier régénère le fichier avec la liste du client dedans : le code
+  // compte alors ce que l'enregistrement décrit, et `n` — relevé avant —
+  // retarde d'un tour. Le code a bien changé, mais il a changé POUR cet
+  // enregistrement. L'écarter ici crierait au loup après chaque publication.
+  return data.items.length !== collection.items.length;
 }
 
 /** Structure d'origine (aucun ajout, suppression ni réordonnancement). */
@@ -146,6 +190,21 @@ export function applyCollection(collection, data, applyFields) {
   const { container, items: originals } = collection;
   if (!data || !Array.isArray(data.items) || !data.items.length) {
     return { rebuilt: false, items: originals };
+  }
+
+  // Le développeur a modifié la liste dans le code depuis que ce contenu a
+  // été enregistré. Rejouer l'enregistrement remplacerait ses blocs par
+  // d'autres, tirés au hasard des anciens numéros de position — et en
+  // afficherait le nombre d'alors. Douze articles réécrits à la main
+  // deviendraient cinq, choisis par des index qui ne veulent plus rien dire.
+  //
+  // Le code reste maître : on laisse sa liste telle qu'il l'a écrite. Les
+  // retouches du client sur les anciens blocs sont perdues — les reposer par
+  // position les mettrait sur les mauvais. L'éditeur le signale.
+  if (estPerime(collection, data)) {
+    warn('collection périmée : le code a', collection.items.length, 'blocs,',
+      'le contenu enregistré en décrit', data.n, '— contenu ignoré');
+    return { rebuilt: false, items: originals, perime: true };
   }
 
   if (isPristine(collection, data)) {

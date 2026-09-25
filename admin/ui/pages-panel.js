@@ -8,19 +8,25 @@
  */
 import { h, icon, clear } from './el.js';
 import { openModal } from './modal.js';
-import { discoverPages, slugPage } from '../core/pages.js';
+import { discoverPages, slugPage, memePage } from '../core/pages.js';
 
-export function openPages({ root, t, doc, hosting, onOpen, onCreate, connues = [], meta = null }) {
+export function openPages({ root, t, doc, hosting, onOpen, onCreate, onDelete = null,
+  connues = [], meta = null }) {
   const pages = discoverPages(doc);
 
   // Les pages déjà ouvertes depuis l'éditeur complètent la découverte par
   // les liens : sans ça, une page fraîchement créée — que rien ne pointe
   // encore — serait injoignable.
-  const base = doc.location.href.replace(/[^/]*$/, '');
+  //
+  // Un chemin retenu part de la racine du site. On reconstruit son adresse
+  // depuis cette racine, et non depuis le dossier de la page ouverte : un
+  // contenu rangé ailleurs renverrait sinon vers un voisin, voire vers
+  // l'accueil.
+  const racine = doc.location.origin + '/';
   for (const connue of connues) {
-    if (pages.some((p) => p.path === connue.path)) continue;
+    if (pages.some((p) => memePage(p.path, connue.path))) continue;
     pages.push({
-      url: base.replace(/[^/]*$/, '') + connue.path.split('/').pop(),
+      url: new URL(connue.path, racine).href,
       path: connue.path,
       label: connue.label || connue.path,
       courante: false,
@@ -41,6 +47,17 @@ export function openPages({ root, t, doc, hosting, onOpen, onCreate, connues = [
           class: 'btn btn--sm', type: 'button',
           onclick: () => { modal.close(); onOpen(page.url); },
         }, t('openPage')),
+      // L'accueil reste : un site sans accueil n'est plus un site.
+      (onDelete && hosting?.enabled && !page.courante && page.path !== 'index.html')
+        ? h('button', {
+          class: 'btn btn--sm btn--danger', type: 'button', title: t('pageDelete'),
+          onclick: () => {
+            if (!confirm(t('pageDeleteConfirm', page.label))) return;
+            modal.close();
+            onDelete(page.path);
+          },
+        }, icon('trash', 12))
+        : null,
     ));
   }
 

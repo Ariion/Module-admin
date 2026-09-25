@@ -1,5 +1,75 @@
 # Journal des versions
 
+## 1.18.1
+
+**Consolidation : le travail fait sur un site vivant revient dans le module**
+
+Les versions 1.14 à 1.18 ont été écrites en situation, en installant le
+module sur un vrai site (procomsolution.fr) — là où les manques se voient.
+Elles n'existaient que dans la copie embarquée de ce site. Tout est
+rapatrié ici, qui redevient la source unique.
+
+**Annuler et refaire** (`core/historique.js`)
+Ctrl+Z, et Ctrl+Maj+Z. L'historique ne garde pas des opérations mais des
+**états complets** de la page : plus lourd en mémoire, et beaucoup plus sûr
+— le module n'a pas à savoir inverser chacune de ses modifications, donc un
+retour en arrière ne peut pas laisser la page à moitié défaite. Ajouter une
+commande demain ne demandera rien de plus. Les états sont figés en texte :
+deux états identiques se reconnaissent d'un coup, et rien de ce qui est
+empilé ne peut bouger dans le dos de l'historique.
+
+**Les types de contenu** (`core/types.js`)
+Un site qui publie régulièrement n'a pas des pages, il a des *contenus* :
+des articles, des portraits, des interviews. Chacun se montre dans une
+galerie et se lit sur sa propre page. Le développeur déclare le découpage
+une fois dans `admin-config.js` — la page qui porte la galerie, le
+conteneur des cartes, le modèle de page. Le client n'a ensuite qu'un bouton
+par forme de contenu, et **il ne voit jamais qu'il crée une page**.
+
+**Écrire dans la page, pour de bon**
+La barre d'édition sur place a été reprise de fond en comble (213 lignes
+ajoutées) : gras, italique, **souligné**, **couleur du texte**, et un vrai
+volet de lien — adresse vérifiée, ouverture dans un nouvel onglet, retrait
+du lien, avec l'état des boutons qui suit la sélection. La sélection est
+retenue et reposée autour de chaque commande, sinon elle se perdait au
+premier clic dans la barre.
+
+**Deux éléments de plus** : la **citation** (texte et source) et
+l'**encadré** (un bloc mis en avant, avec son titre).
+
+**Couleur d'un mot, sans ouvrir la porte**
+Colorer un mot n'a pas d'autre moyen qu'un `style` en ligne. Le nettoyage
+n'accepte donc `style` que sur les balises de texte, et **une seule
+propriété : `color`**. Pas de position, pas de `display`, pas d'image de
+fond — rien qui puisse recouvrir la page ou en déplacer un morceau.
+
+**Supprimer une page** depuis la liste des pages, avec confirmation.
+
+**Publier sur un hébergement statique** (`tools/admin-endpoint.js`)
+Portage du script PHP pour Vercel. Vercel sert un disque en lecture seule,
+donc « écrire un fichier » y veut dire **committer dans le dépôt GitHub**,
+ce qui déclenche un redéploiement. Le contrat est celui du PHP à
+l'identique (`check`, `source`, `page`, `create`), avec la même
+authentification : jeton Firebase vérifié contre les certificats de Google,
+puis appartenance au site dans Firestore — aucune liste d'UID à tenir.
+
+Conséquence : **la réécriture du HTML et la création de pages ne sont plus
+réservées à PHP**. Ce que la documentation présentait comme impossible sur
+un hébergement statique l'est désormais, au prix d'un jeton GitHub à portée
+réduite.
+
+**Robustesse**
+Messages quand la source tarde ou quand une liste affichée est périmée, et
+correction d'un calcul de clé de page : une URL complète fabriquait des
+clés (« https_exemple_fr_portfolio ») qui ne correspondaient à aucun
+brouillon — une remise à zéro ne touchait alors rien.
+
+**Vérifié après rapatriement** : le retrait complet du module (aucun
+résidu, le site garde son contenu), la régénération du HTML avec styles et
+polices, l'insertion d'éléments, la saisie au clavier, et la mémoire des
+groupes repliés. `mairiedesassy` tourne encore en 1.13.1 et peut maintenant
+être mis à jour depuis ici.
+
 ## 1.13.1
 
 **Le diagnostic clavier dit maintenant QUAND la touche est annulée**

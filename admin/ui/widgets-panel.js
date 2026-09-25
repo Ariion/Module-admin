@@ -13,7 +13,8 @@ import { TEMPLATES } from '../core/templates.js';
 /** Type MIME maison, transporté dans le presse-papiers du glisser-déposer. */
 export const DRAG_PREFIX = 'admin-widget:';
 
-export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, onDragEnd }) {
+export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, onDragEnd,
+  contenus = null, onNouveauContenu = null }) {
   let filtre = '';
   const replies = new Set();
 
@@ -40,6 +41,31 @@ export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, 
   function peindre() {
     clear(corps);
     let total = 0;
+
+    // Le type de contenu d'abord : sur une page galerie, « ajouter un
+    // article » est le geste qu'on vient faire, pas « poser un titre ».
+    //
+    // Résolu à chaque peinture : l'aperçu change de page sans que l'éditeur
+    // redémarre, et la rubrique doit suivre.
+    const type = typeof contenus === 'function' ? contenus() : contenus;
+    if (type && onNouveauContenu) {
+      const sous = type.sousTypes.filter(
+        (st) => !filtre || st.nom.toLowerCase().includes(filtre) || st.id.includes(filtre));
+      if (sous.length) {
+        total += sous.length;
+        const ouvert = filtre ? true : !replies.has('contenus');
+        corps.appendChild(h('div', { class: 'wcat', 'data-open': ouvert ? 'true' : 'false' },
+          h('button', {
+            class: 'wcat__head', type: 'button',
+            onclick: () => {
+              if (replies.has('contenus')) replies.delete('contenus'); else replies.add('contenus');
+              dessiner();
+            },
+          }, h('span', {}, type.nom), icon('down', 12)),
+          h('div', { class: 'wgrid' }, sous.map(vignetteContenu)),
+        ));
+      }
+    }
 
     // Les modèles viennent en premier : partir d'une mise en page toute faite
     // est plus rapide que de poser les éléments un par un.
@@ -97,6 +123,20 @@ export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, 
       class: 'tpl', type: 'button', title: t('tpl_' + modele.id),
       onclick: () => onTemplate(modele.id),
     }, schema, h('span', { class: 'tpl__label' }, t('tpl_' + modele.id)));
+  }
+
+  /**
+   * Vignette d'un sous-type de contenu. Elle ne se glisse pas dans la page :
+   * ce n'est pas un élément qu'on dépose, c'est un contenu qu'on crée.
+   */
+  function vignetteContenu(sousType) {
+    return h('button', {
+      class: 'wtile', type: 'button', title: sousType.nom,
+      onclick: () => onNouveauContenu(sousType.id),
+    },
+      h('span', { class: 'wtile__icon' }, icon(sousType.icone || 'text', 20)),
+      h('span', { class: 'wtile__label' }, sousType.nom),
+    );
   }
 
   function vignette(type) {

@@ -21,6 +21,37 @@ const ALLOWED_ATTRS = {
   ABBR: new Set(['title']),
 };
 
+/**
+ * Balises qui peuvent porter un style en ligne, et la seule propriété qu'on
+ * y accepte : la couleur du texte.
+ *
+ * Colorer un mot n'a pas d'autre moyen — il n'y a pas de balise pour ça.
+ * Mais `style` est une porte large : on n'ouvre que celle-là. Pas de
+ * position, pas de display, pas d'image de fond, rien qui puisse recouvrir
+ * la page ou en déplacer un morceau.
+ */
+const STYLABLE = new Set(['SPAN', 'B', 'STRONG', 'I', 'EM', 'U', 'MARK', 'A', 'SMALL']);
+const PROPRIETES_STYLE = new Set(['color']);
+
+/** Ne garde du style que les propriétés autorisées, et leur valeur si elle tient. */
+export function safeStyle(valeur) {
+  const brut = String(valeur ?? '');
+  if (!brut || brut.length > 300) return '';
+  const gardees = [];
+  for (const regle of brut.split(';')) {
+    const sep = regle.indexOf(':');
+    if (sep < 0) continue;
+    const nom = regle.slice(0, sep).trim().toLowerCase();
+    const val = regle.slice(sep + 1).trim();
+    if (!PROPRIETES_STYLE.has(nom)) continue;
+    // Une couleur, et rien d'autre : pas de url(), pas d'expression, pas de
+    // var() qui pourrait pointer ailleurs.
+    if (!/^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%/]+\)|hsla?\([\d\s.,%/deg]+\)|[a-z]{3,20})$/i.test(val)) continue;
+    gardees.push(`${nom}: ${val}`);
+  }
+  return gardees.join('; ');
+}
+
 const SAFE_SCHEMES = new Set(['http', 'https', 'mailto', 'tel', 'sms']);
 
 /**
@@ -135,6 +166,12 @@ function cleanNode(node) {
 
     for (const attr of Array.from(child.attributes)) {
       const name = attr.name.toLowerCase();
+      if (name === 'style' && STYLABLE.has(child.tagName)) {
+        const style = safeStyle(attr.value);
+        if (style) child.setAttribute('style', style);
+        else child.removeAttribute('style');
+        continue;
+      }
       const allowed = ALLOWED_ATTRS['*'].has(name) || ALLOWED_ATTRS[child.tagName]?.has(name);
       if (!allowed || name.startsWith('on')) child.removeAttribute(attr.name);
     }
