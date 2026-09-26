@@ -56,6 +56,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Types de contenu** | Articles, portraits, interviews… Le développeur déclare une fois dans `admin-config.js` la galerie, le conteneur des cartes et le modèle de page ; le client n'a plus qu'un bouton par forme de contenu, et ne voit jamais qu'il crée une page. |
 | **Écriture dans la page** | Gras, italique, souligné, couleur du texte, et un volet de lien complet — adresse vérifiée, nouvel onglet, retrait. L'état des boutons suit la sélection. Le nettoyage n'accepte `style` que sur les balises de texte, et la seule propriété `color`. |
 | **Publier sans PHP** | `tools/admin-endpoint.js` porte le script PHP sur Vercel : le disque y est en lecture seule, donc « écrire un fichier » veut dire committer dans le dépôt GitHub. Même contrat, même authentification Firebase. |
+| **Formulaire de contact** | Un élément à poser comme les autres : nom, adresse, téléphone, message, cases à cocher, liste déroulante — chaque champ absent, facultatif ou obligatoire, avec son libellé, le texte du bouton et le message de remerciement. **Le message arrive dans la rubrique « Messages »** du back-office : on le lit, on le marque lu, on le supprime, on répond depuis son courrielleur. Pas de serveur de courriel, pas de service tiers, pas d'abonnement. Et il **marche sans le module** : la page publiée emporte une balise `<script>` d'une quarantaine de lignes qui porte l'envoi. Si la base ne répond pas, la page reste intacte et le visiteur lit une phrase sous le bouton. |
 
 ## Vendre le module
 
@@ -154,6 +155,7 @@ admin/                    le module (à copier tel quel sur un site)
 ├── core/reset.js         rendre au site son code d'origine
 ├── core/reperes.js       repères d'alignement et distances (sans DOM)
 ├── core/effets.js        survol, clic, apparition au défilement
+├── core/formulaire.js    formulaire de contact : rendu et script d’envoi
 ├── core/illustrations.js images d'exemple dessinées d'après l'ambiance
 ├── core/page-templates.js modèles de page entière
 ├── core/fonts.js         polices et chargement à la demande

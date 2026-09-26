@@ -18,6 +18,7 @@ import { setDebug, debug, safe } from './core/log.js';
 import { actionsDe, attacherActions } from './core/actions.js';
 import { poserPanier } from './core/boutique.js';
 import { animerApparitions } from './core/effets.js';
+import { cibleDEnvoi } from './core/formulaire.js';
 import { ready, emitter } from './core/util.js';
 
 const EDITOR_SESSION_KEY = 'admin:editing';
@@ -76,6 +77,7 @@ class AdminRuntime {
         visibleOnly: this.config.scan.visibleOnly,
         minItems: this.config.scan.minItems,
         requireClass: this.config.scan.requireClass,
+        formulaire: cibleDEnvoi(this.config),
       }).refresh();
     }
     return this.model;

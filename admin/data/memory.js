@@ -108,4 +108,29 @@ export class MemoryBackend {
   async deleteMedia(id) {
     write(this.key('media'), read(this.key('media'), []).filter((m) => m.id !== id));
   }
+
+  /**
+   * Boîte de réception de démonstration. Le formulaire de la page, lui, écrit
+   * toujours dans Firestore : en démonstration il n'a aucune destination et
+   * affiche donc son message d'échec. On peut quand même éprouver l'écran en
+   * déposant un message à la main depuis la console.
+   */
+  async listMessages() {
+    return read(this.key('messages'), []).sort((a, b) => (b.envoye || 0) - (a.envoye || 0));
+  }
+
+  async addMessage(message) {
+    const boite = read(this.key('messages'), []);
+    boite.unshift({ id: uid('msg'), lu: false, envoye: Date.now(), ...message });
+    write(this.key('messages'), boite.slice(0, 200));
+  }
+
+  async markMessage(id, lu) {
+    write(this.key('messages'), read(this.key('messages'), [])
+      .map((m) => (m.id === id ? { ...m, lu: !!lu } : m)));
+  }
+
+  async deleteMessage(id) {
+    write(this.key('messages'), read(this.key('messages'), []).filter((m) => m.id !== id));
+  }
 }

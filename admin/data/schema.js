@@ -7,8 +7,14 @@
  *   sites/{siteId}/drafts/{pageId}        BROUILLON       — éditeurs du site
  *   sites/{siteId}/revisions/{revId}      historique des publications
  *   sites/{siteId}/media/{mediaId}        bibliothèque média
+ *   sites/{siteId}/messages/{msgId}       MESSAGES reçus  — création publique
  *   sites/{siteId}/members/{uid}          accès du client { role }
  *   superadmins/{uid}                     accès global (le prestataire)
+ *
+ * `messages` est le seul chemin où un visiteur NON connecté puisse écrire, et
+ * seulement pour créer : c'est ce que le formulaire de contact dépose. Les
+ * règles y valident la forme du document, faute de quoi une écriture ouverte
+ * serait une écriture ouverte à tout.
  *
  * Le siteId figure toujours dans le chemin : le même code fonctionne avec un
  * projet Firebase dédié par client (un seul siteId) comme avec un projet
@@ -23,6 +29,8 @@ export const paths = {
   revision: (siteId, revId) => `sites/${siteId}/revisions/${revId}`,
   media: (siteId) => `sites/${siteId}/media`,
   mediaItem: (siteId, mediaId) => `sites/${siteId}/media/${mediaId}`,
+  messages: (siteId) => `sites/${siteId}/messages`,
+  message: (siteId, msgId) => `sites/${siteId}/messages/${msgId}`,
   member: (siteId, uid) => `sites/${siteId}/members/${uid}`,
   superadmin: (uid) => `superadmins/${uid}`,
 };

@@ -178,6 +178,30 @@ export class FirebaseBackend {
     await deleteDoc(doc(this.db, paths.mediaItem(this.siteId, id)));
   }
 
+  /**
+   * Les messages reçus par les formulaires du site, du plus récent au plus
+   * ancien. `envoye` est posé par le navigateur du visiteur : les règles le
+   * bornent autour de l'heure du serveur, faute de quoi un envoi fabriqué
+   * resterait en tête de liste pour toujours.
+   */
+  async listMessages(max = 200) {
+    const { collection, query, orderBy, limit, getDocs } = this.sdk.firestore;
+    const q = query(collection(this.db, paths.messages(this.siteId)), orderBy('envoye', 'desc'), limit(max));
+    const snap = await getDocs(q);
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  }
+
+  /** Marque un message lu ou non lu. Seul un éditeur du site en a le droit. */
+  async markMessage(id, lu) {
+    const { doc, updateDoc } = this.sdk.firestore;
+    await updateDoc(doc(this.db, paths.message(this.siteId, id)), { lu: !!lu });
+  }
+
+  async deleteMessage(id) {
+    const { doc, deleteDoc } = this.sdk.firestore;
+    await deleteDoc(doc(this.db, paths.message(this.siteId, id)));
+  }
+
   /** Instance Storage, chargée à la demande (adaptateur média Firebase). */
   async storage() {
     if (!this.storageModule) {

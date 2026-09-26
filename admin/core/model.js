@@ -19,6 +19,7 @@ import { writeEcransSheet } from './ecrans.js';
 import { writeFontLink } from './fonts.js';
 import { writeThemeSheet, policesDuTheme } from './theme.js';
 import { cssDesEffets, writeEffetsSheet } from './effets.js';
+import { contientFormulaire, writeFormulaireScript } from './formulaire.js';
 
 /** Réglages qui décident de la classe d'effets d'un bloc. */
 const EFFETS_CLES = ['survol', 'clic', 'entree', 'dureeEffet'];
@@ -39,6 +40,9 @@ export class PageModel {
   constructor(scanOptions = {}) {
     this.scanOptions = scanOptions;
     this.doc = scanOptions.doc || document;
+    // Où les formulaires de la page écrivent. Le modèle ne s'en sert pas : il
+    // le transmet aux éléments, qui l'inscrivent dans le HTML publié.
+    this.cibleFormulaire = scanOptions.formulaire || null;
     /** @type {Map<string, {el:Element, role:string, print:object, value:object}>} */
     this.entries = new Map();
     /** @type {Array} collections détectées dans la page */
@@ -217,6 +221,7 @@ export class PageModel {
     this.refreshEffets();
     this.refreshEcrans();
     this.refreshFonts();
+    this.refreshFormulaires();
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
     return { applied, orphans: [...this.orphans.values()] };
   }
@@ -343,6 +348,7 @@ export class PageModel {
     return {
       produits: this.reglages?.produits || [],
       boutique: this.reglages?.boutique || {},
+      formulaire: this.cibleFormulaire,
     };
   }
 
@@ -428,6 +434,7 @@ export class PageModel {
     this.refreshEffets();
     this.refreshEcrans();
     this.refreshFonts();
+    this.refreshFormulaires();
     return true;
   }
 
@@ -522,6 +529,19 @@ export class PageModel {
     };
     for (const record of this.widgetSections()) parcourir([record.tree]);
     safe(() => writeEcransSheet(this.doc, morceaux), null, 'ecrans');
+  }
+
+  /**
+   * Pose le script d'envoi des formulaires, si la page en porte un.
+   *
+   * C'est le seul script que le module laisse dans la page publiée, et c'est
+   * assumé : un formulaire figé dans le HTML sans rien pour porter l'envoi
+   * n'est pas un formulaire, c'est un dessin de formulaire. Tout le reste du
+   * contenu publié se passe de script, celui-là ne peut pas.
+   */
+  refreshFormulaires() {
+    const besoin = this.widgetSections().some((record) => contientFormulaire(record.tree));
+    safe(() => writeFormulaireScript(this.doc, besoin), null, 'formulaires');
   }
 
   /**

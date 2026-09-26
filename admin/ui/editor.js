@@ -49,6 +49,7 @@ import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
 import { createHost } from '../data/host.js';
 import { bakePage } from '../core/bake.js';
+import { cibleDEnvoi } from '../core/formulaire.js';
 import { PageModel } from '../core/model.js';
 import { cacheKey } from '../core/config.js';
 import { pageKeyFromLocation } from '../core/dom.js';
@@ -458,6 +459,7 @@ export async function startEditor(runtime) {
       visibleOnly: config.scan.visibleOnly,
       minItems: config.scan.minItems,
       requireClass: config.scan.requireClass,
+      formulaire: cibleDEnvoi(config),
       doc,
     }).refresh();
     runtime.model = model;

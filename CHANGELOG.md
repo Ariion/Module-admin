@@ -1,5 +1,79 @@
 # Journal des versions
 
+## 1.28.0
+
+**Un formulaire de contact, et la boîte qui va avec**
+
+Un site vitrine sans formulaire n'est pas un site vitrine. C'était le manque
+le plus visible du module.
+
+**Un élément à poser comme les autres.** Nom, adresse, téléphone, message,
+cases à cocher, liste déroulante : chaque champ est absent, facultatif ou
+obligatoire, et porte le libellé qu'on lui donne. Le texte du bouton et le
+message de remerciement se règlent aussi. Le balisage reste sémantique et
+sans classes, comme tous les éléments du module : la feuille du site s'y
+applique d'elle-même, et un formulaire qui ne ressemble pas au site se voit
+tout de suite.
+
+**Le message arrive dans la rubrique « Messages ».** Pas de courriel, pas de
+service tiers : un courriel demande un serveur d'envoi, une réputation
+d'expéditeur et un domaine authentifié, et il finit dans les indésirables le
+jour où l'un des trois bouge. Le message se lit donc là où il est arrivé. On
+le lit, on le marque lu, on le supprime ; on répond depuis son courrielleur,
+par le lien posé sur l'adresse du visiteur. La rubrique ne s'allume pas
+d'elle-même — une boîte vide sur un site sans formulaire est une question de
+plus à se poser.
+
+**Et il marche sans le module.** C'était le point dur. Tout le reste du
+contenu publié se passe de script : un titre figé dans le HTML est un titre.
+Un formulaire, lui, a besoin de quelqu'un pour porter l'envoi. Ce quelqu'un
+tient dans une balise `<script>` d'une quarantaine de lignes, posée dans le
+`<head>` comme la feuille du thème, et il lit tout sur le formulaire qu'il
+traite : le formulaire et sa destination sont inséparables. Le module
+supprimé, la page continue d'envoyer.
+
+**Le visiteur ne voit jamais une page cassée.** Réseau coupé, base qui
+refuse, projet absent : la page reste celle qu'elle était et une phrase
+lisible s'affiche sous le bouton, qui redevient cliquable sans que la saisie
+soit perdue. La validation est celle du navigateur — traduite dans la langue
+du visiteur, debout avant qu'aucun script ne soit chargé.
+
+*Les règles Firestore.* Un formulaire change la donne : un visiteur non
+authentifié doit pouvoir CRÉER un message. Il ne peut rien d'autre — ni lire
+la boîte, ni réécrire un message reçu, ni l'effacer. Et comme l'écriture est
+ouverte, la FORME du document est vérifiée à l'écriture : exactement dix
+clés, pas une de plus, chacune du bon type et bornée en taille. Sans cela,
+une écriture ouverte serait une écriture ouverte à tout. Ce qui reste
+possible — le nombre d'envois, qu'aucune règle ne sait limiter — est écrit
+noir sur blanc dans les limites connues, avec les trois façons de le fermer.
+
+*Ce qui a bougé ailleurs.* Le modèle de page pose le script d'envoi comme il
+pose déjà la feuille des effets. Le genre « on me contacte » allume la
+rubrique Messages. Le modèle de page « contact » propose un vrai formulaire
+au lieu d'un lien `mailto:` — qui suppose un logiciel de courrier configuré,
+ce que la moitié des visiteurs n'a pas, et qui met l'adresse du client à la
+portée des robots. Un modèle de section « formulaire de contact » pose le
+bloc en une fois, titre compris.
+
+`npm run essai-formulaire` éprouve le tout dans un vrai navigateur, Firestore
+bouchonné : le rendu et ses réglages, le refus d'un envoi incomplet, la
+charge exacte envoyée, le formulaire du développeur qui n'est pas détourné,
+la panne de la base — et surtout la page réellement figée par l'export,
+rechargée dans un cadre qui ne charge aucun fichier du module, d'où l'envoi
+part quand même.
+
+**Les règles de sécurité sont désormais jouées, pas seulement relues.**
+Le formulaire ouvre le seul point d'écriture de la base accessible sans
+compte ; ce qui empêche un inconnu d'y écrire n'importe quoi n'est pas du
+code du module, c'est `firebase/firestore.rules`, exécuté par Firebase. Une
+règle relue sans être jouée est une règle dont on espère qu'elle marche.
+`npm run essai-regles` la joue contre l'émulateur sur vingt cas : ce qu'un
+visiteur doit pouvoir faire, ce qu'il ne doit pas — lire, lister, modifier,
+supprimer —, les huit formes de document que la règle refuse, ce que le
+membre du site doit pouvoir faire, et le fait que le reste de la base n'a
+pas été ouvert au passage. L'émulateur n'est pas une dépendance du module :
+l'essai dit quoi installer le jour où l'on veut vérifier.
+
 ## 1.27.0
 
 **Les sept éléments qui manquaient**

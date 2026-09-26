@@ -17,8 +17,8 @@ import { safeHtml, safeUrl, safeImageUrl, safeText } from './sanitize.js';
 import { applyStyleObject } from './style.js';
 import { catalogueFiltre, prixLisible, boutonAchat } from './boutique.js';
 import { marqueDe, nomDeMarque, tracerMarque } from './marques.js';
+import { defautsFormulaire, champsPanneauFormulaire, rendreFormulaire } from './formulaire.js';
 
-/** Catégories affichées dans le panneau, dans l'ordre. */
 /**
  * Éléments dont l'habillage vise un enfant plutôt que l'enveloppe.
  * Le bouton est le seul cas aujourd'hui, et c'en est un vrai : ce qu'on voit
@@ -94,6 +94,7 @@ function grilleSouple(el, mini, gap) {
   el.style.gap = gap + 'px';
 }
 
+/** Catégories affichées dans le panneau, dans l'ordre. */
 export const CATEGORIES = ['mise-en-page', 'structure', 'basique', 'media', 'boutique'];
 
 /**
@@ -492,6 +493,18 @@ export const WIDGETS = {
       { key: 'query', type: 'text', label: 'mapQuery', placeholder: '14 route de la Forêt, Parentis' },
       { key: 'height', type: 'number', label: 'heightLabel', min: 160, max: 800, step: 20 },
     ],
+  },
+
+  /**
+   * Le formulaire de contact. Son rendu et son envoi vivent dans
+   * `core/formulaire.js` : c'est le seul élément qui emporte du script dans la
+   * page publiée, et ce script doit rester lisible d'un seul tenant plutôt que
+   * dispersé dans un `switch` de huit cents lignes.
+   */
+  formulaire: {
+    category: 'basique', icon: 'mail',
+    defaults: () => defautsFormulaire(),
+    fields: champsPanneauFormulaire(),
   },
 };
 
@@ -1319,6 +1332,13 @@ export function renderWidget(noeud, doc, contexte = {}) {
       } else {
         el.appendChild(placeholder(doc, 'Indiquez une adresse à afficher sur la carte.'));
       }
+      break;
+    }
+
+    case 'formulaire': {
+      // La destination de l'envoi vient du contexte, comme le catalogue des
+      // produits : elle dépend du site, pas de l'élément.
+      el = rendreFormulaire(doc, noeud, contexte.formulaire || null);
       break;
     }
 
