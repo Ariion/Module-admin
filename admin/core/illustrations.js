@@ -12,7 +12,7 @@
  *
  * @module core/illustrations
  */
-import { themeById } from './theme.js';
+import { themeApplique } from './theme.js';
 
 /** Palette de repli quand aucun thème n'est choisi. */
 const NEUTRE = { fond: '#eef1f6', fondDoux: '#dfe5ee', accent: '#5b6472', encre: '#15181d' };
@@ -81,11 +81,16 @@ const MOTIFS = [
 
 /**
  * Les images d'exemple accordées à un thème.
- * @param {{id?:string}|null} reglageTheme le réglage `theme` du site
+ *
+ * La marque compte ici autant que l'ambiance : une image dessinée à l'accent
+ * d'origine jurerait avec les boutons du client, et c'est précisément pour
+ * éviter ça que ces images sont calculées plutôt que choisies.
+ *
+ * @param {{id?:string, marque?:object}|null} reglageTheme le réglage `theme` du site
  * @returns {{id:string, url:string}[]}
  */
 export function illustrations(reglageTheme) {
-  const theme = themeById(reglageTheme?.id);
+  const theme = themeApplique(reglageTheme);
   const c = theme ? theme.couleurs : NEUTRE;
   return MOTIFS.map((motif) => ({
     id: motif.id,

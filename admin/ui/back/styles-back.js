@@ -341,6 +341,26 @@ body {
 .theme-carte__actions { padding: 10px 13px 13px; display: flex; gap: 7px; }
 .theme-carte__actions .b { flex: 1; }
 
+/* ─── Couleurs et polices de la marque ───────────────────────────────── */
+.perso-champs {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); gap: 16px;
+}
+.perso-champs .champ { margin-bottom: 0; }
+.perso-couleur { display: flex; align-items: center; gap: 8px; }
+.perso-pastille {
+  flex: none; width: 40px; height: 34px; padding: 2px; cursor: pointer;
+  border: 1px solid var(--trait); border-radius: var(--rayon-sm); background: var(--surface);
+}
+.perso-couleur .saisie { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+.perso-aide { display: block; font-size: 12px; color: var(--pale); margin-top: 5px; }
+/* L'aperçu n'est pas réduit comme les vignettes : il est rendu à la largeur
+   qu'il occupe, donc à une largeur d'écran plausible. Une couleur jugée sur un
+   rendu au quart n'est pas jugée. */
+.perso-vue {
+  width: 100%; height: 440px; border: 1px solid var(--trait);
+  border-radius: var(--rayon-sm); background: #fff;
+}
+
 .voile--large { padding: 3vh 3vw; }
 .voile__boite--large {
   width: 100%; max-width: 1180px; height: 94vh; max-height: none;

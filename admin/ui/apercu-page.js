@@ -13,7 +13,7 @@
  * @module ui/apercu-page
  */
 import { h } from './el.js';
-import { themeById } from '../core/theme.js';
+import { themeApplique } from '../core/theme.js';
 import { illustrations } from '../core/illustrations.js';
 
 /** Palette de repli quand aucune ambiance n'est choisie. */
@@ -28,11 +28,14 @@ const NEUTRE = {
  * @param {Array} bandes description de la page, de haut en bas. Chaque entrée
  *   est une chaîne (`'titre'`, `'texte'`, `'bande'`) ou un objet
  *   (`{ type:'hero'|'cartes'|'duo', n, ratio, hauteur }`).
- * @param {{id?:string}|null} theme réglage d'ambiance du site
+ * @param {{id?:string, marque?:object}|null} theme réglage d'ambiance du site
  * @returns {HTMLElement}
  */
 export function apercuPage(bandes, theme) {
-  const t = themeById(theme?.id);
+  // Les couleurs de la marque comptent ici comme ailleurs : les images de la
+  // miniature en sont déjà teintées, un accent resté celui de l'ambiance
+  // ferait une miniature qui se contredit elle-même.
+  const t = themeApplique(theme);
   const c = t ? t.couleurs : NEUTRE;
   const visuels = illustrations(theme);
   let rang = 0;

@@ -300,6 +300,51 @@ format regardé dans le cadre — un seul état, pas deux à tenir d'accord.
 cascade contre le style en ligne, la propriété composée, l'aperçu en iframe
 étroite dans une fenêtre large, et l'aller-retour par l'instantané publié.
 
+#### Ambiance et marque
+
+L'**ambiance** (`core/theme.js`) est un accord complet — deux polices, une
+palette, une forme de bouton, un rythme — écrit dans une feuille du `<head>`,
+jamais dans le HTML. Neuf sont proposées ; elles ne se composent pas, elles se
+choisissent. C'est ce qui permet à un site de tenir debout sans directeur
+artistique.
+
+Mais un client arrive avec un logo, deux couleurs et parfois une police
+imposée. L'ambiance est donc un **point de départ** : le réglage
+`reglages.theme` porte, à côté de `{ id, portee }`, une `marque`
+`{ principale, secondaire, policeTitres, policeTexte }`. Seul ce qui est
+réellement imposé y figure — même règle que les formats d'écran : une valeur
+vidée n'est pas une surcharge à blanc, c'est la fin de la surcharge, et
+l'ambiance reprend la main. Sans marque, aucune valeur de l'ambiance ne
+change : la feuille gagne seulement les deux variables `--secondaire` et
+`--admin-secondaire`, qui retombent sur l'accent tant qu'aucune seconde
+couleur n'est posée. Vérifié en comparant les dix-huit feuilles — neuf
+ambiances, deux portées — produites avant et après.
+
+Deux valeurs sont **dérivées**, et c'est délibéré :
+
+- la couleur du texte posé sur la couleur principale (blanc ou encre, selon la
+  clarté perçue). Une couleur choisie pour un logo ne dit rien de ce qui se lit
+  dessus, et sans ce calcul une marque jaune donne un bouton blanc sur blanc ;
+- la bande de fond, diluée à 14 % de la couleur secondaire dans le fond de
+  l'ambiance. La seconde couleur d'une marque est une couleur de logo : posée
+  telle quelle sur une section, elle rend le texte illisible.
+
+`cssDuTheme()` applique la marque lui-même, plutôt que de recevoir un thème
+déjà peint : c'est ce qui garantit que la feuille du site, la vignette de la
+galerie et la démonstration en plein écran montrent la même chose. Les polices
+de la marque passent par `policesDuTheme()`, donc par la balise écrite par
+`refreshFonts()` — sans quoi le site régénéré nommerait les polices du client
+sans les charger, et les perdrait là où plus personne ne regarde.
+
+La **portée** ne bouge pas : en `blocs`, marque comprise, rien ne descend hors
+des sections posées par le module. Repeindre le code d'un client par surprise
+est la seule erreur irrattrapable ici.
+
+`tools/essai-marque.mjs` mesure tout cela dans un vrai navigateur : la couleur
+de marque qui bat celle de l'ambiance, la surcharge vidée qui rend la main, la
+portée `blocs` qui laisse intact un élément du site, les polices de marque dans
+la balise de chargement, et l'aller-retour par l'instantané publié.
+
 ---
 
 ## 3. Deux chemins de chargement
