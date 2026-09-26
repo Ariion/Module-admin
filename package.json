@@ -11,6 +11,7 @@
     "essai-local": "node tools/essai-local.mjs",
     "essai-ecrans": "node tools/essai-ecrans.mjs",
     "essai-clavier": "node tools/essai-clavier.mjs",
+    "essai-formulaire": "node tools/essai-formulaire.mjs",
     "paquet": "node tools/paquet.mjs",
     "livraison": "node tools/livraison.mjs"
   },
