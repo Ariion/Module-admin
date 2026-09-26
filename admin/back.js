@@ -29,6 +29,7 @@ import { pageKeyFromLocation } from './core/dom.js';
 import { typesDe, cheminDepuisTitre } from './core/types.js';
 import { poserCarte, attendrePage } from './core/contenus.js';
 import { rubriquesActives, rubrique, appliquerGenres, genreChoisi } from './core/rubriques.js';
+import { cibleDEnvoi } from './core/formulaire.js';
 import { createHost } from './data/host.js';
 import { canEdit } from './data/schema.js';
 import { h, icon, clear } from './ui/el.js';
@@ -42,6 +43,7 @@ import { creerStructure } from './ui/back/structure.js';
 import { creerContenus } from './ui/back/contenus.js';
 import { creerReglagesBack, carteGenre } from './ui/back/reglages-back.js';
 import { creerMedias } from './ui/back/medias.js';
+import { creerMessages } from './ui/back/messages.js';
 import { creerProduits } from './ui/back/produits.js';
 import { creerApparence, documentDemo } from './ui/back/apparence.js';
 import { pageDemo } from './core/demo.js';
@@ -187,6 +189,12 @@ async function demarrer() {
           if (media.primary?.remove) await media.primary.remove(m).catch(() => {});
         },
       }),
+      messages: () => creerMessages({
+        t, lang: config.lang,
+        lister: () => backend.listMessages?.(200) ?? [],
+        onLu: (m, lu) => backend.markMessage(m.id, lu),
+        onSupprimer: (m) => backend.deleteMessage(m.id),
+      }),
       apparence: () => creerApparence({
         t,
         lire: async () => (await lireCommun())?.reglages?.theme || null,
@@ -322,7 +330,7 @@ async function demarrer() {
       cadre = frame;
       if (!doc) throw new Error(t('boStructureIllisible'));
 
-      modele = new PageModel({ ...config.scan, doc }).refresh();
+      modele = new PageModel({ ...config.scan, doc, formulaire: cibleDEnvoi(config) }).refresh();
 
       const commun = await lireCommun();
       if (commun) modele.applySnapshot(commun);

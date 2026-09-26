@@ -30,6 +30,12 @@ export const RUBRIQUES = [
   { id: 'contenus', ecran: 'contenus', icone: 'list', groupe: 'contenu', besoin: 'types' },
   { id: 'produits', ecran: 'produits', icone: 'grid', groupe: 'contenu' },
   { id: 'medias', ecran: 'medias', icone: 'image', groupe: 'contenu', toujours: true },
+  // Les messages n'arrivent que si une page porte un formulaire. La rubrique
+  // ne s'allume donc pas d'elle-même : elle vient avec le genre « on me
+  // contacte », ou se coche dans les paramètres le jour où l'on pose un
+  // formulaire. Une boîte de réception vide sur un site qui n'en a pas est
+  // une question de plus à se poser, pas un service.
+  { id: 'messages', ecran: 'messages', icone: 'mail', groupe: 'contenu' },
   { id: 'apparence', ecran: 'apparence', icone: 'palette', groupe: 'allure', toujours: true },
   { id: 'reglages', ecran: 'reglages', icone: 'sliders', groupe: 'module', toujours: true },
 ];
