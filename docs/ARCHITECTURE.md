@@ -155,7 +155,8 @@ blocs du code » dans la barre d'outils du bloc rend la main au développeur.
 ### Sections et éléments
 
 Le client ajoute une section vide, puis y dépose des éléments : titre, texte,
-bouton, liste, image, vidéo, carte, colonnes, séparateur, espaceur. La
+bouton, liste, image, vidéo, carte, colonnes, séparateur, espaceur, accordéon,
+onglets, témoignages, galerie, chiffres clés, tarifs, réseaux sociaux. La
 bibliothèque, la recherche, les catégories et le glisser-déposer reprennent ce
 que fait Elementor.
 
@@ -170,6 +171,60 @@ titre inséré hérite bien de la police du site.
 
 Un élément n'est jamais inséré dans le balisage du développeur : il vit dans
 une section ajoutée. La mise en page du site reste intacte.
+
+#### Les éléments qui se comportent
+
+Sept éléments demandent plus qu'un affichage : un accordéon s'ouvre, des
+onglets changent, une visionneuse s'agrandit. Or le module a disparu de la page
+publiée — c'est tout l'objet de la régénération du HTML. Un comportement qui
+dépendrait de notre script serait un titre muet sur le site en ligne, et le
+défaut ne se verrait pas à l'édition : seulement après coup.
+
+Le comportement est donc rendu au navigateur :
+
+| Élément | Ce qui le fait marcher |
+|---|---|
+| Accordéon | `<details>` / `<summary>`, et `name` pour n'en ouvrir qu'un |
+| Onglets | des boutons radio et une règle `:checked ~ div` |
+| Galerie et visionneuse | une ancre et une règle `:target` |
+| Témoignages, chiffres clés, tarifs | rien : ils ne se comportent pas |
+| Icônes et réseaux sociaux | des tracés SVG posés dans la page |
+
+Une règle d'état a besoin d'un sélecteur, donc d'une classe et d'une feuille.
+Cette feuille vit **dans l'élément**, parmi ses enfants : elle part avec lui
+quand on le retire, et elle survit à la régénération, qui n'efface que les
+attributs `data-admin-*`. Une feuille posée dans le `<head>` aurait demandé un
+mécanisme de plus à tenir d'accord avec la publication.
+
+Ce qui doit tenir **sans** la feuille est posé en style en ligne, et
+délibérément : un bouton radio d'onglet y est effacé, si bien qu'une feuille
+manquante laisse voir trois boutons de trop plutôt que trois panneaux empilés
+sur une case à cocher. La visionneuse, elle, porte `hidden` — sans sa règle,
+elle reste fermée, et rien n'est perdu puisque les mêmes photos sont déjà dans
+la grille juste au-dessus.
+
+**Les icônes sont dessinées, pas chargées** (`core/marques.js`). Ni police
+d'icônes, ni CDN : les tracés sont dans le module, posés en SVG, en
+`currentColor`. Un pied de page garde donc ses icônes le jour où le module
+n'est plus là, sans qu'une seule requête soit partie les chercher. Ce sont des
+tracés reconnaissables, pas des reproductions.
+
+**La largeur, sans requête de média.** Ces éléments se replient avec
+`repeat(auto-fit, minmax(min(100%, Xpx), 1fr))` : c'est la largeur minimale
+d'une colonne qui décide, et trois témoignages tombent en un à 390 px. Aucun
+`@media` n'est écrit ici — les formats d'écran sont les seuls à en produire, à
+partir des réglages du client, et deux mécanismes concurrents finiraient par
+se contredire.
+
+**Limite assumée :** en mode Édition, un clic sélectionne l'élément au lieu de
+l'actionner — c'est la règle de l'aperçu, la même pour tous les liens du site.
+On vérifie un accordéon ou un onglet depuis le mode Aperçu.
+
+`npm run essai-elements` fabrique la page publiée avec le vrai code de sortie
+(`ui/export.js`, scripts et attributs retirés), l'ouvre dans un navigateur, et
+clique dessus : l'accordéon s'ouvre, l'onglet change, la visionneuse s'ouvre et
+se referme. Les largeurs sont mesurées à 390 px, et les requêtes de la page des
+icônes sont comptées — il n'y en a qu'une, la page elle-même.
 
 Deuxième façon d'ajouter une section : **copier une section existante** de la
 page, quand on veut reprendre une mise en page déjà écrite. Le rendu est alors
@@ -236,8 +291,9 @@ supprimées : elles restent récupérables depuis l'onglet Structure.
 
 ### Modèles de section
 
-Huit mises en page prêtes à l'emploi — trois colonnes, image et texte, appel à
-l'action, galerie, contact… Ce sont de simples arbres de widgets : un modèle
+Onze mises en page prêtes à l'emploi — trois colonnes, image et texte, appel à
+l'action, galerie, questions fréquentes, avis clients, tarifs, contact… Ce sont
+de simples arbres de widgets : un modèle
 inséré n'apporte que la **structure**, jamais un style qui jurerait avec le
 site. La typographie et les couleurs viennent de la feuille du site.
 

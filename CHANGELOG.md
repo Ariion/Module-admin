@@ -1,5 +1,71 @@
 # Journal des versions
 
+## 1.26.0
+
+**Les sept éléments qui manquaient**
+
+Sept absences revenaient sur tous les sites réels, et chacune se bricolait à
+la main, chaque fois autrement : l'accordéon des questions fréquentes, les
+onglets, les témoignages, la galerie et sa visionneuse, les chiffres clés,
+les tarifs, les icônes de réseaux.
+
+**Ils marchent une fois le module retiré.** C'est le point, et c'est ce qui
+décide de tout le reste. À la publication, le fichier `.html` est réécrit
+avec le contenu dedans et le site continue sans une ligne du module : un
+accordéon qui aurait eu besoin de notre script serait devenu un titre muet, et
+le défaut ne se serait vu qu'en ligne, après coup. L'accordéon est donc un
+`<details>`, les onglets des boutons radio et une règle `:checked`, la
+visionneuse une ancre et une règle `:target`. Le navigateur fait le travail,
+et il le fait partout.
+
+**Les règles voyagent avec l'élément.** Un comportement en CSS demande un
+sélecteur, donc une classe et une feuille. Cette feuille vit DANS l'élément,
+parmi ses enfants : elle part avec lui quand on le retire, et la régénération
+du HTML la conserve — elle n'efface que les attributs `data-admin-*`.
+
+**Et si la feuille venait à manquer**, rien ne disparaît sans le dire : un
+bouton radio d'onglet est effacé en style en ligne, donc on verrait trois
+boutons de trop et trois panneaux ouverts, jamais un contenu masqué pour
+toujours. La visionneuse, elle, reste simplement fermée — les mêmes photos
+sont déjà dans la grille juste au-dessus.
+
+**Les icônes sont dessinées, pas chargées.** Ni police d'icônes, ni CDN : les
+tracés sont dans le module et posés en SVG, à la couleur du texte autour. Huit
+réseaux, plus le courriel, le téléphone et le site. Le pied de page d'un site
+dont le module a été retiré garde ses icônes, sans qu'une seule requête soit
+partie les chercher.
+
+**Lisibles sur un téléphone sans réinventer le responsive.** Les grilles se
+replient sur la largeur minimale d'une colonne, pas sur une requête de média :
+trois témoignages deviennent un à 390 px. Les formats d'écran restent les
+seuls à écrire des `@media`, et ils s'appliquent à ces éléments comme aux
+autres.
+
+**Dans le panneau**, un champ multiligne montre enfin la forme qu'on attend de
+lui — « Question | Réponse » — au lieu d'un cadre vide à deviner. La galerie,
+elle, a son propre champ : des vignettes qu'on remonte et qu'on retire, et le
+dépôt de plusieurs photos d'un coup.
+
+**Trois modèles de section** en profitent — questions fréquentes, avis
+clients, tarifs — et la rédaction automatique pose désormais une section
+d'avis. Elle pose le bloc et la consigne, pas l'avis : un témoignage inventé,
+avec un prénom et une ville inventés, serait un faux posé sur le site du
+client.
+
+*Limite assumée.* En mode Édition, un clic sélectionne l'élément au lieu de
+l'actionner — c'est la règle de l'aperçu, la même pour tous les liens du site.
+On vérifie un accordéon ou un onglet depuis le mode Aperçu. La visionneuse ne
+se ferme pas non plus à la touche Échap : cela demanderait un script, et un
+script est exactement ce qu'on refuse ici. La croix, le fond et le bouton
+« retour » du navigateur la referment.
+
+`npm run essai-elements` fabrique la page publiée avec le vrai code de sortie,
+l'ouvre dans un navigateur sans une ligne de script, et clique dessus : la
+question s'ouvre et se referme, l'onglet change, la visionneuse s'ouvre,
+défile et se referme. Les largeurs sont mesurées à 390 px — et à 1280 px, pour
+qu'une colonne unique partout ne passe pas pour un succès. Les requêtes de la
+page des icônes sont comptées : il n'y en a qu'une, la page elle-même.
+
 ## 1.25.0
 
 **Un réglage par format d'écran**

@@ -30,6 +30,7 @@ greffe sur du HTML existant sans qu'il faille le préparer.
 | **Modèles de section** | Huit mises en page prêtes à l'emploi, proposées au moment de créer la section : trois colonnes, image et texte, appel à l'action, galerie… |
 | **Mises en page composées** | Un **bandeau d'accueil** (image plein cadre, voile réglable, texte par-dessus, jusqu'au plein écran), des **cartes image** (le titre posé sur la photo, avec dégradé), des **colonnes en proportions** (un tiers / deux tiers…) et des **étiquettes** en capitales espacées. C'est ce qui permet de composer une page au lieu d'empiler des blocs dans une colonne centrée. |
 | **Bibliothèque d'éléments** | Titre, texte, bouton, liste, image, vidéo, carte, colonnes, séparateur, espaceur — recherche, catégories, glisser-déposer dans l'aperçu. Le balisage émis est sémantique et sans classes : la feuille de style du site s'y applique d'elle-même. |
+| **Éléments qui se comportent** | Accordéon, onglets, témoignages, galerie et visionneuse, chiffres clés, tarifs, icônes de réseaux. Le comportement est rendu au navigateur — `<details>`, `:checked`, `:target` — donc il marche encore une fois le module retiré. Les icônes sont dessinées dans la page : aucune requête, aucune dépendance. |
 | **Sections de page** | Ajouter une section vide et la remplir d'éléments, ou copier une section existante du site. Retirer, réordonner, remettre. |
 | **Ambiances** | Neuf thèmes complets — Sobre, Chaleureux, Élégant, Nuit, Naturel, Punchy, Pro, Magazine, Brut. Chacun décide d'un coup des polices, des couleurs, de la forme des boutons et du rythme vertical : sans cela, tous les modèles de page se ressemblent sur une page vierge, faute de style à hériter. Sur un site existant, l'ambiance ne s'applique par défaut **qu'aux parties ajoutées** — le code du client n'est pas repeint sans qu'on le demande. La feuille de style produite est écrite dans le HTML régénéré : le site garde son allure même sans le module. |
 | **Images d'exemple** | Huit visuels dessinés en SVG à partir des couleurs de l'ambiance retenue. Aucun réseau, aucune clé d'API, aucune question de droits — de quoi voir à quoi ressemblera la page avant d'avoir ses propres photos. |
@@ -142,6 +143,7 @@ admin/                    le module (à copier tel quel sur un site)
 ├── core/bake.js          régénération du HTML avec le contenu publié
 ├── core/sections.js      ajout, retrait et ordre des sections de page
 ├── core/widgets.js       catalogue d'éléments et rendu
+├── core/marques.js       les marques des réseaux, dessinées
 ├── core/templates.js     modèles de section
 ├── core/boutique.js      produits, prix, bouton d'achat, panier
 ├── core/theme.js         ambiances : polices, couleurs, formes, rythme
