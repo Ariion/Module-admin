@@ -109,6 +109,24 @@ export function redigerPage(brief, { images = [], textes = null } = {}) {
   // cartes des prestations et dans le bandeau. Une galerie en plus ne faisait
   // que rallonger la page sans rien composer.
 
+  // --- 4. Ce qu'ils en disent ------------------------------------------
+  // L'avis client est l'argument le plus demandé, et c'est aussi celui qu'on
+  // ne peut pas écrire à la place du client : un témoignage inventé, avec un
+  // prénom et une ville inventés, serait un faux posé sur son site. On pose
+  // donc le bloc et la consigne, pas l'avis — et `exemple: true` fait dire au
+  // guide qu'il reste à le remplir.
+  sections.push(section([
+    w('etiquette', { text: 'Ils nous ont fait confiance', align: 'center', exemple: false }),
+    w('heading', { text: titreAvis(brief), level: 'h2', align: 'center', exemple: false }),
+    w('spacer', { height: 26 }),
+    w('temoignages', {
+      items: 'Recopiez ici l’avis d’un client, tel qu’il vous l’a donné.|Son prénom|Sa ville\n'
+        + 'Un deuxième avis, court et concret.|Son prénom|Sa ville\n'
+        + 'Un troisième, sur ce qui vous distingue.|Son prénom|Sa ville',
+      exemple: true,
+    }),
+  ], { padding: 80 }));
+
   // --- 5. Nous trouver -------------------------------------------------
   sections.push(section([
     w('columns', { count: 2, gap: 44 }, [
@@ -159,6 +177,14 @@ function nomMetier(brief) {
   if (brief.metier === 'hebergement') return 'Le lieu';
   if (brief.metier === 'restaurant' || brief.metier === 'alimentaire') return 'À la carte';
   return 'Nos prestations';
+}
+
+/** Titre de la section des avis, selon ce qu'on est pour ses clients. */
+function titreAvis(brief) {
+  if (brief.metier === 'association') return 'Ce qu’en disent nos adhérents';
+  if (brief.metier === 'restaurant' || brief.metier === 'alimentaire') return 'Ce qu’en disent nos clients';
+  if (brief.metier === 'hebergement') return 'Ce qu’en disent nos hôtes';
+  return 'Ce qu’ils en disent';
 }
 
 /** Titre de la section des prestations, adapté à ce qu'on vend. */

@@ -127,6 +127,39 @@ export const TEMPLATES = [
       w('list', { items: 'Premier élément\nDeuxième élément\nTroisième élément\nQuatrième élément' }),
     ]),
   },
+  /**
+   * La foire aux questions. Elle n'a pas sa place dans un modèle « titre et
+   * liste » : ce qu'on vient chercher, c'est de pouvoir replier les réponses.
+   */
+  {
+    id: 'faq',
+    colonnes: [1],
+    build: () => section([
+      w('heading', { text: 'Questions fréquentes', level: 'h2', align: 'center' }),
+      w('spacer', { height: 20 }),
+      w('accordeon', { exemple: true }),
+    ]),
+  },
+  {
+    id: 'avis',
+    colonnes: [1, 1, 1],
+    build: () => section([
+      w('etiquette', { text: 'Ils nous ont fait confiance', align: 'center' }),
+      w('heading', { text: 'Ce qu’ils en disent', level: 'h2', align: 'center' }),
+      w('spacer', { height: 24 }),
+      w('temoignages', { exemple: true }),
+    ]),
+  },
+  {
+    id: 'tarifs',
+    colonnes: [1, 1, 1],
+    build: () => section([
+      w('heading', { text: 'Nos tarifs', level: 'h2', align: 'center' }),
+      w('text', { html: 'Trois formules, sans surprise. Le devis reste gratuit.', align: 'center' }),
+      w('spacer', { height: 26 }),
+      w('tarifs', { exemple: true }),
+    ]),
+  },
   {
     id: 'contact',
     colonnes: [1, 1],
