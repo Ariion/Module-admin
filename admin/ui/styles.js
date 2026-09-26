@@ -1296,6 +1296,10 @@ select.input { appearance: none; cursor: pointer; }
 .theme__nom { font-size: 11.5px; color: var(--muted); }
 .theme[aria-pressed="true"] .theme__nom { color: var(--text); }
 .theme__portee { margin-top: 12px; }
+/* La marque vient sous la grille, séparée d'un filet : on choisit un accord,
+   puis on impose ce que le client a déjà — et jamais l'inverse. */
+.theme__perso { margin-top: 13px; padding-top: 13px; border-top: 1px solid var(--line-soft); }
+.theme__perso .field:last-of-type { margin-bottom: 4px; }
 
 /* --- Diagnostic clavier ------------------------------------------------ */
 .clav {

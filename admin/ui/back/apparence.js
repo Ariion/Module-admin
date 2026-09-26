@@ -11,11 +11,19 @@
  * est peuplée : on choisit un métier, et la page se remplit de textes
  * plausibles — un restaurant, un garage, un cabinet. Pas de faux latin :
  * « Lorem ipsum » ne dit rien de ce à quoi ressemblera la page.
+ *
+ * Sous la galerie, la marque du client : ses couleurs, son couple de polices.
+ * Son aperçu passe par le MÊME chemin que les vignettes — même document de
+ * démonstration, même feuille de thème. C'est la seule raison pour laquelle on
+ * peut se permettre d'appeler cela un aperçu.
  * @module ui/back/apparence
  */
 import { h, icon, clear } from '../el.js';
 import { teteEcran } from './shell-back.js';
-import { THEMES, themeById, cssDuTheme, PORTEES_THEME } from '../../core/theme.js';
+import {
+  THEMES, themeById, cssDuTheme, PORTEES_THEME, marqueDe, fusionnerMarque, policesDuTheme,
+} from '../../core/theme.js';
+import { FONTS, GROUPES_POLICE, writeFontLink } from '../../core/fonts.js';
 import { metiersDemo } from '../../core/demo.js';
 
 /**
@@ -37,7 +45,7 @@ export function creerApparence({ t, lire, appliquer, rendreDemo }) {
 
     const choixMetier = h('select', {
       class: 'saisie', style: { width: 'auto' },
-      onchange: (e) => { metier = e.target.value; peindre(); },
+      onchange: (e) => { metier = e.target.value; peindre(); redessinerMarque(); },
     }, metiersDemo(t).map((m) => h('option', { value: m.id, selected: m.id === metier }, m.nom)));
 
     page.appendChild(teteEcran(t('boApparence'), t('boApparenceAide'),
@@ -72,6 +80,16 @@ export function creerApparence({ t, lire, appliquer, rendreDemo }) {
 
     const grille = h('div', { class: 'themes-gal' });
     page.appendChild(grille);
+
+    // Ce que le client impose par-dessus l'ambiance. Relu par `marqueDe` et
+    // non pris tel quel : ce réglage vient d'un document, et une couleur qui
+    // n'en est pas une n'a pas à traverser jusqu'à l'aperçu.
+    let marque = marqueDe(courant);
+    let redessinerMarque = () => {};
+    // Une marque vide n'a pas à s'enregistrer vide : la clé disparaît, et
+    // l'ambiance reprend la main sans laisser de trace dans le document.
+    const marqueAEcrire = () => (Object.keys(marque).length ? marque : undefined);
+    page.appendChild(carteMarque());
 
     function peindre() {
       clear(grille);
@@ -112,12 +130,153 @@ export function creerApparence({ t, lire, appliquer, rendreDemo }) {
     async function poser(theme) {
       etat.textContent = t('boEnregistrement');
       try {
-        await appliquer({ id: theme.id, portee });
+        // La marque survit au changement d'ambiance : les couleurs du client ne
+        // dépendent pas de l'accord qu'on essaie en dessous.
+        await appliquer({ id: theme.id, portee, marque: marqueAEcrire() });
         courant.id = theme.id;
         courant.portee = portee;
         etat.textContent = t('boThemePose', t('theme_' + theme.id));
         peindre();
+        redessinerMarque();
       } catch (err) { etat.textContent = String(err?.message || err); }
+    }
+
+    /**
+     * Le panneau de marque : les deux couleurs, le couple de polices.
+     *
+     * Il n'a de sens qu'avec une ambiance en place — une surcharge n'a rien à
+     * surcharger sur un site sans habillage — et il le dit plutôt que d'offrir
+     * des champs qui ne changeraient rien.
+     */
+    function carteMarque() {
+      const compte = h('span', { class: 'table__meta' });
+      const corps = h('div', { class: 'carte__corps' });
+      const carte = h('div', { class: 'carte', style: { marginTop: '22px' } },
+        h('div', { class: 'carte__tete' },
+          icon('palette', 14), h('span', {}, t('marquePerso')), compte,
+          h('button', {
+            class: 'b b--sm b--nu', type: 'button',
+            onclick: () => { marque = {}; redessinerMarque(); enregistrerMarque(); },
+          }, icon('close', 12), t('marqueReprendre')),
+          h('button', {
+            class: 'b b--sm', type: 'button',
+            onclick: () => {
+              const theme = themeById(courant.id);
+              if (theme) previsualiser(theme, marque);
+            },
+          }, icon('eye', 12), t('boThemeVoir')),
+          h('button', {
+            class: 'b b--sm b--fort', type: 'button', onclick: () => enregistrerMarque(),
+          }, icon('check', 12), t('marqueEnregistrer')),
+        ),
+        corps,
+      );
+
+      const apercu = h('iframe', {
+        class: 'perso-vue', title: t('marquePerso'), loading: 'lazy',
+        scrolling: 'no', tabindex: '-1',
+      });
+      let attente = null;
+
+      // Rendre la page de démonstration à chaque pixel du sélecteur de couleur
+      // coûterait plus cher que ce que l'œil peut suivre.
+      const rafraichir = () => {
+        const n = Object.keys(marque).length;
+        compte.textContent = n ? t('marqueCompte', n) : t('marqueAucune');
+        clearTimeout(attente);
+        attente = setTimeout(() => {
+          apercu.srcdoc = rendreDemo(metier, { id: courant.id, portee: 'site', marque });
+        }, 140);
+      };
+
+      /** Écrit une surcharge, ou la retire si la valeur est vide ou fautive. */
+      const ecrire = (patch) => {
+        marque = fusionnerMarque(marque, patch) || {};
+        rafraichir();
+      };
+
+      // Faire valider la saisie par le module qui fera foi : deux règles
+      // écrites à deux endroits finiraient par ne plus dire la même chose.
+      const propre = (cle, valeur) => marqueDe({ marque: { [cle]: valeur } })[cle] || '';
+      const libelle = (cle, suffixe = '') => t('marque' + cle[0].toUpperCase() + cle.slice(1) + suffixe);
+
+      redessinerMarque = () => {
+        clear(corps);
+        const theme = themeById(courant.id);
+        if (!theme) {
+          corps.appendChild(h('div', { class: 'note' }, icon('warn', 14), t('marqueSansAmbiance')));
+          return;
+        }
+        corps.append(
+          h('p', { class: 'table__meta', style: { margin: '0 0 14px' } }, t('marquePersoAide')),
+          h('div', { class: 'perso-champs' },
+            champCouleur('principale', theme.couleurs.accent),
+            champCouleur('secondaire', theme.couleurs.fondDoux),
+            champPolice('policeTitres', theme.police.titres),
+            champPolice('policeTexte', theme.police.textes),
+          ),
+          h('p', { class: 'table__meta', style: { margin: '16px 0 8px' } }, t('marqueVignettesAide')),
+          apercu,
+        );
+        rafraichir();
+      };
+
+      /** Pastille native et saisie hexadécimale : la charte donne un code. */
+      function champCouleur(cle, defaut) {
+        const texte = h('input', {
+          class: 'saisie', type: 'text', value: marque[cle] || '',
+          placeholder: t('marqueCommeAmbiance') + ' — ' + defaut,
+          onchange: (e) => {
+            const v = propre(cle, e.target.value);
+            e.target.value = v;
+            pastille.value = v || defaut;
+            ecrire({ [cle]: v });
+          },
+        });
+        const pastille = h('input', {
+          class: 'perso-pastille', type: 'color', value: marque[cle] || defaut,
+          'aria-label': libelle(cle),
+          oninput: (e) => { texte.value = e.target.value; ecrire({ [cle]: e.target.value }); },
+        });
+        return h('label', { class: 'champ' },
+          h('span', { class: 'champ__nom' }, libelle(cle)),
+          h('div', { class: 'perso-couleur' }, pastille, texte),
+          h('span', { class: 'perso-aide' }, libelle(cle, 'Aide')),
+        );
+      }
+
+      function champPolice(cle, defaut) {
+        return h('label', { class: 'champ' },
+          h('span', { class: 'champ__nom' }, libelle(cle)),
+          h('select', {
+            class: 'saisie', onchange: (e) => ecrire({ [cle]: e.target.value }),
+          }, [
+            h('option', { value: '', selected: !marque[cle] },
+              t('marqueCommeAmbiance') + ' — ' + defaut),
+            // Rangées par famille : à plus de quarante entrées, une liste à
+            // plat ne se parcourt plus.
+            ...GROUPES_POLICE.map((groupe) => h('optgroup', { label: t('fontGroup_' + groupe) },
+              FONTS.filter((police) => police.groupe === groupe).map((police) => h('option', {
+                value: police.name, selected: police.name === marque[cle],
+                style: { fontFamily: `"${police.name}", ${police.stack}` },
+              }, police.name)))),
+          ]),
+        );
+      }
+
+      async function enregistrerMarque() {
+        if (!courant.id) return;
+        compte.textContent = t('boEnregistrement');
+        try {
+          await appliquer({ id: courant.id, portee, marque: marqueAEcrire() });
+          courant.portee = portee;
+          courant.marque = marqueAEcrire();
+          compte.textContent = t('marqueFait');
+        } catch (err) { compte.textContent = String(err?.message || err); }
+      }
+
+      redessinerMarque();
+      return carte;
     }
 
     /**
@@ -127,8 +286,8 @@ export function creerApparence({ t, lire, appliquer, rendreDemo }) {
      * sur le disque, et n'a pas à y exister. Elle ne charge rien du site —
      * donc rien ne peut être confondu avec le contenu réel.
      */
-    function previsualiser(theme) {
-      const reglage = { id: theme.id, portee: 'site' };
+    function previsualiser(theme, marqueVue = null) {
+      const reglage = { id: theme.id, portee: 'site', marque: marqueVue || undefined };
       const cadre = h('iframe', {
         class: 'demo-cadre', title: t('boThemeVoir'), loading: 'lazy',
         srcdoc: rendreDemo(metier, reglage),
@@ -181,8 +340,13 @@ export function documentDemo(renderWidget, sections, reglageTheme) {
   // passer { id, portee } le laissait sans polices ni couleurs.
   const style = doc.createElement('style');
   const theme = themeById(reglageTheme?.id);
-  style.textContent = BASE_DEMO + (theme ? '\n' + cssDuTheme(theme, 'site') : '');
+  style.textContent = BASE_DEMO
+    + (theme ? '\n' + cssDuTheme(theme, 'site', reglageTheme?.marque) : '');
   doc.head.appendChild(style);
+  // La même balise que celle du site : sans elle, la démonstration nommait des
+  // polices que le document n'a pas, et les montrait toutes en Times. Juger un
+  // couple de polices sur un rendu qui ne les charge pas n'a aucun sens.
+  writeFontLink(doc, policesDuTheme(reglageTheme));
   return '<!DOCTYPE html>' + doc.documentElement.outerHTML;
 }
 
