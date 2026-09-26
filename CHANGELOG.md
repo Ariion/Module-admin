@@ -1,5 +1,57 @@
 # Journal des versions
 
+## 1.26.0
+
+**Vos couleurs et vos polices, par-dessus l'ambiance**
+
+Les neuf ambiances étaient fermées : on en choisissait une, on ne la modifiait
+pas. Or un client arrive rarement les mains vides — il a un logo, deux couleurs
+et parfois une police que son imprimeur emploie depuis dix ans.
+
+**Une ambiance devient un point de départ.** Sous la galerie de l'écran
+Apparence, un panneau « vos couleurs et vos polices » : la couleur principale,
+la secondaire, la police des titres, celle du texte. Le reste de l'ambiance —
+les formes, le rythme, les proportions — ne bouge pas. On ne compose pas une
+palette de zéro : on corrige celle qu'on a choisie.
+
+**Ce qu'on voit est ce qu'on aura.** L'aperçu de la personnalisation passe par
+la même page de démonstration que les vignettes de la galerie, avec les vraies
+polices chargées. Les images dessinées par le module et les miniatures des
+modèles de page prennent elles aussi les couleurs de la marque : elles auraient
+juré avec les boutons du site.
+
+**Seul ce qu'on impose est enregistré.** Un champ laissé vide n'est pas une
+surcharge : l'ambiance garde la main. Le vider, c'est la lui rendre — sans quoi
+il n'y aurait aucun retour en arrière autre que changer d'ambiance.
+
+**Le texte reste lisible sur la couleur du client.** Une couleur choisie pour
+un logo ne dit rien de ce qui se lit dessus : le texte des boutons s'éclaircit
+ou s'assombrit tout seul. Et la seconde couleur est éclaircie avant de peindre
+une bande de fond, parce qu'une couleur de logo posée telle quelle sur une
+section rend le texte illisible.
+
+**Où l'ambiance s'applique n'a pas changé.** « Sur les parties ajoutées » reste
+« sur les parties ajoutées », marque comprise : le code du client n'est pas
+touché. Repeindre un site par surprise est la seule erreur qu'on ne rattrape
+pas.
+
+*Sous le capot.* La marque vit dans `reglages.theme.marque`, à côté de `id` et
+`portee`, et ne contient que ce qui est réellement surchargé — même forme que
+les surcharges par format d'écran. C'est `cssDuTheme()` qui l'applique, et non
+l'appelant : la feuille du site, la vignette et la démonstration en plein écran
+sortent ainsi toutes de la même fonction. Les polices de la marque entrent dans
+la balise écrite par `refreshFonts()`, sinon le site régénéré les nommerait
+sans les charger — et les perdrait une fois le module retiré, c'est-à-dire là
+où plus personne ne regarde. Une couleur qui n'en est pas une, ou une famille
+absente du catalogue, est écartée à la lecture : ce réglage vient d'un
+document, pas d'un champ.
+
+`npm run essai-marque` mesure le tout dans un vrai navigateur, sur une page qui
+mêle du code écrit à la main et une section posée par le module : la couleur de
+marque qui bat celle de l'ambiance, la surcharge vidée qui rend la main, la
+portée « blocs » qui laisse intact un paragraphe du site, les polices de marque
+dans la balise de chargement, et l'aller-retour par l'instantané publié.
+
 ## 1.25.0
 
 **Un réglage par format d'écran**
