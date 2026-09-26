@@ -7,11 +7,25 @@ rules_version = '2';
 // site. Le siteId est dans le chemin, donc un client ne peut jamais lire ni
 // écrire le contenu d'un autre site, même si les deux partagent le projet.
 //
+// Une exception, et une seule : le formulaire de contact. Un visiteur non
+// authentifié doit pouvoir DÉPOSER un message sans jamais pouvoir en lire, en
+// modifier ni en supprimer un seul. Voir /messages plus bas : c'est le seul
+// point d'écriture ouvert de la base, et sa forme y est vérifiée champ par
+// champ.
+//
 // Le prestataire se donne un accès global en créant un document
 // superadmins/{sonUid} depuis la console Firebase.
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Les clés exactes d'un message déposé par un formulaire. Écrites une
+    // fois : une liste recopiée finirait par diverger de l'autre, et c'est
+    // celle-là qui décide de ce qu'un inconnu peut écrire.
+    function clesMessage() {
+      return ['page', 'formulaire', 'nom', 'courriel', 'telephone',
+              'message', 'cases', 'liste', 'envoye', 'lu'];
+    }
 
     function signedIn() {
       return request.auth != null;
@@ -60,6 +74,67 @@ service cloud.firestore {
       // Bibliothèque média (index des fichiers, pas les fichiers eux-mêmes).
       match /media/{mediaId} {
         allow read, write: if canEdit(siteId);
+      }
+
+      // Boîte de réception du formulaire de contact.
+      //
+      // C'est le SEUL endroit de la base où quelqu'un qui n'est pas connecté
+      // puisse écrire, et il n'a le droit que d'une chose : déposer un
+      // message. Ce qui est refusé, et pourquoi :
+      //
+      //   read    un visiteur qui pourrait lire lirait les messages des
+      //           autres — donc les noms, les adresses et les demandes des
+      //           clients du client. La boîte reste privée.
+      //   update  un message reçu ne se réécrit pas : sinon n'importe qui
+      //           pourrait vider le message qu'il vient d'envoyer, ou
+      //           marquer lu ce que le client n'a pas lu.
+      //   delete  personne n'effacerait ses traces.
+      //
+      // Reste la forme du document, vérifiée ici parce que c'est le seul
+      // endroit où elle PEUT l'être : une création ouverte sans contrôle de
+      // forme, c'est une base où l'on écrit n'importe quoi, autant en volume
+      // qu'en contenu. On exige donc exactement dix clés — ni une de plus,
+      // sinon on stocke le champ inventé par le premier curieux —, chacune
+      // du bon type et bornée en taille. Les bornes sont celles de
+      // `admin/core/formulaire.js`, qui est la référence : le script tronque
+      // à ces longueurs, les règles refusent au-delà.
+      match /messages/{messageId} {
+        function champs() {
+          return request.resource.data;
+        }
+        function texte(valeur, max) {
+          return valeur is string && valeur.size() <= max;
+        }
+        function formeAttendue() {
+          return champs().keys().hasOnly(clesMessage()) && champs().keys().hasAll(clesMessage())
+            && texte(champs().page, 200)
+            && texte(champs().formulaire, 64)
+            && texte(champs().nom, 120)
+            && texte(champs().courriel, 200)
+            && texte(champs().telephone, 40)
+            && texte(champs().message, 5000)
+            && texte(champs().cases, 500)
+            && texte(champs().liste, 120)
+            // Un visiteur ne crée pas un message déjà lu : l'état de lecture
+            // appartient au client, et à lui seul.
+            && champs().lu == false
+            // L'horodatage vient du navigateur du visiteur — il n'y a pas
+            // d'autre source côté REST. On le borne autour de l'heure du
+            // serveur : sans cela, un envoi daté de l'an 3000 resterait en
+            // tête de la boîte pour toujours. Deux jours de marge, parce
+            // qu'une horloge de poste mal réglée est plus fréquente qu'un
+            // malveillant, et qu'un message ne doit pas se perdre pour ça.
+            && champs().envoye is int
+            && champs().envoye > request.time.toMillis() - 172800000
+            && champs().envoye < request.time.toMillis() + 172800000
+            // Un document dont tous les champs sont vides n'est pas un
+            // message : c'est du remplissage.
+            && champs().nom.size() + champs().courriel.size()
+               + champs().telephone.size() + champs().message.size() > 0;
+        }
+
+        allow create: if formeAttendue();
+        allow read, update, delete: if canEdit(siteId);
       }
 
       // Comptes ayant accès au site. Seul le prestataire les gère.
