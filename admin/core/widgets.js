@@ -16,6 +16,7 @@ import { uid } from './util.js';
 import { safeHtml, safeUrl, safeImageUrl, safeText } from './sanitize.js';
 import { applyStyleObject } from './style.js';
 import { catalogueFiltre, prixLisible, boutonAchat } from './boutique.js';
+import { marqueDe, nomDeMarque, tracerMarque } from './marques.js';
 
 /** Catégories affichées dans le panneau, dans l'ordre. */
 /**
@@ -39,6 +40,58 @@ function pistesColonnes(p) {
   // Une proportion ne veut rien dire au-delà de deux colonnes.
   if (nombre === 2 && RATIOS[p.ratio]) return RATIOS[p.ratio];
   return `repeat(${nombre}, minmax(0, 1fr))`;
+}
+
+/**
+ * Les éléments qui se COMPORTENT — ouvrir un panneau, changer d'onglet,
+ * agrandir une photo — n'ont pas droit au script du module : la page publiée
+ * ne le charge plus. Leur comportement tient donc soit dans le HTML lui-même
+ * (`<details>`), soit dans une règle CSS d'état (`:checked`, `:target`).
+ *
+ * Une règle a besoin d'un sélecteur, donc d'une classe et d'une feuille. La
+ * feuille vit DANS l'élément, parmi ses enfants : elle part avec lui quand on
+ * le retire, et elle survit à la régénération du fichier HTML, qui n'efface
+ * que les attributs `data-admin-*`. Une feuille posée dans `<head>` aurait
+ * demandé un mécanisme de plus à tenir d'accord avec la publication.
+ */
+const PREFIXE_COMPORTEMENT = 'admin-w-';
+
+/** La classe qui porte les règles d'un élément, dérivée de sa clé. */
+function classeDe(noeud) {
+  return PREFIXE_COMPORTEMENT + noeud.key;
+}
+
+/** La feuille d'un élément, à poser parmi ses enfants. */
+function feuilleDe(doc, regles) {
+  const feuille = doc.createElement('style');
+  feuille.textContent = regles.join('');
+  return feuille;
+}
+
+/** Les lignes non vides d'un réglage multiligne. */
+function lignesDe(valeur) {
+  return String(valeur ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+}
+
+/** Les champs d'une ligne « A | B | C ». */
+function champsDe(ligne) {
+  return String(ligne).split('|').map((c) => c.trim());
+}
+
+/**
+ * Une grille qui se replie d'elle-même.
+ *
+ * `auto-fit` plutôt qu'un nombre de colonnes fixe : c'est la largeur minimale
+ * qui décide, et la grille tombe à une colonne sans une seule requête de
+ * média. Trois témoignages restent donc lisibles à 390 px sans que ces
+ * éléments écrivent leur propre responsive, qui entrerait en concurrence avec
+ * les formats d'écran — eux seuls produisent des règles `@media`, sur les
+ * réglages du client.
+ */
+function grilleSouple(el, mini, gap) {
+  el.style.display = 'grid';
+  el.style.gridTemplateColumns = `repeat(auto-fit, minmax(min(100%, ${mini}px), 1fr))`;
+  el.style.gap = gap + 'px';
 }
 
 export const CATEGORIES = ['mise-en-page', 'structure', 'basique', 'media', 'boutique'];
@@ -190,6 +243,168 @@ export const WIDGETS = {
     fields: [
       { key: 'titre', type: 'text', label: 'boxTitle' },
       { key: 'items', type: 'lines', label: 'itemsLabel' },
+    ],
+  },
+
+  /**
+   * L'accordéon : la foire aux questions, celle qui traîne en bas de presque
+   * toutes les pages de service, et qu'on bricole chaque fois autrement.
+   *
+   * Rendu en `<details>`, donc sans une ligne de script : ouvrir et fermer est
+   * un comportement du navigateur. C'est le seul choix tenable, puisque le
+   * module a disparu de la page publiée.
+   */
+  accordeon: {
+    category: 'mise-en-page', icon: 'layers',
+    defaults: () => ({
+      items: 'Quels sont vos horaires ?|Du mardi au samedi, de 9 h à 19 h.\n'
+        + 'Intervenez-vous à domicile ?|Oui, dans un rayon de 20 km.\n'
+        + 'Le devis est-il payant ?|Non, le devis est gratuit et sans engagement.',
+      ouvert: 'premier', exclusif: 'oui',
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'accordeonItems', hint: 'accordeonHint',
+        placeholder: 'Quels sont vos horaires ? | Du mardi au samedi, de 9 h à 19 h.' },
+      { key: 'ouvert', type: 'select', label: 'accordeonOuvert',
+        options: ['premier', 'aucun', 'tous'] },
+      { key: 'exclusif', type: 'checkbox', label: 'accordeonExclusif', on: 'oui' },
+    ],
+  },
+
+  /**
+   * Les onglets : trois offres, trois horaires, trois lieux, sans tripler la
+   * hauteur de la page.
+   *
+   * Des boutons radio et une règle `:checked`. Aucun script, donc : c'est le
+   * navigateur qui retient l'onglet choisi, et il le fait aussi bien dans la
+   * page publiée que dans l'aperçu.
+   */
+  onglets: {
+    category: 'mise-en-page', icon: 'template',
+    defaults: () => ({
+      items: 'Le midi|Entrée, plat et dessert à 19 €, du mardi au vendredi.\n'
+        + 'Le soir|À la carte, de 19 h à 22 h, sur réservation.\n'
+        + 'Le dimanche|Brunch de 11 h à 15 h.',
+      align: 'left',
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'ongletsItems', hint: 'ongletsHint',
+        placeholder: 'Le midi | Entrée, plat et dessert à 19 €.' },
+      { key: 'align', type: 'align', label: 'ongletsAlign' },
+    ],
+  },
+
+  /**
+   * Les témoignages. L'avis client est l'argument le plus réclamé et le plus
+   * mal bricolé à la main — le plus souvent en trois `<div>` qui se décalent
+   * dès qu'un avis est plus long que les autres.
+   */
+  temoignages: {
+    category: 'mise-en-page', icon: 'text',
+    defaults: () => ({
+      items: 'Travail soigné et délais tenus. Je recommande.|Claire M.|Bordeaux\n'
+        + 'On nous a écoutés avant de nous proposer quoi que ce soit.|Paul D.|Client depuis 2019\n'
+        + 'Un chantier propre chaque soir. Cela compte plus qu’on ne croit.|Fatima B.|Mérignac',
+      etoiles: 5, largeurMini: 260, gap: 26,
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'temoignagesItems', hint: 'temoignagesHint',
+        placeholder: 'L’avis | Le nom | Ville ou précision' },
+      { key: 'etoiles', type: 'number', label: 'temoignagesEtoiles', min: 0, max: 5, step: 1 },
+      { key: 'largeurMini', type: 'number', label: 'colonneMini', min: 180, max: 520, step: 10 },
+      { key: 'gap', type: 'number', label: 'gapLabel', min: 0, max: 80, step: 2 },
+    ],
+  },
+
+  /**
+   * La galerie et sa visionneuse. Restaurant, artisan, hébergement : la photo
+   * EST le contenu, et la regarder en grand n'est pas un luxe.
+   *
+   * La visionneuse repose sur `:target` — un lien vers une ancre, une règle
+   * qui affiche la vue correspondante. Donc, là encore, aucun script.
+   */
+  galerie: {
+    category: 'media', icon: 'image',
+    defaults: () => ({
+      images: '', hauteur: 220, largeurMini: 200, gap: 12, visionneuse: 'oui',
+    }),
+    fields: [
+      { key: 'images', type: 'images', label: 'galerieImages', hint: 'galerieHint' },
+      { key: 'hauteur', type: 'number', label: 'galerieHauteur', min: 80, max: 600, step: 10 },
+      { key: 'largeurMini', type: 'number', label: 'colonneMini', min: 80, max: 520, step: 10 },
+      { key: 'gap', type: 'number', label: 'gapLabel', min: 0, max: 60, step: 2 },
+      { key: 'visionneuse', type: 'checkbox', label: 'galerieVisionneuse', on: 'oui' },
+    ],
+  },
+
+  /** Les chiffres clés : « 15 ans », « 400 chantiers », trois nombres alignés. */
+  chiffres: {
+    category: 'mise-en-page', icon: 'grid',
+    defaults: () => ({
+      items: '15|ans d’expérience\n400|chantiers livrés\n98 %|clients satisfaits',
+      align: 'center', largeurMini: 180, gap: 24,
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'chiffresItems', hint: 'chiffresHint',
+        placeholder: '400 | chantiers livrés' },
+      { key: 'align', type: 'align', label: 'alignLabel' },
+      { key: 'largeurMini', type: 'number', label: 'colonneMini', min: 120, max: 420, step: 10 },
+      { key: 'gap', type: 'number', label: 'gapLabel', min: 0, max: 80, step: 2 },
+    ],
+  },
+
+  /**
+   * Les tarifs : des colonnes comparables, dont une mise en avant.
+   *
+   * Une ligne par offre, et les avantages séparés par un point-virgule à
+   * l'intérieur de la ligne. Deux séparateurs valent mieux qu'un réglage par
+   * puce : on lit ses trois offres d'un coup d'œil dans le champ.
+   */
+  tarifs: {
+    category: 'mise-en-page', icon: 'columns',
+    defaults: () => ({
+      items: 'Essentiel|390 €|Pour se lancer|Une page ; Un formulaire ; Mise en ligne'
+        + '|contact.html\n'
+        + 'Complet|790 €|Pour aller plus loin|Cinq pages ; Galerie photo ; Référencement local'
+        + ' ; Un an de suivi|contact.html\n'
+        + 'Sur mesure|Sur devis|Pour un projet précis|Pages libres ; Boutique ; Accompagnement'
+        + '|contact.html',
+      enAvant: 2, etiquetteAvant: 'Le plus demandé', libelle: 'Choisir cette offre',
+      largeurMini: 240, gap: 22,
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'tarifsItems', hint: 'tarifsHint',
+        placeholder: 'Essentiel | 390 € | Pour se lancer | Une page ; Un formulaire | contact.html' },
+      { key: 'enAvant', type: 'number', label: 'tarifsEnAvant', min: 0, max: 8, step: 1 },
+      { key: 'etiquetteAvant', type: 'text', label: 'tarifsEtiquette' },
+      { key: 'libelle', type: 'text', label: 'tarifsLibelle' },
+      { key: 'largeurMini', type: 'number', label: 'colonneMini', min: 200, max: 520, step: 10 },
+      { key: 'gap', type: 'number', label: 'gapLabel', min: 0, max: 80, step: 2 },
+    ],
+  },
+
+  /**
+   * Les icônes des réseaux, DESSINÉES.
+   *
+   * Pas une police d'icônes, pas un CDN : les tracés sont dans le module (voir
+   * `core/marques.js`) et posés en SVG dans la page. Le pied de page d'un site
+   * dont le module a été retiré garde donc ses icônes, sans qu'une seule
+   * requête soit partie les chercher.
+   */
+  reseaux: {
+    category: 'basique', icon: 'link',
+    defaults: () => ({
+      liens: 'instagram|https://www.instagram.com/\n'
+        + 'facebook|https://www.facebook.com/\n'
+        + 'courriel|mailto:contact@exemple.fr',
+      taille: 22, forme: 'cercle', align: 'left',
+    }),
+    fields: [
+      { key: 'liens', type: 'lines', label: 'reseauxLiens', hint: 'reseauxHint',
+        placeholder: 'instagram | https://www.instagram.com/mon-compte' },
+      { key: 'taille', type: 'number', label: 'reseauxTaille', min: 14, max: 56, step: 2 },
+      { key: 'forme', type: 'select', label: 'reseauxForme', options: ['nu', 'cercle', 'carre'] },
+      { key: 'align', type: 'align', label: 'alignLabel' },
     ],
   },
 
@@ -538,6 +753,381 @@ export function renderWidget(noeud, doc, contexte = {}) {
         liste.appendChild(item);
       }
       if (liste.childNodes.length) el.appendChild(liste);
+      break;
+    }
+
+    case 'accordeon': {
+      el = doc.createElement('div');
+      const entrees = lignesDe(p.items);
+      if (!entrees.length) {
+        el.appendChild(placeholder(doc, 'Une ligne par question : Question | Réponse'));
+        break;
+      }
+      // Un accordéon exclusif se déclare par `name`, et le navigateur s'en
+      // charge. Un navigateur qui ignore l'attribut laisse simplement deux
+      // panneaux ouverts : personne ne perd de contenu. En revanche `name`
+      // interdit d'en ouvrir plusieurs, donc il n'a rien à faire là quand on
+      // a justement demandé que tout soit ouvert.
+      const exclusif = p.exclusif === 'oui' && p.ouvert !== 'tous';
+      entrees.forEach((ligne, rang) => {
+        const [question, ...reponse] = champsDe(ligne);
+        const details = doc.createElement('details');
+        if (exclusif) details.setAttribute('name', 'a' + noeud.key);
+        if (p.ouvert === 'tous' || (p.ouvert !== 'aucun' && rang === 0)) {
+          details.setAttribute('open', '');
+        }
+        details.style.cssText = 'border-top:1px solid rgba(128,128,128,.28);'
+          + (rang === entrees.length - 1 ? 'border-bottom:1px solid rgba(128,128,128,.28);' : '');
+
+        const titre = doc.createElement('summary');
+        titre.textContent = remplacerJetons(question);
+        titre.style.cssText = 'cursor:pointer;padding:15px 0;font-weight:600;';
+        details.appendChild(titre);
+
+        const corps = doc.createElement('p');
+        corps.textContent = remplacerJetons(reponse.join(' | '));
+        corps.style.cssText = 'margin:0 0 17px;';
+        details.appendChild(corps);
+        el.appendChild(details);
+      });
+      break;
+    }
+
+    case 'onglets': {
+      el = doc.createElement('div');
+      const entrees = lignesDe(p.items);
+      if (!entrees.length) {
+        el.appendChild(placeholder(doc, 'Une ligne par onglet : Titre | Contenu'));
+        break;
+      }
+      const classe = classeDe(noeud);
+      el.className = classe;
+      // Les titres et les panneaux sont frères, dans un seul conteneur souple :
+      // les panneaux prennent toute la ligne, les titres se serrent sur la
+      // précédente. Sans sous-conteneur, la règle `:checked ~ div` reste vraie.
+      el.style.cssText = 'position:relative;display:flex;flex-wrap:wrap;gap:14px 22px;';
+      if (p.align === 'center') el.style.justifyContent = 'center';
+      if (p.align === 'right') el.style.justifyContent = 'flex-end';
+
+      const regles = [
+        `.${classe}>label{cursor:pointer;padding:8px 0;`
+          + 'border-bottom:2px solid transparent;opacity:.6}',
+        `.${classe}>div{display:none;width:100%;margin:0}`,
+        `.${classe}>input:checked+label{opacity:1;border-bottom-color:currentColor}`,
+        `.${classe}>input:focus-visible+label{outline:2px solid currentColor;outline-offset:4px}`,
+      ];
+
+      // Les titres sont posés d'abord, les panneaux ensuite : intercalés, le
+      // conteneur souple renverrait chaque titre sous le panneau précédent au
+      // lieu de les aligner en une rangée.
+      const titres = [];
+      const panneaux = [];
+      entrees.forEach((ligne, rang) => {
+        const [titre, ...contenu] = champsDe(ligne);
+        const id = noeud.key + '-o' + (rang + 1);
+
+        const bouton = doc.createElement('input');
+        bouton.setAttribute('type', 'radio');
+        bouton.setAttribute('name', noeud.key);
+        bouton.setAttribute('id', id);
+        if (rang === 0) bouton.setAttribute('checked', '');
+        // Effacé en style EN LIGNE, et non par la feuille : si la feuille
+        // venait à manquer, on verrait trois boutons radio en trop plutôt que
+        // trois panneaux empilés sur une case à cocher. Effacé, pas
+        // `display:none` — il reste dans l'ordre de tabulation, et les flèches
+        // du clavier changent d'onglet comme il faut.
+        bouton.style.cssText = 'position:absolute;width:1px;height:1px;'
+          + 'opacity:0;margin:0;pointer-events:none;';
+
+        const etiquette = doc.createElement('label');
+        etiquette.setAttribute('for', id);
+        etiquette.textContent = remplacerJetons(titre);
+
+        const panneau = doc.createElement('div');
+        const texte = doc.createElement('p');
+        texte.textContent = remplacerJetons(contenu.join(' | '));
+        texte.style.margin = '0';
+        panneau.appendChild(texte);
+
+        titres.push(bouton, etiquette);
+        panneaux.push(panneau);
+        regles.push(`.${classe}>#${id}:checked~div:nth-of-type(${rang + 1}){display:block}`);
+      });
+      el.append(feuilleDe(doc, regles), ...titres, ...panneaux);
+      break;
+    }
+
+    case 'temoignages': {
+      el = doc.createElement('div');
+      const avis = lignesDe(p.items);
+      if (!avis.length) {
+        el.appendChild(placeholder(doc, 'Une ligne par avis : L’avis | Le nom | Ville'));
+        break;
+      }
+      grilleSouple(el, Math.max(180, Number(p.largeurMini) || 260), Math.max(0, p.gap ?? 26));
+
+      const etoiles = Math.max(0, Math.min(5, Number(p.etoiles ?? 0)));
+      for (const ligne of avis) {
+        const [propos, nom, detail] = champsDe(ligne);
+        const bloc = doc.createElement('figure');
+        bloc.style.cssText = 'margin:0;display:flex;flex-direction:column;gap:12px;';
+
+        // Des caractères, pas des images : une étoile dessinée serait une
+        // requête de plus, et celle-ci est déjà dans toutes les polices.
+        if (etoiles) {
+          const note = doc.createElement('p');
+          note.textContent = '★'.repeat(etoiles) + '☆'.repeat(5 - etoiles);
+          note.setAttribute('aria-label', `${etoiles} sur 5`);
+          note.style.cssText = 'margin:0;letter-spacing:.14em;';
+          bloc.appendChild(note);
+        }
+
+        const citation = doc.createElement('blockquote');
+        citation.style.margin = '0';
+        const phrase = doc.createElement('p');
+        phrase.textContent = remplacerJetons(propos);
+        phrase.style.margin = '0';
+        citation.appendChild(phrase);
+        bloc.appendChild(citation);
+
+        const signature = [remplacerJetons(nom || ''), remplacerJetons(detail || '')]
+          .filter(Boolean).join(' — ');
+        if (signature) {
+          const auteur = doc.createElement('figcaption');
+          auteur.textContent = signature;
+          auteur.style.cssText = 'font-size:.86em;opacity:.72;';
+          bloc.appendChild(auteur);
+        }
+        el.appendChild(bloc);
+      }
+      break;
+    }
+
+    case 'galerie': {
+      el = doc.createElement('div');
+      const images = lignesDe(p.images).map((x) => safeImageUrl(x)).filter(Boolean);
+      if (!images.length) {
+        el.appendChild(placeholder(doc, 'Ajoutez des photos depuis la bibliothèque.'));
+        break;
+      }
+      grilleSouple(el, Math.max(80, Number(p.largeurMini) || 200), Math.max(0, p.gap ?? 12));
+
+      const hauteur = Math.max(80, Math.min(600, Number(p.hauteur) || 220));
+      const visionneuse = p.visionneuse === 'oui';
+      const idGalerie = 'g' + noeud.key;
+      const idVue = (rang) => 'v' + noeud.key + '-' + rang;
+      // La croix et les flèches renvoient à la galerie elle-même, et non à une
+      // ancre vide : refermer la visionneuse ne doit pas remonter en haut de
+      // la page, mais rendre la vue là où on l'a ouverte.
+      if (visionneuse) el.setAttribute('id', idGalerie);
+
+      images.forEach((src, rang) => {
+        const vignette = doc.createElement('img');
+        vignette.setAttribute('src', src);
+        vignette.setAttribute('alt', '');
+        vignette.setAttribute('loading', 'lazy');
+        vignette.style.cssText = `width:100%;height:${hauteur}px;`
+          + 'object-fit:cover;display:block;';
+        if (!visionneuse) { el.appendChild(vignette); return; }
+
+        const ouvrir = doc.createElement('a');
+        ouvrir.setAttribute('href', '#' + idVue(rang));
+        ouvrir.setAttribute('aria-label', `Agrandir la photo ${rang + 1}`);
+        ouvrir.style.cssText = 'display:block;overflow:hidden;';
+        ouvrir.appendChild(vignette);
+        el.appendChild(ouvrir);
+      });
+
+      if (visionneuse) {
+        const regles = [];
+        images.forEach((src, rang) => {
+          const vue = doc.createElement('div');
+          vue.setAttribute('id', idVue(rang));
+          // `hidden` plutôt qu'une règle de la feuille : sans la feuille, la
+          // visionneuse reste fermée au lieu d'étaler les photos en pleine
+          // page les unes sous les autres. Et rien n'est perdu — les mêmes
+          // photos sont déjà dans la grille, juste au-dessus.
+          vue.setAttribute('hidden', '');
+          vue.style.cssText = 'position:fixed;inset:0;z-index:9000;padding:22px;'
+            + 'align-items:center;justify-content:center;background:rgba(8,8,10,.92);';
+
+          // Cliquer à côté referme : c'est le geste qu'on fait sans y penser.
+          // Mais ce lien-là double la croix, qui dit déjà la même chose : le
+          // laisser dans l'ordre de lecture ferait annoncer « Fermer » deux
+          // fois à qui n'a que la voix pour naviguer.
+          const fond = doc.createElement('a');
+          fond.setAttribute('href', '#' + idGalerie);
+          fond.setAttribute('aria-hidden', 'true');
+          fond.setAttribute('tabindex', '-1');
+          fond.style.cssText = 'position:absolute;inset:0;';
+          vue.appendChild(fond);
+
+          const grande = doc.createElement('img');
+          grande.setAttribute('src', src);
+          grande.setAttribute('alt', '');
+          grande.style.cssText = 'position:relative;max-width:94%;max-height:84vh;'
+            + 'width:auto;height:auto;object-fit:contain;';
+          vue.appendChild(grande);
+
+          const commande = (signe, libelle, cible, place) => {
+            const lien = doc.createElement('a');
+            lien.setAttribute('href', '#' + cible);
+            lien.setAttribute('aria-label', libelle);
+            lien.textContent = signe;
+            lien.style.cssText = 'position:absolute;' + place
+              + ';display:flex;align-items:center;justify-content:center;'
+              + 'width:44px;height:44px;color:#fff;text-decoration:none;'
+              + 'font-size:27px;line-height:1;';
+            vue.appendChild(lien);
+          };
+          commande('×', 'Fermer', idGalerie, 'top:8px;right:8px');
+          if (images.length > 1) {
+            const avant = (rang - 1 + images.length) % images.length;
+            const apres = (rang + 1) % images.length;
+            commande('‹', 'Photo précédente', idVue(avant), 'left:4px;top:50%;margin-top:-22px');
+            commande('›', 'Photo suivante', idVue(apres), 'right:4px;top:50%;margin-top:-22px');
+          }
+          el.appendChild(vue);
+          regles.push(`#${idVue(rang)}:target{display:flex}`);
+        });
+        el.insertBefore(feuilleDe(doc, regles), el.firstChild);
+      }
+      break;
+    }
+
+    case 'chiffres': {
+      el = doc.createElement('div');
+      const entrees = lignesDe(p.items);
+      if (!entrees.length) {
+        el.appendChild(placeholder(doc, 'Une ligne par chiffre : 400 | chantiers livrés'));
+        break;
+      }
+      grilleSouple(el, Math.max(120, Number(p.largeurMini) || 180), Math.max(0, p.gap ?? 24));
+
+      for (const ligne of entrees) {
+        const [valeur, ...libelle] = champsDe(ligne);
+        const bloc = doc.createElement('div');
+        appliquerAlignement(bloc, p.align || 'center');
+
+        const nombre = doc.createElement('strong');
+        nombre.textContent = remplacerJetons(valeur);
+        // En `em` et non en pixels : la taille suit celle réglée sur le bloc,
+        // donc une surcharge de format d'écran la fait suivre avec elle.
+        nombre.style.cssText = 'display:block;font-size:2.7em;line-height:1.05;';
+        bloc.appendChild(nombre);
+
+        const mot = doc.createElement('span');
+        mot.textContent = remplacerJetons(libelle.join(' | '));
+        mot.style.cssText = 'display:block;margin-top:8px;font-size:.78em;'
+          + 'letter-spacing:.14em;text-transform:uppercase;opacity:.72;';
+        bloc.appendChild(mot);
+        el.appendChild(bloc);
+      }
+      break;
+    }
+
+    case 'tarifs': {
+      el = doc.createElement('div');
+      const offres = lignesDe(p.items);
+      if (!offres.length) {
+        el.appendChild(placeholder(doc,
+          'Une ligne par offre : Nom | Prix | Mention | avantage ; avantage | adresse'));
+        break;
+      }
+      grilleSouple(el, Math.max(200, Number(p.largeurMini) || 240), Math.max(0, p.gap ?? 22));
+
+      const enAvant = parseInt(p.enAvant, 10);
+      offres.forEach((ligne, rang) => {
+        const [nom, prix, mention, avantages, adresse] = champsDe(ligne);
+        const distinguee = rang + 1 === enAvant;
+        const colonne = doc.createElement('div');
+        // Un trait plus net, et rien d'autre : une couleur inventée ici
+        // jurerait avec la charte du site, que le module ne connaît pas.
+        colonne.style.cssText = 'display:flex;flex-direction:column;gap:12px;padding:26px 24px;'
+          + (distinguee ? 'border:2px solid currentColor;' : 'border:1px solid rgba(128,128,128,.3);');
+
+        if (distinguee && String(p.etiquetteAvant ?? '').trim()) {
+          const marque = doc.createElement('p');
+          marque.textContent = remplacerJetons(p.etiquetteAvant);
+          marque.style.cssText = 'margin:0;font-size:.7em;letter-spacing:.16em;'
+            + 'text-transform:uppercase;opacity:.75;';
+          colonne.appendChild(marque);
+        }
+
+        const titre = doc.createElement('h3');
+        titre.textContent = remplacerJetons(nom || '');
+        titre.style.margin = '0';
+        colonne.appendChild(titre);
+
+        if (prix) {
+          const montant = doc.createElement('p');
+          montant.textContent = remplacerJetons(prix);
+          montant.style.cssText = 'margin:0;font-size:2em;line-height:1.1;font-weight:600;';
+          colonne.appendChild(montant);
+        }
+        if (mention) {
+          const sous = doc.createElement('p');
+          sous.textContent = remplacerJetons(mention);
+          sous.style.cssText = 'margin:0;font-size:.9em;opacity:.72;';
+          colonne.appendChild(sous);
+        }
+
+        const liste = doc.createElement('ul');
+        liste.style.cssText = 'margin:0;flex:1;';
+        for (const avantage of String(avantages ?? '').split(';')) {
+          if (!avantage.trim()) continue;
+          const item = doc.createElement('li');
+          item.textContent = remplacerJetons(avantage.trim());
+          liste.appendChild(item);
+        }
+        if (liste.childNodes.length) colonne.appendChild(liste);
+
+        const href = safeUrl(adresse);
+        const libelle = String(p.libelle ?? '').trim();
+        if (href && libelle) {
+          const action = doc.createElement('a');
+          action.setAttribute('href', href);
+          action.textContent = remplacerJetons(libelle);
+          colonne.appendChild(action);
+        }
+        el.appendChild(colonne);
+      });
+      break;
+    }
+
+    case 'reseaux': {
+      el = doc.createElement('nav');
+      el.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;align-items:center;';
+      appliquerAlignement(el, p.align);
+      if (p.align === 'center') el.style.justifyContent = 'center';
+      if (p.align === 'right') el.style.justifyContent = 'flex-end';
+
+      const taille = Math.max(12, Math.min(72, Number(p.taille) || 22));
+      const rayon = p.forme === 'carre' ? '9px' : '50%';
+      for (const ligne of lignesDe(p.liens)) {
+        const [mot, adresse] = champsDe(ligne);
+        const marque = marqueDe(mot);
+        // Un mot qu'on ne sait pas dessiner ne donne pas une icône vide : il
+        // ne donne rien, et la ligne suivante est traitée.
+        if (!marque) continue;
+
+        const href = safeUrl(adresse);
+        const lien = doc.createElement(href ? 'a' : 'span');
+        if (href) lien.setAttribute('href', href);
+        lien.setAttribute('title', nomDeMarque(marque));
+        // L'icône est un dessin : sans nom accessible, le lien serait annoncé
+        // « lien » et rien de plus.
+        lien.setAttribute('aria-label', nomDeMarque(marque));
+        lien.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;'
+          + 'color:inherit;text-decoration:none;'
+          + (p.forme === 'nu' ? '' : `width:${taille * 2}px;height:${taille * 2}px;`
+            + `border:1px solid currentColor;border-radius:${rayon};`);
+        lien.appendChild(tracerMarque(doc, marque, taille));
+        el.appendChild(lien);
+      }
+      if (!el.childNodes.length) {
+        el.appendChild(placeholder(doc, 'Une ligne par réseau : instagram | https://…'));
+      }
       break;
     }
 

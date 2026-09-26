@@ -225,11 +225,92 @@ export function createInspector({ vue, t, actions }) {
             onclick: () => { ecrire(a); render(selection); },
           }, t('align_' + a)))));
 
+      // Une ligne qui a une forme — « Question | Réponse » — est indevinable
+      // devant un cadre vide. L'exemple et la phrase d'aide font donc partie
+      // du contrôle, au même titre que le cadre lui-même.
       case 'lines':
-        return champ(t(f.label), h('textarea', {
-          class: 'textarea', value: valeur ?? '',
-          oninput: (e) => ecrire(e.target.value),
-        }));
+        return champ(t(f.label), h('div', {},
+          h('textarea', {
+            class: 'textarea', value: valeur ?? '', placeholder: f.placeholder || '',
+            oninput: (e) => ecrire(e.target.value),
+          }),
+          f.hint ? h('p', { class: 'hint', style: { margin: '6px 0 0' } }, t(f.hint)) : null,
+        ));
+
+      /**
+       * Une liste d'images, rangée comme un réglage multiligne : une adresse
+       * par ligne. Le stockage est donc celui d'un champ texte — rien de
+       * nouveau ne descend jusqu'à la publication — mais le client, lui, voit
+       * ses photos, les remonte et les retire.
+       */
+      case 'images': {
+        const liste = String(valeur ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+        const poser = (suivante) => { ecrire(suivante.join('\n')); render(selection); };
+        const petitBouton = (nomIcone, libelle, onclick, desactive = false) => h('button', {
+          class: 'btn btn--icon', type: 'button', title: libelle, disabled: desactive,
+          style: { padding: '2px 5px' }, onclick,
+        }, icon(nomIcone, 11));
+
+        const vignette = (src, rang) => h('div', { style: { position: 'relative' } },
+          h('img', {
+            src: safeImageUrl(src) || '', alt: '',
+            style: {
+              width: '100%', height: '58px', objectFit: 'cover', display: 'block', borderRadius: '4px',
+            },
+          }),
+          h('div', {
+            class: 'row',
+            style: { position: 'absolute', bottom: '3px', right: '3px', gap: '3px', width: 'auto' },
+          },
+          petitBouton('left', t('imagesAvant'), () => {
+            const suivante = liste.slice();
+            suivante.splice(rang - 1, 0, ...suivante.splice(rang, 1));
+            poser(suivante);
+          }, rang === 0),
+          petitBouton('trash', t('remove'), () => poser(liste.filter((_, i) => i !== rang))),
+          ),
+        );
+
+        const fichier = h('input', {
+          type: 'file', accept: 'image/*', multiple: true, style: { display: 'none' },
+          onchange: async (e) => {
+            const choisis = Array.from(e.target.files || []);
+            e.target.value = '';
+            if (!choisis.length) return;
+            const ajoutees = [];
+            for (const image of choisis) ajoutees.push((await actions.upload(image)).url);
+            poser([...liste, ...ajoutees]);
+          },
+        });
+
+        return h('div', {},
+          liste.length
+            ? h('div', {
+              style: {
+                display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '5px', marginBottom: '9px',
+              },
+            }, liste.map(vignette))
+            : h('p', { class: 'hint', style: { marginTop: '0' } }, t('imagesVide')),
+          h('div', { class: 'row', style: { marginBottom: '11px' } },
+            h('button', {
+              class: 'btn', type: 'button', onclick: () => fichier.click(),
+            }, icon('upload', 13), t('chooseFile')),
+            h('button', {
+              class: 'btn', type: 'button',
+              onclick: () => actions.pickMedia((item) => poser([...liste, item.url]), 'image'),
+            }, icon('folder', 13), t('library')),
+          ),
+          fichier,
+          champ(t(f.label), h('div', {},
+            h('textarea', {
+              class: 'textarea', value: liste.join('\n'), placeholder: '/images/photo.jpg',
+              oninput: (e) => ecrire(e.target.value),
+            }),
+            f.hint ? h('p', { class: 'hint', style: { margin: '6px 0 0' } }, t(f.hint)) : null,
+          )),
+        );
+      }
 
       case 'richtext':
         return champ(t(f.label), h('textarea', {
