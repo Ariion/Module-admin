@@ -352,6 +352,7 @@ sites/{siteId}/pages/{pageId}      contenu PUBLIÉ      lecture publique
 sites/{siteId}/drafts/{pageId}     brouillon           éditeurs du site
 sites/{siteId}/revisions/{revId}   historique          éditeurs du site
 sites/{siteId}/media/{mediaId}     bibliothèque média  éditeurs du site
+sites/{siteId}/messages/{msgId}    messages reçus      CRÉATION publique
 sites/{siteId}/members/{uid}       accès client        { role: owner|editor }
 superadmins/{uid}                  accès global du prestataire
 ```
@@ -481,6 +482,10 @@ restent converties en URL d'intégration, seuls hébergeurs acceptés.
   balises de mise en forme.
 - **Cloisonnement par les règles**, pas par le code client. Le module ne
   décide de rien : c'est Firestore qui refuse.
+- **Un seul point d'écriture ouvert**, et sa forme est vérifiée. Le formulaire
+  de contact autorise un visiteur non authentifié à CRÉER un message —
+  jamais à en lire, modifier ni supprimer un. Les règles exigent en retour les
+  dix clés attendues et rien d'autre, chacune du bon type et bornée. Voir §9.
 
 ---
 
@@ -554,6 +559,117 @@ décalés.
 *Nuance :* l'export manuel est une re-sérialisation du DOM au moment du clic.
 Le contenu est fidèle, l'indentation d'origine ne l'est pas.
 
+*Une exception, déclarée :* une page portant un formulaire de contact garde la
+balise `<script>` qui porte l'envoi, et les attributs `data-formulaire-*` qui
+disent où écrire. C'est ce qui fait qu'un formulaire publié reste un
+formulaire une fois le module retiré. Voir §9.
+
+## 9. Formulaire de contact et boîte de réception
+
+Un site vitrine sans formulaire n'est pas un site vitrine. C'est pourtant
+l'élément le plus difficile à poser ici, pour une raison précise : **tout le
+reste du contenu publié se passe de script**. Un titre figé dans le HTML est
+un titre. Un formulaire, lui, a besoin de quelqu'un pour porter l'envoi — et
+ce quelqu'un doit tenir dans la page, puisque le module doit rester retirable.
+
+### Le partage
+
+| Ce qui vit où | Quoi |
+|---|---|
+| Dans le balisage publié | Un `<form>` sémantique et sans classes, plus des attributs `data-formulaire-*` : la destination (projet, base, site), le remerciement, le message d'échec. |
+| Dans le `<head>` publié | **Une** balise `<script>` (`admin-formulaire`), une quarantaine de lignes, aucun import. Posée par le modèle, comme la feuille du thème ou celle des effets. |
+| Nulle part ailleurs | Aucun fichier à charger, aucun SDK, aucun service tiers, aucun serveur de courriel. |
+
+Les attributs ne portent **pas** le préfixe `data-admin-`, et c'est
+volontaire : la régénération du HTML et l'export manuel effacent ce préfixe,
+et effaceraient donc l'adresse de la boîte de réception. Le script, lui, n'est
+pas paramétré — il lit tout sur le formulaire qu'il traite. Formulaire et
+destination sont ainsi inséparables, et le même script sert tous les sites.
+
+C'est la seule exception à « l'export ne garde plus une occurrence du mot
+admin » : une page portant un formulaire garde cette balise et son
+identifiant. Sans elle, le formulaire publié serait un dessin de formulaire.
+
+### L'envoi
+
+L'API REST de Firestore, comme la lecture du contenu publié : `POST` sur
+`sites/{siteId}/messages`, sans identifiants, sans SDK. La clé d'API figure
+dans le HTML — elle est déjà servie à tous les visiteurs dans
+`admin-config.js`, et ce ne sont pas les clés qui protègent une base Firebase,
+ce sont les règles.
+
+La validation est celle du navigateur (`required`, `type="email"`) : traduite
+dans la langue du visiteur, debout avant qu'aucun script ne soit chargé. Le
+script la revérifie avant d'envoyer, pour le cas d'un envoi programmatique.
+
+Si quoi que ce soit échoue — réseau coupé, règles qui refusent, base absente —
+la page reste celle qu'elle était et le visiteur lit une phrase sous le
+bouton. Dans l'éditeur (`?admin-preview`, `?admin-bake`) rien ne part : le
+client voit son remerciement, sa boîte ne se remplit pas d'essais.
+
+Un message déposé :
+
+```json
+{
+  "page": "/contact.html",
+  "formulaire": "w_m3k2x1",
+  "nom": "Camille Rey", "courriel": "camille@exemple.fr", "telephone": "",
+  "message": "Bonjour, vos tarifs pour juin ?",
+  "cases": "Être rappelé", "liste": "Un devis",
+  "envoye": 1757030400000,
+  "lu": false
+}
+```
+
+### La règle, et ce qu'elle refuse
+
+Les champs du formulaire sont un **catalogue fermé** (nom, courriel,
+téléphone, message, cases, liste). Ce n'est pas une limitation subie : c'est
+ce qui permet aux règles de connaître les dix clés du document, donc de
+refuser tout le reste. Un formulaire à champs libres obligerait à accepter des
+clés inconnues — c'est-à-dire à laisser n'importe qui écrire n'importe quoi
+dans la base du client.
+
+```
+match /messages/{messageId} {
+  allow create: if formeAttendue();          // les dix clés, typées, bornées
+  allow read, update, delete: if canEdit(siteId);
+}
+```
+
+Ce qui est refusé, et pourquoi :
+
+| Refusé | Pourquoi |
+|---|---|
+| `read` | un visiteur qui pourrait lire lirait les noms, les adresses et les demandes des clients du client. |
+| `update` | un message reçu ne se réécrit pas : sinon on vide le message qu'on vient d'envoyer, ou on marque lu ce que le client n'a pas lu. |
+| `delete` | personne n'effacerait ses traces. |
+| Une clé de plus | on stockerait le champ inventé par le premier curieux. |
+| Un champ trop long | 5 000 caractères pour le message, 200 pour une adresse. Les bornes sont celles de `admin/core/formulaire.js`, que le script applique en tronquant. |
+| `lu: true` à la création | l'état de lecture appartient au client, et à lui seul. |
+| Un horodatage fantaisiste | borné à deux jours autour de l'heure du serveur : sans cela, un envoi daté de l'an 3000 resterait en tête de la boîte pour toujours. |
+| Un document entièrement vide | ce n'est pas un message, c'est du remplissage. |
+
+### La boîte de réception
+
+Rubrique « Messages » du back-office : lister, lire, marquer lu, supprimer.
+Répondre se fait depuis son courrielleur, par le lien posé sur l'adresse du
+visiteur. La rubrique ne s'allume pas d'elle-même — elle vient avec le genre
+« on me contacte », ou se coche dans les paramètres : une boîte vide sur un
+site qui n'a pas de formulaire est une question de plus à se poser.
+
+Rien n'y est jamais rendu en HTML. Tout ce qui s'y affiche a été écrit par un
+inconnu non authentifié : on ne pose que du texte, jamais de balise.
+
+`npm run essai-formulaire` éprouve le tout dans un vrai navigateur, Firestore
+bouchonné : le rendu et ses réglages, le refus d'un envoi incomplet, la charge
+exacte envoyée, le formulaire du développeur qui n'est pas détourné, la panne
+de la base qui laisse la page intacte — et surtout la page réellement figée
+par l'export, rechargée dans un cadre qui ne charge aucun fichier du module,
+d'où l'envoi part quand même.
+
+---
+
 ## Limites connues
 
 | Limite | Détail |
@@ -568,4 +684,7 @@ Le contenu est fidèle, l'indentation d'origine ne l'est pas.
 | Une page = un document | Au-delà de ~1 Mo de contenu modifié sur une seule page, il faudrait découper. Très au-delà d'un site vitrine. |
 | Bref clignotement | Sans réécriture du HTML, le texte d'origine peut apparaître un instant avant le contenu publié sur une page jamais visitée. Le cache local supprime l'effet dès la deuxième visite ; la réécriture le supprime définitivement. |
 | Réécriture et hébergement | La réécriture automatique demande PHP. Sur un statique pur (Netlify), seul l'export manuel est disponible. |
+| Formulaire : volume d'envois | **Aucune règle Firestore ne sait limiter un débit.** Qui connaît l'adresse de la page connaît la clé publique et peut donc déposer des milliers de messages conformes. Les règles bornent la TAILLE de chacun, pas leur NOMBRE. Réponses hors module, par ordre de coût : activer App Check sur Firestore, passer l'écriture par `admin-endpoint.php`, ou poser un quota Firebase. L'appât posé dans le formulaire n'écarte que les robots qui remplissent les champs d'une vraie page. |
+| Formulaire : horloge du visiteur | L'horodatage vient du navigateur. Un poste déréglé de plus de deux jours voit son envoi refusé par les règles — le formulaire affiche alors son message d'échec, lisible, et le visiteur peut réessayer. |
+| Formulaire : ni pièce jointe ni notification | Un message est du texte. Pas de fichier joint (il faudrait ouvrir Storage à l'écriture publique), et rien n'avertit le client : il faut ouvrir la rubrique Messages. |
 | Copie de référence publique | `page.src.html` est lisible par quiconque connaît l'URL. Elle ne contient que le code du site, déjà public — mais aussi le contenu d'avant les modifications du client. |
