@@ -190,12 +190,18 @@ export const PAGE_TEMPLATES = [
       section([
         w('columns', { count: 2, gap: 40 }, [
           [
+            // Un vrai formulaire, pas un lien `mailto:` : le lien suppose un
+            // logiciel de courrier configuré, ce que la moitié des visiteurs
+            // n'a pas, et il met l'adresse du client à la portée des robots.
+            w('heading', { text: 'Écrivez-nous', level: 'h3' }),
+            w('formulaire', {}),
+          ],
+          [
             w('heading', { text: 'Coordonnées', level: 'h3' }),
             w('list', { items: 'Adresse : 1 rue de l’Exemple\nTéléphone : 00 00 00 00 00\nCourriel : contact@exemple.fr' }),
             w('spacer', { height: 12 }),
-            w('button', { text: 'Écrire un message', href: 'mailto:contact@exemple.fr' }),
+            w('map', { query: '', height: 280 }),
           ],
-          [w('map', { query: '', height: 320 })],
         ]),
       ]),
       section([
@@ -442,7 +448,7 @@ export const INTENTIONS = [
   { id: 'portfolio', modele: 'portfolio', allume: ['contenus'] },
   { id: 'histoire', modele: 'apropos', allume: [] },
   { id: 'article', modele: 'article', allume: ['contenus'] },
-  { id: 'contact', modele: 'contact', allume: [] },
+  { id: 'contact', modele: 'contact', allume: ['messages'] },
 ];
 
 /**

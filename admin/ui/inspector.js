@@ -184,6 +184,10 @@ export function createInspector({ vue, t, actions }) {
      * « moyenne », « 1-2 » — ce qui ne veut rien dire pour le client. On
      * cherche une traduction, et on retombe sur la valeur s'il n'y en a pas.
      */
+    // `labelOptions` sert quand plusieurs réglages partagent le même jeu de
+    // choix : six champs de formulaire valent « absent / facultatif /
+    // obligatoire », et recopier trois traductions par champ serait la
+    // garantie qu'un jour l'une manque.
     const libelleOption = (base, option) => {
       const cle = `${base}_${option}`;
       const traduit = t(cle);
@@ -202,7 +206,7 @@ export function createInspector({ vue, t, actions }) {
           class: 'input', onchange: (e) => ecrire(e.target.value),
         }, f.options.map((o) => h('option', {
           value: o, selected: String(o) === String(valeur),
-        }, libelleOption(f.label, o)))));
+        }, libelleOption(f.labelOptions || f.label, o)))));
 
       case 'number':
         return champ(t(f.label), h('input', {

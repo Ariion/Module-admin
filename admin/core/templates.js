@@ -142,6 +142,19 @@ export const TEMPLATES = [
       ]),
     ]),
   },
+  {
+    // Le bloc qui manquait : un formulaire posé en une fois, avec son titre.
+    // Poser l'élément seul marche aussi, mais personne ne pense à mettre un
+    // titre au-dessus — et un formulaire sans titre ressemble à un accident.
+    id: 'formulaire',
+    colonnes: [1],
+    build: () => section([
+      w('heading', { text: 'Écrivez-nous', level: 'h2' }),
+      w('text', { html: 'Une phrase pour dire sous quel délai vous répondez.' }),
+      w('spacer', { height: 16 }),
+      w('formulaire', {}),
+    ]),
+  },
 ];
 
 export function findTemplate(id) {
