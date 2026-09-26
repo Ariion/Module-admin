@@ -14,6 +14,7 @@
  */
 import { h, icon } from './el.js';
 import { openModal } from './modal.js';
+import { VERSION } from '../version.js';
 
 /**
  * Les groupes, dans l'ordre où on en a besoin.
@@ -78,6 +79,12 @@ export function openOutils({ root, t, actions }) {
       ));
     }
   }
+
+  // La version, en pied de liste. Elle n'est pas décorative : quand un client
+  // signale un défaut, la première question est « quelle version tournez-vous
+  // ? », et jusqu'ici personne ne pouvait y répondre sans ouvrir un fichier.
+  // Volontairement sans traduction : un numéro se lit dans toutes les langues.
+  corps.appendChild(h('p', { class: 'outils__version' }, 'Module admin ' + VERSION));
 
   return modal;
 }

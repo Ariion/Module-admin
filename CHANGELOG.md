@@ -1,5 +1,36 @@
 # Journal des versions
 
+## 1.25.1
+
+**Savoir quelle version tourne où**
+
+Le module vit maintenant sur plusieurs sites, et il s'y met à jour à la
+main. Sans moyen de savoir ce qui tourne où, deux accidents guettent — et
+les deux sont arrivés : on croit un site en retard alors qu'il est en
+**avance**, quelqu'un y ayant corrigé quelque chose, et on écrase la
+correction en « mettant à jour ».
+
+**Le module dit sa version.** `admin/version.js` est servi tel quel par
+l'hébergement : la réponse tient en une commande, sans ouvrir le site ni se
+connecter. Et la ligne apparaît en pied du panneau « Outils », parce que la
+première question posée à un client qui signale un défaut est « quelle
+version tournez-vous ? » — et que personne ne pouvait y répondre.
+
+**`npm run sync` compare.** Avec l'adresse d'un site, il va chercher chacun
+des fichiers du module et compare les empreintes. Il répond donc à la
+question que le numéro de version ne sait pas traiter : *le site a le même
+numéro, mais quelqu'un y a-t-il touché ?* La sortie nomme les fichiers qui
+diffèrent, et dit qu'un fichier différent peut être en avance — à regarder
+avant de le remplacer. L'outil ne modifie rien ; décider reste humain.
+
+Un site posé avant ce marqueur n'a pas de `admin/version.js` : la
+comparaison fichier par fichier reste valable, et l'outil le dit.
+
+**Le paquet et la livraison refusent une version qui se ment.** Si
+`package.json` et `admin/version.js` divergent, rien n'est fabriqué :
+livrer un module qui se présente sous une version qu'il n'a pas
+reconduirait exactement le problème que le marqueur devait résoudre.
+
 ## 1.25.0
 
 **Un réglage par format d'écran**

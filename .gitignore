@@ -5,3 +5,6 @@ test-tmp/
 .essai-local/
 paquet/
 livraison/
+
+# Worktrees des agents : dossiers de travail, jamais du contenu de dépôt.
+.claude/worktrees/

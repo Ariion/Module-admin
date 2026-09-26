@@ -369,6 +369,11 @@ button, input, textarea, select { font: inherit; color: inherit; }
 }
 .seg__btn--marque[aria-pressed="true"]::after { background: #fff; }
 .hint--fort { color: var(--accent-hi, var(--accent)); font-weight: 500; }
+.outils__version {
+  margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line-soft);
+  color: var(--faint); font-size: 11px; text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
 .field--surcharge .field__label {
   display: flex; align-items: center; justify-content: space-between; gap: 6px;
 }

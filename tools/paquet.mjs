@@ -19,8 +19,18 @@
 import { cpSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verifierVersion } from './sync.mjs';
 
 const racine = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+// Un module qui se présente sous une version qu'il n'a pas reconduit très
+// exactement le problème que le marqueur devait résoudre : on refuse de
+// fabriquer quoi que ce soit tant que les deux déclarations divergent.
+const coherence = verifierVersion();
+if (!coherence.ok) {
+  console.error('\n  ' + coherence.message + '\n');
+  process.exit(1);
+}
 
 const args = new Map(process.argv.slice(2)
   .filter((a) => a.startsWith('--'))
