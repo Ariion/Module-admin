@@ -335,20 +335,30 @@ export function cssDuTheme(theme, portee = 'site', marque = null) {
     .map((s) => (blocs ? `[data-admin-section] ${s.trim()}` : s.trim()))
     .join(', ');
 
+  // Les noms COURTS — `--accent`, `--fond`, `--trait`… — ne sont pas
+  // préfixés, donc ils peuvent déjà exister chez le client : un site écrit à
+  // la main en français a toutes les chances d'avoir son propre `--accent`.
+  // Les poser sur `:root` revient à les lui prendre, puisque la feuille du
+  // module est injectée après la sienne.
+  //
+  // En portée « site », c'est justement ce qu'on veut : le thème EST le style
+  // de la page, et la page de départ livrée avec le module est écrite sur ces
+  // noms-là pour suivre l'ambiance. En portée « blocs », on a promis
+  // l'inverse — alors on les descend dans les sections du module, où elles
+  // servent sans rien prendre à personne.
+  const alias = `--fond:${c.fond}; --fond-doux:${c.fondDoux}; --encre:${c.encre}; --doux:${c.doux};
+  --trait:${c.trait}; --accent:${c.accent}; --secondaire:${secondaire}; --largeur:${r.largeur}px;`;
+
   const regles = [
-    // Les variables servent aussi de passerelle : la page de départ livrée
-    // avec le module est écrite sur ces noms-là, donc elle suit le thème
-    // jusque dans ses propres règles.
     `:root{
   --admin-fond:${c.fond}; --admin-fond-doux:${c.fondDoux}; --admin-encre:${c.encre};
   --admin-doux:${c.doux}; --admin-trait:${c.trait}; --admin-accent:${c.accent};
   --admin-sur-accent:${c.surAccent}; --admin-accent-rgb:${canaux(c.accent)};
   --admin-secondaire:${secondaire};
   --admin-largeur:${r.largeur}px; --admin-rayon:${f.rayon}px;
-  --admin-police-titres:${titres}; --admin-police-textes:${textes};
-  --fond:${c.fond}; --fond-doux:${c.fondDoux}; --encre:${c.encre}; --doux:${c.doux};
-  --trait:${c.trait}; --accent:${c.accent}; --secondaire:${secondaire}; --largeur:${r.largeur}px;
+  --admin-police-titres:${titres}; --admin-police-textes:${textes};${blocs ? '' : '\n  ' + alias}
 }`,
+    blocs ? `[data-admin-section]{\n  ${alias}\n}` : '',
 
     `${racine}{
   background:${c.fond}; color:${c.encre};

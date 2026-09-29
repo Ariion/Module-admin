@@ -328,6 +328,25 @@ du contenu, avec le rôle `style`, et retrouvées par le chemin de l'élément :
 le scanner ne remonte pas les conteneurs, un résolveur direct par chemin prend
 le relais. Celles des widgets vivent dans leur arbre.
 
+Les variables de l'ambiance sont publiées sous deux jeux de noms. Les noms
+**préfixés** (`--admin-accent`, `--admin-fond`…) sont posés sur `:root` dans
+les deux portées : ils sont à nous, personne d'autre ne les emploie. Les noms
+**courts** (`--accent`, `--fond`, `--trait`…) ne sont pas préfixés, donc ils
+peuvent déjà exister chez le client — un site écrit à la main en français a
+toutes les chances d'avoir son propre `--accent`, et la feuille du module est
+injectée après la sienne. En portée « site » ils sont posés sur `:root`, et
+c'est le but : le thème EST le style de la page. En portée « blocs » ils
+descendent dans `[data-admin-section]`, où ils servent les blocs du module
+sans rien prendre au client.
+
+La page de départ livrée avec le module demande les variables par leur nom
+préfixé, avec sa propre valeur en repli (`var(--admin-accent, #15181d)`) :
+elle suit donc l'ambiance sans avoir besoin qu'on lui prenne les siennes, et
+garde ses couleurs quand aucune ambiance n'est posée.
+
+`npm run essai-portee` mesure cela sur le site de démonstration du dépôt, qui
+définit ses propres couleurs comme le ferait un vrai client.
+
 #### Formats d'écran
 
 Un réglage peut prendre **une valeur par format** (`core/ecrans.js`). Le format

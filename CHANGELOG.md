@@ -1,5 +1,36 @@
 # Journal des versions
 
+## 1.28.1
+
+**La portée « blocs » tient enfin sa promesse**
+
+« Sur les parties ajoutées seulement — le code du client n'est pas touché » :
+c'est la promesse centrale du module, et elle était fausse sur un point.
+
+L'ambiance publiait ses couleurs sous deux jeux de noms : les nôtres
+(`--admin-accent`) et des noms courts (`--accent`, `--fond`, `--trait`…).
+Les seconds étaient posés sur `:root` dans les deux portées. Or un site
+écrit à la main en français a toutes les chances d'avoir son propre
+`--accent`, et la feuille du module est injectée après la sienne : elle la
+lui prenait, y compris en mode prudent.
+
+Ce n'était pas une hypothèse. Le site de démonstration de ce dépôt définit
+`--accent: #b1855b` ; en portée « blocs », il devenait `#15181d`. Mesuré
+dans un navigateur, pas déduit du code.
+
+Les noms courts descendent désormais dans `[data-admin-section]` quand la
+portée est « blocs » : ils servent les blocs du module et ne prennent plus
+rien à personne. En portée « site », ils restent sur `:root` — là, remplacer
+le style de la page est précisément ce qu'on demande.
+
+La page de départ livrée avec le module demande maintenant les variables par
+leur nom préfixé, avec sa propre valeur en repli. Elle suit l'ambiance sans
+avoir besoin qu'on lui prenne les siennes, et garde ses couleurs quand
+aucune ambiance n'est posée.
+
+`npm run essai-portee` fixe la promesse en huit points, sur le site de
+démonstration du dépôt qui joue le rôle du client.
+
 ## 1.28.0
 
 **Un formulaire de contact, et la boîte qui va avec**

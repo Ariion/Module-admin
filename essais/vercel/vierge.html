@@ -9,13 +9,13 @@
      les sections ajoutées depuis l'éditeur. Modifiez ces valeurs pour donner
      son identité au site — tout le reste s'y accorde. */
   :root{
-    --encre:#15181d;
-    --doux:#5b6472;
-    --trait:#e5e8ec;
-    --fond:#ffffff;
-    --fond-doux:#f6f7f9;
-    --accent:#15181d;
-    --largeur:1060px;
+    --encre: var(--admin-encre, #15181d);
+    --doux: var(--admin-doux, #5b6472);
+    --trait: var(--admin-trait, #e5e8ec);
+    --fond: var(--admin-fond, #ffffff);
+    --fond-doux: var(--admin-fond-doux, #f6f7f9);
+    --accent: var(--admin-accent, #15181d);
+    --largeur: var(--admin-largeur, 1060px);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   body{
