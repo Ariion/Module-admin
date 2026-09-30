@@ -769,6 +769,48 @@ if ($action === 'create') {
     ok(['created' => true, 'path' => basename($cible['file'])]);
 }
 
+/**
+ * Fichiers de service écrits à la racine du site.
+ *
+ * Deux noms, et pas un de plus. C'est la liste elle-même qui fait
+ * l'autorisation : sans elle, « écrire un fichier à la racine » voudrait dire
+ * écrire n'importe quoi, y compris un .php — donc offrir l'hébergement au
+ * premier compte compromis. L'action `page` ne pouvait pas servir : elle exige
+ * un .html, la marque du module et une copie du code d'origine, ce qu'un plan
+ * du site n'a pas.
+ */
+$FICHIERS_SERVICE = ['sitemap.xml', 'robots.txt'];
+
+if ($action === 'fichier') {
+    currentUid($PROJECT_ID, $ALLOWED_UIDS);
+    if (!$ALLOW_BAKE) {
+        fail('L’écriture de fichiers est désactivée sur ce site.', 403);
+    }
+    $body = json_decode((string) file_get_contents('php://input'), true) ?: [];
+    $nom = basename(str_replace('\\', '/', (string) ($body['path'] ?? '')));
+    if (!in_array($nom, $FICHIERS_SERVICE, true)) {
+        fail('Ce fichier ne fait pas partie de ceux que le module écrit.');
+    }
+    $contenu = (string) ($body['content'] ?? '');
+    if ($contenu === '' || strlen($contenu) > 512 * 1024) {
+        fail('Contenu absent ou trop volumineux.');
+    }
+
+    $racine = realpath($SITE_ROOT);
+    if (!$racine) {
+        fail('Racine du site introuvable.', 500);
+    }
+    $cible = $racine . '/' . $nom;
+    $temp = $cible . '.tmp';
+    if (@file_put_contents($temp, $contenu) === false || !@rename($temp, $cible)) {
+        @unlink($temp);
+        fail('Écriture impossible : vérifiez les droits du dossier.', 500);
+    }
+    @chmod($cible, 0644);
+
+    ok(['written' => true, 'bytes' => strlen($contenu), 'path' => $nom]);
+}
+
 // La suppression d'une PAGE, à ne pas confondre avec « delete », qui retire
 // un média. Deux fichiers, deux dossiers, deux garde-fous : les mélanger
 // laisserait un chemin de page atteindre le dossier des médias.

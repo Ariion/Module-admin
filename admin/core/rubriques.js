@@ -36,6 +36,12 @@ export const RUBRIQUES = [
   // formulaire. Une boîte de réception vide sur un site qui n'en a pas est
   // une question de plus à se poser, pas un service.
   { id: 'messages', ecran: 'messages', icone: 'mail', groupe: 'contenu' },
+  // Le référencement ne se décoche pas, et c'est le seul choix tenable : un
+  // site publié est indexé que son propriétaire s'y intéresse ou non, et une
+  // page sans description existe pour les moteurs le jour même. Une rubrique
+  // qu'il faudrait d'abord découvrir dans les paramètres serait une rubrique
+  // que personne n'ouvre — donc un audit qui ne sert à rien.
+  { id: 'referencement', ecran: 'referencement', icone: 'search', groupe: 'visibilite', toujours: true },
   { id: 'apparence', ecran: 'apparence', icone: 'palette', groupe: 'allure', toujours: true },
   { id: 'reglages', ecran: 'reglages', icone: 'sliders', groupe: 'module', toujours: true },
 ];

@@ -168,6 +168,16 @@ export const BAKE_PARAM = 'admin-bake';
  */
 export const PREVIEW_PARAM = 'admin-preview';
 
+/**
+ * Paramètre d'URL qui désigne un constat d'audit.
+ *
+ * L'écran d'audit dit ce qui manque et où ; ce paramètre est ce qui lui permet
+ * d'y emmener. Il porte l'empreinte de l'élément fautif, et l'éditeur
+ * sélectionne celui-ci à l'ouverture. Sans lui, « voir sur la page » rouvrirait
+ * la page entière et laisserait chercher — c'est-à-dire ne servirait à rien.
+ */
+export const CONSTAT_PARAM = 'admin-constat';
+
 /** L'URL courante demande-t-elle un chargement passif du module ? */
 export function isPassive(search = location.search) {
   const params = new URLSearchParams(search);

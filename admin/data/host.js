@@ -78,6 +78,24 @@ export function createHost(config, backend) {
     },
 
     /**
+     * Écrit un fichier de service à la racine du site.
+     *
+     * L'action `page` ne pouvait pas servir, et c'est voulu : elle n'accepte
+     * que des `.html`, exige la marque du module dans le contenu reçu et une
+     * copie du code d'origine à côté. Trois garde-fous qui protègent les pages
+     * du client, et qu'un plan du site ne peut satisfaire — il n'est pas une
+     * page, il n'a pas de source, et personne ne l'a écrit à la main.
+     *
+     * La liste des noms permis est tenue par les deux terminaisons, pas ici :
+     * un contrôle qui vit dans le navigateur n'en est pas un.
+     */
+    async writeFichier(nom, contenu) {
+      const result = await call('fichier', { path: nom, content: contenu });
+      debug('fichier écrit', result.path, result.bytes, 'octets');
+      return result;
+    },
+
+    /**
      * Crée une page en copiant le code d'origine d'une autre.
      * La nouvelle page hérite donc de l'en-tête, du pied de page et du style
      * du site — c'est le seul moyen d'obtenir une page cohérente sans

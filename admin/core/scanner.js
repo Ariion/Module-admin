@@ -13,6 +13,25 @@ import { fingerprint } from './identity.js';
 const IGNORE_ATTR = 'data-admin-ignore';
 const UI_ATTR = 'data-admin-ui';
 
+/**
+ * Cet élément est-il hors du champ du module ?
+ *
+ * Exporté parce que l'audit parcourt le même arbre pour d'autres raisons — les
+ * niveaux de titre, les champs de formulaire — et doit écarter exactement les
+ * mêmes zones. Deux listes d'exclusions qui divergent, et l'audit reproche au
+ * client un défaut dans la barre d'outils du module.
+ */
+export function ignore(el, excludeSelector = '') {
+  if (NEVER.has(el.tagName)) return true;
+  if (el.hasAttribute(IGNORE_ATTR) || el.hasAttribute(UI_ATTR)) return true;
+  if (el.closest('[' + UI_ATTR + ']')) return true;
+  if (el.closest('[' + IGNORE_ATTR + ']')) return true;
+  if (excludeSelector) {
+    try { if (el.matches(excludeSelector)) return true; } catch { /* sélecteur invalide */ }
+  }
+  return false;
+}
+
 /** Champs lus dans le DOM pour chaque rôle. C'est aussi le format stocké. */
 export function readValue(el, role) {
   switch (role) {
@@ -77,16 +96,6 @@ export function scan(options = {}) {
   const found = [];
   const seen = new Set();
 
-  const skipped = (el) => {
-    if (NEVER.has(el.tagName)) return true;
-    if (el.hasAttribute(IGNORE_ATTR) || el.hasAttribute(UI_ATTR)) return true;
-    if (el.closest('[' + UI_ATTR + ']')) return true;
-    if (excludeSelector) {
-      try { if (el.matches(excludeSelector)) return true; } catch { /* sélecteur invalide */ }
-    }
-    return false;
-  };
-
   const add = (el, role) => {
     if (visibleOnly && !isVisible(el)) return;
     const print = fingerprint(el, role);
@@ -98,7 +107,7 @@ export function scan(options = {}) {
   };
 
   const walk = (el, textAllowed) => {
-    if (skipped(el)) return;
+    if (ignore(el, excludeSelector)) return;
 
     if (el.tagName === 'IMG') {
       if (el.getAttribute('src')) add(el, 'image');

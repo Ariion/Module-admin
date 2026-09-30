@@ -44,12 +44,13 @@ import { remettreAZero, remettreLeSiteAZero } from '../core/reset.js';
 import { redigerPage } from '../core/redacteur.js';
 import { prestationsDuBrief, themeSuggere } from '../core/brief.js';
 import { redigerAvecIA, cleLocale, poserCleLocale } from '../core/ia.js';
-import { PAGE_COMMUNE } from '../core/config.js';
+import { PAGE_COMMUNE, CONSTAT_PARAM } from '../core/config.js';
 import { openPages } from './pages-panel.js';
 import { createMedia } from '../media/index.js';
 import { createHost } from '../data/host.js';
 import { bakePage } from '../core/bake.js';
 import { cibleDEnvoi } from '../core/formulaire.js';
+import { planDuSite, robots, racineDe, referencementDe } from '../core/referencement.js';
 import { PageModel } from '../core/model.js';
 import { cacheKey } from '../core/config.js';
 import { pageKeyFromLocation } from '../core/dom.js';
@@ -1571,6 +1572,39 @@ export async function startEditor(runtime) {
     });
     if (orphans.length) notify(t('orphans', orphans.length), true);
     await hosting.writePage(html, chemin);
+    await deposerPlanDuSite();
+  }
+
+  /**
+   * Dépose le plan du site et le fichier robots après la page.
+   *
+   * Un échec ici ne remet rien en cause : la page est écrite, elle est en
+   * ligne, et un plan manquant ne se voit pas d'un visiteur. Faire échouer la
+   * publication pour ça reviendrait à annoncer au client que son texte n'est
+   * pas parti, alors qu'il l'est.
+   *
+   * Le plan est réécrit à CHAQUE publication, en entier. C'est le seul moyen
+   * qu'une page créée la semaine dernière y figure : rien ne tient la liste
+   * des pages à jour ailleurs que les réglages du site, et personne ne
+   * rouvrira un écran pour la régénérer à la main.
+   */
+  async function deposerPlanDuSite() {
+    const reglage = referencementDe(model.reglages);
+    if (reglage.plan === false) return;
+    const racine = racineDe(reglage.adresse);
+    if (!racine) return;
+    const pages = model.reglages?.pages || [];
+    const plan = planDuSite({
+      adresse: racine,
+      pages: pages.length ? pages.map((p) => ({ chemin: p.path })) : [{ chemin: 'index.html' }],
+    });
+    if (!plan) return;
+    try {
+      await hosting.writeFichier('sitemap.xml', plan);
+      await hosting.writeFichier('robots.txt', robots({ adresse: racine }));
+    } catch (err) {
+      debug('plan du site non écrit :', err?.message || err);
+    }
   }
 
   function history() {
@@ -1703,6 +1737,24 @@ export async function startEditor(runtime) {
         .catch(() => {});
     }
     proposerAssistant();
+    allerAuConstat();
+  }
+
+  /**
+   * Ouvre l'éditeur sur l'élément qu'un constat d'audit désigne.
+   *
+   * L'écran d'audit dit ce qui manque ET où : il passe l'empreinte de
+   * l'élément dans l'adresse, et on le sélectionne ici. Si l'empreinte ne
+   * répond plus — la page a changé depuis la vérification — on ne dit rien de
+   * plus que la page ouverte : le constat sera simplement absent de la
+   * prochaine analyse, et inventer une sélection au hasard serait pire.
+   */
+  function allerAuConstat() {
+    const demande = new URLSearchParams(location.search).get(CONSTAT_PARAM);
+    if (!demande) return;
+    const entry = model.entries.get(demande);
+    if (!entry) return;
+    select({ el: entry.el, entry }, { reveal: true });
   }
 
   return new Promise((resolve) => {

@@ -1,5 +1,44 @@
 # Journal des versions
 
+## 1.30.0
+
+**Référencement et accessibilité : le module dit enfin ce qui manque**
+
+Jusqu'ici le module ne connaissait du référencement que deux choses : le
+titre de la page et sa description. C'était tout.
+
+**Les métadonnées complètes**, écrites dans la page publiée et conservées
+une fois le module retiré : image de partage, adresse canonique, langue, et
+la fiche d'établissement en JSON-LD — le module connaît déjà le métier, la
+ville et l'enseigne, il ne les redemande pas. Un `sitemap.xml` et un
+`robots.txt` sont écrits à la publication, par la terminaison qui sait déjà
+écrire un fichier.
+
+**Un écran qui dit où, pas seulement quoi.** Vingt-et-une vérifications,
+énoncées en français et pas en jargon : « cette page n'a pas de
+description », « cette image n'a pas de texte de remplacement », « deux
+titres de niveau 1 », « ce lien ne dit pas où il mène », « ce champ n'a pas
+d'étiquette », « cette cible est trop petite pour un doigt ». Chaque constat
+dit où il se trouve. Un audit qui signale sans situer est une punition, pas
+un outil.
+
+**L'accessibilité est le même écran**, parce que ce sont les mêmes
+vérifications sur le même arbre. Le contraste est **calculé** selon WCAG,
+pas estimé : vérifié contre les valeurs de référence de la norme, y compris
+les gris limites où tout se joue.
+
+**Bloquant et souhaitable sont séparés**, et il n'y a **pas de note sur
+100** : un chiffre rond fait travailler pour le chiffre plutôt que pour le
+site.
+
+*Sous le capot.* L'audit s'appuie sur le scanner et le modèle de page
+existants plutôt que de réanalyser le HTML à sa façon — deux lectures du
+même document finiraient par ne plus dire la même chose. `npm run
+essai-audit` fixe cinquante-six points, dont les deux qui comptent le plus :
+sur une page volontairement fautive chaque défaut est trouvé, et sur une
+page correcte **aucun faux positif** — un audit qui crie pour rien ne sera
+plus jamais ouvert.
+
 ## 1.29.0
 
 **Le formulaire ne peut plus être noyé — là où c'est possible**
