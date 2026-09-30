@@ -696,8 +696,8 @@ ce quelqu'un doit tenir dans la page, puisque le module doit rester retirable.
 
 | Ce qui vit où | Quoi |
 |---|---|
-| Dans le balisage publié | Un `<form>` sémantique et sans classes, plus des attributs `data-formulaire-*` : la destination (projet, base, site), le remerciement, le message d'échec. |
-| Dans le `<head>` publié | **Une** balise `<script>` (`admin-formulaire`), une quarantaine de lignes, aucun import. Posée par le modèle, comme la feuille du thème ou celle des effets. |
+| Dans le balisage publié | Un `<form>` sémantique et sans classes, plus des attributs `data-formulaire-*` : la destination, le remerciement, le message d'échec. La destination est *soit* la base (projet, base, site) *soit* le relais posé sur l'hébergement du client — jamais les deux, voir « Le nombre d'envois » plus bas. |
+| Dans le `<head>` publié | **Une** balise `<script>` (`admin-formulaire`), une centaine de lignes commentaires compris, aucun import. Posée par le modèle, comme la feuille du thème ou celle des effets. |
 | Nulle part ailleurs | Aucun fichier à charger, aucun SDK, aucun service tiers, aucun serveur de courriel. |
 
 Les attributs ne portent **pas** le préfixe `data-admin-`, et c'est
@@ -752,7 +752,9 @@ dans la base du client.
 
 ```
 match /messages/{messageId} {
-  allow create: if formeAttendue();          // les dix clés, typées, bornées
+  // les dix clés, typées, bornées — et, si le site a fermé le dépôt direct,
+  // seul le compte « facteur » de son hébergement peut encore poser un message
+  allow create: if formeAttendue() && (envoiDirectOuvert(siteId) || isFacteur(siteId));
   allow read, update, delete: if canEdit(siteId);
 }
 ```
@@ -769,6 +771,85 @@ Ce qui est refusé, et pourquoi :
 | `lu: true` à la création | l'état de lecture appartient au client, et à lui seul. |
 | Un horodatage fantaisiste | borné à deux jours autour de l'heure du serveur : sans cela, un envoi daté de l'an 3000 resterait en tête de la boîte pour toujours. |
 | Un document entièrement vide | ce n'est pas un message, c'est du remplissage. |
+
+Et ce qu'elles ne savent **pas** refuser : le nombre. Aucune règle Firestore ne
+compte les écritures — il n'y a pas de compteur à interroger, et l'adresse du
+demandeur n'est pas dans `request`. Section suivante.
+
+### Le nombre d'envois
+
+Le vrai point faible du chantier, et il est architectural : **les règles bornent
+la taille d'un message, jamais leur nombre**. Qui lit la page de contact connaît
+la destination et peut y déposer des milliers de documents conformes. Boîte
+illisible, quota consommé, et facture si le projet est sur un plan payant.
+
+Deux états possibles, et le module dit toujours dans lequel il est.
+
+| | Dépôt direct (par défaut) | Relais compté (option) |
+|---|---|---|
+| Ce que la page publiée porte | l'adresse de la base | l'URL d'`admin-endpoint.php` |
+| Qui écrit dans Firestore | le navigateur du visiteur, sans compte | l'hébergement du client, sous le compte « facteur » |
+| Ce qui borne le nombre | rien | 3/heure et 10/jour par adresse, 150/jour pour le site |
+| Ce qui reste | le plafond de dépense Firebase | le plafond de dépense Firebase |
+| Demande | rien | PHP chez le client |
+
+**Pourquoi un compte dédié plutôt qu'un dépôt anonyme depuis le relais.** Un
+relais qui écrirait anonymement ne limiterait rien : il suffirait de l'ignorer
+et d'écrire dans la base en direct, puisque ce chemin resterait ouvert. Le
+compte permet aux règles de **fermer** le chemin direct tout en gardant le
+nôtre. Son rôle est `facteur`, pas `editor` : son mot de passe vit dans un
+fichier PHP sur un mutualisé, et le jour où ce fichier fuit il ne doit rien
+donner de plus que le droit de poser un message — pas de lire la boîte, pas de
+toucher au site. C'est éprouvé dans `npm run essai-regles`.
+
+**L'interrupteur est un document, pas un réglage.** La présence de
+`sites/{siteId}/reglages/relais` ferme le dépôt direct, et ce document ne
+s'écrit que depuis la console Firebase. Un site par témoin : plusieurs sites
+partagent un projet, et l'un peut avoir PHP quand l'autre est sur un statique
+pur. Le retirer rouvre le dépôt direct — c'est la marche arrière, et elle est
+immédiate.
+
+**Le relais est un compteur, pas une autorité.** Il revérifie la forme du
+document de son côté, et les règles la revérifient après lui. Il ne croit rien
+de ce que la requête raconte sur la destination : site, base, projet et compte
+viennent de ses propres réglages. Il date lui-même le message, ce qui fait
+disparaître au passage la limite de l'horloge du visiteur. Il refuse un GET, un
+corps de plus de 24 Ko, un envoi dont l'origine n'est pas le site. Ce dernier
+contrôle n'arrête pas un `curl` qui pose l'en-tête à la main, et ce n'est pas
+prétendu : il épargne du travail aux compteurs.
+
+**Ce qui vit dans la page, et ce que ça vaut.** Un appât invisible, et un repos
+de vingt secondes après un envoi réussi. L'appât écarte les robots qui
+remplissent tout ce qu'ils trouvent — il y en a beaucoup ; le repos écarte le
+double clic. Ni l'un ni l'autre n'arrête un envoi fabriqué hors de la page,
+puisqu'un tel envoi ne charge jamais le script. C'est pour cette raison exacte
+qu'un délai minimal de remplissage et un jeton à usage unique ont été écartés :
+ils se mesurent dans la page, et l'attaque qui coûte cher n'y passe pas.
+
+**Pourquoi pas App Check.** C'est la réponse native de Firebase, et elle n'est
+pas praticable ici — pour une raison de portée, pas de difficulté. App Check
+s'active **par API**, pour tout Cloud Firestore, jamais pour une collection. Or
+le module fait lire le contenu publié par le navigateur de chaque visiteur en
+REST anonyme (`admin/data/rest.js`), exprès, pour ne pas lui faire télécharger
+le SDK. L'exiger couperait donc l'affichage du contenu de tout le site, et le
+back-office avec (`admin/data/firebase.js` n'initialise aucun fournisseur App
+Check). Pour garder les deux debout, chaque page devrait obtenir un jeton
+reCAPTCHA avant de montrer son texte : le contenu du site dépendrait alors de
+`google.com/recaptcha`, ce qui contredit la règle « le site ne casse jamais ».
+Le jeton, lui, s'obtiendrait sans SDK — la balise reCAPTCHA v3 puis un échange
+REST `firebaseappcheck.googleapis.com/…:exchangeRecaptchaV3Token` tiennent dans
+le script autonome. Le blocage est la portée de l'enforcement, pas la technique.
+
+**Pourquoi pas un compteur dans les règles.** Une construction paraît y
+arriver : écrire dans la même opération atomique le message et un témoin daté à
+la minute, la règle n'autorisant que la *création* de ce témoin. Elle borne
+réellement le débit — et elle donne à n'importe qui le moyen de poser le témoin
+de la minute en cours, une fois par minute, pour que plus personne ne puisse
+jamais écrire au client. Elle échange une boîte noyée contre un formulaire mort.
+Écartée pour cela.
+
+La marche à suivre côté propriétaire, avec l'ordre des étapes, est dans
+[`docs/FORMULAIRE-DEBIT.md`](FORMULAIRE-DEBIT.md).
 
 ### La boîte de réception
 
@@ -804,7 +885,7 @@ d'où l'envoi part quand même.
 | Une page = un document | Au-delà de ~1 Mo de contenu modifié sur une seule page, il faudrait découper. Très au-delà d'un site vitrine. |
 | Bref clignotement | Sans réécriture du HTML, le texte d'origine peut apparaître un instant avant le contenu publié sur une page jamais visitée. Le cache local supprime l'effet dès la deuxième visite ; la réécriture le supprime définitivement. |
 | Réécriture et hébergement | La réécriture automatique demande PHP. Sur un statique pur (Netlify), seul l'export manuel est disponible. |
-| Formulaire : volume d'envois | **Aucune règle Firestore ne sait limiter un débit.** Qui connaît l'adresse de la page connaît la clé publique et peut donc déposer des milliers de messages conformes. Les règles bornent la TAILLE de chacun, pas leur NOMBRE. Réponses hors module, par ordre de coût : activer App Check sur Firestore, passer l'écriture par `admin-endpoint.php`, ou poser un quota Firebase. L'appât posé dans le formulaire n'écarte que les robots qui remplissent les champs d'une vraie page. |
-| Formulaire : horloge du visiteur | L'horodatage vient du navigateur. Un poste déréglé de plus de deux jours voit son envoi refusé par les règles — le formulaire affiche alors son message d'échec, lisible, et le visiteur peut réessayer. |
+| Formulaire : volume d'envois | **Aucune règle Firestore ne sait limiter un débit** : elles bornent la taille d'un message, pas leur nombre. Sur un hébergement PHP, le relais compté ferme le problème (3/heure et 10/jour par adresse, 150/jour pour le site) et ferme le chemin direct avec. Sans PHP, rien ne borne le nombre, et seule reste la garantie du plafond de dépense Firebase. L'appât et le repos posés dans le formulaire n'écartent que ce qui passe par la page. App Check ne s'applique pas ici : il s'active pour tout Firestore, donc il couperait la lecture du contenu publié. Voir §9 et `docs/FORMULAIRE-DEBIT.md`. |
+| Formulaire : horloge du visiteur | En dépôt direct, l'horodatage vient du navigateur : un poste déréglé de plus de deux jours voit son envoi refusé par les règles — le formulaire affiche alors son message d'échec, lisible, et le visiteur peut réessayer. Le relais compté, lui, date le message lui-même : la limite disparaît avec lui. |
 | Formulaire : ni pièce jointe ni notification | Un message est du texte. Pas de fichier joint (il faudrait ouvrir Storage à l'écriture publique), et rien n'avertit le client : il faut ouvrir la rubrique Messages. |
 | Copie de référence publique | `page.src.html` est lisible par quiconque connaît l'URL. Elle ne contient que le code du site, déjà public — mais aussi le contenu d'avant les modifications du client. |

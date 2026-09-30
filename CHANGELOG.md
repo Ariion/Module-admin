@@ -1,5 +1,50 @@
 # Journal des versions
 
+## 1.29.0
+
+**Le formulaire ne peut plus être noyé — là où c'est possible**
+
+Les règles Firestore vérifient qu'un message est bien un message : dix
+champs, chacun du bon type, chacun borné. Ce qu'elles ne savent pas faire,
+c'est **compter**. Il n'existe aucune règle Firebase qui dise « pas plus de
+dix messages par heure ». Qui lit le code de la page de contact y trouve
+l'adresse de la base et peut y déposer des milliers de messages
+parfaitement conformes.
+
+**Sur un hébergement PHP, le problème se ferme.** Les envois passent par
+`admin-endpoint.php`, qui compte — trois par heure et dix par jour et par
+adresse, cent cinquante par jour pour le site — et dépose sous un compte
+« facteur ». Ce rôle est volontairement distinct d'« éditeur » : ce compte
+vit dans un fichier PHP sur un hébergement mutualisé, et le jour où ce
+fichier fuit il ne doit donner que le droit de poser un message — pas de
+lire la boîte, pas de toucher au site.
+
+**Et le chemin direct se referme avec.** Poser le document
+`reglages/relais` interdit aux règles tout dépôt venu d'un navigateur. Un
+relais qui compterait pendant que la porte d'à côté reste ouverte ne
+limiterait rien. L'interrupteur se pose depuis la console Firebase, pas
+depuis le module : ce n'est pas un réglage qu'on veut voir basculer par
+mégarde.
+
+**Sans PHP, on ne prétend pas.** Rien ne borne alors le nombre d'envois, et
+`docs/FORMULAIRE-DEBIT.md` dit quoi faire à la place, en dix minutes et sans
+écrire une ligne de code : poser un plafond de dépense, ou rester sur le
+plan gratuit de Firebase, où la base refuse les écritures au-delà du quota
+plutôt que de facturer. Le document est écrit pour le propriétaire du site,
+pas pour un développeur.
+
+**App Check n'a pas été retenu, et la raison mérite d'être dite** : il
+s'active pour tout Firestore. L'activer couperait la lecture publique du
+contenu — c'est-à-dire le site lui-même. Ce n'était pas la bonne porte.
+
+*Sous le capot.* L'épreuve des règles passe de vingt à **trente-deux cas**,
+jouée contre l'émulateur : le témoin posé ferme bien le dépôt direct, le
+facteur dépose mais ne lit pas, ne modifie pas, ne supprime pas, n'écrit pas
+dans le site, et ne peut pas retirer le témoin lui-même. La forme du
+document reste exigée du facteur comme de tout le monde — le relais est un
+compteur, pas une autorité : s'il se faisait berner sur le contenu, la
+règle continuerait de refuser.
+
 ## 1.28.1
 
 **La portée « blocs » tient enfin sa promesse**

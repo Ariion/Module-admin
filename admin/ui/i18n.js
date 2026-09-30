@@ -572,6 +572,9 @@ const DICTIONARIES = {
     // --- Effets et animations
     grp_effets: 'Effets et animations',
 
+    // --- Volume d'envois du formulaire
+    formErreurAide: 'Ce texte s’affiche aussi quand un envoi est refusé parce qu’il en arrivait trop : préférez « réessayez plus tard » à « erreur ».',
+
     // --- Formulaire de contact et boîte de réception
     w_formulaire: 'Formulaire de contact',
     tpl_formulaire: 'Formulaire de contact',
@@ -1656,6 +1659,9 @@ const DICTIONARIES = {
     dragMove: 'Move this block (drag) — Shift: lock one axis, Alt: no snapping',
     // --- Effects and animations
     grp_effets: 'Effects and animations',
+
+    // --- Contact form sending volume
+    formErreurAide: 'This text also shows when a message is turned away because too many were arriving: prefer “try again later” to “error”.',
 
     // --- Contact form and inbox
     w_formulaire: 'Contact form',

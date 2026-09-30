@@ -1,0 +1,12 @@
+{
+  "//": "Sert à UNE chose : que la commande écrite dans tools/essai-regles.mjs lance l'émulateur sur le port que cet essai interroge. Sans ce fichier, firebase-tools choisit 8080 et l'essai ne trouve personne.",
+  "firestore": {
+    "rules": "firebase/firestore.rules",
+    "indexes": "firebase/firestore.indexes.json"
+  },
+  "storage": { "rules": "firebase/storage.rules" },
+  "emulators": {
+    "firestore": { "host": "127.0.0.1", "port": 8181 },
+    "ui": { "enabled": false }
+  }
+}

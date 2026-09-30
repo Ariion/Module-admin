@@ -63,6 +63,21 @@ export const DEFAULTS = {
     pagePath: '',
   },
 
+  /**
+   * Formulaire de contact. Vide, le formulaire écrit directement dans
+   * Firestore : c'est le mode qui ne demande rien à personne, et dont le
+   * nombre d'envois n'est borné par rien (voir docs/FORMULAIRE-DEBIT.md).
+   *
+   * `relais` renseigné, les envois passent par `admin-endpoint.php`, qui les
+   * COMPTE. C'est la seule façon de limiter un débit sans serveur
+   * d'application, et elle demande PHP : elle reste donc une option, jamais
+   * le chemin par défaut.
+   */
+  formulaire: {
+    /** URL d'admin-endpoint.php, ou vide pour écrire directement. */
+    relais: '',
+  },
+
   media: {
     /** 'firebase' | 'endpoint' | 'url' */
     adapter: 'firebase',

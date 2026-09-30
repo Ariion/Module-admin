@@ -2,7 +2,7 @@
 /**
  * Script serveur du module d'administration.
  *
- * Un seul fichier à déposer à la racine du site. Il rend deux services :
+ * Un seul fichier à déposer à la racine du site. Il rend trois services :
  *
  *   1. BIBLIOTHÈQUE MÉDIA — les images du client restent sur SON hébergement,
  *      dans un dossier /medias, sans abonnement supplémentaire.
@@ -11,6 +11,12 @@
  *      est réécrit avec le contenu à l'intérieur. C'est ce qui rend le module
  *      réellement optionnel : le client peut le supprimer quand il veut, son
  *      site garde tout ce qu'il a saisi.
+ *
+ *   3. ENVOIS DU FORMULAIRE, COMPTÉS (facultatif, éteint par défaut) — les
+ *      messages du formulaire de contact passent par ici, qui les compte, au
+ *      lieu d'aller droit dans Firestore, qui ne sait pas compter. C'est le
+ *      seul service ouvert sans compte, et le seul moyen de borner le NOMBRE
+ *      de messages qu'un inconnu peut déposer. Voir docs/FORMULAIRE-DEBIT.md.
  *
  * Une copie intacte du code d'origine (`page.src.html`) est conservée à côté
  * de chaque page, et chaque régénération repart de cette copie — jamais du
@@ -71,6 +77,47 @@ if (is_file($IA_FICHIER)) {
     }
 }
 
+// --- Formulaire de contact : les envois comptés (facultatif) --------------
+// Le seul point de ce script ouvert SANS COMPTE. Il existe pour une raison
+// unique : aucune règle Firestore ne sait limiter un débit. Qui lit la page de
+// contact connaît la destination et peut y déposer des milliers de messages
+// parfaitement conformes — boîte noyée, quota consommé, facture. Ici, on
+// compte.
+//
+// Laissé à false, rien ne change : le formulaire écrit directement dans
+// Firestore, comme avant, et son débit n'est borné par rien.
+//
+// Pour l'activer, voir docs/FORMULAIRE-DEBIT.md — l'ORDRE des étapes compte.
+// En deux mots : créez un compte Firebase dédié, donnez-lui le rôle
+// « facteur » sur le site, renseignez les six lignes ci-dessous, ajoutez
+// `formulaire: { relais: '/admin-endpoint.php' }` à admin-config.js,
+// republiez les pages, et seulement ALORS posez le document
+// sites/{siteId}/reglages/relais qui ferme le chemin direct.
+$CONTACT_ACTIF   = false;
+$CONTACT_SITE_ID = '';                  // le siteId, côté SERVEUR : jamais celui de la requête
+$CONTACT_CLE_API = '';                  // clé web du projet (la même qu'admin-config.js)
+$CONTACT_BASE    = '(default)';
+$CONTACT_FACTEUR = '';                  // adresse du compte dédié
+$CONTACT_MOT_DE_PASSE = '';             // son mot de passe
+
+// Les bornes. Généreuses pour un visiteur, étroites pour une machine : un
+// humain qui écrit trois fois en une heure est déjà rare.
+$CONTACT_MAX_HEURE_IP = 3;
+$CONTACT_MAX_JOUR_IP  = 10;
+$CONTACT_MAX_JOUR_SITE = 150;           // le plafond qui protège la facture
+$CONTACT_MAX_IP_SUIVIES = 4000;         // au-delà, on ne grossit plus le fichier
+
+// Où vivent les compteurs et le jeton du facteur. Rien de durable : le jour
+// où ce dossier est vidé, les compteurs repartent de zéro, ce qui est sans
+// conséquence.
+$CONTACT_DOSSIER = sys_get_temp_dir();
+
+// Ces deux lignes n'ont pas à être changées. Elles existent pour que
+// `tools/essai-debit.mjs` puisse faire répondre un bouchon local à la place de
+// Google, et éprouver ce fichier pour de vrai au lieu de le relire.
+$CONTACT_HOTE_FIRESTORE = 'https://firestore.googleapis.com/v1';
+$CONTACT_HOTE_AUTH = 'https://identitytoolkit.googleapis.com/v1';
+
 // Hôtes d'où l'on accepte de rapatrier une image (action=import). Tout le
 // reste est refusé : ce script ne doit pas devenir un aspirateur à URL.
 $IMPORT_HOSTS = [
@@ -125,10 +172,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit;
 }
 
-function fail(string $message, int $status = 400): void
+function fail(string $message, int $status = 400, array $extra = []): void
 {
     http_response_code($status);
-    echo json_encode(['error' => $message], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => $message] + $extra, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -629,6 +676,9 @@ if ($action === 'check') {
         'media'      => is_dir($MEDIA_DIR) && is_writable($MEDIA_DIR),
         // Une clé est-elle en place ? Jamais laquelle.
         'ia'         => $IA_CLE !== '',
+        // Les envois du formulaire passent-ils par ici ? Le back-office peut
+        // ainsi dire au client ce qui protège sa boîte, ou ne la protège pas.
+        'contact'    => $CONTACT_ACTIF,
         'iaEcrivable' => is_writable(__DIR__),
     ]);
 }
@@ -744,6 +794,343 @@ if ($action === 'delete-page') {
     if (is_file($cible['source'])) @unlink($cible['source']);
 
     ok(['deleted' => true, 'path' => basename($cible['file'])]);
+}
+
+// ------------------------------------- formulaire de contact : les envois
+/**
+ * Dépose un message de formulaire, après l'avoir COMPTÉ.
+ *
+ * C'est le seul endroit de ce fichier qu'un inconnu peut appeler, et il est
+ * écrit dans cet esprit. Rien de ce que la requête raconte n'est cru sur la
+ * destination : le site, la base, le projet et le compte viennent des réglages
+ * en tête de fichier. Une requête qui mentirait sur son siteId n'obtiendrait
+ * pas d'écrire dans la boîte d'un autre site — elle écrirait dans celle de
+ * CELUI-CI, ou nulle part.
+ *
+ * Ce qui est vérifié, dans cet ordre, et pourquoi :
+ *
+ *   1. POST, corps borné            un GET n'écrit rien ; 24 Ko suffisent au
+ *                                   plus long message que le formulaire
+ *                                   accepte, accents compris.
+ *   2. même origine                 l'envoi vient d'une page du site. Ça
+ *                                   n'arrête pas un `curl` qui pose l'en-tête
+ *                                   à la main, et ce n'est pas prétendu :
+ *                                   c'est le tri du tout-venant.
+ *   3. l'appât                      rempli, on répond « reçu » sans écrire.
+ *                                   Le robot croit avoir réussi et ne
+ *                                   réessaie pas.
+ *   4. la forme                     exactement les dix clés du document, aux
+ *                                   longueurs de `admin/core/formulaire.js`.
+ *                                   Les règles Firestore le revérifieront :
+ *                                   ce relais est un compteur, pas une
+ *                                   autorité.
+ *   5. les compteurs                par adresse et par jour, et un plafond
+ *                                   pour le site entier — celui qui protège
+ *                                   la facture même le jour où l'attaque
+ *                                   arrive de mille adresses.
+ *
+ * Puis, seulement, l'écriture, sous le compte « facteur » : les règles ne
+ * laissent plus passer un dépôt direct dès que le site a posé son témoin.
+ */
+if ($action === 'message') {
+    if (!$CONTACT_ACTIF) {
+        fail('Les envois de formulaire ne passent pas par cet hébergement.', 501);
+    }
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        fail('Méthode refusée.', 405);
+    }
+    if ($CONTACT_SITE_ID === '' || $CONTACT_CLE_API === ''
+        || $CONTACT_FACTEUR === '' || $CONTACT_MOT_DE_PASSE === '') {
+        fail('Envois de formulaire mal configurés sur cet hébergement.', 500);
+    }
+    if (!contactMemeOrigine()) {
+        fail('Envoi refusé.', 403);
+    }
+
+    $brut = (string) file_get_contents('php://input', false, null, 0, 24 * 1024 + 1);
+    if (strlen($brut) > 24 * 1024) {
+        fail('Message trop volumineux.', 413);
+    }
+    $recu = json_decode($brut, true);
+    if (!is_array($recu)) {
+        fail('Message illisible.');
+    }
+
+    // L'appât. On répond comme si tout s'était bien passé : un robot à qui
+    // l'on dit non revient, un robot à qui l'on dit oui s'en va.
+    if (trim((string) ($recu['_'] ?? '')) !== '') {
+        ok(['recu' => true]);
+    }
+
+    $champs = contactDocument($recu);
+    if ($champs === null) {
+        fail('Message vide.');
+    }
+
+    $borne = contactDebit(
+        $CONTACT_DOSSIER,
+        $CONTACT_SITE_ID,
+        contactEmpreinteIp($CONTACT_SITE_ID),
+        $CONTACT_MAX_HEURE_IP,
+        $CONTACT_MAX_JOUR_IP,
+        $CONTACT_MAX_JOUR_SITE,
+        $CONTACT_MAX_IP_SUIVIES
+    );
+    if ($borne !== '') {
+        // Le visiteur, lui, lira le message d'échec réglé dans le formulaire :
+        // « réessayez dans un instant ». C'est la bonne phrase pour ce cas.
+        fail('Trop d’envois. Réessayez plus tard.', 429, ['borne' => $borne]);
+    }
+
+    $jeton = contactJetonFacteur(
+        $CONTACT_HOTE_AUTH,
+        $CONTACT_CLE_API,
+        $CONTACT_FACTEUR,
+        $CONTACT_MOT_DE_PASSE,
+        $CONTACT_DOSSIER
+    );
+    if ($jeton === null) {
+        fail('Le compte de dépôt n’a pas pu être ouvert.', 502);
+    }
+
+    $url = $CONTACT_HOTE_FIRESTORE
+        . '/projects/' . rawurlencode($PROJECT_ID)
+        . '/databases/' . rawurlencode($CONTACT_BASE)
+        . '/documents/sites/' . rawurlencode($CONTACT_SITE_ID) . '/messages'
+        . '?key=' . rawurlencode($CONTACT_CLE_API);
+
+    [$code, $reponse] = contactAppel($url, json_encode(['fields' => $champs], JSON_UNESCAPED_UNICODE), [
+        'content-type: application/json',
+        'authorization: Bearer ' . $jeton,
+    ]);
+    if ($code < 200 || $code >= 300) {
+        // On ne renvoie pas ce que Firestore a répondu : ce serait décrire la
+        // base à un inconnu.
+        error_log('admin-endpoint : dépôt du message refusé (' . $code . ') ' . substr((string) $reponse, 0, 300));
+        fail('Le message n’a pas pu être enregistré.', 502);
+    }
+    ok(['recu' => true]);
+}
+
+/**
+ * L'envoi vient-il d'une page de ce site ?
+ *
+ * Un navigateur pose `Origin` sur un POST et `Referer` par défaut. Les deux
+ * absents, on refuse : c'est la signature d'un appel fabriqué. Que ce soit
+ * clair — un attaquant qui pose l'en-tête lui-même passe. Ce contrôle ne
+ * remplace pas les compteurs, il leur épargne du travail.
+ */
+function contactMemeOrigine(): bool
+{
+    $hote = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    if ($hote === '') {
+        return false;
+    }
+    foreach (['HTTP_ORIGIN', 'HTTP_REFERER'] as $entete) {
+        $valeur = (string) ($_SERVER[$entete] ?? '');
+        if ($valeur === '') {
+            continue;
+        }
+        $lu = parse_url($valeur, PHP_URL_HOST);
+        if (is_string($lu) && strtolower($lu) === preg_replace('/:\d+$/', '', $hote)) {
+            return true;
+        }
+        // Un en-tête présent mais qui désigne ailleurs est un refus net : on
+        // ne va pas chercher l'autre en espérant qu'il dise oui.
+        return false;
+    }
+    return false;
+}
+
+/**
+ * Le document à écrire, ou null s'il ne veut rien dire.
+ *
+ * Les dix clés, et rien d'autre : ce qui arrive en plus est jeté sans être
+ * signalé. Les longueurs sont celles de `admin/core/formulaire.js`, et on
+ * TRONQUE plutôt que de refuser — un message trop long doit arriver
+ * raccourci, pas se perdre. Deux valeurs ne viennent jamais de la requête :
+ * `lu`, qui appartient au client, et `envoye`, que le serveur date lui-même.
+ * C'est même un progrès sur le dépôt direct : ici, l'horloge du visiteur ne
+ * peut plus faire refuser son message.
+ */
+function contactDocument(array $recu): ?array
+{
+    $bornes = [
+        'page' => 200, 'formulaire' => 64, 'nom' => 120, 'courriel' => 200,
+        'telephone' => 40, 'message' => 5000, 'cases' => 500, 'liste' => 120,
+    ];
+    $champs = [];
+    foreach ($bornes as $cle => $max) {
+        $valeur = $recu[$cle] ?? '';
+        if (!is_string($valeur)) {
+            $valeur = '';
+        }
+        $champs[$cle] = ['stringValue' => mb_substr($valeur, 0, $max)];
+    }
+    $champs['envoye'] = ['integerValue' => (string) (int) round(microtime(true) * 1000)];
+    $champs['lu'] = ['booleanValue' => false];
+
+    $utile = mb_strlen($champs['nom']['stringValue']) + mb_strlen($champs['courriel']['stringValue'])
+        + mb_strlen($champs['telephone']['stringValue']) + mb_strlen($champs['message']['stringValue']);
+    return $utile > 0 ? $champs : null;
+}
+
+/**
+ * L'empreinte de l'adresse du demandeur.
+ *
+ * On ne garde pas les adresses des visiteurs d'un site vitrine : une
+ * empreinte salée par le siteId suffit à compter, et le fichier de compteurs
+ * n'est alors pas une liste de qui a écrit au client.
+ */
+function contactEmpreinteIp(string $sel): string
+{
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    return substr(hash('sha256', $sel . '|' . $ip), 0, 24);
+}
+
+/**
+ * Compte cet envoi et dit quelle borne il dépasse, ou '' s'il passe.
+ *
+ * Le fichier est verrouillé pendant la lecture ET l'écriture : deux envois
+ * simultanés qui liraient tous les deux « 2 » écriraient tous les deux « 3 »,
+ * et la troisième borne ne servirait plus à rien.
+ *
+ * Le plafond du site est examiné d'abord, exprès : c'est lui qui protège la
+ * facture, et c'est le seul qui tienne quand l'attaque arrive de mille
+ * adresses différentes.
+ */
+function contactDebit(
+    string $dossier,
+    string $site,
+    string $empreinte,
+    int $maxHeure,
+    int $maxJour,
+    int $maxSite,
+    int $maxSuivies
+): string {
+    $fichier = rtrim($dossier, '/') . '/admin-debit-' . substr(hash('sha256', $site), 0, 24) . '.json';
+    $poignee = @fopen($fichier, 'c+');
+    if ($poignee === false) {
+        // Sans compteur possible, on préfère refuser : accepter reviendrait à
+        // promettre une limite qu'on ne tient pas.
+        return 'compteur';
+    }
+    try {
+        if (!flock($poignee, LOCK_EX)) {
+            return 'compteur';
+        }
+        $taille = (int) (fstat($poignee)['size'] ?? 0);
+        $lu = $taille > 0 ? json_decode((string) fread($poignee, $taille), true) : null;
+        $jour = gmdate('Y-m-d');
+        $heure = gmdate('Y-m-d\TH');
+
+        $etat = is_array($lu) && ($lu['jour'] ?? '') === $jour
+            ? ['jour' => $jour, 'site' => (int) ($lu['site'] ?? 0), 'ip' => (array) ($lu['ip'] ?? [])]
+            : ['jour' => $jour, 'site' => 0, 'ip' => []];
+
+        if ($maxSite > 0 && $etat['site'] >= $maxSite) {
+            return 'site-jour';
+        }
+        $connue = isset($etat['ip'][$empreinte]);
+        if (!$connue && $maxSuivies > 0 && count($etat['ip']) >= $maxSuivies) {
+            // Le plafond du site n'a pas encore parlé et le fichier est déjà
+            // plein d'adresses distinctes : c'est une dispersion qu'un site
+            // vitrine ne produit pas. On s'arrête là plutôt que de laisser
+            // grossir un fichier sans fin.
+            return 'dispersion';
+        }
+
+        $ligne = $connue ? (array) $etat['ip'][$empreinte] : ['h' => $heure, 'nh' => 0, 'nj' => 0];
+        if (($ligne['h'] ?? '') !== $heure) {
+            $ligne = ['h' => $heure, 'nh' => 0, 'nj' => (int) ($ligne['nj'] ?? 0)];
+        }
+        if ($maxHeure > 0 && (int) $ligne['nh'] >= $maxHeure) {
+            return 'ip-heure';
+        }
+        if ($maxJour > 0 && (int) $ligne['nj'] >= $maxJour) {
+            return 'ip-jour';
+        }
+
+        $ligne['nh'] = (int) $ligne['nh'] + 1;
+        $ligne['nj'] = (int) $ligne['nj'] + 1;
+        $etat['ip'][$empreinte] = $ligne;
+        $etat['site']++;
+
+        ftruncate($poignee, 0);
+        rewind($poignee);
+        fwrite($poignee, (string) json_encode($etat));
+        fflush($poignee);
+        return '';
+    } finally {
+        @flock($poignee, LOCK_UN);
+        @fclose($poignee);
+    }
+}
+
+/**
+ * Le jeton du compte « facteur », pris au cache ou renouvelé.
+ *
+ * Pourquoi un compte plutôt que le dépôt anonyme : tant que le dépôt anonyme
+ * est ouvert, ce relais ne limite rien — il suffit de l'ignorer et d'écrire
+ * dans Firestore en direct. Le compte permet aux règles de FERMER ce chemin
+ * tout en gardant le nôtre ouvert. Son rôle est « facteur » : il pose des
+ * messages et ne sait rien lire.
+ */
+function contactJetonFacteur(
+    string $hoteAuth,
+    string $cle,
+    string $courriel,
+    string $motDePasse,
+    string $dossier
+): ?string {
+    $cache = rtrim($dossier, '/') . '/admin-facteur-' . substr(hash('sha256', $courriel), 0, 24) . '.json';
+    if (is_file($cache)) {
+        $lu = json_decode((string) @file_get_contents($cache), true);
+        if (is_array($lu) && (int) ($lu['expire'] ?? 0) > time() && ($lu['jeton'] ?? '') !== '') {
+            return (string) $lu['jeton'];
+        }
+    }
+
+    [$code, $reponse] = contactAppel(
+        $hoteAuth . '/accounts:signInWithPassword?key=' . rawurlencode($cle),
+        (string) json_encode([
+            'email' => $courriel, 'password' => $motDePasse, 'returnSecureToken' => true,
+        ]),
+        ['content-type: application/json']
+    );
+    if ($code < 200 || $code >= 300) {
+        error_log('admin-endpoint : le compte facteur a été refusé (' . $code . ')');
+        return null;
+    }
+    $json = json_decode((string) $reponse, true);
+    $jeton = is_array($json) ? (string) ($json['idToken'] ?? '') : '';
+    if ($jeton === '') {
+        return null;
+    }
+    // Cinq minutes de marge : un jeton qui expire pendant la requête ferait
+    // perdre le message sans raison.
+    $duree = max(60, (int) ($json['expiresIn'] ?? 3600) - 300);
+    @file_put_contents($cache, (string) json_encode(['jeton' => $jeton, 'expire' => time() + $duree]));
+    @chmod($cache, 0600);
+    return $jeton;
+}
+
+/** Un POST JSON, et ce qu'il a répondu. */
+function contactAppel(string $url, string $corps, array $entetes): array
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => $entetes,
+        CURLOPT_POSTFIELDS     => $corps,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $brut = curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return [$code, $brut === false ? '' : (string) $brut];
 }
 
 fail('Action inconnue.', 404);

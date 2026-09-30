@@ -1,6 +1,6 @@
 {
   "name": "module-admin",
-  "version": "1.28.1",
+  "version": "1.29.0",
   "description": "Interface d'édition visuelle pour sites statiques codés à la main. Firebase, aucun serveur, aucun build.",
   "type": "module",
   "private": true,
@@ -16,6 +16,7 @@
     "essai-elements": "node tools/essai-elements.mjs",
     "essai-clavier": "node tools/essai-clavier.mjs",
     "essai-formulaire": "node tools/essai-formulaire.mjs",
+    "essai-debit": "node tools/essai-debit.mjs",
     "essai-regles": "node tools/essai-regles.mjs",
     "paquet": "node tools/paquet.mjs",
     "livraison": "node tools/livraison.mjs"

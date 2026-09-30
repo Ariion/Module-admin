@@ -19,7 +19,14 @@
  *   npx firebase emulators:start --only firestore --project projet-de-test
  *
  * puis, dans un autre terminal, `npm run essai-regles`.
- * Java est nécessaire à l'émulateur.
+ * Java est nécessaire à l'émulateur, et `firebase.json` à la racine est ce qui
+ * fait répondre l'émulateur sur le port interrogé ici.
+ *
+ * Une chose à savoir en lisant la sortie de l'émulateur : dès qu'une règle
+ * consulte un document (`exists`, `get`) et finit par REFUSER, l'émulateur
+ * écrit « evaluation error » avant son « false ». Ce n'est pas un défaut de la
+ * règle — la décision est bien un refus, et elle est stable. On le reproduit
+ * avec un `exists()` nu sur un document absent.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -63,6 +70,12 @@ const env = await initializeTestEnvironment({
   },
 });
 
+// L'émulateur garde ses données d'une exécution à l'autre. On repart donc
+// d'une base vide : le dernier cas de cet essai pose un témoin qui change ce
+// qu'un inconnu peut faire, et le laisser en place ferait échouer les premiers
+// cas du passage suivant — pour une raison qui n'a rien à voir avec les règles.
+await env.clearFirestore();
+
 const SITE = 'site-essai';
 const chemin = (id) => `sites/${SITE}/messages/${id}`;
 
@@ -75,6 +88,7 @@ await env.withSecurityRulesDisabled(async (ctx) => {
 
 const inconnu = env.unauthenticatedContext().firestore();
 const patron = env.authenticatedContext('patron').firestore();
+const facteur = env.authenticatedContext('facteur').firestore();
 
 /** Un message conforme, dont chaque essai ne change qu'un détail. */
 const valide = (p = {}) => ({
@@ -141,6 +155,54 @@ await dit('écrire dans le contenu du site',
 await dit('se donner les droits en écrivant un membre',
   setDoc(doc(inconnu, `sites/${SITE}/members/moi`), { role: 'owner' }), false);
 
+// --- Le témoin qui ferme le dépôt direct -------------------------------
+//
+// Ce bloc vient EN DERNIER, et ce n'est pas un hasard : poser le témoin change
+// ce qu'un inconnu peut faire, et les cas d'au-dessus doivent avoir été joués
+// sur un site qui ne l'a pas. Un site vitrine ordinaire est dans cet état-là.
+//
+// Ce qu'on éprouve ici est la seule limite de DÉBIT que le module sache poser.
+// Elle ne vit pas dans les règles — aucune règle ne compte — mais les règles
+// sont ce qui empêche de la contourner : témoin posé, le dépôt direct est
+// refusé, et il ne reste que le chemin qui passe par l'hébergement du client,
+// lequel compte.
+console.log('\nLe témoin « relais » posé : le dépôt direct se ferme');
+await env.withSecurityRulesDisabled(async (ctx) => {
+  await setDoc(doc(ctx.firestore(), `sites/${SITE}/reglages/relais`), { pose: Date.now() });
+  await setDoc(doc(ctx.firestore(), `sites/${SITE}/members/facteur`), { role: 'facteur' });
+});
+
+await dit('un inconnu ne dépose plus rien en direct',
+  setDoc(doc(inconnu, chemin('f1')), valide()), false);
+await dit('le facteur, lui, dépose', setDoc(doc(facteur, chemin('f2')), valide()), true);
+// Le relais est un compteur, pas une autorité : la forme lui est exigée aussi.
+await dit('le facteur ne dépose pas n’importe quelle forme',
+  setDoc(doc(facteur, chemin('f3')), valide({ vecteur: 'autre chose' })), false);
+await dit('ni un message de 5001 caractères',
+  setDoc(doc(facteur, chemin('f4')), valide({ message: 'a'.repeat(5001) })), false);
+
+// Le mot de passe du facteur vit dans un fichier PHP sur un hébergement
+// mutualisé. Le jour où ce fichier fuit, il ne doit rien donner de plus.
+console.log('\nEt ce que le compte du facteur ne peut pas faire');
+await dit('lire la boîte', getDocs(collection(facteur, `sites/${SITE}/messages`)), false);
+await dit('marquer un message lu', updateDoc(doc(facteur, chemin('deja-la')), { lu: true }), false);
+await dit('supprimer un message', deleteDoc(doc(facteur, chemin('deja-la'))), false);
+await dit('écrire dans le contenu du site',
+  setDoc(doc(facteur, `sites/${SITE}/pages/accueil`), { titre: 'remplacé' }), false);
+await dit('retirer le témoin pour rouvrir le dépôt direct',
+  deleteDoc(doc(facteur, `sites/${SITE}/reglages/relais`)), false);
+
+// L'interrupteur ne doit pas se laisser basculer depuis un navigateur : ni
+// posé par un inconnu sur le site d'un autre, ni retiré par le client lui-même
+// d'un clic malheureux.
+console.log('\nEt l’interrupteur lui-même');
+await dit('un inconnu ne le pose pas',
+  setDoc(doc(inconnu, `sites/${SITE}/reglages/relais`), { pose: 1 }), false);
+await dit('le client ne le retire pas',
+  deleteDoc(doc(patron, `sites/${SITE}/reglages/relais`)), false);
+await dit('le client peut en constater la présence',
+  getDoc(doc(patron, `sites/${SITE}/reglages/relais`)), true);
+
 await env.cleanup();
-console.log(echecs ? `\n${echecs} échec(s)\n` : '\nLes règles tiennent sur les 20 cas.\n');
+console.log(echecs ? `\n${echecs} échec(s)\n` : '\nLes règles tiennent sur les 32 cas.\n');
 process.exit(echecs ? 1 : 0);
