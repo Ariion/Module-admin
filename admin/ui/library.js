@@ -51,6 +51,17 @@ export function mediaKind(item) {
   return 'file';
 }
 
+/**
+ * Poids lisible. Le client ne sait pas ce qu'est un octet ; il sait très bien
+ * qu'une photo « de 4 Mo » est lourde et qu'une photo « de 210 Ko » ne l'est
+ * pas. C'est la seule façon de lui montrer ce que le module vient de faire.
+ */
+function poidsLisible(octets) {
+  const ko = Number(octets) / 1024;
+  if (!(ko > 0)) return '';
+  return ko < 900 ? `${Math.round(ko)} Ko` : `${(ko / 1024).toFixed(1)} Mo`;
+}
+
 /** Nom lisible pour un média qui n'en porte pas. */
 function nomDeplie(url) {
   const valeur = String(url);
@@ -208,23 +219,42 @@ export function createLibrary({ vue, t, backend, media, onPicked }) {
       return;
     }
     let erreur = '';
+    let avant = 0;
+    let apres = 0;
+    let tailles = 0;
     for (let i = 0; i < fichiers.length; i += 1) {
       message.textContent = `${t('uploading')} ${fichiers[i].name} (${i + 1}/${fichiers.length})`;
-      erreur = (await envoyer(fichiers[i])) || erreur;
+      const bilan = await envoyer(fichiers[i]);
+      erreur = bilan.erreur || erreur;
+      avant += fichiers[i].size || 0;
+      apres += bilan.poids;
+      tailles += bilan.tailles;
     }
     await charger();
     // La relecture efface le message : on remet l'échec sous les yeux.
-    message.textContent = erreur || t('mediaAdded');
+    if (erreur) { message.textContent = erreur; return; }
+    // Et quand tout s'est bien passé, on dit ce que ça a donné : c'est le seul
+    // endroit où le travail fait sur les images se voit.
+    message.textContent = apres && apres < avant
+      ? t('mediaAllegee', poidsLisible(avant), poidsLisible(apres), tailles)
+      : t('mediaAdded');
   }
 
-  /** @returns {Promise<string>} message d'erreur, ou chaîne vide si tout va bien */
+  /**
+   * @returns {Promise<{erreur:string, poids:number, tailles:number}>} l'échec
+   *   éventuel, et de quoi rendre compte de ce qui a été envoyé
+   */
   async function envoyer(f) {
     try {
       const resultat = await media.primary.upload(f);
       await backend.addMedia({ kind: mediaKind({ type: f.type, url: resultat.url }), ...resultat });
-      return '';
+      return {
+        erreur: '',
+        poids: Number(resultat.size) || 0,
+        tailles: resultat.variantes?.length || 1,
+      };
     } catch (err) {
-      return err.message || String(err);
+      return { erreur: err.message || String(err), poids: 0, tailles: 0 };
     }
   }
 
@@ -406,7 +436,13 @@ export function createLibrary({ vue, t, backend, media, onPicked }) {
       ? h('img', { src: item.url, alt: '', loading: 'lazy' })
       : h('div', { class: 'tile__icon' }, icon(ICONES[item.kind] || 'pages', 20));
 
-    return h('div', { class: 'tile', title: nom + ' — ' + item.url },
+    // Une image téléversée porte ses largeurs, une adresse collée n'en a pas :
+    // la différence compte pour la performance du site, autant qu'elle se lise.
+    const largeurs = item.variantes?.length || 0;
+    const detail = nom + ' — ' + item.url
+      + (largeurs > 1 ? ' — ' + t('mediaTailles', largeurs) : '');
+
+    return h('div', { class: 'tile', title: detail },
       h('button', {
         class: 'tile__pick', type: 'button', onclick: () => choisir(item),
       }, apercu, h('div', { class: 'tile__name' }, nom)),

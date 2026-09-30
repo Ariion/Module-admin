@@ -13,6 +13,7 @@
     "essai-ecrans": "node tools/essai-ecrans.mjs",
     "essai-marque": "node tools/essai-marque.mjs",
     "essai-elements": "node tools/essai-elements.mjs",
+    "essai-images": "node tools/essai-images.mjs",
     "essai-clavier": "node tools/essai-clavier.mjs",
     "essai-formulaire": "node tools/essai-formulaire.mjs",
     "essai-regles": "node tools/essai-regles.mjs",

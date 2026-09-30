@@ -11,6 +11,7 @@
 import { h } from './el.js';
 import { openModal } from './modal.js';
 import { reveillerFeuilles } from '../core/frame.js';
+import { reglerChargementImages } from '../core/images.js';
 
 function download(filename, content, type) {
   const url = URL.createObjectURL(new Blob([content], { type }));
@@ -28,6 +29,12 @@ function download(filename, content, type) {
  * @param {string[]} options.scriptMarkers fragments d'URL des scripts à retirer
  */
 export function freezePage({ doc = document, scriptMarkers = ['/admin/', 'admin-config', 'admin/runtime'] } = {}) {
+  // Sur le document VIVANT, avant la copie : c'est le seul endroit où les
+  // rectangles existent, et un clone détaché n'a aucune mise en page. Le
+  // fichier exporté à la main reçoit donc le même réglage des chargements que
+  // celui que la publication réécrit — sinon la porte de sortie donnerait une
+  // page plus lente que la porte d'entrée.
+  reglerChargementImages(doc);
   const clone = doc.documentElement.cloneNode(true);
 
   // Une feuille de style tierce trop lente a pu être endormie pour que
