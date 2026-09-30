@@ -1,5 +1,35 @@
 # Journal des versions
 
+## 1.32.0
+
+**Barré, exposant, indice, et de quoi tout défaire**
+
+La barre qui apparaît quand on sélectionne du texte dans l'aperçu savait
+mettre en gras, en italique, souligner, colorer et lier. Elle sait
+maintenant aussi **barrer**, mettre en **exposant** et en **indice**, et
+**effacer la mise en forme**.
+
+Le barré n'est pas un ornement : c'est « 24,90 € 19,90 € », la mise en forme
+la plus demandée d'une boutique, et elle manquait. Il a fallu ouvrir le
+nettoyeur à `S`, `STRIKE` et `DEL` — trois balises pour une seule mise en
+forme, parce que les navigateurs ne produisent pas la même. N'en garder
+qu'une aurait fait disparaître le barré d'un client sur trois, sans rien
+signaler.
+
+L'exposant et l'indice, eux, ne coûtaient rien : le nettoyeur les acceptait
+déjà. Il manquait les boutons.
+
+*Où se joue la vraie question.* Un bouton pose une balise que le NAVIGATEUR
+choisit, et le module repasse tout au nettoyeur avant d'enregistrer. Les deux
+ne s'étaient jamais parlé. Si l'un produit `<strike>` là où l'autre n'attend
+que `<s>`, le client voit son prix barré à l'écran, l'enregistre, et le
+retrouve nu au rechargement — sans un message, sans une trace.
+`npm run essai-mise-en-forme` exécute donc les vraies commandes dans un vrai
+navigateur, passe le résultat au vrai nettoyeur, et vérifie ce qui reste :
+vingt-six points, dont les quatre qui gardent la porte fermée — un script,
+un bloc qui recouvrirait la page, un cadre étranger, un lien qui exécute du
+code.
+
 ## 1.31.0
 
 **Les images : 91 % d'octets en moins sur un téléphone**

@@ -176,17 +176,32 @@ export function createTextEditor({ layer, origin, t, onCommit, couleurs = null }
     bouton('bold', t('bold'), 'bold', commande('bold')),
     bouton('italic', t('italic'), 'italic', commande('italic')),
     bouton('underline', t('underline'), 'underline', commande('underline')),
+    // Le barré sert surtout à un prix : « 24,90 € 19,90 € ». C'est la mise en
+    // forme la plus demandée d'une boutique, et elle manquait.
+    bouton('strikeThrough', t('barre'), 'barre', commande('strikeThrough')),
+    bouton('superscript', t('exposant'), 'exposant', commande('superscript')),
+    bouton('subscript', t('indice'), 'indice', commande('subscript')),
     bouton('color', t('couleurTexte'), 'palette', () => { volet.style.display = 'none'; ouvrirCouleurs(); }),
     bouton('link', t('linkUrl'), 'link', () => { nuancier.style.display = 'none'; ouvrirLien(); }),
+    // En dernier : c'est le bouton qu'on cherche quand on s'est trompé, et le
+    // seul qui défait au lieu de faire.
+    bouton('removeFormat', t('effacerFormat'), 'effacer', commande('removeFormat')),
   ];
   barre.append(h('div', { class: 'rtb__outils' }, ...boutons), nuancier, volet, mot);
 
   /** Le bouton s'allume quand la sélection porte déjà cette mise en forme. */
+  /**
+   * Les commandes qui BASCULENT, donc dont le bouton peut s'allumer. La
+   * couleur, le lien et l'effacement n'en sont pas : ils font, ils ne
+   * marquent pas un état qu'on pourrait relire sur la sélection.
+   */
+  const BASCULES = ['bold', 'italic', 'underline', 'strikeThrough', 'superscript', 'subscript'];
+
   function majEtat() {
     if (!doc) return;
     for (const b of boutons) {
       const nom = b.getAttribute('data-cmd');
-      if (nom !== 'bold' && nom !== 'italic' && nom !== 'underline') continue;
+      if (!BASCULES.includes(nom)) continue;
       let actif = false;
       try { actif = doc.queryCommandState(nom); } catch { actif = false; }
       b.classList.toggle('btn--actif', actif);

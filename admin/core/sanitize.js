@@ -12,6 +12,13 @@
 const ALLOWED_TAGS = new Set([
   'B', 'STRONG', 'I', 'EM', 'U', 'SPAN', 'BR', 'SMALL', 'SUP', 'SUB',
   'MARK', 'A', 'CODE', 'ABBR', 'TIME', 'CITE', 'Q',
+  // Le barré : trois balises pour une seule mise en forme, parce que les
+  // navigateurs ne produisent pas la même. `S` est celle d'aujourd'hui,
+  // `STRIKE` celle que rendent encore de vieux moteurs, `DEL` celle qu'un
+  // développeur aura écrite à la main. Les trois disent « prix barré », et
+  // n'en garder qu'une ferait disparaître la mise en forme d'un client sur
+  // trois sans rien signaler.
+  'S', 'STRIKE', 'DEL',
 ]);
 
 const ALLOWED_ATTRS = {
