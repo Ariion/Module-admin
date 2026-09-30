@@ -11,7 +11,9 @@ rules_version = '2';
 // authentifié doit pouvoir DÉPOSER un message sans jamais pouvoir en lire, en
 // modifier ni en supprimer un seul. Voir /messages plus bas : c'est le seul
 // point d'écriture ouvert de la base, et sa forme y est vérifiée champ par
-// champ.
+// champ. Sa taille, pas son nombre : un site qui veut BORNER LE NOMBRE ferme
+// ce point-là et fait passer ses envois par son hébergement, qui compte
+// (document sites/{siteId}/reglages/relais, rôle « facteur »).
 //
 // Le prestataire se donne un accès global en créant un document
 // superadmins/{sonUid} depuis la console Firebase.
@@ -47,6 +49,27 @@ service cloud.firestore {
 
     function canEdit(siteId) {
       return isSuper() || (isMember(siteId) && memberRole(siteId) in ['owner', 'editor']);
+    }
+
+    // Le compte que la terminaison `admin-endpoint.php` utilise pour déposer
+    // les messages qu'elle a comptés. Un rôle à part, et pas « editor » : ce
+    // compte-là vit dans un fichier PHP sur un hébergement mutualisé, et le
+    // jour où ce fichier fuit il ne doit rien donner de plus que le droit de
+    // poser un message — pas de lire la boîte, pas de toucher au site.
+    function isFacteur(siteId) {
+      return isMember(siteId) && memberRole(siteId) == 'facteur';
+    }
+
+    // Le site accepte-t-il encore un dépôt direct depuis le navigateur ?
+    //
+    // Aucune règle ne sait compter les écritures : tant que ce chemin est
+    // ouvert, le nombre de messages n'est borné par rien. Poser le document
+    // sites/{siteId}/reglages/relais le ferme, et l'envoi ne passe plus que
+    // par l'hébergement du client, qui compte, lui. Un témoin par site :
+    // plusieurs sites partagent un projet, et l'un peut avoir PHP quand
+    // l'autre est sur un statique pur.
+    function envoiDirectOuvert(siteId) {
+      return !exists(/databases/$(database)/documents/sites/$(siteId)/reglages/relais);
     }
 
     match /sites/{siteId} {
@@ -89,6 +112,13 @@ service cloud.firestore {
       //           pourrait vider le message qu'il vient d'envoyer, ou
       //           marquer lu ce que le client n'a pas lu.
       //   delete  personne n'effacerait ses traces.
+      //
+      // Ce qu'elles ne savent PAS refuser : le nombre. Aucune règle Firestore
+      // ne compte les écritures — il n'existe pas de compteur à interroger, et
+      // l'adresse du demandeur n'est pas dans `request`. Tant que le dépôt
+      // direct est ouvert, la taille de chaque message est bornée et leur
+      // nombre ne l'est pas. Voir `envoiDirectOuvert` plus haut, et
+      // `docs/FORMULAIRE-DEBIT.md` pour ce que le propriétaire doit régler.
       //
       // Reste la forme du document, vérifiée ici parce que c'est le seul
       // endroit où elle PEUT l'être : une création ouverte sans contrôle de
@@ -133,8 +163,21 @@ service cloud.firestore {
                + champs().telephone.size() + champs().message.size() > 0;
         }
 
-        allow create: if formeAttendue();
+        // La forme est exigée de TOUT LE MONDE, facteur compris : le relais
+        // est un compteur, pas une autorité. S'il se faisait berner sur le
+        // contenu, la règle continuerait de refuser.
+        allow create: if formeAttendue() && (envoiDirectOuvert(siteId) || isFacteur(siteId));
         allow read, update, delete: if canEdit(siteId);
+      }
+
+      // Réglages techniques du site. Un seul document y vit aujourd'hui,
+      // `relais`, et sa seule PRÉSENCE est l'information : elle ferme le
+      // dépôt direct. On le crée depuis la console Firebase, comme les
+      // comptes — c'est un interrupteur qu'on ne veut pas voir basculer
+      // depuis un navigateur, même celui du client.
+      match /reglages/{cle} {
+        allow read: if canEdit(siteId);
+        allow write: if isSuper();
       }
 
       // Comptes ayant accès au site. Seul le prestataire les gère.

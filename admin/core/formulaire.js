@@ -18,9 +18,9 @@
  *                   donc l'adresse de la boîte de réception.
  *   le script    →  UNE balise, écrite dans le `<head>` par le modèle, au
  *                   même titre que la feuille du thème ou celle des effets.
- *                   Une quarantaine de lignes, aucun import, aucune
- *                   dépendance : c'est le strict minimum pour qu'un envoi
- *                   parte d'une page où le module n'existe plus.
+ *                   Une centaine de lignes commentaires compris, aucun
+ *                   import, aucune dépendance : c'est le strict minimum pour
+ *                   qu'un envoi parte d'une page où le module n'existe plus.
  *
  * Le script n'est pas paramétré : il lit tout sur le formulaire qu'il traite.
  * Le formulaire et sa destination sont ainsi inséparables — on ne peut pas
@@ -34,6 +34,23 @@
  * Et si Firestore ne répond pas, le visiteur voit une phrase lisible sous le
  * bouton. Jamais une page cassée : c'est la règle du module, elle vaut ici
  * comme ailleurs.
+ *
+ * LE NOMBRE D'ENVOIS. Les règles Firestore bornent la TAILLE d'un message,
+ * jamais leur NOMBRE — aucune règle ne sait compter. Qui lit la page connaît
+ * la destination et peut donc déposer des milliers de messages conformes.
+ * Deux réponses cohabitent ici, et il faut savoir laquelle on a :
+ *
+ *   par défaut   →  rien ne limite le débit. Le repos posé après un envoi et
+ *                   l'appât écartent le tout-venant, pas un `curl`. La seule
+ *                   garantie contre la facture est alors le plafond de
+ *                   dépense du projet Firebase.
+ *   `relais`     →  l'envoi passe par `admin-endpoint.php`, qui compte par
+ *                   adresse et par jour, et qui dépose le message sous un
+ *                   compte que les règles reconnaissent. Le chemin direct
+ *                   est alors fermé par les règles elles-mêmes.
+ *
+ * La marche à suivre est dans `docs/FORMULAIRE-DEBIT.md`, et ce qui reste
+ * ouvert dans chaque cas y est écrit noir sur blanc.
  * @module core/formulaire
  */
 import { BAKE_PARAM, PREVIEW_PARAM } from './config.js';
@@ -43,6 +60,15 @@ export const FORMULAIRE_SCRIPT_ID = 'admin-formulaire';
 
 /** Point d'entrée REST de Firestore — le même que celui de la lecture. */
 const HOTE_REST = 'https://firestore.googleapis.com/v1';
+
+/**
+ * Repos observé après un envoi réussi, en millisecondes.
+ *
+ * Vingt secondes : assez pour qu'un second clic ne double pas un message,
+ * assez peu pour que quelqu'un qui a vraiment deux choses à dire n'attende
+ * pas. Ce n'est pas une protection — c'est de la politesse.
+ */
+const REPOS_MS = 20000;
 
 /**
  * Ce qu'un champ peut valoir dans le panneau.
@@ -120,7 +146,10 @@ export function champsPanneauFormulaire() {
   }
   lignes.push({ key: 'bouton', type: 'text', label: 'formBouton' });
   lignes.push({ key: 'merci', type: 'text', label: 'formMerci' });
-  lignes.push({ key: 'erreur', type: 'text', label: 'formErreur' });
+  // Ce texte sert plus souvent qu'on ne le croit : c'est aussi lui que lit le
+  // visiteur dont l'envoi a été refusé parce qu'il en arrivait trop. Le dire
+  // sous le champ évite un « Erreur » sec là où « réessayez » convient.
+  lignes.push({ key: 'erreur', type: 'text', label: 'formErreur', hint: 'formErreurAide' });
   return lignes;
 }
 
@@ -145,7 +174,14 @@ function lignes(valeur) {
   return String(valeur ?? '').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 20);
 }
 
-/** Où le formulaire écrit. `null` si le site n'est pas relié à un projet. */
+/**
+ * Où le formulaire écrit. `null` si le site n'est pas relié à un projet.
+ *
+ * `relais` renseigné, c'est l'hébergement du client qui portera l'envoi — et
+ * qui le comptera, ce qu'aucune règle Firestore ne sait faire. La destination
+ * Firestore n'est alors PAS reposée dans la page : elle n'y servirait qu'à
+ * indiquer le chemin qui contourne le comptage.
+ */
 export function cibleDEnvoi(config) {
   const projet = config?.firebase?.projectId;
   const cle = config?.firebase?.apiKey;
@@ -153,6 +189,7 @@ export function cibleDEnvoi(config) {
   return {
     projet, cle, site: config.siteId,
     base: config.firebase.databaseId || '(default)',
+    relais: String(config.formulaire?.relais || '').trim(),
   };
 }
 
@@ -188,7 +225,13 @@ export function rendreFormulaire(doc, noeud, cible = null) {
   // La clé d'API Firebase est déjà servie à tous les visiteurs dans
   // `admin-config.js` : la reposer ici ne dévoile rien. Ce sont les règles
   // Firestore qui protègent la base, jamais le secret d'une clé publique.
-  if (cible) {
+  //
+  // Un relais renseigné remplace cette destination au lieu de s'y ajouter :
+  // une page qui porterait les deux offrirait au premier curieux le chemin
+  // court, celui qui ne passe pas par le comptage.
+  if (cible && cible.relais) {
+    form.setAttribute('data-formulaire-relais', cible.relais);
+  } else if (cible) {
     form.setAttribute('data-formulaire-projet', cible.projet);
     form.setAttribute('data-formulaire-cle', cible.cle);
     form.setAttribute('data-formulaire-site', cible.site);
@@ -320,6 +363,7 @@ const SOURCE_SCRIPT = `(function () {
   var HOTE = '${HOTE_REST}';
   var MAX = ${JSON.stringify(MAX_PAR_CHAMP)};
   var EDITION = ['${PREVIEW_PARAM}', '${BAKE_PARAM}'];
+  var REPOS = ${REPOS_MS};
 
   /** La page est-elle affichée dans l'éditeur ? Alors rien ne part. */
   function edition() {
@@ -360,6 +404,16 @@ const SOURCE_SCRIPT = `(function () {
     return saisi;
   }
 
+  /** Ce qui part vers le relais : la saisie telle quelle, à plat. */
+  function sac(form, saisi) {
+    var envoi = {
+      page: String(location.pathname || '/').slice(0, 200),
+      formulaire: String(form.getAttribute('data-formulaire') || '').slice(0, 64)
+    };
+    for (var cle in MAX) { envoi[cle] = saisi[cle]; }
+    return envoi;
+  }
+
   function charge(form, saisi) {
     var champs = {
       page: { stringValue: String(location.pathname || '/').slice(0, 200) },
@@ -395,33 +449,52 @@ const SOURCE_SCRIPT = `(function () {
     var appat = form.querySelector('[name="_"]');
     if (edition() || (appat && appat.value)) { dire(form, merci, true); return; }
 
-    var projet = form.getAttribute('data-formulaire-projet');
-    var cle = form.getAttribute('data-formulaire-cle');
-    var site = form.getAttribute('data-formulaire-site');
-    var base = form.getAttribute('data-formulaire-base') || '(default)';
-    if (!projet || !cle || !site) { dire(form, rate, false); return; }
+    // Un repos après chaque envoi réussi. Le visiteur qui reclique lit son
+    // remerciement, et une boucle posée sur le bouton n'écrit qu'une fois.
+    // Ça ne coûte rien et ça ne perd aucun message — mais que ce soit dit :
+    // un envoi fabriqué hors de cette page ne passe pas par ici du tout.
+    if (form.reposJusqua && Date.now() < form.reposJusqua) { dire(form, merci, true); return; }
 
-    var url = HOTE + '/projects/' + encodeURIComponent(projet)
-      + '/databases/' + encodeURIComponent(base)
-      + '/documents/sites/' + encodeURIComponent(site) + '/messages'
-      + '?key=' + encodeURIComponent(cle);
+    var relais = form.getAttribute('data-formulaire-relais');
+    var url, corps;
+    if (relais) {
+      // L'hébergement du client porte l'envoi, et le compte. La page ne sait
+      // rien de la base : ni le projet, ni la clé, ni le site.
+      url = relais;
+      corps = JSON.stringify(sac(form, valeurs(form)));
+    } else {
+      var projet = form.getAttribute('data-formulaire-projet');
+      var cle = form.getAttribute('data-formulaire-cle');
+      var site = form.getAttribute('data-formulaire-site');
+      var base = form.getAttribute('data-formulaire-base') || '(default)';
+      if (!projet || !cle || !site) { dire(form, rate, false); return; }
+      url = HOTE + '/projects/' + encodeURIComponent(projet)
+        + '/databases/' + encodeURIComponent(base)
+        + '/documents/sites/' + encodeURIComponent(site) + '/messages'
+        + '?key=' + encodeURIComponent(cle);
+      corps = JSON.stringify(charge(form, valeurs(form)));
+    }
 
     function fini(ok) {
       if (bouton) bouton.disabled = false;
       dire(form, ok ? merci : rate, ok);
-      if (ok && form.reset) form.reset();
+      if (ok) {
+        form.reposJusqua = Date.now() + REPOS;
+        if (form.reset) form.reset();
+      }
     }
 
     if (bouton) bouton.disabled = true;
     dire(form, '', true);
-    // Quoi qu'il arrive — réseau coupé, règles qui refusent, base absente —
-    // la page reste celle qu'elle était et le visiteur lit une phrase.
+    // Quoi qu'il arrive — réseau coupé, règles qui refusent, relais absent,
+    // envoi de trop refusé par l'hébergement — la page reste celle qu'elle
+    // était et le visiteur lit une phrase.
     try {
       fetch(url, {
         method: 'POST',
         credentials: 'omit',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(charge(form, valeurs(form)))
+        body: corps
       }).then(function (reponse) { fini(!!reponse && reponse.ok); }, function () { fini(false); });
     } catch (erreur) { fini(false); }
   });

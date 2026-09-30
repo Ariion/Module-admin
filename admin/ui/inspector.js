@@ -382,11 +382,18 @@ export function createInspector({ vue, t, actions }) {
           fichier, champ(t(f.label), adresse));
       }
 
+      // Une phrase d'aide sous un champ texte, comme les réglages multilignes
+      // en ont déjà une : certains textes servent dans des situations que le
+      // client n'imagine pas en les écrivant, et le lui dire ici est le seul
+      // endroit où il le lira.
       default:
-        return champ(t(f.label), h('input', {
-          class: 'input', type: 'text', value: valeur ?? '', placeholder: f.placeholder || '',
-          oninput: (e) => ecrire(e.target.value),
-        }));
+        return champ(t(f.label), h('div', {},
+          h('input', {
+            class: 'input', type: 'text', value: valeur ?? '', placeholder: f.placeholder || '',
+            oninput: (e) => ecrire(e.target.value),
+          }),
+          f.hint ? h('p', { class: 'hint', style: { margin: '6px 0 0' } }, t(f.hint)) : null,
+        ));
     }
   }
 

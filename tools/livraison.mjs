@@ -70,7 +70,11 @@ writeFileSync(resolve(cible, 'installation.html'),
 
 // --- La documentation, sans les liens vers ce qui n'est pas livré ----------
 mkdirSync(resolve(cible, 'docs'), { recursive: true });
-for (const doc of ['INSTALLATION.md', 'ARCHITECTURE.md', 'MISE-EN-LIGNE.md', 'IA.md', 'IMAGES.md']) {
+// FORMULAIRE-DEBIT.md est une marche à suivre pour le propriétaire du site,
+// pas une page d'architecture : sans elle, le formulaire part sans le seul
+// garde-fou qui borne le nombre de messages qu'on peut y déposer.
+for (const doc of ['INSTALLATION.md', 'ARCHITECTURE.md', 'MISE-EN-LIGNE.md', 'IA.md', 'IMAGES.md',
+  'FORMULAIRE-DEBIT.md']) {
   const texte = lire('docs/' + doc)
     // Les essais internes ne font pas partie de la livraison.
     .replace(/\s*\(voir\s*\[`essais\/[^\]]*`\]\([^)]*\)\)/g, '')
