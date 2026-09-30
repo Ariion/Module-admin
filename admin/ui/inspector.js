@@ -15,6 +15,7 @@ import { STYLE_FIELDS, STYLE_GROUPS, readStyleValues } from '../core/style.js';
 import { ECRANS, ECRAN_BASE, surchargesDe, fusionnerEcrans } from '../core/ecrans.js';
 import { TEMPLATES } from '../core/templates.js';
 import { FONTS, GROUPES_POLICE } from '../core/fonts.js';
+import { variantesDe, rangerVariantes, sizesMesure } from '../core/images.js';
 
 const TITRES = { text: 'text', link: 'link', image: 'image', background: 'background' };
 
@@ -200,6 +201,21 @@ export function createInspector({ vue, t, actions }) {
     // réglages qui font apparaître d'autres champs appellent `render` eux-mêmes.
     const ecrire = (v) => actions.setWidgetProps(noeud.key, { [f.key]: v }, { garderPanneau: true });
 
+    /**
+     * Écrit une adresse d'image ET, à côté, les largeurs que le téléversement a
+     * produites. Les deux partent dans la même écriture : séparées, un
+     * enregistrement pris entre les deux laisserait un `srcset` qui désigne une
+     * image que le réglage ne pointe plus.
+     *
+     * @param {string} v valeur du réglage, telle qu'elle sera stockée
+     * @param {object[]} items médias choisis ou téléversés
+     * @param {string[]} adresses adresses que le réglage tient désormais
+     */
+    const ecrireImage = (v, items, adresses) => actions.setWidgetProps(noeud.key, {
+      [f.key]: v,
+      variantes: rangerVariantes(noeud.props.variantes, items, adresses),
+    }, { garderPanneau: true });
+
     switch (f.type) {
       case 'select':
         return champ(t(f.label), h('select', {
@@ -249,7 +265,10 @@ export function createInspector({ vue, t, actions }) {
        */
       case 'images': {
         const liste = String(valeur ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
-        const poser = (suivante) => { ecrire(suivante.join('\n')); render(selection); };
+        const poser = (suivante, items = []) => {
+          ecrireImage(suivante.join('\n'), items, suivante);
+          render(selection);
+        };
         const petitBouton = (nomIcone, libelle, onclick, desactive = false) => h('button', {
           class: 'btn btn--icon', type: 'button', title: libelle, disabled: desactive,
           style: { padding: '2px 5px' }, onclick,
@@ -282,8 +301,8 @@ export function createInspector({ vue, t, actions }) {
             e.target.value = '';
             if (!choisis.length) return;
             const ajoutees = [];
-            for (const image of choisis) ajoutees.push((await actions.upload(image)).url);
-            poser([...liste, ...ajoutees]);
+            for (const image of choisis) ajoutees.push(await actions.upload(image));
+            poser([...liste, ...ajoutees.map((r) => r.url)], ajoutees);
           },
         });
 
@@ -302,7 +321,7 @@ export function createInspector({ vue, t, actions }) {
             }, icon('upload', 13), t('chooseFile')),
             h('button', {
               class: 'btn', type: 'button',
-              onclick: () => actions.pickMedia((item) => poser([...liste, item.url]), 'image'),
+              onclick: () => actions.pickMedia((item) => poser([...liste, item.url], [item]), 'image'),
             }, icon('folder', 13), t('library')),
           ),
           fichier,
@@ -345,7 +364,12 @@ export function createInspector({ vue, t, actions }) {
           }),
           h('button', {
             class: 'btn btn--icon', type: 'button', title: t('library'),
-            onclick: () => actions.pickMedia((item) => { ecrire(item.url); render(selection); }, f.type === 'media' ? 'video' : 'audio'),
+            // La famille demandée par le réglage l'emporte : l'image du bandeau
+            // passe par ce champ, et la bibliothèque s'ouvrait sur les vidéos.
+            onclick: () => actions.pickMedia((item) => {
+              ecrireImage(item.url, [item], [item.url]);
+              render(selection);
+            }, f.accept || (f.type === 'media' ? 'video' : 'audio')),
           }, icon('folder', 13)),
         ));
 
@@ -368,7 +392,7 @@ export function createInspector({ vue, t, actions }) {
             e.target.value = '';
             if (!f2) return;
             const r = await actions.upload(f2);
-            adresse.value = r.url; montrer(r.url); ecrire(r.url);
+            adresse.value = r.url; montrer(r.url); ecrireImage(r.url, [r], [r.url]);
           },
         });
         return h('div', {}, apercu,
@@ -376,7 +400,9 @@ export function createInspector({ vue, t, actions }) {
             h('button', { class: 'btn', type: 'button', onclick: () => fichier.click() }, icon('upload', 13), t('chooseFile')),
             h('button', {
               class: 'btn', type: 'button',
-              onclick: () => actions.pickMedia((item) => { adresse.value = item.url; montrer(item.url); ecrire(item.url); }, 'image'),
+              onclick: () => actions.pickMedia((item) => {
+                adresse.value = item.url; montrer(item.url); ecrireImage(item.url, [item], [item.url]);
+              }, 'image'),
             }, icon('folder', 13), t('library')),
           ),
           fichier, champ(t(f.label), adresse));
@@ -655,6 +681,25 @@ export function createInspector({ vue, t, actions }) {
     return blocs;
   }
 
+  /**
+   * Ce qu'on enregistre pour une image du site du client.
+   *
+   * Le `sizes` est MESURÉ sur l'élément tel qu'il s'affiche : on ne connaît pas
+   * la mise en page du développeur, et une valeur devinée choisirait soit une
+   * image floue, soit la plus grande — ce qui annulerait le gain. Une image de
+   * banque ou une adresse tapée à la main n'a pas de largeurs : les deux champs
+   * partent alors vides, et le `srcset` prévu pour l'image précédente est
+   * effacé plutôt que gardé de travers.
+   */
+  function contenuImage(item, entry) {
+    const connues = variantesDe(item);
+    return {
+      src: item.url,
+      srcset: connues?.srcset || '',
+      sizes: connues?.srcset ? sizesMesure(entry.el) : '',
+    };
+  }
+
   function champsImage(entry, valeur) {
     const image = h('img', { alt: '' });
     const apercu = h('div', { class: 'preview' }, image);
@@ -664,7 +709,13 @@ export function createInspector({ vue, t, actions }) {
 
     const adresse = h('input', {
       class: 'input', type: 'text', value: valeur.src || '', placeholder: '/images/photo.jpg',
-      onchange: (e) => { montrer(e.target.value); actions.setContent(entry, { src: e.target.value }); },
+      // Les largeurs enregistrées désignaient l'image PRÉCÉDENTE : elles
+      // partent avec elle, sinon un téléphone recevrait la petite taille d'une
+      // photo qui n'est plus là.
+      onchange: (e) => {
+        montrer(e.target.value);
+        actions.setContent(entry, { src: e.target.value, srcset: '', sizes: '' });
+      },
     });
 
     function montrer(src) {
@@ -686,7 +737,7 @@ export function createInspector({ vue, t, actions }) {
         const r = await actions.upload(f, (ratio) => { barre.style.width = Math.round(ratio * 100) + '%'; });
         adresse.value = r.url;
         montrer(r.url);
-        actions.setContent(entry, { src: r.url });
+        actions.setContent(entry, contenuImage(r, entry));
         message.textContent = '';
       } catch (err) {
         message.textContent = err.message || String(err);
@@ -713,7 +764,7 @@ export function createInspector({ vue, t, actions }) {
           onclick: () => actions.pickMedia((item) => {
             adresse.value = item.url;
             montrer(item.url);
-            actions.setContent(entry, { src: item.url });
+            actions.setContent(entry, contenuImage(item, entry));
           }, 'image'),
         }, icon('folder', 13), t('library')),
       ),

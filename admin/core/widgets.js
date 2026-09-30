@@ -15,6 +15,7 @@
 import { uid } from './util.js';
 import { safeHtml, safeUrl, safeImageUrl, safeText } from './sanitize.js';
 import { applyStyleObject } from './style.js';
+import { SIZES, PREMIER_ECRAN, poserImage, srcsetSur } from './images.js';
 import { catalogueFiltre, prixLisible, boutonAchat } from './boutique.js';
 import { marqueDe, nomDeMarque, tracerMarque } from './marques.js';
 import { defautsFormulaire, champsPanneauFormulaire, rendreFormulaire } from './formulaire.js';
@@ -71,6 +72,29 @@ function feuilleDe(doc, regles) {
 /** Les lignes non vides d'un réglage multiligne. */
 function lignesDe(valeur) {
   return String(valeur ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+}
+
+/**
+ * Les largeurs disponibles pour cette adresse, telles que le téléversement les
+ * a enregistrées.
+ *
+ * Le réglage visible reste une adresse — une par ligne pour une galerie — et
+ * les largeurs vivent à côté, dans une table `variantes` indexée par adresse.
+ * On ne les DÉDUIT jamais du nom de fichier : l'hébergement renomme ce qu'il
+ * reçoit, et une adresse devinée serait une image cassée sur les seuls écrans
+ * qui l'auraient choisie. Une adresse absente de la table n'a donc pas de
+ * `srcset`, et c'est exactement ce qu'on veut : le client qui colle une adresse
+ * à la main, ou modifie la liste d'une galerie, garde une page qui s'affiche.
+ */
+function variantesPour(p, url) {
+  const table = p?.variantes;
+  const enregistre = url && table && typeof table === 'object' ? table[url] : null;
+  if (!enregistre || typeof enregistre !== 'object') return null;
+  const srcset = srcsetSur(enregistre.srcset);
+  const largeur = Math.round(Number(enregistre.largeur) || 0);
+  const hauteur = Math.round(Number(enregistre.hauteur) || 0);
+  if (!srcset && !(largeur && hauteur)) return null;
+  return { srcset, largeur, hauteur };
 }
 
 /** Les champs d'une ligne « A | B | C ». */
@@ -569,11 +593,23 @@ export function renderWidget(noeud, doc, contexte = {}) {
       // les bords. On neutralise donc les deux, ici seulement.
       el.style.padding = '0';
 
+      // Une image, et non un fond CSS. Un fond déclaré en style en ligne n'est
+      // découvert qu'après le calcul de la mise en page : le navigateur le
+      // demande en dernier, alors que c'est l'image que le visiteur attend en
+      // premier. Un `<img>` est lu par l'analyseur dès la première passe, sait
+      // porter `srcset` — un fond n'a pas d'équivalent sans requête de média
+      // écrite à la main — et accepte `fetchpriority`.
       const fond = safeImageUrl(p.image);
       if (fond) {
-        el.style.backgroundImage = `url("${fond.replace(/"/g, '%22')}")`;
-        el.style.backgroundSize = 'cover';
-        el.style.backgroundPosition = 'center';
+        const visuel = doc.createElement('img');
+        visuel.setAttribute('alt', '');
+        visuel.setAttribute('aria-hidden', 'true');
+        poserImage(visuel, fond, variantesPour(p, fond), { sizes: SIZES.pleine, ...PREMIER_ECRAN });
+        // `max-width:none` et `margin:0` pour la même raison que le voile : la
+        // feuille du site contraint presque toujours `section > *`.
+        visuel.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;'
+          + 'max-width:none;margin:0;object-fit:cover;object-position:center;display:block;';
+        el.appendChild(visuel);
       }
 
       // Le voile est ce qui rend le texte lisible sur n'importe quelle photo.
@@ -936,9 +972,8 @@ export function renderWidget(noeud, doc, contexte = {}) {
 
       images.forEach((src, rang) => {
         const vignette = doc.createElement('img');
-        vignette.setAttribute('src', src);
         vignette.setAttribute('alt', '');
-        vignette.setAttribute('loading', 'lazy');
+        poserImage(vignette, src, variantesPour(p, src), { sizes: SIZES.vignette });
         vignette.style.cssText = `width:100%;height:${hauteur}px;`
           + 'object-fit:cover;display:block;';
         if (!visionneuse) { el.appendChild(vignette); return; }
@@ -975,9 +1010,13 @@ export function renderWidget(noeud, doc, contexte = {}) {
           fond.style.cssText = 'position:absolute;inset:0;';
           vue.appendChild(fond);
 
+          // Douze photos en pleine taille dans une page, c'est douze fichiers
+          // téléchargés pour une visionneuse que le visiteur n'ouvrira
+          // peut-être jamais. Différée, une image restée cachée n'est demandée
+          // qu'au moment où la vue s'ouvre.
           const grande = doc.createElement('img');
-          grande.setAttribute('src', src);
           grande.setAttribute('alt', '');
+          poserImage(grande, src, variantesPour(p, src), { sizes: SIZES.pleine });
           grande.style.cssText = 'position:relative;max-width:94%;max-height:84vh;'
             + 'width:auto;height:auto;object-fit:contain;';
           vue.appendChild(grande);
@@ -1163,7 +1202,7 @@ export function renderWidget(noeud, doc, contexte = {}) {
       appliquerAlignement(el, p.align);
       const img = doc.createElement('img');
       const src = safeImageUrl(p.src);
-      if (src) img.setAttribute('src', src);
+      poserImage(img, src, variantesPour(p, src), { sizes: SIZES.bloc });
       img.setAttribute('alt', safeText(p.alt || '').replace(/&lt;|&gt;/g, ''));
       img.style.width = Math.max(10, Math.min(100, p.width ?? 100)) + '%';
       img.style.display = 'inline-block';

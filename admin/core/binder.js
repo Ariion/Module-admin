@@ -8,6 +8,7 @@
  * @module core/binder
  */
 import { safeHtml, safeText, safeUrl, safeImageUrl } from './sanitize.js';
+import { srcsetSur } from './images.js';
 import { readValue } from './scanner.js';
 import { applyStyleObject, readStyleValues } from './style.js';
 
@@ -41,6 +42,24 @@ function applyText(el, value) {
   return false;
 }
 
+/**
+ * Une image détectée dans le HTML du client.
+ *
+ * C'est la frontière la plus délicate du module : on ne réécrit pas la page du
+ * développeur. Mais l'image, elle, n'est plus la sienne dès l'instant où le
+ * client en a choisi une autre — c'est nous qui posons `src`, et qui vidons
+ * déjà le `srcset` qu'il avait prévu pour l'ancienne. Y écrire le nôtre reste
+ * donc dans ce que le module a le droit de faire.
+ *
+ * Ce qu'on n'écrit PAS ici, et c'est un choix : `width`/`height`. Une
+ * proportion posée à l'édition survivrait à l'image qu'elle décrivait, et pour
+ * la corriger il faudrait savoir si le `width` du développeur DIMENSIONNE son
+ * image ou ne fait que la décrire — un `<img width="80">` de logo sans CSS fait
+ * le premier, et l'effacer casserait la page. Le module ne sait pas trancher,
+ * donc il ne tranche pas. Les proportions des images du client sont posées à la
+ * publication, et seulement là où le développeur n'en a déclaré aucune : voir
+ * `core/images.js`.
+ */
 function applyImage(el, value) {
   let changed = false;
   if (typeof value.src === 'string' && value.src) {
@@ -57,6 +76,34 @@ function applyImage(el, value) {
       }
       changed = true;
     }
+  }
+
+  // Les largeurs de remplacement se posent APRÈS, sur le `srcset` qu'on vient
+  // de vider : dans l'autre ordre, une image remplacée deux fois aurait gardé
+  // les largeurs de la première.
+  const srcset = srcsetSur(value.srcset);
+  if (srcset && el.getAttribute('srcset') !== srcset) {
+    el.setAttribute('srcset', srcset);
+    el.setAttribute('sizes', String(value.sizes || '100vw'));
+    changed = true;
+  }
+
+  // La proportion, quand la médiathèque la connaît et que le développeur n'a
+  // rien déclaré. La publication sait déjà la relever, mais sur l'image
+  // CHARGÉE : une photo remplacée à l'instant n'a pas encore ses octets, et la
+  // page partait alors sans sa proportion — donc en sautant au chargement,
+  // précisément ce qu'on voulait éviter. La tenir du média plutôt que du
+  // décodage la rend certaine.
+  //
+  // Toujours pas de réécriture : on n'écrit que là où il n'y a rien. Un
+  // `width` posé par le développeur peut DIMENSIONNER son image au lieu de la
+  // décrire, et le module ne sait pas lequel des deux.
+  const largeur = Math.round(Number(value.largeur) || 0);
+  const hauteur = Math.round(Number(value.hauteur) || 0);
+  if (largeur > 0 && hauteur > 0 && !el.hasAttribute('width') && !el.hasAttribute('height')) {
+    el.setAttribute('width', String(largeur));
+    el.setAttribute('height', String(hauteur));
+    changed = true;
   }
   if (typeof value.alt === 'string' && el.getAttribute('alt') !== value.alt) {
     el.setAttribute('alt', safeText(value.alt).replace(/&lt;|&gt;/g, ''));

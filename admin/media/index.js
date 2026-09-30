@@ -4,6 +4,20 @@
  * Le module ne force aucun fournisseur : le stockage des images est un point
  * d'extension. Écrire un nouvel adaptateur (Cloudinary, S3, Bunny...) revient
  * à exposer `upload(file)` et, si possible, `list()`.
+ *
+ * Ce que `upload` doit rendre, et ce que chaque champ sert :
+ *
+ *   url, path, name, size, type    l'image telle qu'on la stocke et l'affiche
+ *   width, height                  la proportion écrite dans le HTML publié,
+ *                                  pour que la page ne saute pas au chargement
+ *   srcset                         les largeurs, prêtes à poser telles quelles
+ *   variantes[]                    {url, path, width, height} de chacune, pour
+ *                                  pouvoir toutes les effacer avec l'image
+ *
+ * Les trois derniers sont facultatifs : un adaptateur qui ne produit qu'une
+ * largeur reste parfaitement utilisable — le module écrit alors un `src` seul,
+ * comme avant. C'est ce qui arrive aussi pour une adresse saisie à la main et
+ * pour une image de banque laissée à distance.
  * @module media
  */
 import { createFirebaseStorageAdapter } from './firebase-storage.js';

@@ -18,6 +18,7 @@ import { PageModel } from './model.js';
 import { BAKE_PARAM } from './config.js';
 import { loadFrame, reveillerFeuilles } from './frame.js';
 import { ecrireEntete } from './referencement.js';
+import { reglerChargementImages } from './images.js';
 import { debug, warn } from './log.js';
 
 /** Marqueur qui distingue un fichier régénéré du code source d'origine. */
@@ -67,6 +68,29 @@ function poserAdressePubliee(doc, sourceUrl, model) {
   ecrireEntete(doc, { meta: model.pageMetaCourant(), reglages: model.reglages, adresse });
 }
 
+/**
+ * Tranche, sur le document régénéré, ce qui se charge tout de suite.
+ *
+ * C'est le seul moment où la question a une réponse : ici la page est ENTIÈRE
+ * et MISE EN PAGE, donc on sait quelle image tombe dans le premier écran et
+ * lesquelles sont en dessous. Au rendu d'un élément, personne ne le sait — et
+ * se tromper coûte dans les deux sens : une image de bandeau différée retarde
+ * l'affichage au lieu de l'accélérer.
+ *
+ * Le résultat part dans le fichier `.html` : ce sont des attributs standards,
+ * ils ne demandent rien au module et lui survivent.
+ *
+ * La hauteur de référence est celle du cadre de régénération, pas celle de
+ * l'écran de l'administrateur : le fichier publié doit être le même quel que
+ * soit le poste depuis lequel on a cliqué sur « Publier ».
+ */
+function reglerImagesPubliees(doc) {
+  const vue = doc.defaultView;
+  const bilan = reglerChargementImages(doc, { pli: vue?.innerHeight || 900 });
+  debug('images publiées :', bilan.immediates, 'immédiates,', bilan.differees, 'différées,',
+    bilan.dimensionnees, 'dimensionnées');
+}
+
 /** Retire du document régénéré tout ce que le module y a laissé. */
 function clean(doc, pageId, { sourceUrl, model } = {}) {
   // Par sécurité : la régénération n'attend pas le rendu, donc aucune feuille
@@ -76,6 +100,12 @@ function clean(doc, pageId, { sourceUrl, model } = {}) {
   if (sourceUrl && model) poserAdressePubliee(doc, sourceUrl, model);
   for (const node of doc.querySelectorAll('[data-admin-ui]')) node.remove();
   for (const node of doc.querySelectorAll('#admin-document-style')) node.remove();
+
+  // Avant le nettoyage des attributs : la passe a besoin de `data-admin-section`
+  // pour distinguer nos images de celles du HTML du client, sur lesquelles elle
+  // n'ajoute que ce qui manque.
+  reglerImagesPubliees(doc);
+
   for (const node of doc.querySelectorAll('*')) {
     for (const attr of Array.from(node.attributes)) {
       if (attr.name.startsWith('data-admin-') && !ATTRS_CONSERVES.has(attr.name)) {

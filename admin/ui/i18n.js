@@ -848,6 +848,9 @@ const DICTIONARIES = {
     noImage: 'Aucune image',
     removeImage: 'Retirer le fond',
     resetStyle: 'Rétablir l’habillage d’origine',
+    mediaAllegee: (avant, apres, tailles) => `Ajouté et allégé : ${apres} au lieu de ${avant}, `
+      + `en ${tailles} tailles pour s’adapter aux écrans.`,
+    mediaTailles: (n) => `${n} tailles`,
 
     // Éléments qui se comportent sans le module
     w_accordeon: 'Accordéon',
@@ -2012,6 +2015,9 @@ const DICTIONARIES = {
     noImage: 'No image',
     removeImage: 'Remove background',
     resetStyle: 'Restore original appearance',
+    mediaAllegee: (avant, apres, tailles) => `Added and optimised: ${apres} instead of ${avant}, `
+      + `in ${tailles} sizes to fit every screen.`,
+    mediaTailles: (n) => `${n} sizes`,
 
     // Elements that behave without the module
     w_accordeon: 'Accordion',

@@ -1,5 +1,45 @@
 # Journal des versions
 
+## 1.31.0
+
+**Les images : 91 % d'octets en moins sur un téléphone**
+
+La moitié du travail existait : une photo de 6 Mo sortie d'un téléphone
+était déjà ramenée à une largeur raisonnable avant l'envoi. Il manquait tout
+le reste, et c'est ce qui pèse vraiment sur un site vitrine.
+
+**Une photo devient quatre largeurs**, en WebP, produites dans le navigateur
+au moment du téléversement — 480, 960, 1440, 1920 — et le `srcset` écrit
+dans la page laisse le navigateur choisir. Ce qu'il ne sait pas convertir
+passe quand même, tel quel : un SVG n'a rien à décliner, et un fichier
+illisible ne doit pas bloquer un téléversement.
+
+**Ce qui est sous le pli attend**, et ce qui est dans le premier écran ne
+l'attend pas. La question ne se tranche qu'à la publication, quand la page
+est entière et mise en page : au rendu d'un élément, personne ne sait où il
+tombera. Se tromper coûte dans les deux sens — un bandeau différé retarde
+l'affichage au lieu de l'accélérer.
+
+**Les proportions sont écrites**, pour que la page ne saute pas. Sur les
+images du module, toujours. Sur celles du site du client, seulement là où le
+développeur n'a rien déclaré : un `width` peut *dimensionner* une image au
+lieu de la décrire, et le module ne sait pas lequel des deux.
+
+**Mesuré, pas affirmé** — octets réellement sortis du serveur, sur la page
+publiée sans le module :
+
+| | avant | après |
+|---|---|---|
+| Téléphone (390 px) | 749,6 Ko | **70,4 Ko** (−91 %) |
+| Grand écran (1280 px) | 749,6 Ko | **370,4 Ko** (−51 %) |
+
+*Une réserve, plutôt qu'un chiffre de plus.* Le décalage de mise en page est
+nul, mais il l'était déjà sur la page témoin : les éléments du module
+réservaient leur place en CSS. Ce que les proportions apportent se joue sur
+les images du site du client et sur les pages où le CSS ne réserve rien — et
+le montage d'essai ne sait pas le mettre en scène. L'essai le dit lui-même
+plutôt que de compter ce gain-là.
+
 ## 1.30.0
 
 **Référencement et accessibilité : le module dit enfin ce qui manque**
