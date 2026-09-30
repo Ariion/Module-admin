@@ -16,6 +16,7 @@
     "essai-clavier": "node tools/essai-clavier.mjs",
     "essai-formulaire": "node tools/essai-formulaire.mjs",
     "essai-regles": "node tools/essai-regles.mjs",
+    "essai-audit": "node tools/essai-audit.mjs",
     "paquet": "node tools/paquet.mjs",
     "livraison": "node tools/livraison.mjs"
   },

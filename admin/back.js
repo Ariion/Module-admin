@@ -21,7 +21,7 @@
  * écran en a besoin.
  * @module back
  */
-import { resolveConfig, PREVIEW_PARAM, PAGE_COMMUNE } from './core/config.js';
+import { resolveConfig, PREVIEW_PARAM, PAGE_COMMUNE, CONSTAT_PARAM } from './core/config.js';
 import { loadFrame } from './core/frame.js';
 import { PageModel } from './core/model.js';
 import { setDebug, debug } from './core/log.js';
@@ -30,6 +30,7 @@ import { typesDe, cheminDepuisTitre } from './core/types.js';
 import { poserCarte, attendrePage } from './core/contenus.js';
 import { rubriquesActives, rubrique, appliquerGenres, genreChoisi } from './core/rubriques.js';
 import { cibleDEnvoi } from './core/formulaire.js';
+import { planDuSite, robots, racineDe } from './core/referencement.js';
 import { createHost } from './data/host.js';
 import { canEdit } from './data/schema.js';
 import { h, icon, clear } from './ui/el.js';
@@ -46,6 +47,7 @@ import { creerMedias } from './ui/back/medias.js';
 import { creerMessages } from './ui/back/messages.js';
 import { creerProduits } from './ui/back/produits.js';
 import { creerApparence, documentDemo } from './ui/back/apparence.js';
+import { creerReferencement } from './ui/back/referencement.js';
 import { pageDemo } from './core/demo.js';
 import { renderWidget } from './core/widgets.js';
 import { createMedia } from './media/index.js';
@@ -195,6 +197,18 @@ async function demarrer() {
         onLu: (m, lu) => backend.markMessage(m.id, lu),
         onSupprimer: (m) => backend.deleteMessage(m.id),
       }),
+      referencement: () => creerReferencement({
+        t,
+        lister: listerPages,
+        ouvrirPage: chargerPage,
+        enregistrerPage: (pageId, instantane) => backend.saveDraft(pageId, instantane),
+        reglages: async () => (await lireCommun())?.reglages || null,
+        enregistrerReglages,
+        choisirMedia,
+        ecrirePlan: ecrirePlanDuSite,
+        peutEcrire: () => etatHote.ok,
+        onAller: (chemin, ancre) => ouvrirEnDirect(chemin, { constat: ancre }),
+      }),
       apparence: () => creerApparence({
         t,
         lire: async () => (await lireCommun())?.reglages?.theme || null,
@@ -293,6 +307,10 @@ async function demarrer() {
     const url = new URL(chemin || 'index.html', RACINE);
     url.searchParams.set(config.editor.trigger, '');
     if (options.guide) url.searchParams.set('guide', '');
+    // L'écran d'audit a un constat à montrer : l'éditeur s'ouvrira dessus,
+    // élément sélectionné. Sans cela, « voir sur la page » rouvrirait la page
+    // entière et laisserait chercher.
+    if (options.constat) url.searchParams.set(CONSTAT_PARAM, options.constat);
     if (options.structure) url.searchParams.set('structure', '');
     window.open(url.href, '_blank', 'noopener');
   }
@@ -371,6 +389,24 @@ async function demarrer() {
       ...(commun || { v: 1, content: {}, collections: {} }),
       reglages: { ...(commun?.reglages || {}), ...patch },
     });
+  }
+
+  /**
+   * Dépose le plan du site et le fichier robots à la racine.
+   *
+   * Les deux fichiers sont écrits ENSEMBLE, et c'est voulu : un plan que rien
+   * ne déclare n'est trouvé que si le client le soumet à la main dans une
+   * console de moteur de recherche, ce qu'il ne fera pas. `robots.txt` est la
+   * seule façon de le désigner sans rien demander à personne.
+   */
+  async function ecrirePlanDuSite({ adresse, pages }) {
+    const racine = racineDe(adresse);
+    if (!racine) return { pages: 0 };
+    const plan = planDuSite({ adresse: racine, pages });
+    if (!plan) return { pages: 0 };
+    await hebergement.writeFichier('sitemap.xml', plan);
+    await hebergement.writeFichier('robots.txt', robots({ adresse: racine }));
+    return { pages: (plan.match(/<loc>/g) || []).length };
   }
 
   async function enregistrerRubriques({ genres, rubriques }) {

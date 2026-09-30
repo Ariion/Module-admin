@@ -17,6 +17,7 @@
 import { PageModel } from './model.js';
 import { BAKE_PARAM } from './config.js';
 import { loadFrame, reveillerFeuilles } from './frame.js';
+import { ecrireEntete } from './referencement.js';
 import { debug, warn } from './log.js';
 
 /** Marqueur qui distingue un fichier régénéré du code source d'origine. */
@@ -37,12 +38,42 @@ export const BAKED_META = 'admin-baked';
  */
 const ATTRS_CONSERVES = new Set(['data-admin-section', 'data-admin-ref']);
 
+/**
+ * Inscrit l'adresse publique de la page dans le fichier régénéré.
+ *
+ * C'est le seul endroit du module qui connaisse la VRAIE adresse du fichier
+ * écrit. L'éditeur, lui, travaille sur `page.html?admin` : une adresse
+ * canonique relevée là-bas pointerait vers le mode d'édition, ce qui est pire
+ * que pas de canonique du tout — les moteurs suivraient une page qui demande à
+ * se connecter. Le modèle ne pose donc la canonique que si le client l'a
+ * écrite lui-même ; sinon elle est déduite ici, de la copie du code d'origine
+ * dont on vient de repartir.
+ *
+ * Tout passe par la même fonction que l'édition : deux façons d'écrire les
+ * mêmes balises finiraient par ne plus écrire les mêmes.
+ */
+function poserAdressePubliee(doc, sourceUrl, model) {
+  let adresse = '';
+  try {
+    const url = new URL(sourceUrl, doc.baseURI || undefined);
+    url.search = '';
+    url.hash = '';
+    url.pathname = url.pathname
+      .replace(/\.src\.html?$/i, '.html')
+      .replace(/\/index\.html?$/i, '/');
+    adresse = url.href;
+  } catch { /* source d'un genre inattendu : on s'abstient */ }
+  if (!adresse) return;
+  ecrireEntete(doc, { meta: model.pageMetaCourant(), reglages: model.reglages, adresse });
+}
+
 /** Retire du document régénéré tout ce que le module y a laissé. */
-function clean(doc, pageId) {
+function clean(doc, pageId, { sourceUrl, model } = {}) {
   // Par sécurité : la régénération n'attend pas le rendu, donc aucune feuille
   // ne devrait être endormie ici. Si cela changeait un jour, le fichier écrit
   // ne perdrait pas pour autant la balise du client.
   reveillerFeuilles(doc);
+  if (sourceUrl && model) poserAdressePubliee(doc, sourceUrl, model);
   for (const node of doc.querySelectorAll('[data-admin-ui]')) node.remove();
   for (const node of doc.querySelectorAll('#admin-document-style')) node.remove();
   for (const node of doc.querySelectorAll('*')) {
@@ -107,7 +138,7 @@ export async function bakePage({ sourceUrl, snapshot, scanOptions = {}, pageId, 
 
     const model = new PageModel({ ...scanOptions, doc }).refresh();
     const result = model.applySnapshot(snapshot);
-    clean(doc, pageId);
+    clean(doc, pageId, { sourceUrl, model });
 
     const html = serialize(doc, sourceDoc, analyses);
     debug('régénération', pageId, result.applied, 'valeurs,', result.orphans.length, 'orphelins');

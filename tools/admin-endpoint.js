@@ -13,6 +13,7 @@
  *   POST ?action=page    {path, html}   → {written, bytes, path}
  *   POST ?action=create  {path, from}   → {created, path}
  *   POST ?action=delete-page {path}     → {deleted, path}
+ *   POST ?action=fichier {path, content} → {written, bytes, path}
  *   POST ?action=config  {...}          → 501 (voir plus bas)
  *
  * Authentification : jeton d'identité Firebase en Authorization: Bearer.
@@ -38,6 +39,9 @@ const GITHUB = 'https://api.github.com';
 /** Marque qu'une page a été régénérée par le module. */
 const BAKED_MARKER = 'name="admin-baked"';
 const MAX_HTML = 1024 * 1024;
+
+/** Les seuls fichiers que le module écrive ailleurs que dans une page. */
+const FICHIERS_SERVICE = ['sitemap.xml', 'robots.txt'];
 
 /* ───────────────────────────── certificats Google ───────────────────────── */
 
@@ -355,6 +359,28 @@ const actions = {
     await deleteFile(paths.file, `Suppression : ${paths.file}`);
     await deleteFile(paths.source, `Suppression de la copie d'origine : ${paths.source}`);
     return { deleted: true, path: paths.file };
+  },
+
+  /**
+   * Fichiers de service écrits à la racine du site : le plan et robots.txt.
+   *
+   * Deux noms, et pas un de plus. La liste EST l'autorisation : sans elle,
+   * « écrire un fichier à la racine » voudrait dire committer n'importe quoi
+   * dans le dépôt du client, y compris une fonction servie par Vercel. Et
+   * l'action `page` ne pouvait pas servir — elle exige un .html, la marque du
+   * module et une copie du code d'origine, ce qu'un plan du site n'a pas.
+   */
+  async fichier({ body }) {
+    const nom = String(body.path || '').replace(/\\/g, '/').split('/').pop();
+    if (!FICHIERS_SERVICE.includes(nom)) {
+      throw httpError('Ce fichier ne fait pas partie de ceux que le module écrit.', 400);
+    }
+    const contenu = String(body.content || '');
+    if (contenu === '' || contenu.length > 512 * 1024) {
+      throw httpError('Contenu absent ou trop volumineux.', 400);
+    }
+    await writeFile(nom, contenu, `Référencement : ${nom}`);
+    return { written: true, bytes: Buffer.byteLength(contenu, 'utf8'), path: nom };
   },
 
   async config() {

@@ -20,6 +20,7 @@ import { writeFontLink } from './fonts.js';
 import { writeThemeSheet, policesDuTheme } from './theme.js';
 import { cssDesEffets, writeEffetsSheet } from './effets.js';
 import { contientFormulaire, writeFormulaireScript } from './formulaire.js';
+import { ecrireEntete } from './referencement.js';
 
 /** Réglages qui décident de la classe d'effets d'un bloc. */
 const EFFETS_CLES = ['survol', 'clic', 'entree', 'dureeEffet'];
@@ -222,6 +223,7 @@ export class PageModel {
     this.refreshEcrans();
     this.refreshFonts();
     this.refreshFormulaires();
+    this.refreshReferencement();
     debug('appliqué', applied, 'valeurs,', this.orphans.size, 'orphelins');
     return { applied, orphans: [...this.orphans.values()] };
   }
@@ -729,15 +731,35 @@ export class PageModel {
   setPageMeta(patch) {
     this.pageMeta = { ...(this.pageMeta || {}), ...patch };
     appliquerMeta(this.doc, this.pageMeta);
+    this.refreshReferencement();
   }
 
   /** Valeurs actuelles, lues dans la page si rien n'a été enregistré. */
   pageMetaCourant() {
     const description = this.doc.querySelector('meta[name="description"]');
+    const partage = this.doc.querySelector('meta[property="og:image"]');
+    const canonique = this.doc.querySelector('link[rel="canonical"]');
     return {
       titre: this.pageMeta?.titre ?? (this.doc.title || ''),
       description: this.pageMeta?.description ?? (description?.getAttribute('content') || ''),
+      partage: this.pageMeta?.partage ?? (partage?.getAttribute('content') || ''),
+      canonique: this.pageMeta?.canonique ?? (canonique?.getAttribute('href') || ''),
     };
+  }
+
+  /**
+   * Écrit les balises de référencement et la fiche d'établissement.
+   *
+   * Appelée APRÈS la fusion des réglages, et pas depuis `appliquerMeta` : la
+   * fiche d'établissement se construit sur le brief et les mentions légales,
+   * qui arrivent avec le document commun. L'écrire plus tôt la produirait
+   * vide, puis il faudrait compter les passages pour la corriger.
+   */
+  refreshReferencement() {
+    safe(() => ecrireEntete(this.doc, {
+      meta: this.pageMetaCourant(),
+      reglages: this.reglages,
+    }), false, 'referencement');
   }
 
   setReglage(cle, valeur) {
