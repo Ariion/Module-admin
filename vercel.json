@@ -1,8 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/", "destination": "/essais/vercel/accueil.html" },
-    { "source": "/site", "destination": "/essais/vercel/index.html" },
-    { "source": "/vierge", "destination": "/essais/vercel/vierge.html" }
+    {
+      "source": "/",
+      "destination": "/essais/vercel/accueil.html"
+    },
+    {
+      "source": "/site",
+      "destination": "/essais/vercel/index.html"
+    },
+    {
+      "source": "/vierge",
+      "destination": "/essais/vercel/vierge.html"
+    },
+    {
+      "source": "/distribution/admin/:chemin*",
+      "destination": "/admin/:chemin*"
+    }
   ]
 }
