@@ -87,6 +87,24 @@ function applyImage(el, value) {
     el.setAttribute('sizes', String(value.sizes || '100vw'));
     changed = true;
   }
+
+  // La proportion, quand la médiathèque la connaît et que le développeur n'a
+  // rien déclaré. La publication sait déjà la relever, mais sur l'image
+  // CHARGÉE : une photo remplacée à l'instant n'a pas encore ses octets, et la
+  // page partait alors sans sa proportion — donc en sautant au chargement,
+  // précisément ce qu'on voulait éviter. La tenir du média plutôt que du
+  // décodage la rend certaine.
+  //
+  // Toujours pas de réécriture : on n'écrit que là où il n'y a rien. Un
+  // `width` posé par le développeur peut DIMENSIONNER son image au lieu de la
+  // décrire, et le module ne sait pas lequel des deux.
+  const largeur = Math.round(Number(value.largeur) || 0);
+  const hauteur = Math.round(Number(value.hauteur) || 0);
+  if (largeur > 0 && hauteur > 0 && !el.hasAttribute('width') && !el.hasAttribute('height')) {
+    el.setAttribute('width', String(largeur));
+    el.setAttribute('height', String(hauteur));
+    changed = true;
+  }
   if (typeof value.alt === 'string' && el.getAttribute('alt') !== value.alt) {
     el.setAttribute('alt', safeText(value.alt).replace(/&lt;|&gt;/g, ''));
     changed = true;

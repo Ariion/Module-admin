@@ -66,10 +66,13 @@ const IMAGE_CLIENT = (teinte) => 'data:image/svg+xml,'
  * module : la première sera remplacée par une photo de la médiathèque, la
  * seconde ne sera pas touchée du tout.
  *
- * Les deux sections qui les portent sont volontairement DIFFÉRENTES — l'une a
- * un titre. Deux sections de structure identique seraient détectées comme un
- * bloc répétable, et leurs images relèveraient de la collection plutôt que du
- * contenu : ce n'est pas ce mécanisme-là qu'on éprouve ici.
+ * Les deux sections qui les portent sont volontairement DIFFÉRENTES : l'une
+ * pose l'image nue, l'autre la range dans un `<figure>` légendé. Deux sections
+ * de structure voisine seraient détectées comme un bloc répétable, et leurs
+ * images relèveraient de la collection plutôt que du contenu — ce n'est pas ce
+ * mécanisme-là qu'on éprouve ici. Un simple `<h2>` de plus n'y suffit pas : la
+ * parenté se juge sur la forme, et deux sections « titre, image, paragraphe »
+ * restent parentes. Il faut que l'imbrication diffère.
  */
 const ATELIER = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
 <title>essai des images</title>
@@ -87,8 +90,9 @@ const ATELIER = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
 <p>Quatre chambres, un verger, et le calme des coteaux.</p></section>
 <section class="dedans photo"><img src="${IMAGE_CLIENT('b9c3ae')}" alt="La façade">
 <p>La façade, au printemps.</p></section>
-<section class="dedans photo"><h2>Le verger</h2>
-<img src="${IMAGE_CLIENT('aeb3c9')}" alt="Le verger">
+<section class="dedans"><h2>Le verger</h2>
+<figure class="photo"><img src="${IMAGE_CLIENT('aeb3c9')}" alt="Le verger">
+<figcaption>Au petit matin.</figcaption></figure>
 <p>Quatre-vingts arbres, et un vieux puits.</p></section>
 </main></body></html>`;
 
@@ -384,6 +388,10 @@ const publication = await page.evaluate(async ({ chambre, verger }) => {
     src: chambre.url,
     srcset: connues.srcset,
     sizes: sizesMesure(model.entries.get(idClient).el),
+    // La médiathèque connaît la proportion : on la transmet plutôt que de
+    // laisser la publication la deviner sur une image pas encore chargée.
+    largeur: connues.largeur,
+    hauteur: connues.hauteur,
   });
 
   // Le bandeau doit passer devant : `after` ne sait que placer APRÈS, et
@@ -440,16 +448,32 @@ const bandeau = imgs[0];
 const differees = imgs.filter((i) => i.loading === 'lazy');
 const sansDimension = imgs.filter((i) => !i.largeur || !i.hauteur);
 
-dit('la page publiée porte six images', 6, imgs.length);
+// L'inventaire avant les affirmations : un compte qui tombe faux doit dire
+// CE qu'il a compté, sinon on ajuste le nombre attendu sans savoir pourquoi.
+for (const [i, im] of imgs.entries()) {
+  const nom = im.src.startsWith('data:') ? '(donnée en ligne)' : im.src.split('/').pop();
+  console.log(`    ${String(i).padStart(2)}. ${nom.padEnd(38)} ${(im.loading || 'immédiat').padEnd(9)}`
+    + `${(im.largeur ? im.largeur + '×' + im.hauteur : 'sans dimension').padEnd(16)}`
+    + `${im.srcset ? im.srcset.split(', ').length + ' largeurs' : 'pas de srcset'}  ${im.sizes}`);
+}
+// Huit et non six : la galerie rend chaque photo deux fois — la vignette
+// dans la grille, et la copie que la visionneuse montre en grand. C'est ce qui
+// lui permet de s'ouvrir sans une ligne de script, module retiré.
+dit('la page publiée porte huit images', 8, imgs.length);
 dit('le bandeau est le premier visuel', true, bandeau.srcset.includes('1920w'));
 dit('le bandeau n’est PAS différé', '', bandeau.loading);
 dit('il est même annoncé prioritaire', 'high', bandeau.priorite);
 dit('il sait choisir sa largeur', '100vw', bandeau.sizes);
-dit('les images sous le pli sont différées', 5, differees.length);
-dit('et décodées sans bloquer', 5, differees.filter((i) => i.decoding === 'async').length);
+dit('toutes les images sous le pli sont différées', imgs.length - 1, differees.length);
+dit('et décodées sans bloquer', imgs.length - 1,
+  differees.filter((i) => i.decoding === 'async').length);
 dit('aucune image sans proportion écrite', 0, sansDimension.length);
+// On vérifie la FORME, pas le nombre : la largeur est relevée sur la page du
+// client, donc elle change avec sa mise en page. Un nombre en dur ferait
+// tomber l'essai au premier pixel de marge modifié, sans que rien soit cassé.
 dit('l’image du client reçoit nos largeurs', true,
-  imgs.some((i) => i.sizes === '(max-width: 828px) 100vw, 828px' && i.srcset.includes('1920w')));
+  imgs.some((i) => /^\(max-width: \d+px\) 100vw, \d+px$/.test(i.sizes)
+    && i.srcset.includes('1920w')));
 dit('celle qu’on n’a pas touchée garde son adresse', true,
   imgs.some((i) => i.src.startsWith('data:image/svg') && i.largeur === '800'));
 dit('le bandeau n’est plus un fond CSS', 'non', publication.fondCss);
@@ -529,8 +553,13 @@ const largeurDe = (urls) => urls.map((u) => /-(\d+)\.webp$/.exec(u)?.[1] || /-(\
 console.log(`    le téléphone reçoit : ${mobileApres.urls.join(', ') || '(rien)'}`);
 console.log(`    le bureau reçoit    : ${largeApres.urls.join(', ') || '(rien)'}`);
 
-dit('le téléphone ne reçoit qu’une image : celle du bandeau', 1, mobileApres.urls.length);
-dit('et c’est la petite largeur', true, largeurDe(mobileApres.urls).includes('480'));
+// Pas « une seule image » : un navigateur charge aussi ce qui approche du bord
+// de l'écran, et la marge qu'il s'accorde lui appartient. Ce qui est à nous, et
+// ce qu'on vérifie, c'est que TOUT ce qu'il va chercher est une petite largeur.
+dit('le téléphone ne va chercher que de petites largeurs', true,
+  largeurDe(mobileApres.urls).every((l) => l === '480'));
+dit('et il en prend moins que le grand écran', true,
+  mobileApres.urls.length <= largeApres.urls.length);
 dit('le bureau, lui, reçoit une grande largeur', true,
   largeurDe(largeApres.urls).some((l) => l === '1440' || l === '1920'));
 dit('donc un écran étroit télécharge STRICTEMENT moins d’octets qu’un large',
@@ -539,7 +568,14 @@ dit('et moins que la même page sans ce travail', true, mobileApres.images < mob
 dit('sur un grand écran aussi', true, largeApres.images < largeAvant.images);
 dit('le décalage de mise en page est nul', 0, mobileApres.decalage);
 dit('sur un grand écran aussi', 0, largeApres.decalage);
-dit('alors que la page témoin, elle, saute', true, mobileAvant.decalage > 0);
+// La page témoin ne saute pas non plus, et il faut le dire plutôt que de
+// s'attribuer un gain : elle perd les attributs `width`/`height`, mais garde
+// les styles en ligne des éléments du module, qui réservent déjà la place.
+// Le décalage nul mesuré ici prouve donc que rien n'a été CASSÉ, pas qu'on a
+// réparé quelque chose. Ce que les attributs apportent vraiment se joue sur
+// les images du site du client et sur les pages où le CSS ne réserve rien —
+// et cela, ce montage ne sait pas le mettre en scène.
+dit('le témoin ne saute pas davantage : le gain n’est pas là', 0, mobileAvant.decalage);
 
 console.log('\nEt après avoir tout fait défiler — la page entière');
 const toutApres = await mesurer('/publie/apres.html', 390, 700, true);
@@ -556,7 +592,8 @@ console.log(`    téléphone, page entière  : ${ko(toutAvant.images)} → ${ko(
   + `(−${gain(toutAvant.images, toutApres.images)} %)`);
 console.log(`    bureau, au chargement    : ${ko(largeAvant.images)} → ${ko(largeApres.images)} `
   + `(−${gain(largeAvant.images, largeApres.images)} %)`);
-console.log(`    décalage de mise en page : ${mobileAvant.decalage} → ${mobileApres.decalage}`);
+console.log(`    décalage de mise en page : ${mobileAvant.decalage} des deux côtés — `
+  + 'le gain est ailleurs, voir la note');
 
 dit('aucune erreur de script pendant tout l’essai', 0, plantages.length);
 if (plantages.length) for (const p of plantages) console.log('      ' + p);
