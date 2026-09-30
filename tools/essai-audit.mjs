@@ -393,8 +393,12 @@ console.log('\nLes phrases de l’écran, dans les deux langues');
       fetch('/admin/core/audit.js').then((r) => r.text()),
     ]);
     const cles = new Set();
-    for (const m of sources[0].matchAll(/\bt\('([A-Za-z0-9_]+)'/g)) cles.add(m[1]);
-    for (const m of sources[1].matchAll(/constat\('([A-Za-z0-9_]+)'/g)) cles.add(m[1]);
+    // `[,)]` après le guillemet : sans lui, `t('boAuditZone_' + zone)` ferait
+    // relever le PRÉFIXE comme s'il était une clé, et l'essai réclamerait une
+    // phrase qui n'a aucune raison d'exister. Les clés construites par
+    // morceaux sont ajoutées à la main juste en dessous, valeur par valeur.
+    for (const m of sources[0].matchAll(/\bt\('([A-Za-z0-9_]+)'\s*[,)]/g)) cles.add(m[1]);
+    for (const m of sources[1].matchAll(/constat\('([A-Za-z0-9_]+)'\s*[,)]/g)) cles.add(m[1]);
     // Celles que le code construit par morceaux : le relevé ne les voit pas.
     for (const g of GRAVITES) { cles.add('boAuditGravite_' + g); cles.add('boAuditGraviteAide_' + g); }
     for (const f of FAMILLES) cles.add('boAuditFamille_' + f);
