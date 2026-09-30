@@ -19,8 +19,10 @@ la main sur le code.
 ## Ce que contient ce dossier
 
 ```
-installation.html       la page qui vous guide, à ouvrir en premier
-index.html              une page vierge, prête, si vous partez de zéro
+index.html              À OUVRIR EN PREMIER — le choix du chemin, puis
+                        la page vierge qui deviendra votre site
+installation.html       les trois étapes, si vous greffez le module
+                        sur un site que vous avez déjà
 admin/                  le module (à copier tel quel à la racine du site)
 admin-config.js         la configuration livrée (mode local, pour essayer)
 admin-config.exemple.js le modèle commenté, pour un vrai site
@@ -43,8 +45,8 @@ ci-dessous.
 
 ### Vous partez de zéro
 
-Le dossier contient déjà une page `index.html` vierge, prête. Servez ce
-dossier :
+Le dossier contient déjà une page `index.html` vierge, prête — c'est elle
+qui deviendra votre site. Servez ce dossier :
 
 ```bash
 npx http-server -p 8080 .

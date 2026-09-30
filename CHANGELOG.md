@@ -1,5 +1,31 @@
 # Journal des versions
 
+## 1.33.0
+
+**La porte d'entrée du dossier vendu**
+
+Celui qui achète le module décompresse un dossier et clique sur
+`index.html`. Il y trouvait jusqu'ici une page blanche disant « Bonjour,
+cette page est vierge, ajoutez ?admin à l'adresse ». C'était vrai, et
+c'était une porte close.
+
+Elle pose maintenant la seule question qui compte — **par où commencer ?** —
+et n'offre que deux chemins : greffer le module sur un site qu'on a déjà, ou
+partir de zéro. Le second mène à l'administration, et la page dit ce qui s'y
+passera : le genre de site, la structure, l'allure, puis les mots.
+
+**Elle prévient d'abord d'un mur invisible.** Un dossier ouvert par
+double-clic s'affiche en `file://`, et les navigateurs refusent d'y charger
+un module JavaScript. Le module ne démarre donc pas — vérifié, la console
+refuse `admin/runtime.js` avec une erreur d'origine. Sans un mot à ce sujet,
+la toute première impression du produit était une page qui ne fait rien,
+sans raison apparente. La porte le dit avant tout le reste, précise que rien
+n'est cassé, et donne les deux façons d'y remédier.
+
+Cette page reste celle qui deviendra le site : le bloc d'accueil est encadré
+de deux commentaires et se supprime d'un bloc, styles compris, quand il n'a
+plus lieu d'être.
+
 ## 1.32.0
 
 **Barré, exposant, indice, et de quoi tout défaire**

@@ -59,22 +59,153 @@
     section{ padding:46px 18px }
   }
 
-  .accueil{padding:96px 24px 84px; text-align:center}
-  .accueil > *{max-width:680px; margin-left:auto; margin-right:auto}
   .pied{
     border-top:1px solid var(--trait); padding:32px 24px;
     text-align:center; color:var(--doux); font-size:.9rem;
   }
+
+  /* ------------------------------------------------------------------
+     Le bloc d'accueil. Il n'appartient PAS à votre site : il vous sert à
+     démarrer, et vous le supprimerez — tout ce qui est entre les deux
+     commentaires « ACCUEIL » plus bas, et ces styles-ci.
+     ------------------------------------------------------------------ */
+  .porte{padding:72px 24px 24px}
+  .porte > *{max-width:860px; margin-left:auto; margin-right:auto}
+  .porte__sur{
+    font-size:.78rem; text-transform:uppercase; letter-spacing:.14em;
+    font-weight:600; color:var(--doux); margin-bottom:14px;
+  }
+  .porte h1{margin-bottom:.35em}
+  /* Pas de largeur propre : un paragraphe plus étroit que la colonne se
+     recentrerait dedans, et partirait d'un bord que le titre n'a pas. */
+  .porte__chapeau{font-size:1.08rem}
+
+  .avertir{
+    max-width:860px; margin:26px auto 0; padding:18px 20px;
+    border:1px solid var(--trait); border-left:3px solid var(--accent);
+    background:var(--fond-doux); border-radius:8px;
+  }
+  .avertir p{margin-bottom:.6em}
+  .avertir p:last-child{margin-bottom:0}
+  .avertir code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86em;
+    background:var(--fond); padding:2px 6px; border-radius:4px;
+    border:1px solid var(--trait); color:var(--encre);
+  }
+
+  .voies{
+    max-width:860px; margin:34px auto 0; display:grid; gap:18px;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); align-items:start;
+  }
+  .voie{
+    border:1px solid var(--trait); border-radius:10px; padding:24px 22px;
+    background:var(--fond); display:flex; flex-direction:column; height:100%;
+  }
+  .voie--fort{border-color:var(--accent); border-width:2px; padding:23px 21px}
+  .voie__num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:26px; height:26px; border-radius:50%; margin-bottom:12px;
+    background:var(--accent); color:var(--fond);
+    font-size:.82rem; font-weight:600; font-variant-numeric:tabular-nums;
+  }
+  .voie h2{font-size:1.28rem; margin-bottom:.4em}
+  .voie p{font-size:.96rem}
+  .voie ol,.voie ul{font-size:.94rem; margin-bottom:1em}
+  .voie__pied{margin-top:auto; padding-top:8px}
+  .voie a.bouton{display:inline-block}
+  .voie__apres{
+    display:block; margin-top:10px; font-size:.86rem; color:var(--doux);
+  }
+  .porte__fin{
+    max-width:860px; margin:34px auto 0; padding-top:22px;
+    border-top:1px solid var(--trait); font-size:.92rem; color:var(--doux);
+  }
+  @media (max-width:760px){ .porte{padding:48px 18px 18px} }
 </style>
 </head>
 <body>
 
-<div class="accueil">
-  <h1>Bonjour</h1>
-  <p>Cette page est vierge. Ajoutez <strong>?admin</strong> à la fin de
-     l’adresse : un assistant vous posera deux questions et construira votre
-     page.</p>
+<!-- ================= ACCUEIL — à supprimer quand votre site est prêt ======
+     Ce bloc ne fait pas partie de votre site. Il vous sert à démarrer.
+     Quand vous n'en avez plus besoin, supprimez-le jusqu'au commentaire
+     de fin, ainsi que les styles marqués « Le bloc d'accueil » plus haut.
+     ===================================================================== -->
+<div class="porte">
+  <p class="porte__sur">Module d’administration</p>
+  <h1>Par où voulez-vous commencer&nbsp;?</h1>
+  <p class="porte__chapeau">Deux chemins, et un seul à choisir. Vous pouvez
+     changer d’avis plus tard&nbsp;: rien de ce que vous faites ici n’est
+     définitif, et le module s’enlève à tout moment sans rien emporter.</p>
+
+  <div class="avertir">
+    <p><strong>Avant tout&nbsp;: ce dossier doit être servi par une adresse,
+       pas ouvert depuis votre disque.</strong></p>
+    <p>Si l’adresse en haut de cette fenêtre commence par <code>file://</code>,
+       le module ne démarrera pas — les navigateurs refusent de charger ce
+       genre de fichier depuis un dossier, pour votre sécurité. Ce n’est pas
+       une panne, et rien n’est cassé.</p>
+    <p>Deux façons d’y remédier&nbsp;: <strong>mettez le dossier en ligne</strong>
+       sur votre hébergement, ou ouvrez un terminal dans ce dossier et lancez
+       <code>npx http-server -p 8080</code>, puis rendez-vous sur
+       <code>http://localhost:8080</code>.</p>
+  </div>
+
+  <div class="voies">
+
+    <div class="voie">
+      <span class="voie__num">1</span>
+      <h2>J’ai déjà un site</h2>
+      <p>Le module se greffe dessus sans que vous touchiez à une ligne de
+         votre code. Il détecte tout seul vos textes, vos titres et vos
+         images, et vous les rend modifiables.</p>
+      <ol>
+        <li>Copiez le dossier <code>admin/</code> à la racine de votre site.</li>
+        <li>Renseignez vos cinq clés dans <code>admin-config.js</code>.</li>
+        <li>Ajoutez deux lignes avant la balise <code>&lt;/body&gt;</code> de
+            chaque page.</li>
+      </ol>
+      <p>Puis ajoutez <code>?admin</code> à la fin de l’adresse d’une page pour
+         vous connecter.</p>
+      <div class="voie__pied">
+        <a class="bouton" href="installation.html">Voir les trois étapes en détail</a>
+        <span class="voie__apres">Les lignes à copier vous y attendent, prêtes.</span>
+      </div>
+    </div>
+
+    <div class="voie voie--fort">
+      <span class="voie__num">2</span>
+      <h2>Je pars de zéro</h2>
+      <p>Cette page-ci est vierge, et c’est elle qui deviendra votre site.
+         L’administration vous conduit du premier écran jusqu’à la mise en
+         ligne, une question à la fois.</p>
+      <ul>
+        <li><strong>Le genre de site</strong> — vitrine, boutique, presse&nbsp;?
+            La réponse décide de ce que vous verrez dans le menu, et vous
+            évite les huit rubriques dont vous n’avez que faire.</li>
+        <li><strong>La structure</strong> — on empile les sections sur des
+            formes, sans se soucier des mots&nbsp;: un bandeau, trois colonnes,
+            une galerie, un appel à vous joindre.</li>
+        <li><strong>L’allure</strong> — neuf ambiances, montrées non pas en
+            capture d’écran mais en vrai rendu, avec des textes de votre
+            métier. Puis vos couleurs et vos polices par-dessus.</li>
+        <li><strong>Les mots</strong> — vous écrivez sur la page elle-même, à
+            l’endroit où ils s’afficheront.</li>
+      </ul>
+      <div class="voie__pied">
+        <a class="bouton" href="admin.html">Ouvrir l’administration</a>
+        <span class="voie__apres">Vous y créerez votre compte à la première visite.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="porte__fin">
+    Vous hésitez&nbsp;? Prenez le second chemin. Construire un site d’essai ne
+    coûte rien et ne vous engage à rien&nbsp;: c’est encore la façon la plus
+    rapide de voir ce que le module sait faire. Le premier chemin vous attendra.
+  </p>
 </div>
+<!-- ================= FIN DE L’ACCUEIL ================================== -->
 
 <footer class="pied">
   © Mon site
