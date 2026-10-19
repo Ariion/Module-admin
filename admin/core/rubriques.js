@@ -42,6 +42,11 @@ export const RUBRIQUES = [
   // qu'il faudrait d'abord découvrir dans les paramètres serait une rubrique
   // que personne n'ouvre — donc un audit qui ne sert à rien.
   { id: 'referencement', ecran: 'referencement', icone: 'search', groupe: 'visibilite', toujours: true },
+  // La bibliothèque est rangée avec l'allure et non avec le contenu : on y
+  // vient choisir une MISE EN PAGE, et on repart avec une page neuve. Elle ne
+  // se décoche pas — un site qui se construit en a besoin au premier jour, et
+  // celui qui est construit n'a qu'à ne pas l'ouvrir.
+  { id: 'bibliotheque', ecran: 'bibliotheque', icone: 'template', groupe: 'allure', toujours: true },
   { id: 'apparence', ecran: 'apparence', icone: 'palette', groupe: 'allure', toujours: true },
   { id: 'reglages', ecran: 'reglages', icone: 'sliders', groupe: 'module', toujours: true },
 ];

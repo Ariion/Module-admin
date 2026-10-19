@@ -47,6 +47,9 @@ import { creerMedias } from './ui/back/medias.js';
 import { creerMessages } from './ui/back/messages.js';
 import { creerProduits } from './ui/back/produits.js';
 import { creerApparence, documentDemo } from './ui/back/apparence.js';
+import { creerBibliotheque } from './ui/back/bibliotheque.js';
+import { pageDuModele } from './core/bibliotheque.js';
+import { slugPage } from './core/pages.js';
 import { creerReferencement } from './ui/back/referencement.js';
 import { pageDemo } from './core/demo.js';
 import { renderWidget } from './core/widgets.js';
@@ -208,6 +211,17 @@ async function demarrer() {
         ecrirePlan: ecrirePlanDuSite,
         peutEcrire: () => etatHote.ok,
         onAller: (chemin, ancre) => ouvrirEnDirect(chemin, { constat: ancre }),
+      }),
+      bibliotheque: () => creerBibliotheque({
+        t,
+        // La vignette et le bouton passent par la MÊME fabrique : ce qu'on
+        // regarde est donc exactement ce qu'on obtient.
+        // L'ambiance du site est relue à chaque peinture plutôt que retenue :
+        // on arrive souvent ici juste après l'avoir changée.
+        rendreModele: (modeleId, metierId, reglage) => documentDemo(renderWidget,
+          pageDuModele(modeleId, { metier: metierId, theme: reglage }), reglage),
+        theme: async () => (await lireCommun())?.reglages?.theme || null,
+        onCreer: creerDepuisModele,
       }),
       apparence: () => creerApparence({
         t,
@@ -480,6 +494,37 @@ async function demarrer() {
    * dans la liste sans attendre que l'hébergement ait fini de remonter le
    * site, et on peut y revenir même si la mise en ligne tarde.
    */
+  /**
+   * Crée une page vierge, puis y pose le modèle choisi.
+   *
+   * Dans cet ordre, et sur une page NEUVE seulement : poser une mise en page
+   * sur une page qui existe effacerait un travail, et une galerie n'est pas
+   * l'endroit où l'on détruit quelque chose. La page est donc d'abord créée
+   * vide — c'est le chemin déjà éprouvé — et le modèle s'ajoute ensuite comme
+   * une suite de sections, exactement comme le ferait l'écran Structure.
+   */
+  async function creerDepuisModele({ modeleId, metier, nom }) {
+    const chemin = slugPage(nom);
+    await creerPage({ nom, chemin, depuis: null });
+
+    const session = await chargerPage(chemin);
+    try {
+      const reglage = (await lireCommun())?.reglages?.theme || null;
+      const sections = pageDuModele(modeleId, { metier, theme: reglage });
+      const instantane = session.model.toSnapshot({ portee: 'page' });
+      instantane.sections = {
+        add: sections.map((tree, rang) => ({
+          kind: 'widgets', key: `${modeleId}-${rang}`, after: null, tree,
+        })),
+        hide: [],
+        order: sections.map((_, rang) => `ins:${modeleId}-${rang}`),
+      };
+      await backend.saveDraft(session.pageId, instantane);
+    } finally {
+      session.fermer?.();
+    }
+  }
+
   async function creerPage({ nom, chemin, depuis }) {
     if (depuis) await hebergement.ensureSource(depuis);
     await hebergement.createPage(chemin, depuis || undefined);
