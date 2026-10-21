@@ -21,6 +21,19 @@
  * Les scènes sont composées de primitives communes plutôt qu'écrites une par
  * une : trente-six dessins indépendants auraient divergé au premier réglage de
  * couleur, et personne ne les aurait tous reregardés.
+ *
+ * Elles ont aussi longtemps été PLATES — chaque objet posé au même plan, une
+ * ombre pile dessous, aucune direction de lumière. Un dessin plat se reconnaît
+ * sans se regarder. Trois réglages partagés y ont répondu : un jour déclaré une
+ * fois pour toutes, des ombres portées décalées à son opposé, et des objets qui
+ * s'assombrissent vers le bas. Tout cela vit dans `fond()` et dans les
+ * primitives, donc les trente-six en profitent sans qu'aucune soit retouchée.
+ *
+ * Ce qu'elles ne sont toujours pas : des photographies. Le gain est net là où
+ * la scène contient une source de lumière — une salle de restaurant en ambiance
+ * nuit est franchement bonne — et reste modeste là où il n'y en a pas. Une
+ * vraie photo, posée par le client ou par `npm run photos`, l'emporte toujours
+ * sur ces dessins, et c'est l'ordre voulu.
  * @module core/illustrations
  */
 import { themeApplique } from './theme.js';
@@ -29,8 +42,44 @@ import { photosDuMetier } from './photos.js';
 /** Palette de repli quand aucun thème n'est choisi. */
 const NEUTRE = { fond: '#eef1f6', fondDoux: '#dfe5ee', accent: '#5b6472', encre: '#15181d' };
 
+/**
+ * D'où vient la lumière, en fraction du cadre.
+ *
+ * Une seule direction pour les trente-six scènes : une série dont chaque
+ * image est éclairée autrement ne lit pas comme une série. Haut-gauche est
+ * le choix classique, et il place les ombres en bas à droite — donc hors du
+ * tiers gauche, là où un titre vient se poser.
+ */
+const JOUR = { x: '.34', y: '.18' };
+
 const encoder = (svg) => 'data:image/svg+xml;charset=utf-8,'
   + encodeURIComponent(svg.replace(/\s{2,}/g, ' ').trim());
+
+/**
+ * La chute de lumière, dans le coin opposé au jour.
+ *
+ * Première tentative : une masse floue en bord de cadre, censée créer un
+ * premier plan. Rendue, elle lisait comme un lampadaire — une tige et une
+ * boule — identique sur les trente-six, donc comme un filigrane. Un flou
+ * fort ne rend pas une forme neutre : il la rend douteuse.
+ *
+ * Ce qui tient, c'est de ne pas dessiner d'objet du tout. Une zone qui
+ * s'assombrit à l'opposé de la source donne le modelé que l'ombre portée
+ * donne aux objets — sans rien ajouter que l'œil puisse reconnaître de
+ * travers, et sans jamais recouvrir le sujet.
+ *
+ * @param {object} c palette
+ * @param {'gauche'|'droite'} cote bord qui recule ; l'autre reste au jour
+ */
+const chute = (c, cote) => {
+  const cx = cote === 'gauche' ? '.08' : '.94';
+  return `<defs><radialGradient id="chute" cx="${cx}" cy=".92" r=".95">
+      <stop offset="0" stop-color="${c.encre}" stop-opacity=".2"/>
+      <stop offset=".55" stop-color="${c.encre}" stop-opacity=".07"/>
+      <stop offset="1" stop-color="${c.encre}" stop-opacity="0"/>
+    </radialGradient></defs>
+    <rect width="1200" height="800" fill="url(#chute)"/>`;
+};
 
 // ----------------------------------------------------------------- primitives
 //
@@ -40,18 +89,49 @@ const encoder = (svg) => 'data:image/svg+xml;charset=utf-8,'
 
 /** Le fond : un dégradé vertical, jamais un aplat — un aplat n'a pas de jour. */
 const fond = (c, haut = c.fondDoux, bas = c.fond) => `
-  <defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="${haut}"/><stop offset="1" stop-color="${bas}"/>
-  </linearGradient></defs><rect width="1200" height="800" fill="url(#f)"/>`;
+  <defs>
+    <linearGradient id="f" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${haut}"/><stop offset="1" stop-color="${bas}"/>
+    </linearGradient>
+    <radialGradient id="jour" cx="${JOUR.x}" cy="${JOUR.y}" r=".8">
+      <stop offset="0" stop-color="#fff" stop-opacity=".52"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".15"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="objet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${c.accent}"/>
+      <stop offset="1" stop-color="${c.encre}" stop-opacity=".58"/>
+    </linearGradient>
+    <linearGradient id="halo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${haut}" stop-opacity=".85"/>
+      <stop offset="1" stop-color="${haut}" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="loin" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5"/></filter>
+    <filter id="douce" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="13"/></filter>
+    <filter id="flou" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="27"/></filter>
+  </defs>
+  <rect width="1200" height="800" fill="url(#f)"/>
+  <rect width="1200" height="800" fill="url(#jour)"/>`;
 
 /** Le sol : une bande basse qui donne une assise à ce qu'on pose dessus. */
 const sol = (c, y = 600) =>
   `<rect x="0" y="${y}" width="1200" height="${800 - y}" fill="${c.accent}" opacity=".13"/>`;
 
-/** Une ombre portée douce, posée SOUS un objet pour le décoller du fond. */
+/**
+ * Une ombre portée, décalée À L'OPPOSÉ du jour.
+ *
+ * Elle était auparavant centrée pile sous l'objet : c'est l'ombre de midi,
+ * celle qui n'indique aucune direction et qui, pour l'œil, aplatit tout ce
+ * qu'elle touche. Décalée et floutée, elle dit d'où vient la lumière — et
+ * c'est elle, bien plus que le dessin de l'objet, qui le pose au sol.
+ */
 const ombre = (c, x, y, rx) =>
-  `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${Math.max(6, rx * 0.13)}"
-    fill="${c.encre}" opacity=".10"/>`;
+  `<ellipse cx="${x + rx * 0.17}" cy="${y + 5}" rx="${rx * 1.05}"
+    ry="${Math.max(7, rx * 0.15)}" fill="${c.encre}" opacity=".15"
+    filter="url(#douce)"/>`;
 
 /** Une fenêtre : deux battants et la lumière qui entre. */
 const fenetre = (c, x, y, w, h) => `
@@ -67,22 +147,28 @@ const suspension = (c, x, y, r = 40) => `
   <line x1="${x}" y1="0" x2="${x}" y2="${y - r / 2}" stroke="${c.accent}"
     stroke-width="4" opacity=".45"/>
   <path d="M${x - r} ${y} L${x - r * 0.42} ${y - r * 0.95} L${x + r * 0.42} ${y - r * 0.95}
-    L${x + r} ${y} Z" fill="${c.accent}" opacity=".62"/>`;
+    L${x + r} ${y} Z" fill="url(#objet)" opacity=".85"/>
+  <path d="M${x - r * 0.85} ${y} H${x + r * 0.85} L${x + r * 2.4} 800 H${x - r * 2.4} Z"
+    fill="url(#halo)" filter="url(#douce)"/>
+  <ellipse cx="${x}" cy="${y + 2}" rx="${r * 0.82}" ry="${r * 0.24}"
+    fill="${c.fond}" opacity=".95"/>`;
 
 /** Une plante en pot : la touche qui fait « lieu » plutôt que « schéma ». */
 const plante = (c, x, y, s = 1) => `
   <path d="M${x} ${y - 20 * s} C ${x - 70 * s} ${y - 120 * s} ${x - 40 * s} ${y - 210 * s}
     ${x} ${y - 230 * s} C ${x + 44 * s} ${y - 208 * s} ${x + 72 * s} ${y - 116 * s}
-    ${x} ${y - 20 * s} Z" fill="${c.accent}" opacity=".5"/>
+    ${x} ${y - 20 * s} Z" fill="url(#objet)" opacity=".62"/>
+  ${ombre(c, x, y + 72 * s, 52 * s)}
   <path d="M${x - 46 * s} ${y} h${92 * s} l${-14 * s} ${70 * s} h${-64 * s} Z"
-    fill="${c.accent}" opacity=".75"/>`;
+    fill="url(#objet)" opacity=".85"/>`;
 
 /** Une table vue de côté : plateau et pieds. */
 const table = (c, x, y, w) => `
+  ${ombre(c, x, y + 110, w * 0.44)}
   <rect x="${x - w / 2}" y="${y}" width="${w}" height="16" rx="8"
-    fill="${c.accent}" opacity=".78"/>
-  <rect x="${x - w / 2 + 24}" y="${y + 16}" width="12" height="90" fill="${c.accent}" opacity=".55"/>
-  <rect x="${x + w / 2 - 36}" y="${y + 16}" width="12" height="90" fill="${c.accent}" opacity=".55"/>`;
+    fill="url(#objet)" opacity=".9"/>
+  <rect x="${x - w / 2 + 24}" y="${y + 16}" width="12" height="90" fill="url(#objet)" opacity=".7"/>
+  <rect x="${x + w / 2 - 36}" y="${y + 16}" width="12" height="90" fill="url(#objet)" opacity=".7"/>`;
 
 /** Une assiette vue de dessus : deux cercles, et le couvert à côté. */
 const couvert = (c, x, y, r) => `
@@ -135,11 +221,11 @@ const portant = (c, x, y, w) => {
 };
 
 /** Des collines : l'horizon qui fait respirer une image d'hébergement. */
-const collines = (c) => `
+const collines = (c) => `<g filter="url(#loin)" opacity=".8">
   <path d="M0 560 C 220 440 380 610 620 520 C 840 440 1010 540 1200 470 L1200 800 L0 800 Z"
     fill="${c.accent}" opacity=".22"/>
   <path d="M0 650 C 260 560 470 720 760 630 C 960 570 1080 640 1200 610 L1200 800 L0 800 Z"
-    fill="${c.accent}" opacity=".38"/>`;
+    fill="${c.accent}" opacity=".38"/></g>`;
 
 /** Une maison : le corps, le toit, la porte, une fenêtre. */
 const maison = (c, x, y, s = 1) => `
@@ -373,7 +459,7 @@ export function illustrations(reglageTheme, metierId = 'autre') {
   return scenes.map((dessin, rang) => ({
     id: `${metierId}-${rang}`,
     url: encoder(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"
-      width="1200" height="800">${dessin(c)}</svg>`),
+      width="1200" height="800">${dessin(c)}${chute(c, rang % 2 ? 'droite' : 'gauche')}</svg>`),
   }));
 }
 

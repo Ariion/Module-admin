@@ -1,5 +1,33 @@
 # Journal des versions
 
+
+## 1.36.0 — Les scènes dessinées prennent la lumière
+
+Les trente-six illustrations de métier étaient plates : tous les objets au même
+plan, une ombre centrée pile sous chacun — l'ombre de midi, celle qui n'indique
+aucune direction et aplatit ce qu'elle touche.
+
+Corrigé dans la couche partagée, donc sans retoucher une seule des trente-six :
+
+- une direction de jour déclarée une fois (`JOUR`), haut-gauche, identique pour
+  toute la série — une série éclairée de trente-six façons ne lit pas comme une
+  série ;
+- les ombres portées se décalent à l'opposé du jour et se floutent ;
+- la table et la plante projettent la leur : elles étaient posées sur rien ;
+- les objets prennent un dégradé vertical, donc du poids ;
+- les suspensions sont ALLUMÉES — halo et cône de lumière. C'est le geste qui
+  rend le plus, et il porte surtout en ambiance nuit.
+
+Essayé et écarté en chemin : une masse floue en bord de cadre, censée créer un
+premier plan. Rendue, elle lisait comme un lampadaire, identique sur les
+trente-six — donc comme un filigrane. Un flou fort ne neutralise pas une forme,
+il la rend douteuse. Remplacée par une simple chute de lumière dans le coin
+opposé, qui ne dessine aucun objet et ne recouvre jamais le sujet.
+
+`npm run essai-illustrations` contrôle les 324 combinaisons métier × thème :
+aucune référence `url(#…)` orpheline (le mode d'échec silencieux de cette
+mécanique), chaque scène passe par `fond()`, et une seule direction de jour.
+
 ## 1.35.0
 
 **La chaîne qui attend les photos**
