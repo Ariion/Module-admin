@@ -1,5 +1,39 @@
 # Journal des versions
 
+## 1.35.0
+
+**La chaîne qui attend les photos**
+
+Les scènes dessinées évoquent un métier, mais elles ne sont pas des
+photographies. Le jour où de vraies photos arrivent, tout est prêt à les
+recevoir.
+
+`npm run photos` prend des JPEG bruts dans `photos-source/`, nommés
+`<metier>-<rang>.jpg`, et produit les quatre largeurs en WebP dans
+`medias/exemples/` plus un catalogue dans `admin/core/photos.js`. Les
+illustrations consultent ce catalogue : **une photo l'emporte toujours sur
+un dessin**, et un métier sans photo garde ses scènes. On peut donc n'en
+photographier que trois ou quatre sans que rien ne soit bancal.
+
+**Les photos vivent dans `medias/`, pas dans `admin/`.** Une page publiée
+qui pointerait vers un fichier du module perdrait ses images le jour où le
+client le retire, alors qu'il doit pouvoir le retirer sans que son site
+change. Elles vivent donc avec le site, pas avec l'outil.
+
+La commande refuse en disant pourquoi : un nom hors des douze métiers, une
+image trop petite. Et elle n'agrandit jamais : une source de 1200 px donne
+trois largeurs, pas quatre. Agrandir ajoute des pixels et aucune
+information, et cela se voit sur un bandeau plein cadre.
+
+`photos-source/` est ignoré par git : c'est de la matière première, seules
+les WebP produites partent avec le module.
+
+*Honnêtement.* L'environnement de développement refuse toute sortie réseau
+vers les hébergeurs d'images, donc les photos ne peuvent pas être produites
+puis rapatriées depuis ici. `docs/PHOTOS-PROMPTS.md` porte la direction
+artistique et les trente-six prompts pour les produire ailleurs, avec
+l'outil de son choix.
+
 ## 1.34.0
 
 **Les images d'exemple évoquent enfin un métier**

@@ -8,3 +8,6 @@ livraison/
 
 # Worktrees des agents : dossiers de travail, jamais du contenu de dépôt.
 .claude/worktrees/
+
+# Photos sources : matière première, jamais livrée
+photos-source/

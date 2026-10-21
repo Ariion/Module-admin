@@ -153,9 +153,13 @@ dit('le restaurant porte son enseigne',
 dit('le bâtiment porte la sienne',
   lu.parMetier.batiment.textes.join(' ').includes('Delaunay'),
   lu.parMetier.batiment.textes.join(' | '));
-dit('aucune scène ne demande le réseau',
-  Object.values(lu.parMetier).every((x) => x.visuel.startsWith('data:image/svg+xml')),
-  'une scène pointe ailleurs qu’en donnée');
+// L'intention n'est pas « ce doit être un dessin » mais « rien ne part vers
+// un tiers ». Un dessin est une donnée en ligne, une photo est un fichier
+// servi par le site lui-même : les deux satisfont la règle, une adresse
+// http(s) ne la satisferait pas.
+dit('aucun visuel ne dépend d’un serveur tiers',
+  Object.values(lu.parMetier).every((x) => !/^https?:/i.test(x.visuel)),
+  'un visuel pointe vers un hôte extérieur');
 
 console.log('\nCe qui a déjà été écrit n’est jamais écrasé');
 dit('le titre du client est gardé', lu.titreGarde === 'Mon vrai titre', lu.titreGarde);

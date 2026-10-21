@@ -173,8 +173,28 @@ hebergement association  sport      autre
 ```
 
 Déposez-les dans un dossier **`photos-source/`** à la racine du dépôt, en
-JPEG brut et non retouché. La conversion en WebP, les quatre largeurs et le
-`srcset` sont faits ensuite par le module — ne les préparez pas à la main.
+JPEG brut et non retouché, **1600 px de large au minimum**, puis lancez :
+
+```bash
+npm run photos
+```
+
+La commande écrit les quatre largeurs en WebP dans `medias/exemples/` et le
+catalogue dans `admin/core/photos.js`. Elle refuse, en disant pourquoi, un
+fichier mal nommé ou trop petit, et elle n'agrandit jamais une image : une
+source de 1200 px donne trois largeurs et pas quatre.
+
+Ne préparez rien à la main : ni redimensionnement, ni conversion, ni
+`srcset`.
+
+`photos-source/` est ignoré par git. C'est de la matière première, elle n'a
+pas à être livrée : seules les WebP produites partent avec le module.
+
+### Vous n'êtes pas obligé de tout faire d'un coup
+
+Un métier sans photo garde ses scènes dessinées. Trois métiers
+photographiés, c'est trois métiers en photo et neuf en dessin, sans que rien
+ne soit bancal. Relancez la commande à chaque ajout.
 
 ---
 

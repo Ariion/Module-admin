@@ -179,19 +179,37 @@ const echapper = (texte) => String(texte).replace(/[&<>]/g, (c) => ECHAPPES[c]);
  * demandent aucun réseau et n'appartiennent à personne.
  */
 export function poserLesVisuels(sections, theme, metier = 'autre') {
-  const visuels = illustrations(theme, metier).map((i) => i.url);
+  const visuels = illustrations(theme, metier);
   if (!visuels.length) return sections;
   let rang = 0;
-  const suivant = () => visuels[rang++ % visuels.length];
+  const suivantEntier = () => visuels[rang++ % visuels.length];
+
+  // Une photo arrive avec ses quatre largeurs ; un dessin n'en a pas besoin,
+  // il est vectoriel. On range les largeurs là où l'élément sait les lire,
+  // pour que la page publiée serve la bonne taille au bon écran.
+  const table = {};
+  const noter = (image) => {
+    if (image.srcset) {
+      table[image.url] = {
+        srcset: image.srcset, largeur: image.largeur, hauteur: image.hauteur,
+      };
+    }
+    return image.url;
+  };
 
   const parcourir = (noeuds) => {
     for (const noeud of noeuds || []) {
       const p = noeud.props;
       if (p) {
-        if (noeud.type === 'hero' && !p.image) p.image = suivant();
-        if (noeud.type === 'image' && !p.src) p.src = suivant();
-        if (noeud.type === 'carte' && !p.image) p.image = suivant();
-        if (noeud.type === 'galerie' && !p.images) p.images = visuels.slice(0, 4).join('\n');
+        if (noeud.type === 'hero' && !p.image) p.image = noter(suivantEntier());
+        if (noeud.type === 'image' && !p.src) p.src = noter(suivantEntier());
+        if (noeud.type === 'carte' && !p.image) p.image = noter(suivantEntier());
+        if (noeud.type === 'galerie' && !p.images) {
+          p.images = visuels.slice(0, 4).map(noter).join('\n');
+        }
+        if (Object.keys(table).length && ['hero', 'image', 'carte', 'galerie'].includes(noeud.type)) {
+          p.variantes = { ...(p.variantes || {}), ...table };
+        }
       }
       if (noeud.children) parcourir(noeud.children);
     }

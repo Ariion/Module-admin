@@ -24,6 +24,7 @@
  * @module core/illustrations
  */
 import { themeApplique } from './theme.js';
+import { photosDuMetier } from './photos.js';
 
 /** Palette de repli quand aucun thème n'est choisi. */
 const NEUTRE = { fond: '#eef1f6', fondDoux: '#dfe5ee', accent: '#5b6472', encre: '#15181d' };
@@ -346,9 +347,26 @@ export const METIERS_ILLUSTRES = Object.keys(SCENES).filter((id) => id !== 'autr
  *
  * @param {object|null} reglageTheme réglage d'ambiance
  * @param {string} [metierId] métier à évoquer ; sinon des formes abstraites
- * @returns {{id: string, url: string}[]}
+ * @returns {{id: string, url: string, srcset?: string, largeur?: number,
+ *   hauteur?: number}[]} une photo porte ses largeurs, un dessin n'en a pas
+ *   besoin — il est vectoriel.
  */
 export function illustrations(reglageTheme, metierId = 'autre') {
+  // Une photographie l'emporte toujours sur un dessin : le dessin existe
+  // parce qu'il n'y a pas de photo, pas l'inverse. Un métier photographié
+  // sert ses photos, les autres gardent leurs scènes — on peut donc n'en
+  // produire que trois ou quatre sans que rien ne soit bancal.
+  const photos = photosDuMetier(metierId);
+  if (photos.length) {
+    return photos.map((photo, rang) => ({
+      id: `${metierId}-${rang}`,
+      url: photo.src,
+      srcset: photo.srcset,
+      largeur: photo.largeur,
+      hauteur: photo.hauteur,
+    }));
+  }
+
   const theme = themeApplique(reglageTheme);
   const c = theme ? theme.couleurs : NEUTRE;
   const scenes = SCENES[metierId] || SCENES.autre;
