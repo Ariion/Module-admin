@@ -11,6 +11,40 @@ plus tard sans que rien ne soit bancal.
 
 ---
 
+## Le chemin le plus court : ne rien générer du tout
+
+Générer trente-six images coûte des crédits et du temps. Une banque libre en
+donne autant en une commande :
+
+```bash
+export PEXELS_API_KEY=...     # https://www.pexels.com/api/ — gratuit, sans carte
+npm run moissonner            # cherche et télécharge dans photos-source/
+npm run photos                # WebP, quatre largeurs, catalogue
+```
+
+À lancer **sur votre machine** : la session Claude tourne dans un conteneur
+dont la politique réseau refuse tous les hôtes d'images, Pexels compris. Ce
+n'est pas une panne, et ce n'est pas réglable depuis l'application.
+
+`npm run moissonner` écrit la trace de chaque photo et de son auteur dans
+`docs/PHOTOS-CREDITS.json`. La licence Pexels autorise l'usage commercial
+sans attribution ; elle interdit de revendre les photos *en tant que photos*
+et de monter une banque concurrente. Les livrer comme visuels d'exemple
+remplaçables d'un clic ne relève ni de l'un ni de l'autre — mais gardez le
+fichier, c'est lui qui répond le jour où un client pose la question.
+
+Une recherche ne sait pas juger une image. Regardez les trente-six, et
+rejouez celles qui ne vont pas :
+
+```bash
+npm run moissonner -- --metier beaute --decalage 3 --force
+```
+
+Les prompts ci-dessous restent utiles pour ce que la banque ne donne pas :
+un métier mal couvert, ou une image qu'il faut vraiment composer.
+
+---
+
 ## La règle qui tient tout
 
 **Ce sont des images d'EXEMPLE, pas des images de marque.** Elles doivent

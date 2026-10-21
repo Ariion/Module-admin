@@ -1,6 +1,30 @@
 # Journal des versions
 
 
+
+## 1.37.0 — Les photos d'exemple se téléchargent
+
+`npm run moissonner` cherche et télécharge les trente-six photos depuis
+Pexels, puis `npm run photos` en fait les WebP. Plus besoin de générer quoi
+que ce soit, ni de payer des crédits pour des visuels d'exemple.
+
+À lancer sur la machine du développeur : la session Claude tourne dans un
+conteneur dont la politique réseau refuse tous les hôtes d'images — Unsplash,
+Pexels, Pixabay, Wikimedia répondent `403 to CONNECT`. Ce n'est pas une panne
+et ce n'est pas réglable depuis l'application ; l'environnement utilisé est
+déjà le plus ouvert disponible.
+
+Le script ne fait que ce qui demande le réseau. Il saute ce qui est déjà là,
+refuse une photo de moins de 1920 px (le pipeline ne ré-agrandit jamais),
+s'arrête net sur une clé refusée ou un quota atteint plutôt que de répéter la
+même erreur douze fois, et permet de rejouer un seul métier sans toucher aux
+autres.
+
+La trace de licence va dans `docs/PHOTOS-CREDITS.json`, et non dans
+`photos-source/` : ce dossier est ignoré par git en entier, la trace y aurait
+été perdue. C'est elle qui répond le jour où un client demande d'où vient une
+image.
+
 ## 1.36.0 — Les scènes dessinées prennent la lumière
 
 Les trente-six illustrations de métier étaient plates : tous les objets au même
