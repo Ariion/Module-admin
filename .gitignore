@@ -11,3 +11,6 @@ livraison/
 
 # Photos sources : matière première, jamais livrée
 photos-source/
+
+# Script de téléchargement : adresses qui expirent, pas du contenu de dépôt.
+telecharger-photos.sh

@@ -89,7 +89,15 @@ for (const fichier of entrees) {
 
   // On ne grossit jamais une image : agrandir ajoute des pixels et aucune
   // information, et le résultat se voit sur un bandeau plein cadre.
-  const utiles = LARGEURS.filter((l) => l <= largeurSource);
+  //
+  // La largeur NATIVE est gardée quand elle dépasse le dernier palier retenu.
+  // Sans cela une source de 1264 px ne servirait que du 960, et on jetterait
+  // un quart de sa définition pour rester sur des nombres ronds.
+  const paliers = LARGEURS.filter((l) => l <= largeurSource);
+  const dernier = paliers[paliers.length - 1] || 0;
+  const utiles = largeurSource > dernier && largeurSource < LARGEURS[LARGEURS.length - 1]
+    ? [...paliers, largeurSource]
+    : paliers;
   if (!utiles.length) {
     refuses.push(`${fichier} (trop petite : ${largeurSource} px)`);
     continue;
