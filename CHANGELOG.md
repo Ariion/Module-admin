@@ -1,5 +1,39 @@
 # Journal des versions
 
+## 1.34.0
+
+**Les images d'exemple évoquent enfin un métier**
+
+Les vignettes de la bibliothèque montraient des aplats — un dégradé, des
+arcs, des vagues. Joli, et parfaitement muet : devant une vignette, personne
+ne se projette dans un aplat.
+
+Les images dessinées par le module évoquent désormais le **métier**. Une
+salle avec ses suspensions et sa table dressée pour un restaurant, un
+portant pour une boutique, un toit et son échafaudage pour le bâtiment, une
+maison sur ses collines pour l'hébergement, une piste pour le sport. Douze
+métiers, trois scènes chacun, trente-six en tout.
+
+Ce ne sont pas des photographies et elles n'essaient pas de s'en faire
+passer pour. Mais on reconnaît ce qu'on regarde, et c'est tout ce qu'on leur
+demande — le jour où de vraies photos remplaceront les dessins, le
+mécanisme sera le même.
+
+**Rien n'a changé de ce qui faisait leur intérêt** : aucune requête réseau,
+aucune clé d'API, aucune question de droits, et elles prennent les couleurs
+de l'ambiance choisie. Trente-six scènes pèsent 68 Ko en tout, la plus
+lourde 3 Ko — elles sont calculées, pas stockées.
+
+La galerie d'ambiances en profite aussi : ses neuf démonstrations
+connaissaient déjà le métier, elles n'en tiraient simplement rien.
+
+*Un défaut trouvé par l'épreuve, pas par la relecture.* `poserLesMots`
+remplaçait le premier titre venu dès lors qu'il n'était pas vide — donc le
+titre d'un client, sur une page déjà écrite, par une enseigne inventée. Le
+commentaire promettait exactement l'inverse. La substitution n'a désormais
+lieu que sur un texte explicitement marqué comme exemple, et les modèles
+marquent les leurs à la construction.
+
 ## 1.33.0
 
 **La porte d'entrée du dossier vendu**

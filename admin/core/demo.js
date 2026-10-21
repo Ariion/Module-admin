@@ -75,7 +75,7 @@ export function briefDemo(metierId, graine = 0) {
  * @returns {object[]} arbres de widgets
  */
 export function pageDemo(metierId, theme = null, graine = 0) {
-  const visuels = illustrations(theme).map((i) => i.url);
+  const visuels = illustrations(theme, metierId).map((i) => i.url);
   const { sections } = redigerPage(briefDemo(metierId, graine), { images: visuels });
   return sections;
 }

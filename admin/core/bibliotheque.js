@@ -114,7 +114,7 @@ export function poserLesMots(sections, brief) {
   const parcourir = (noeuds) => {
     for (const noeud of noeuds || []) {
       const type = noeud.type;
-      if (restant[type] && noeud.props && marqueDuModele(noeud, type)) {
+      if (restant[type] && noeud.props && marqueDuModele(noeud)) {
         if (type === 'text') noeud.props.html = echapper(restant[type]);
         else noeud.props.text = restant[type];
         delete noeud.props.exemple;
@@ -135,12 +135,33 @@ export function poserLesMots(sections, brief) {
  * change la formulation cesserait d'être reconnu, et un texte écrit par le
  * client qui ressemblerait par hasard au nôtre serait écrasé.
  */
-function marqueDuModele(noeud, type) {
-  if (noeud.props.exemple) return true;
-  // Les titres et étiquettes des modèles ne sont pas marqués : ils sont
-  // courts et toujours génériques. On se contente alors d'exiger qu'il y ait
-  // quelque chose à remplacer.
-  return type !== 'text' && !!String(noeud.props.text || '').trim();
+function marqueDuModele(noeud) {
+  return !!noeud.props.exemple;
+}
+
+/**
+ * Marque comme exemples le premier titre et la première étiquette du modèle.
+ *
+ * Les textes des modèles sont déjà marqués ; leurs titres ne le sont pas,
+ * alors qu'ils en sont tout autant — « Le titre de votre site » n'attend que
+ * d'être remplacé. Les marquer ici plutôt que d'accepter n'importe quel titre
+ * non vide ferme un piège : sans cela, `poserLesMots` appelée sur une page
+ * déjà écrite remplaçait le titre du client par une enseigne inventée.
+ * Éprouvé — c'est l'essai qui l'a trouvé, pas la relecture.
+ */
+function marquerExemples(sections) {
+  const reste = { heading: true, etiquette: true };
+  const parcourir = (noeuds) => {
+    for (const noeud of noeuds || []) {
+      if (reste[noeud.type] && noeud.props) {
+        noeud.props.exemple = true;
+        reste[noeud.type] = false;
+      }
+      if (noeud.children) parcourir(noeud.children);
+    }
+  };
+  parcourir(sections);
+  return sections;
 }
 
 const ECHAPPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
@@ -150,13 +171,15 @@ const echapper = (texte) => String(texte).replace(/[&<>]/g, (c) => ECHAPPES[c]);
  * Pose les visuels dessinés par le module dans les emplacements vides.
  *
  * Un modèle sort de `build()` sans images : ses `hero` et ses `image` ont un
- * emplacement, pas un fichier. Une vignette sans visuel ne ressemble à rien,
+ * emplacement, pas un fichier. Les scènes sont celles du MÉTIER — une table
+ * dressée pour un restaurant, un portant pour une boutique : c'est ce qui
+ * fait qu'on reconnaît son commerce dans la vignette au lieu d'un aplat. Une vignette sans visuel ne ressemble à rien,
  * et surtout pas à ce qu'on obtiendra une fois les photos posées. Les
  * illustrations sont calculées aux couleurs de l'ambiance, donc elles ne
  * demandent aucun réseau et n'appartiennent à personne.
  */
-export function poserLesVisuels(sections, theme) {
-  const visuels = illustrations(theme).map((i) => i.url);
+export function poserLesVisuels(sections, theme, metier = 'autre') {
+  const visuels = illustrations(theme, metier).map((i) => i.url);
   if (!visuels.length) return sections;
   let rang = 0;
   const suivant = () => visuels[rang++ % visuels.length];
@@ -195,8 +218,8 @@ export function pageDuModele(modeleId, { metier = 'autre', ville, theme = null }
   // `clone` plutôt que l'arbre rendu par `build()` : la galerie en dessine
   // douze à la suite, et deux vignettes qui partageraient un nœud se
   // peindraient l'une sur l'autre.
-  const sections = clone(modele.build());
+  const sections = marquerExemples(clone(modele.build()));
   poserLesMots(sections, briefDuMetier(metier, ville));
-  poserLesVisuels(sections, theme);
+  poserLesVisuels(sections, theme, metier);
   return sections;
 }
