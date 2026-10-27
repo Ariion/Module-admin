@@ -1,10 +1,11 @@
 {
   "name": "module-admin",
-  "version": "1.37.0",
+  "version": "1.38.0",
   "description": "Interface d'édition visuelle pour sites statiques codés à la main. Firebase, aucun serveur, aucun build.",
   "type": "module",
   "private": true,
   "scripts": {
+    "test": "node tools/essais.mjs",
     "start": "http-server -p 8080 -c-1 .",
     "demo": "http-server -p 8080 -c-1 . -o /demo/index.html",
     "lint": "eslint admin",
@@ -18,6 +19,7 @@
     "essai-elements": "node tools/essai-elements.mjs",
     "essai-images": "node tools/essai-images.mjs",
     "essai-mise-en-forme": "node tools/essai-mise-en-forme.mjs",
+    "essai-assainissement": "node tools/essai-assainissement.mjs",
     "essai-clavier": "node tools/essai-clavier.mjs",
     "essai-formulaire": "node tools/essai-formulaire.mjs",
     "essai-debit": "node tools/essai-debit.mjs",

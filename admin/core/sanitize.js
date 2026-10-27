@@ -140,8 +140,53 @@ export function safeText(value) {
 }
 
 /**
+ * Balises dont on jette AUSSI le contenu, au lieu de le garder en texte.
+ *
+ * Partout ailleurs, une balise refusée laisse son texte : c'est ce qu'on veut
+ * d'un `<div>` ou d'un `<p>`. Mais le « texte » d'un `<script>` est du code,
+ * et celui d'un `<style>` des règles CSS. Les garder ne les rend pas
+ * dangereux — ils arrivent comme texte, pas comme balise — seulement illisibles :
+ * le client colle un bout de page web et voit apparaître `.menu{display:none}`
+ * au milieu de sa phrase.
+ */
+const JETES = new Set([
+  'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'IFRAME', 'OBJECT', 'EMBED',
+  'HEAD', 'TITLE', 'META', 'LINK', 'SVG', 'MATH', 'CANVAS', 'AUDIO', 'VIDEO',
+]);
+
+/**
+ * Balises de bloc : en les retirant, on laisse une coupure de ligne.
+ *
+ * Sans elle, « <p>Bonjour</p><p>Madame</p> » devient « BonjourMadame ». Le
+ * client colle depuis Word, retrouve ses mots soudés, et n'a aucun moyen de
+ * comprendre d'où ça vient.
+ */
+const BLOCS = new Set([
+  'DIV', 'P', 'LI', 'UL', 'OL', 'TR', 'TD', 'TH', 'TABLE', 'SECTION',
+  'ARTICLE', 'HEADER', 'FOOTER', 'ASIDE', 'NAV', 'MAIN', 'BLOCKQUOTE',
+  'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'PRE', 'HR', 'FIGURE', 'FIGCAPTION',
+]);
+
+/**
+ * Profondeur maximale explorée.
+ *
+ * `safeHtml` tourne aussi à l'AFFICHAGE, sur le site public. Un contenu
+ * imbriqué quelques milliers de fois ferait déborder la pile, et la page du
+ * client ne s'afficherait plus du tout. Au-delà de cette profondeur, on
+ * aplatit en texte : on perd la mise en forme d'un cas que personne ne
+ * rencontre honnêtement, et la page tient.
+ */
+const PROFONDEUR_MAX = 60;
+
+/**
  * Assainit un fragment HTML riche : ne conserve qu'une liste blanche de
- * balises inline et d'attributs. Tout le reste est aplati en texte.
+ * balises inline et d'attributs.
+ *
+ * Une balise refusée est DÉBALLÉE, pas aplatie : on jette l'enveloppe et on
+ * garde ce qu'elle contenait, mise en forme comprise. L'aplatir en texte
+ * faisait disparaître le gras, les liens et les couleurs de tout contenu
+ * collé depuis un traitement de texte ou une autre page — c'est-à-dire de
+ * presque tout ce qu'un client colle.
  */
 export function safeHtml(html) {
   const input = String(html ?? '');
@@ -156,7 +201,7 @@ export function safeHtml(html) {
   return root.innerHTML;
 }
 
-function cleanNode(node) {
+function cleanNode(node, profondeur = 0) {
   for (const child of Array.from(node.childNodes)) {
     if (child.nodeType === Node.TEXT_NODE) continue;
 
@@ -165,9 +210,26 @@ function cleanNode(node) {
       continue;
     }
 
-    if (!ALLOWED_TAGS.has(child.tagName)) {
-      // Balise interdite : on garde le texte, on jette l'enveloppe.
+    if (JETES.has(child.tagName)) { child.remove(); continue; }
+
+    if (profondeur >= PROFONDEUR_MAX) {
       child.replaceWith(child.ownerDocument.createTextNode(child.textContent || ''));
+      continue;
+    }
+
+    if (!ALLOWED_TAGS.has(child.tagName)) {
+      // On nettoie le contenu AVANT de déballer : une fois remonté d'un cran,
+      // il ne sera plus parcouru par cette boucle-ci, qui travaille sur une
+      // liste d'enfants figée avant la modification.
+      cleanNode(child, profondeur + 1);
+      const doc = child.ownerDocument;
+      const morceaux = Array.from(child.childNodes);
+      // Une coupure APRÈS le bloc, et seulement s'il reste quelque chose
+      // derrière : sinon on termine le contenu par un retour à vide.
+      if (BLOCS.has(child.tagName) && morceaux.length && child.nextSibling) {
+        morceaux.push(doc.createElement('br'));
+      }
+      child.replaceWith(...morceaux);
       continue;
     }
 
@@ -192,6 +254,6 @@ function cleanNode(node) {
       }
     }
 
-    cleanNode(child);
+    cleanNode(child, profondeur + 1);
   }
 }

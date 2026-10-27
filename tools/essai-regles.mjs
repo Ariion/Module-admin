@@ -36,18 +36,52 @@ const racine = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.FIRESTORE_EMULATOR_PORT || 8181);
 
 const AIDE = `
-  L'émulateur Firestore ne répond pas sur le port ${PORT}.
+  Il manque l'outillage de l'émulateur. Une seule fois :
 
     npm i --no-save firebase-tools @firebase/rules-unit-testing firebase
-    npx firebase emulators:start --only firestore --project projet-de-test
 
-  Puis relancez cet essai dans un autre terminal.
+  Il n'entre pas dans les dépendances du module : il pèse plusieurs centaines
+  de mégaoctets, et celui qui achète le module n'a aucune raison de le
+  télécharger pour s'en servir. Java est nécessaire à l'émulateur.
 `;
 
 // Sans émulateur, l'essai ne prouverait rien : mieux vaut refuser de partir
 // que rendre un vert qui ne veut rien dire.
 const debout = await fetch(`http://127.0.0.1:${PORT}/`).then(() => true).catch(() => false);
-if (!debout) { console.error(AIDE); process.exit(1); }
+
+// Si personne n'écoute, on monte l'émulateur nous-mêmes plutôt que de
+// renvoyer l'utilisateur à un second terminal.
+//
+// Cet essai est le seul à couvrir la frontière de sécurité du produit : ce
+// qui empêche un inconnu d'écrire dans la base d'un client n'est pas du code
+// du module, c'est `firebase/firestore.rules`. Un essai qu'il faut penser à
+// préparer est un essai qu'on finit par sauter, et c'est précisément celui
+// qu'on ne peut pas se permettre de sauter.
+//
+// `emulators:exec` démarre, lance la commande, puis éteint — y compris si la
+// commande échoue. C'est ce qui évite de laisser un émulateur orphelin
+// derrière soi, ce qu'un démarrage à la main fait très bien.
+if (!debout && !process.env.ESSAI_REGLES_ENVELOPPE) {
+  const { spawnSync } = await import('node:child_process');
+  const { existsSync } = await import('node:fs');
+  if (!existsSync(resolve(racine, 'node_modules/.bin/firebase'))) {
+    console.error(AIDE);
+    process.exit(1);
+  }
+  console.log(`\n  Aucun émulateur sur le port ${PORT} : j'en monte un le temps de l'essai.\n`);
+  const sortie = spawnSync(
+    resolve(racine, 'node_modules/.bin/firebase'),
+    ['emulators:exec', '--only', 'firestore', '--project', 'projet-de-test',
+      `node ${resolve(racine, 'tools/essai-regles.mjs')}`],
+    { cwd: racine, stdio: 'inherit', env: { ...process.env, ESSAI_REGLES_ENVELOPPE: '1' } },
+  );
+  process.exit(sortie.status === null ? 1 : sortie.status);
+}
+
+if (!debout) {
+  console.error(`\n  L'émulateur ne répond toujours pas sur le port ${PORT}.\n`);
+  process.exit(1);
+}
 
 let outils;
 try {

@@ -2,6 +2,63 @@
 
 
 
+
+## 1.38.0 — Le contenu collé garde sa mise en forme, et `npm test` existe
+
+### Ce qui était cassé
+
+`safeHtml` aplatissait en texte toute balise hors liste blanche. Conséquence,
+jamais vue parce que rien ne la regardait :
+
+| collé | obtenu avant |
+|---|---|
+| `<div><b>Prix</b> cassé</div>` | `Prix cassé` — gras perdu |
+| `<p>Une</p><p>Deux</p>` | `UneDeux` — mots soudés |
+| `<div><a href="/contact">Écrire</a></div>` | `Écrire` — lien détruit |
+
+C'est exactement ce que produit un client qui colle depuis Word ou une page
+web. Il perdait sa mise en forme et récupérait des mots collés.
+
+Une balise refusée est désormais DÉBALLÉE : on jette l'enveloppe, on garde ce
+qu'elle contenait. Les balises de bloc laissent une coupure de ligne, et une
+seule, jamais en fin de contenu.
+
+### Deux défauts trouvés en chemin
+
+`<script>` et `<style>` laissaient leur contenu en texte : le client voyait
+`.menu{display:none}` apparaître au milieu de sa phrase. Leur contenu est
+maintenant jeté avec l'enveloppe.
+
+`safeHtml` tourne aussi à l'AFFICHAGE, sur le site public. Un contenu
+suffisamment imbriqué faisait déborder la pile — donc une page qui ne
+s'affiche plus. Au-delà de 60 niveaux, on aplatit.
+
+### `npm run essai-assainissement`
+
+35 cas. Les deux bouts, parce qu'ils se contredisent : ce que le client doit
+garder (sortie exacte, pour attraper aussi le `<br>` en trop) et ce qui ne
+doit jamais ressortir (script, gestionnaires, `javascript:`, `data:`, mXSS
+par svg et par mathml, cadres, formulaires). Dans un vrai navigateur : les
+contournements de ce genre d'outil vivent dans l'écart entre un analyseur
+simulé et un analyseur réel.
+
+### `npm test`
+
+Il y avait quatorze commandes et aucune façon de répondre à « est-ce que le
+module est vert ? ». Un essai est maintenant VERT, ROUGE, ou IGNORÉ pour une
+raison nommée — seul le rouge fait échouer. Les trois qui demandent un projet
+Firebase ou un site servi rendaient un code d'échec impossible à distinguer
+d'un vrai défaut, et une batterie où le rouge est normal est une batterie que
+plus personne ne lit.
+
+### L'essai des règles Firestore monte son émulateur
+
+Il fallait un second terminal, donc il ne tournait jamais. C'est pourtant le
+seul essai qui couvre la frontière de sécurité du produit. `npm run
+essai-regles` démarre l'émulateur, joue les 32 cas, et éteint — y compris en
+cas d'échec. L'outillage reste hors des dépendances : il pèse plusieurs
+centaines de mégaoctets, et l'acheteur n'a aucune raison de le télécharger.
+
 ## 1.37.0 — Les photos d'exemple se téléchargent
 
 `npm run moissonner` cherche et télécharge les trente-six photos depuis
