@@ -2,7 +2,7 @@
 /**
  * Télécharge les photos d'exemple depuis Pexels, sur VOTRE machine.
  *
- *   export PEXELS_API_KEY=...        (gratuit, sans carte, 1 minute)
+ *   export PEXELS_API_KEY=...   (facultatif ; sans clé, la source est Openverse)
  *   npm run moissonner
  *   npm run photos
  *
@@ -71,20 +71,10 @@ const force = args.includes('--force');
 const metierVoulu = option('metier');
 const decalage = Number(option('decalage', 0)) || 0;
 
-const cle = process.env.PEXELS_API_KEY;
-if (!cle) {
-  console.error(`
-  Il manque la clé Pexels.
-
-    1. https://www.pexels.com/api/  →  « Get Started »  (gratuit, sans carte)
-    2. export PEXELS_API_KEY=la_clé_reçue
-    3. npm run moissonner
-
-  La clé sert uniquement à chercher : elle ne quitte pas votre machine et
-  n'a rien à faire dans le dépôt.
-`);
-  process.exit(1);
-}
+// Sans clé Pexels, on se rabat sur Openverse : aucune clé, aucun compte.
+const cle = process.env.PEXELS_API_KEY || '';
+const SOURCE_NOM = cle ? 'Pexels' : 'Openverse (CC0 et domaine public)';
+console.log(`\n  Source : ${SOURCE_NOM}\n`);
 
 const metiers = metierVoulu ? [metierVoulu] : Object.keys(RECHERCHES);
 for (const m of metiers) {
@@ -97,8 +87,10 @@ for (const m of metiers) {
 mkdirSync(SOURCE, { recursive: true });
 const credits = existsSync(CREDITS) ? JSON.parse(readFileSync(CREDITS, 'utf8')) : {};
 
-/** Un appel à l'API, avec un message lisible quand ça se passe mal. */
-async function chercher(requete) {
+/** Une photo, quelle que soit la source. */
+function normaliser(p) { return p; }
+
+async function chercherPexels(requete) {
   const url = 'https://api.pexels.com/v1/search'
     + `?query=${encodeURIComponent(requete)}`
     + `&orientation=landscape&size=large&per_page=${decalage + 15}`;
@@ -106,8 +98,34 @@ async function chercher(requete) {
   if (reponse.status === 401) throw new Error('clé Pexels refusée (401)');
   if (reponse.status === 429) throw new Error('quota horaire Pexels atteint (429), réessayez dans une heure');
   if (!reponse.ok) throw new Error(`Pexels a répondu ${reponse.status}`);
-  return (await reponse.json()).photos || [];
+  return ((await reponse.json()).photos || []).map((p) => normaliser({
+    id: `pexels-${p.id}`, width: p.width, height: p.height, telecharger: p.src.original,
+    auteur: p.photographer, profil: p.photographer_url, source: p.url,
+    licence: 'Pexels License, https://www.pexels.com/license/',
+  }));
 }
+
+/**
+ * Openverse, sans clé. Restreint à CC0 et domaine public : aucune mention
+ * obligatoire, donc rien à afficher chez le client. Le catalogue est moins
+ * riche que Pexels, il faut regarder le résultat de près.
+ */
+async function chercherOpenverse(requete) {
+  const url = 'https://api.openverse.org/v1/images/'
+    + `?q=${encodeURIComponent(requete)}`
+    + '&license=cc0,pdm&aspect_ratio=wide&size=large&mature=false'
+    + `&page_size=${Math.min(20, decalage + 20)}`;
+  const reponse = await fetch(url, { headers: { 'User-Agent': 'module-admin-moissonneur' } });
+  if (reponse.status === 429) throw new Error('trop de requêtes Openverse (429), réessayez dans quelques minutes');
+  if (!reponse.ok) throw new Error(`Openverse a répondu ${reponse.status}`);
+  return ((await reponse.json()).results || []).map((p) => normaliser({
+    id: `ov-${p.id}`, width: p.width || 0, height: p.height || 0, telecharger: p.url,
+    auteur: p.creator || 'inconnu', profil: p.creator_url || '', source: p.foreign_landing_url,
+    licence: `${String(p.license || '').toUpperCase()} ${p.license_url || ''}`.trim(),
+  }));
+}
+
+const chercher = cle ? chercherPexels : chercherOpenverse;
 
 let ecrites = 0;
 let sautees = 0;
@@ -140,19 +158,19 @@ for (const metier of metiers) {
     if (!photo) { manques.push(`${metier}-${rang}`); continue; }
     dejaPrises.add(photo.id);
 
-    const image = await fetch(photo.src.original);
+    const image = await fetch(photo.telecharger);
     if (!image.ok) { manques.push(`${metier}-${rang}`); continue; }
     writeFileSync(cible, Buffer.from(await image.arrayBuffer()));
 
     credits[`${metier}-${rang}`] = {
-      auteur: photo.photographer,
-      profil: photo.photographer_url,
-      source: photo.url,
+      auteur: photo.auteur,
+      profil: photo.profil,
+      source: photo.source,
       largeur: photo.width,
       hauteur: photo.height,
-      licence: 'Pexels License, https://www.pexels.com/license/',
+      licence: photo.licence,
     };
-    console.log(`  ✓ ${metier}-${rang}  ${photo.width}×${photo.height}  © ${photo.photographer}`);
+    console.log(`  ✓ ${metier}-${rang}  ${photo.width}×${photo.height}  © ${photo.auteur}`);
     ecrites += 1;
   }
 }
