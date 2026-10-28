@@ -7,129 +7,99 @@
 <meta name="description" content="Module Admin : un éditeur visuel qui se greffe sur un site HTML existant. Démonstration en phase de test.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --nuit:#0B0E12;
-    --surface:#11151A;
-    --texte:#E8E5DF;
-    --doux:#8E949C;
-    --filet:rgba(232,229,223,.14);
-    --champagne:#C2AB82;
-    --serif:'Instrument Serif', 'Times New Roman', serif;
-    --sans:'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --fond-a:#050b18; --fond-b:#071228; --marine:#1B3560;
+    --cyan:#29B8D9; --encre:#dde8f6; --doux:#8fa3c2; --filet:rgba(221,232,246,.14);
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{background:var(--nuit)}
+  html{background:var(--fond-a)}
   body{
-    font-family:var(--sans); font-size:17px; line-height:1.65;
-    color:var(--texte); background:var(--nuit);
-    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    font-family:var(--sans); font-size:16px; line-height:1.7; color:var(--encre);
+    background:linear-gradient(180deg,var(--fond-a) 0%,var(--fond-b) 60%,var(--fond-a) 100%);
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
   }
   a{color:inherit}
-  a:focus-visible, [contenteditable]:focus-visible{outline:1px solid var(--champagne); outline-offset:6px}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;color:var(--champagne)}
-  .page{max-width:1120px; margin:0 auto; padding:0 32px}
+  a:focus-visible,[contenteditable]:focus-visible{outline:1px solid var(--cyan);outline-offset:6px}
+  code{font-family:var(--mono);font-size:.88em;color:var(--cyan)}
+  .page{max-width:1120px;margin:0 auto;padding:0 28px}
+  .label{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
 
-  /* ---- barre du haut ---- */
-  .barre{display:flex; justify-content:space-between; align-items:center; padding:32px 0}
-  .marque{font-family:var(--serif); font-size:24px; letter-spacing:.01em}
-  .test{
-    display:inline-flex; align-items:center; gap:10px;
-    font-size:14px; color:var(--doux);
-    padding:7px 16px; border:1px solid var(--filet); border-radius:999px;
+  .barre{display:flex;justify-content:space-between;align-items:center;padding:28px 0}
+  .marque{font-family:var(--serif);font-size:22px}
+  .test{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--doux);
+    padding:7px 14px;border:1px solid var(--filet);border-radius:999px;display:inline-flex;align-items:center;gap:9px}
+  .test::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan)}
+
+  .ouverture{padding:clamp(48px,8vw,104px) 0 0;text-align:center}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,6.4vw,76px);line-height:1.06;letter-spacing:-.015em;
+    max-width:15ch;margin:22px auto 0;cursor:text}
+  h1[contenteditable]:hover{outline:1px dashed var(--filet);outline-offset:14px}
+  .essai-titre{margin-top:22px;font-family:var(--mono);font-size:12.5px;color:var(--doux)}
+  .chapo{margin:30px auto 0;max-width:56ch;color:#b7c7df;font-size:17px}
+  .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+  .bouton{font-size:14.5px;font-weight:600;text-decoration:none;padding:14px 26px;border-radius:10px;background:var(--cyan);color:#04101f}
+  .bouton.sec{background:none;color:var(--encre);border:1px solid rgba(221,232,246,.35);font-weight:500;padding:13px 26px}
+
+  /* fenêtre type macOS, capture réelle */
+  .scene{position:relative;margin:clamp(56px,8vw,96px) auto 0;max-width:1000px}
+  .fenetre{border:1px solid var(--filet);border-radius:12px;overflow:hidden;background:#0b1424;
+    box-shadow:0 40px 100px rgba(0,0,0,.55),0 0 0 1px rgba(41,184,217,.06)}
+  .fenetre .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--filet)}
+  .fenetre .bar i{width:10px;height:10px;border-radius:50%;background:rgba(221,232,246,.2)}
+  .fenetre .bar span{margin-left:10px;font-family:var(--mono);font-size:11px;color:var(--doux)}
+  .fenetre img{display:block;width:100%;height:auto}
+  .flottante{position:absolute;right:-28px;bottom:-56px;width:230px;border-radius:12px;overflow:hidden;
+    border:1px solid var(--filet);box-shadow:0 30px 70px rgba(0,0,0,.6);background:#0b1424}
+  .flottante img{display:block;width:100%;height:auto}
+
+  .avis{margin-top:clamp(96px,11vw,140px);display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;
+    padding:28px 0;border-top:1px solid var(--filet);border-bottom:1px solid var(--filet)}
+  .avis strong{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.2;white-space:nowrap}
+  .avis p{max-width:68ch;color:#b7c7df;font-size:15px}
+  .avis #etat{margin-top:10px;font-family:var(--mono);font-size:12.5px;color:var(--cyan)}
+
+  .titre-section{font-family:var(--serif);font-weight:400;font-size:clamp(30px,4vw,44px);line-height:1.15;margin:12px 0 36px}
+  .essais{padding-top:clamp(64px,9vw,112px)}
+  .cartes{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .carte{display:flex;flex-direction:column;text-decoration:none;color:inherit;border:1px solid var(--filet);border-radius:12px;
+    overflow:hidden;background:rgba(27,53,96,.18);transition:border-color .3s,transform .3s}
+  .carte:hover,.carte:focus-visible{border-color:rgba(41,184,217,.55);transform:translateY(-3px)}
+  .carte .vis{aspect-ratio:16/9;overflow:hidden;border-bottom:1px solid var(--filet);background:#0b1424}
+  .carte .vis img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+  .carte .txt{padding:26px 28px 30px;display:flex;flex-direction:column;flex:1}
+  .carte h3{font-family:var(--serif);font-weight:400;font-size:32px;line-height:1.1;margin:10px 0 12px}
+  .carte p{color:#b7c7df;font-size:15px;max-width:44ch}
+  .carte .aller{margin-top:auto;padding-top:22px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan)}
+
+  .regard{padding-top:clamp(72px,10vw,120px)}
+  .colonnes{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+  .colonnes > div{border-top:1px solid var(--cyan);padding-top:20px}
+  .colonnes h4{font-family:var(--serif);font-weight:400;font-size:23px;line-height:1.2;margin-bottom:10px}
+  .colonnes p{color:#b7c7df;font-size:15px}
+  .note-heberg{margin-top:clamp(48px,6vw,72px);max-width:72ch;color:var(--doux);font-size:13.5px}
+  .note-heberg strong{color:var(--encre);font-weight:600}
+
+  footer{margin-top:clamp(64px,9vw,112px);padding:26px 0 52px;border-top:1px solid var(--filet);
+    display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--doux)}
+  footer a{color:var(--encre);text-underline-offset:4px;text-decoration-color:var(--cyan)}
+
+  @media (prefers-reduced-motion:no-preference){
+    .barre,.ouverture > *,.scene{animation:entree .9s cubic-bezier(.2,.7,.2,1) both}
+    h1{animation-delay:.1s}.chapo{animation-delay:.2s}.actions{animation-delay:.3s}.scene{animation-delay:.4s}
+    @keyframes entree{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
   }
-  .test::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--champagne)}
-
-  /* ---- ouverture ---- */
-  .ouverture{padding:clamp(72px,12vw,148px) 0 clamp(56px,8vw,96px)}
-  h1{
-    font-family:var(--serif); font-weight:400;
-    font-size:clamp(46px,8.4vw,112px); line-height:1.02; letter-spacing:-.018em;
-    max-width:13ch; cursor:text;
-  }
-  h1[contenteditable]:hover{outline:1px dashed var(--filet); outline-offset:14px}
-  .essai-titre{margin-top:28px; font-size:14.5px; color:var(--doux)}
-  .chapo{margin-top:44px; max-width:52ch; font-size:19px; line-height:1.7; color:#BDBAB4}
-
-  /* ---- avertissement de test ---- */
-  .avis{
-    display:grid; grid-template-columns:auto 1fr; gap:28px; align-items:start;
-    padding:28px 0; border-top:1px solid var(--filet); border-bottom:1px solid var(--filet);
-  }
-  .avis strong{font-family:var(--serif); font-weight:400; font-size:26px; line-height:1.2; white-space:nowrap}
-  .avis p{max-width:68ch; color:#BDBAB4; font-size:16px}
-  .avis #etat{margin-top:10px; font-size:14.5px; color:var(--champagne)}
-
-  /* ---- les deux essais ---- */
-  .essais{padding:clamp(56px,8vw,104px) 0 0}
-  .titre-section{font-family:var(--serif); font-weight:400; font-size:clamp(30px,4vw,44px); line-height:1.15; margin-bottom:40px}
-  .essai{
-    display:grid; grid-template-columns:1fr minmax(0,400px); gap:clamp(28px,5vw,72px); align-items:center;
-    padding:36px 0; border-top:1px solid var(--filet); text-decoration:none; color:inherit;
-  }
-  .essai:last-of-type{border-bottom:1px solid var(--filet)}
-  .essai .genre{font-size:14.5px; color:var(--doux); margin-bottom:14px}
-  .essai h3{
-    font-family:var(--serif); font-weight:400; font-size:clamp(36px,4.6vw,56px);
-    line-height:1.05; letter-spacing:-.01em; margin-bottom:18px; transition:color .3s ease;
-  }
-  .essai p{max-width:46ch; color:#BDBAB4; font-size:16.5px}
-  .essai .aller{
-    display:inline-block; margin-top:26px; font-weight:500; font-size:15.5px;
-    padding-bottom:4px; border-bottom:1px solid var(--champagne); transition:padding .3s ease;
-  }
-  .essai:hover h3, .essai:focus-visible h3{color:var(--champagne)}
-  .essai:hover .aller{padding-right:12px}
-  .visuel{aspect-ratio:8/5; overflow:hidden; border-radius:2px; background:var(--surface); position:relative}
-  .visuel img{width:100%; height:100%; object-fit:cover; display:block; transition:transform .8s cubic-bezier(.2,.7,.2,1)}
-  .essai:hover .visuel img{transform:scale(1.04)}
-  /* croquis d'une page vierge */
-  .croquis{position:absolute; inset:0; padding:9% 11%; display:flex; flex-direction:column; gap:7%}
-  .croquis i{display:block; height:7%; background:rgba(232,229,223,.16); border-radius:1px}
-  .croquis i:nth-child(1){width:46%; height:11%; background:rgba(232,229,223,.34)}
-  .croquis i:nth-child(2){width:88%}
-  .croquis i:nth-child(3){width:72%}
-  .croquis i:nth-child(4){width:80%}
-  .croquis i:nth-child(5){width:34%; margin-top:auto; border:1px dashed var(--champagne); background:none; height:14%}
-
-  /* ---- ce qu'il faut regarder ---- */
-  .regard{padding:clamp(72px,10vw,128px) 0 0}
-  .colonnes{display:grid; grid-template-columns:repeat(3,1fr); gap:0}
-  .colonnes > div{padding:0 32px; border-left:1px solid var(--filet)}
-  .colonnes > div:first-child{padding-left:0; border-left:0}
-  .colonnes h4{font-family:var(--serif); font-weight:400; font-size:25px; line-height:1.2; margin-bottom:12px}
-  .colonnes p{color:#BDBAB4; font-size:16px}
-
-  .note-heberg{margin-top:clamp(56px,7vw,88px); max-width:72ch; color:var(--doux); font-size:14.5px}
-  .note-heberg strong{color:var(--texte); font-weight:500}
-
-  footer{margin-top:clamp(72px,10vw,128px); padding:28px 0 56px; border-top:1px solid var(--filet);
-         display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap; font-size:14.5px; color:var(--doux)}
-  footer a{color:var(--texte); text-underline-offset:4px; text-decoration-color:var(--champagne)}
-
-  /* ---- une seule entrée orchestrée, à l'ouverture ---- */
-  @media (prefers-reduced-motion: no-preference){
-    .barre, h1, .essai-titre, .chapo{animation:entree 1s cubic-bezier(.2,.7,.2,1) both}
-    h1{animation-delay:.12s}
-    .essai-titre{animation-delay:.5s}
-    .chapo{animation-delay:.34s}
-    @keyframes entree{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:none}}
-  }
-
   @media (max-width:860px){
-    .essai{grid-template-columns:1fr}
-    .essai .visuel{order:-1}
-    .colonnes{grid-template-columns:1fr; gap:32px}
-    .colonnes > div, .colonnes > div:first-child{padding:24px 0 0; border-left:0; border-top:1px solid var(--filet)}
-    .colonnes > div:first-child{border-top:0; padding-top:0}
-    .avis{grid-template-columns:1fr; gap:12px}
-    .avis strong{white-space:normal}
+    .cartes{grid-template-columns:1fr}
+    .colonnes{grid-template-columns:1fr}
+    .avis{grid-template-columns:1fr;gap:12px}.avis strong{white-space:normal}
+    .flottante{right:12px;bottom:-44px;width:130px}
   }
-  @media (max-width:520px){
-    .page{padding:0 20px}
-    .test{font-size:13px; padding:6px 12px}
-  }
+  @media (max-width:520px){.page{padding:0 20px}.test{font-size:10.5px;padding:6px 11px}}
 </style>
 </head>
 <body>
@@ -141,9 +111,24 @@
   </div>
 
   <header class="ouverture">
+    <p class="label">Éditeur visuel pour sites statiques</p>
     <h1 contenteditable="true" spellcheck="false" aria-label="Titre modifiable : cliquez et écrivez">Modifiez votre site en cliquant dessus.</h1>
     <p class="essai-titre">Essayez : cliquez sur ce titre et écrivez. Rien n'est enregistré.</p>
     <p class="chapo">Module Admin se greffe sur un site HTML existant. Pas de CMS, pas de build : deux lignes de code, et vos clients modifient eux-mêmes leurs textes, leurs images et leurs liens.</p>
+    <div class="actions">
+      <a class="bouton" href="/demo/?admin">Ouvrir l'éditeur</a>
+      <a class="bouton sec" href="/vierge?admin">Partir d'une page vierge</a>
+    </div>
+
+    <div class="scene">
+      <div class="fenetre">
+        <div class="bar"><i></i><i></i><i></i><span>Hôtel des Pins, en cours de modification</span></div>
+        <img src="/essais/vercel/img/editeur.jpg" width="1600" height="1000" alt="L'éditeur ouvert sur le site fictif Hôtel des Pins : le titre est sélectionné, le panneau de gauche permet de le modifier.">
+      </div>
+      <div class="flottante" aria-hidden="true">
+        <img src="/essais/vercel/img/mobile.jpg" width="480" height="1040" alt="" loading="lazy">
+      </div>
+    </div>
   </header>
 
   <section class="avis" aria-label="Phase de test">
@@ -155,46 +140,38 @@
   </section>
 
   <section class="essais">
+    <p class="label">Essais</p>
     <h2 class="titre-section">Deux façons de l'essayer</h2>
-
-    <a class="essai" href="/demo/?admin">
-      <div>
-        <p class="genre">Sur un site existant</p>
-        <h3>Hôtel des Pins</h3>
-        <p>Un site écrit à la main, laissé tel quel. Le module s'y greffe, repère seul les textes, les images et les liens, et gère les listes de cartes répétables. Seules deux balises <code>&lt;script&gt;</code> ont été ajoutées.</p>
-        <span class="aller">Ouvrir l'éditeur</span>
-      </div>
-      <div class="visuel"><img src="/demo/images/hero.jpg" alt="" loading="lazy"></div>
-    </a>
-
-    <a class="essai" href="/vierge?admin">
-      <div>
-        <p class="genre">Sans site de départ</p>
-        <h3>Page vierge</h3>
-        <p>Un titre, un pied de page, une feuille de style minimale. Un assistant pose deux questions, puis propose des mises en page et construit celle que vous choisissez.</p>
-        <span class="aller">Lancer l'assistant</span>
-      </div>
-      <div class="visuel" aria-hidden="true"><div class="croquis"><i></i><i></i><i></i><i></i><i></i></div></div>
-    </a>
+    <div class="cartes">
+      <a class="carte" href="/demo/?admin">
+        <div class="vis"><img src="/demo/images/hero.jpg" alt="" loading="lazy"></div>
+        <div class="txt">
+          <span class="label">Sur un site existant</span>
+          <h3>Hôtel des Pins</h3>
+          <p>Un site écrit à la main, laissé tel quel. Le module repère seul les textes, les images et les liens, et gère les listes de cartes. Seules deux balises <code>&lt;script&gt;</code> ont été ajoutées.</p>
+          <span class="aller">Ouvrir l'éditeur →</span>
+        </div>
+      </a>
+      <a class="carte" href="/vierge?admin">
+        <div class="vis"><img src="/essais/vercel/img/vierge.jpg" alt="" loading="lazy"></div>
+        <div class="txt">
+          <span class="label">Sans site de départ</span>
+          <h3>Page vierge</h3>
+          <p>Un titre, un pied de page, une feuille de style minimale. Un assistant pose deux questions, puis propose des mises en page et construit celle que vous choisissez.</p>
+          <span class="aller">Lancer l'assistant →</span>
+        </div>
+      </a>
+    </div>
   </section>
 
   <section class="regard">
+    <p class="label">À regarder</p>
     <h2 class="titre-section">Ce qu'il faut tester</h2>
     <div class="colonnes">
-      <div>
-        <h4>Sur l'hôtel</h4>
-        <p>Survolez un titre, cliquez, écrivez. Dupliquez une carte de chambre, puis rechargez la page sans <code>?admin</code> pour voir le résultat.</p>
-      </div>
-      <div>
-        <h4>Sur la page vierge</h4>
-        <p>Cochez plusieurs intentions et regardez les propositions changer. Une fois la page construite, tout reste modifiable, déplaçable et supprimable.</p>
-      </div>
-      <div>
-        <h4>Sur téléphone</h4>
-        <p>Le panneau devient une feuille qui se replie en bas de l'écran, pour modifier un site depuis sa poche.</p>
-      </div>
+      <div><h4>Sur l'hôtel</h4><p>Survolez un titre, cliquez, écrivez. Dupliquez une carte de chambre, puis rechargez la page sans <code>?admin</code> pour voir le résultat.</p></div>
+      <div><h4>Sur la page vierge</h4><p>Cochez plusieurs intentions et regardez les propositions changer. Une fois la page construite, tout reste modifiable, déplaçable et supprimable.</p></div>
+      <div><h4>Sur téléphone</h4><p>Le panneau devient une feuille qui se replie en bas de l'écran, pour modifier un site depuis sa poche.</p></div>
     </div>
-
     <p class="note-heberg"><strong>Hébergement statique.</strong> Sur Vercel, le fichier <code>.html</code> ne peut pas être réécrit à la publication et les médias ne se téléversent pas : les fichiers sont en lecture seule après déploiement. Le contenu est servi au chargement, et l'éditeur propose un export manuel de la page figée. Sur un hébergement PHP, ces deux limites disparaissent.</p>
   </section>
 
@@ -205,7 +182,6 @@
 
 </div>
 
-<!-- La configuration des essais dit elle-même si Firebase est branché. -->
 <script src="/essais/vercel/admin-config.js"></script>
 <script>
   (function () {
