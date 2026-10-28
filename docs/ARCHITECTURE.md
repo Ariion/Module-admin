@@ -68,11 +68,7 @@ entrée de menu supplémentaire, quatrième carte ajoutée à une liste,
 reformulation d'un texte non édité. Résultat : **tout le contenu retrouve sa
 place, zéro orphelin.**
 
-Vérifié aussi sur un site client réel de 960 lignes (voir
-[`essais/domaine-lamartine/`](../essais/domaine-lamartine/LISEZMOI.md)) : 56
-éléments et 6 listes répétables détectés sans configuration, puis section
-entière insérée, classe modifiée, entrée de menu et bloc ajoutés dans le code
-— **aucun orphelin, aucune erreur**.
+Vérifié aussi sur un site HTML écrit à la main (voir [`demo/`](../demo/index.html)) : éléments et listes répétables détectés sans configuration, puis section entière insérée, classe modifiée, entrée de menu et bloc ajoutés dans le code, **aucun orphelin, aucune erreur**.
 
 Ce qui casse quand même : renommer l'`id` qui sert d'ancre à une section,
 ou déplacer un élément dans une autre section **et** en changer le texte au

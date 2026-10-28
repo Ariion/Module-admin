@@ -185,7 +185,7 @@ admin/                    le module (à copier tel quel sur un site)
     └── library.js        bibliothèque média (dépôt, ajout par adresse, filtres)
 
 demo/                     site de démonstration complet
-essais/domaine-lamartine/ test sur un site client réel (code brut + module)
+demo/ site fictif (Hôtel des Pins) pour essayer le module
 firebase/                 règles de sécurité Firestore et Storage
 tools/admin-endpoint.php  script serveur : médias + réécriture du HTML
 tools/paquet.mjs          fabrique le dossier à téléverser chez le client

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Module Admin — les deux essais</title>
+<title>Module Admin, démonstration</title>
 <style>
   :root{
     --encre: var(--admin-encre, #15181d); --doux: var(--admin-doux, #5d6673); --pale:#8b94a1;
@@ -74,21 +74,18 @@
 
 <header>
   <div class="marque"><span class="point"></span> Module Admin</div>
-  <h1>Deux essais, deux situations</h1>
+  <h1>Essayez l'éditeur</h1>
   <p class="chapo">Le module s'installe sur un site qui existe déjà, ou sert à
-     en construire un depuis une page vide. Voici les deux cas, côte à côte.
+     en construire un depuis une page vide. Voici les deux cas, côte à côte, sur des sites fictifs.
      Ajoutez <code>?admin</code> à l'adresse pour ouvrir l'éditeur.</p>
   <p class="etat" id="etat"></p>
 </header>
 
 <div class="cartes">
-  <a class="carte" href="/site?admin">
+  <a class="carte" href="/demo/?admin">
     <span class="etiquette">Site existant</span>
-    <h2>Domaine de Lamartine</h2>
-    <p>Le code d'un vrai site client, inchangé. Le module s'y greffe et y
-       trouve seul 56 textes, images et liens, ainsi que les listes de cartes
-       répétables. Aucune ligne du site n'a été modifiée : deux balises
-       <code>&lt;script&gt;</code> ont été ajoutées, rien d'autre.</p>
+    <h2>Hôtel des Pins</h2>
+    <p>Un site HTML écrit à la main (un hôtel fictif), laissé tel quel. Le module s'y greffe et trouve seul les textes, images et liens, ainsi que les listes de cartes répétables. Aucune ligne du site n'a été modifiée : deux balises <code>&lt;script&gt;</code> ont été ajoutées, rien d'autre.</p>
     <span class="aller">Ouvrir l'éditeur →</span>
   </a>
 
@@ -103,17 +100,11 @@
 </div>
 
 <div class="apres">
-  <h3>Vous cherchiez le produit livré&nbsp;?</h3>
-  <p>Cette page-ci est un <strong>banc d'essai</strong>&nbsp;: elle sert à
-     éprouver le module sur deux situations, pas à le présenter. La porte
-     d'entrée du dossier que reçoit l'acheteur est ailleurs —
-     <a href="/distribution/index.html">ouvrir la porte du dossier vendu</a>.</p>
-
   <h3>Ce qu'il faut regarder</h3>
   <ul>
     <li><strong>Sur le site existant</strong> : l'assistant ne s'ouvre jamais,
         et le code reste tel quel. Survolez un titre, cliquez, écrivez.
-        Dupliquez une carte de gîte. Publiez, puis rechargez sans
+        Dupliquez une carte de chambre. Publiez, puis rechargez sans
         <code>?admin</code>.</li>
     <li><strong>Sur la page vierge</strong> : cochez plusieurs intentions pour
         voir les propositions changer. Une fois la page construite, tout reste

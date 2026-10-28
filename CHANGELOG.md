@@ -1198,7 +1198,7 @@ qu'on emprunte précisément quand ça va mal.
   donc pas concernée ; le garde-fou y est tout de même posé.
 
 Vérifié hors ligne, où le cas se produit à chaque chargement : l'aperçu
-s'affiche, et `essais/domaine-lamartine/site-fige/index.html` se régénère à
+s'affiche, et la page figée du site d'essai se régénère à
 l'identique, balise de polices comprise.
 
 ## 1.11.1

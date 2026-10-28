@@ -19,7 +19,7 @@ const T = (html) => ({ html });
 
 /** Ce qu'on demande sur l'éditeur du site. */
 export const CHAMPS_LEGAUX = [
-  { key: 'denomination', requis: true, exemple: 'Domaine de Lamartine' },
+  { key: 'denomination', requis: true, exemple: 'Hôtel des Pins' },
   { key: 'formeJuridique', exemple: 'SARL, SAS, auto-entrepreneur…' },
   { key: 'capital', exemple: '10 000 €' },
   { key: 'adresse', requis: true, exemple: '1 route de la Forêt, 30130 Pont-Saint-Esprit' },

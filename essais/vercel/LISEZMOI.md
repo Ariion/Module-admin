@@ -65,7 +65,7 @@ et un mot de passe. **Notez l'UID** affiché dans la liste.
 
 ```
 Collection      sites
-ID du document  test-lamartine
+ID du document  essais-vercel
 ```
 
 Ce document peut rester vide. Ouvrez-le, *Démarrer une collection* :
@@ -104,7 +104,7 @@ Déployez. Le `vercel.json` du dépôt sert trois adresses :
 | Adresse | Ce qu'on y trouve |
 |---|---|
 | `https://VOTRE-PROJET.vercel.app/` | l'accueil des essais, avec les deux cas |
-| `…/site?admin` | **site existant** : le code du Domaine de Lamartine, inchangé, avec le module greffé |
+| `…/demo/?admin` | **site existant** : un site fictif (Hôtel des Pins), inchangé, avec le module greffé |
 | `…/vierge?admin` | **sans site de base** : une page vide, l'assistant construit la mise en page |
 
 > Utilisez bien ces adresses-là, pas `/essais/vercel/index.html` : le module
@@ -253,7 +253,7 @@ trace le nombre d'éléments détectés et chaque application de contenu.
 | Symptôme | Cause la plus probable |
 |---|---|
 | « Connexion impossible » alors que le mot de passe est bon | domaine non autorisé dans Firebase Auth (étape 4) |
-| Connecté, puis « Ce compte n'a pas accès à ce site » | document `sites/test-lamartine/members/<UID>` absent, ou `role` ≠ `owner` |
+| Connecté, puis « Ce compte n'a pas accès à ce site » | document `sites/essais-vercel/members/<UID>` absent, ou `role` ≠ `owner` |
 | `Missing or insufficient permissions` en console | règles de sécurité non publiées (étape 1f) |
 | Le contenu publié ne s'affiche pas pour un visiteur | `pages/{pageId}` doit être en lecture publique — vérifiez que vous avez bien collé le fichier de règles fourni |
 | Rien ne se passe avec `?admin` | `siteId` ou `projectId` erroné : la console le dit |

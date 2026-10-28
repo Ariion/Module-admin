@@ -20,7 +20,7 @@ const CLES = {
 const RENSEIGNE = !Object.values(CLES).some((v) => /À REMPLIR/.test(v));
 
 window.ADMIN_CONFIG = {
-  siteId: 'test-lamartine',
+  siteId: 'essais-vercel',
 
   // 'firebase' dès que les clés sont là, 'demo' en attendant.
   backend: RENSEIGNE ? 'firebase' : 'demo',
