@@ -31,14 +31,14 @@ a { color: var(--accent); }
 .site-nav a:hover { color: var(--accent); }
 
 .hero {
-  min-height: 460px; display: flex; align-items: center;
-  background-image: url("images/hero.svg");
+  min-height: 540px; display: flex; align-items: center;
+  background-image: linear-gradient(180deg, rgba(8,14,26,.55) 0%, rgba(8,14,26,.35) 45%, rgba(8,14,26,.6) 100%), url("images/hero.jpg");
   background-size: cover; background-position: center;
   color: #fff; text-align: center;
 }
 .hero__inner { max-width: 720px; margin: 0 auto; padding: 60px 24px; }
-.hero h1 { font-size: clamp(32px, 5vw, 52px); margin: 0 0 14px; }
-.hero p { font-size: 19px; opacity: .92; margin: 0 0 26px; }
+.hero h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.12; margin: 0 0 14px; text-wrap: balance; text-shadow: 0 2px 18px rgba(0,0,0,.35); }
+.hero p { font-size: 19px; opacity: .95; margin: 0 0 26px; text-shadow: 0 1px 12px rgba(0,0,0,.35); }
 
 .button {
   display: inline-block; padding: 12px 26px; border-radius: 2px;
@@ -47,6 +47,7 @@ a { color: var(--accent); }
 }
 
 section { padding: 72px 0; }
+section.wrap { padding: 72px 24px; }
 section h2 { font-size: 30px; margin: 0 0 10px; }
 .lead { color: var(--muted); max-width: 620px; margin: 0 0 40px; }
 
