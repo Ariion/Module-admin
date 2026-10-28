@@ -45,18 +45,18 @@ const CREDITS = resolve(racine, 'docs/PHOTOS-CREDITS.json');
  * pouvoir se poser.
  */
 const RECHERCHES = {
-  restaurant: 'empty restaurant interior warm light',
-  alimentaire: 'grocery store shelves interior',
-  beaute: 'beauty salon interior minimal',
-  batiment: 'construction site building exterior',
-  sante: 'medical clinic interior bright',
-  conseil: 'modern office meeting room empty',
-  boutique: 'clothing boutique store interior',
-  creatif: 'creative studio workspace desk',
-  hebergement: 'hotel room interior window',
-  association: 'community hall gathering space',
-  sport: 'gym interior equipment',
-  autre: 'minimal architecture interior space',
+  restaurant: ['empty restaurant interior wooden tables warm light', 'set restaurant table plates glasses top view', 'empty dining room chairs bar counter evening'],
+  alimentaire: ['artisan bakery interior bread shelves', 'flour wooden table baguette bread linen', 'fresh vegetables crates market stall'],
+  beaute: ['hair salon interior round mirror plants', 'spa shelf amber bottles towels candle', 'massage treatment room white sheets'],
+  batiment: ['old stone house renovation scaffolding', 'carpenter workbench hand tools wood shavings', 'interior renovation plaster wall empty room'],
+  sante: ['clinic waiting room armchairs plant bright', 'doctor desk notebook pen glass of water', 'empty medical examination room white light'],
+  conseil: ['empty meeting room wooden table large window', 'desk open notebook pen coffee glasses', 'corner office window view bookshelf plant'],
+  boutique: ['independent clothing boutique rail wooden floor', 'shop shelf ceramics folded textiles vase', 'shop window interior daylight wooden floor'],
+  creatif: ['bright art studio large table sketchbooks', 'painter table brushes paint tubes palette', 'studio wall blank paper pinned drawing tools'],
+  hebergement: ['countryside guesthouse facade wooden shutters garden', 'guest room white bed linen open window greenery', 'shaded terrace pergola wooden table valley view'],
+  association: ['community hall chairs in circle large windows', 'welcome table notebooks cups plant simple tablecloth', 'community garden raised wooden beds shed'],
+  sport: ['empty gym wooden floor dumbbells windows', 'running track lanes texture', 'empty gymnasium court lines basketball hoops'],
+  autre: ['bright neutral workspace wooden table chair plant', 'natural materials wood linen ceramic light surface', 'small shop facade awning street no sign'],
 };
 
 const PAR_METIER = 3;
@@ -101,10 +101,10 @@ const credits = existsSync(CREDITS) ? JSON.parse(readFileSync(CREDITS, 'utf8')) 
 async function chercher(requete) {
   const url = 'https://api.pexels.com/v1/search'
     + `?query=${encodeURIComponent(requete)}`
-    + `&orientation=landscape&size=large&per_page=${PAR_METIER + decalage + 12}`;
+    + `&orientation=landscape&size=large&per_page=${decalage + 15}`;
   const reponse = await fetch(url, { headers: { Authorization: cle } });
   if (reponse.status === 401) throw new Error('clé Pexels refusée (401)');
-  if (reponse.status === 429) throw new Error('quota horaire Pexels atteint (429) — réessayez dans une heure');
+  if (reponse.status === 429) throw new Error('quota horaire Pexels atteint (429), réessayez dans une heure');
   if (!reponse.ok) throw new Error(`Pexels a répondu ${reponse.status}`);
   return (await reponse.json()).photos || [];
 }
@@ -114,30 +114,31 @@ let sautees = 0;
 const manques = [];
 
 for (const metier of metiers) {
-  let trouvees;
-  try {
-    trouvees = await chercher(RECHERCHES[metier]);
-  } catch (erreur) {
-    console.error(`\n  ✗ ${erreur.message}\n`);
-    // Rien ne sert de redemander onze fois : une clé refusée le reste, et un
-    // quota atteint vaut pour toute l'heure.
-    if (/401|429/.test(erreur.message)) process.exit(1);
-    manques.push(metier);
-    continue;
-  }
-
-  // Trop petite, la photo ne remplirait pas les quatre largeurs du pipeline :
-  // `npm run photos` ne ré-agrandit jamais, et il a raison.
-  const utiles = trouvees.filter((p) => p.width >= LARGEUR_MINI).slice(decalage);
-  if (utiles.length < PAR_METIER) {
-    console.log(`  ! ${metier} — seulement ${utiles.length} photo(s) assez grande(s)`);
-  }
-
+  // Une recherche par rang : vue d'ensemble, détail, lumière. C'est ce qui
+  // fait une petite série plutôt que trois variantes de la même photo.
+  const dejaPrises = new Set();
   for (let rang = 1; rang <= PAR_METIER; rang += 1) {
-    const photo = utiles[rang - 1];
     const cible = resolve(SOURCE, `${metier}-${rang}.jpg`);
-    if (!photo) { manques.push(`${metier}-${rang}`); continue; }
     if (existsSync(cible) && !force) { sautees += 1; continue; }
+
+    let trouvees;
+    try {
+      trouvees = await chercher(RECHERCHES[metier][rang - 1]);
+    } catch (erreur) {
+      console.error(`\n  ✗ ${erreur.message}\n`);
+      // Une clé refusée le reste, et un quota atteint vaut pour toute l'heure.
+      if (/401|429/.test(erreur.message)) process.exit(1);
+      manques.push(`${metier}-${rang}`);
+      continue;
+    }
+
+    // Trop petite, la photo ne remplirait pas les quatre largeurs du pipeline :
+    // `npm run photos` ne ré-agrandit jamais, et il a raison.
+    const photo = trouvees
+      .filter((p) => p.width >= LARGEUR_MINI && !dejaPrises.has(p.id))
+      .slice(decalage)[0];
+    if (!photo) { manques.push(`${metier}-${rang}`); continue; }
+    dejaPrises.add(photo.id);
 
     const image = await fetch(photo.src.original);
     if (!image.ok) { manques.push(`${metier}-${rang}`); continue; }
@@ -149,7 +150,7 @@ for (const metier of metiers) {
       source: photo.url,
       largeur: photo.width,
       hauteur: photo.height,
-      licence: 'Pexels License — https://www.pexels.com/license/',
+      licence: 'Pexels License, https://www.pexels.com/license/',
     };
     console.log(`  ✓ ${metier}-${rang}  ${photo.width}×${photo.height}  © ${photo.photographer}`);
     ecrites += 1;
