@@ -6,6 +6,10 @@
       "destination": "/essais/vercel/accueil.html"
     },
     {
+      "source": "/modeles",
+      "destination": "/essais/vercel/modeles.html"
+    },
+    {
       "source": "/vierge",
       "destination": "/essais/vercel/vierge.html"
     },

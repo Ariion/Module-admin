@@ -4,6 +4,30 @@
 
 
 
+
+## 1.40.0 — La vitrine des modèles
+
+`/modeles` : on choisit un métier, on parcourt les onze modèles, et surtout
+on GARDE le modèle en changeant de métier — les textes, l'enseigne, la ville
+et les images suivent. Onze modèles × douze métiers × quatre ambiances, soit
+528 pages, dont aucune n'est stockée : chacune est calculée à l'instant par
+`pageDuModele()`, avec le `renderWidget` du site. Une démonstration qui
+mentirait sur ce point ne servirait à rien.
+
+Le popup d'achat n'apparaît qu'arrivé en bas de page, et une seule fois par
+session : proposer d'acheter avant d'avoir rien regardé ne convainc personne.
+
+Trois défauts vus en regardant la page rendue, pas en relisant le code :
+
+- « Et si vous ouvriez **boulangerie** ? » — les libellés de
+  `metiersBibliotheque` sont des libellés de FILTRE, qui rangent bien et se
+  lisent mal dans une phrase. Il leur fallait une seconde formulation.
+- les sous-titres affichaient `page_accueil`, `page_boutique`. `t('page_' +
+  famille)` semblait marcher et ne marchait que par accident : il tombait
+  juste quand un modèle portait le nom de sa famille.
+- l'espace entre le nom du modèle et le métier, écrit dans le texte, était
+  avalé par le HTML.
+
 ## 1.39.0 — Ce qu’un visiteur télécharge, mesuré et tenu
 
 ### Le chiffre qui manquait
