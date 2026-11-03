@@ -46,7 +46,31 @@ export function normaliserProduit(brut) {
     categorie: safeText(brut?.categorie ?? '').slice(0, 60),
     poids: Math.max(0, Math.round(Number(brut?.poids) || 0)),
     disponible: brut?.disponible !== false,
+    declinaisons: declinaisonsDe(brut?.declinaisons),
   };
+}
+
+/**
+ * Les déclinaisons d'un produit : parfum, taille, couleur.
+ *
+ * Trois au plus, parce que Snipcart n'en lit pas davantage
+ * (`custom1` à `custom3`). En demander une quatrième ne produirait aucune
+ * erreur : l'option disparaîtrait simplement de la commande, ce qui est la
+ * pire façon d'échouer. On coupe donc ici, où ça se voit.
+ *
+ * Une option peut porter un supplément, avec la notation de Snipcart :
+ * « Grand[+5.00] ». On la laisse passer telle quelle — c'est lui qui la lit,
+ * pas nous.
+ */
+function declinaisonsDe(brut) {
+  if (!Array.isArray(brut)) return [];
+  return brut.slice(0, 3).map((d) => ({
+    nom: safeText(d?.nom ?? '').slice(0, 40),
+    options: (Array.isArray(d?.options) ? d.options : [])
+      .slice(0, 24)
+      .map((o) => safeText(o ?? '').slice(0, 60))
+      .filter(Boolean),
+  })).filter((d) => d.nom && d.options.length);
 }
 
 /**
@@ -91,6 +115,15 @@ export function boutonAchat(doc, produit, boutique = {}, libelle = 'Acheter') {
     if (produit.image) lien.setAttribute('data-item-image', produit.image);
     if (produit.description) lien.setAttribute('data-item-description', produit.description);
     if (produit.poids) lien.setAttribute('data-item-weight', String(produit.poids));
+    // Snipcart numérote ses champs à partir de 1, et il lit la valeur
+    // choisie dans `-value`. Sans valeur par défaut, un acheteur qui ne
+    // touche pas au sélecteur commanderait une déclinaison vide.
+    produit.declinaisons.forEach((d, rang) => {
+      const n = rang + 1;
+      lien.setAttribute(`data-item-custom${n}-name`, d.nom);
+      lien.setAttribute(`data-item-custom${n}-options`, d.options.join('|'));
+      lien.setAttribute(`data-item-custom${n}-value`, premiereOption(d.options[0]));
+    });
     return lien;
   }
 
@@ -101,6 +134,52 @@ export function boutonAchat(doc, produit, boutique = {}, libelle = 'Acheter') {
   }
   return lien;
 }
+
+/** « Grand[+5.00] » désigne l'option « Grand » : le supplément n'en fait pas partie. */
+export function premiereOption(option) {
+  return String(option || '').replace(/\[[^\]]*\]\s*$/, '').trim();
+}
+
+/**
+ * L'option telle qu'on la MONTRE : « A5 (+6,00 €) ».
+ *
+ * « A5[+6.00] » est la notation que Snipcart lit. L'afficher telle quelle
+ * mettait sous les yeux de l'acheteur une syntaxe d'outil, avec un point
+ * décimal anglais au milieu d'une boutique française. Le supplément doit se
+ * voir — c'est une information de prix — mais écrit comme un prix.
+ */
+export function libelleOption(option, devise = 'EUR') {
+  const brut = String(option || '');
+  const nu = premiereOption(brut);
+  const sup = brut.match(/\[\s*\+?\s*(\d+(?:[.,]\d{1,2})?)\s*\]\s*$/);
+  if (!sup) return nu;
+  const symbole = DEVISES[devise] || devise;
+  const montant = Number(sup[1].replace(',', '.')).toFixed(2).replace('.', ',');
+  return `${nu} (+${montant} ${symbole})`;
+}
+
+/**
+ * Le script qui relie les sélecteurs de la page au bouton d'achat.
+ *
+ * Il est écrit en texte, et non posé en écouteur, pour une raison précise :
+ * la page publiée est du HTML STATIQUE, produit par `core/bake.js`, et un
+ * écouteur ne se sérialise pas. Des sélecteurs qui ne feraient rien une fois
+ * la page publiée seraient pires que pas de sélecteurs du tout — ils
+ * laisseraient l'acheteur croire qu'il a choisi sa taille.
+ *
+ * Il tient en quelques lignes et ne dépend de rien : c'est le même texte
+ * qu'injectent le module et le script de démonstration, pour qu'il n'y ait
+ * qu'une version de ce comportement.
+ */
+export const SCRIPT_DECLINAISONS = `
+document.addEventListener('change', function (e) {
+  var sel = e.target;
+  if (!sel.matches || !sel.matches('[data-declinaison]')) return;
+  var carte = sel.closest('[data-produit]');
+  var bouton = carte && carte.querySelector('.snipcart-add-item');
+  if (!bouton) return;
+  bouton.setAttribute('data-item-custom' + sel.dataset.declinaison + '-value', sel.value);
+});`.trim();
 
 /** Le catalogue rangé, filtré éventuellement sur une catégorie. */
 export function catalogueFiltre(produits, categorie) {
@@ -140,6 +219,11 @@ export function poserPanier(doc, boutique) {
   racine.setAttribute('data-api-key', String(boutique.cle));
   racine.setAttribute('data-config-modal-style', 'side');
   doc.body.appendChild(racine);
+
+  const declinaisons = doc.createElement('script');
+  declinaisons.textContent = SCRIPT_DECLINAISONS;
+  declinaisons.setAttribute('data-admin-ui', '');
+  doc.body.appendChild(declinaisons);
   return true;
 }
 

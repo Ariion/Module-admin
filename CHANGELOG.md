@@ -6,6 +6,37 @@
 
 
 
+
+## 1.42.0 — Les déclinaisons produit
+
+Parfum, taille, couverture : jusqu'à trois par produit, avec supplément de
+prix optionnel. Trois, parce que Snipcart ne lit que `custom1` à `custom3` —
+une quatrième ne produirait aucune erreur, l'option disparaîtrait simplement
+de la commande, ce qui est la pire façon d'échouer. On coupe donc là où ça
+se voit.
+
+**Le sélecteur devait survivre à la mise en statique.** La page publiée est
+produite par `core/bake.js`, et un écouteur d'événement ne se sérialise pas :
+des sélecteurs inertes seraient pires que pas de sélecteurs du tout —
+l'acheteur croirait avoir choisi sa taille. Le comportement est donc un
+script en texte, `SCRIPT_DECLINAISONS`, écrit une fois dans `core/boutique.js`
+et injecté aussi bien par le module que par le script de démonstration.
+Vérifié dans un navigateur sur la page statique : le choix se reporte sur le
+bouton, et deux produits de la même grille ne s'échangent pas leurs options.
+
+**Un défaut vu en regardant le menu déroulant.** La notation de Snipcart
+s'affichait telle quelle : l'acheteur lisait « A5[+6.00] » — une syntaxe
+d'outil, avec un point décimal anglais au milieu d'une boutique française.
+Le supplément doit se voir, c'est une information de prix, mais écrit comme
+un prix : « A5 (+6,00 €) ». La valeur envoyée reste « A5 ».
+
+`npm run essai-snipcart` couvre maintenant : trois déclinaisons au plus, des
+options ET une valeur par défaut pour chacune, une valeur par défaut qui
+figure bien parmi les options — sans quoi l'acheteur commande une
+déclinaison vide et le vendeur ne sait pas quoi expédier — aucune notation
+de supplément dans la valeur envoyée, et le script de liaison présent sur
+toute page qui porte des sélecteurs.
+
 ## 1.41.0 — Le tunnel de vente, de la fiche produit au paiement
 
 `/boutique` : une boutique de démonstration — six produits, six fiches, un

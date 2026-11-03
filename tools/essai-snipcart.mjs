@@ -99,6 +99,54 @@ for (const article of tous) {
     chezElle ? `${chezElle.price} ≠ ${article.price}` : 'absent de cette page');
 }
 
+console.log('\nLes déclinaisons');
+const avecDecl = tous.filter((a) => a['custom1-name']);
+if (!avecDecl.length) {
+  console.log('  — aucun produit décliné dans ce catalogue');
+} else {
+  // Snipcart ne lit que custom1 à custom3. Une quatrième ne provoquerait
+  // aucune erreur : l'option disparaîtrait de la commande, en silence.
+  const trop = tous.filter((a) => a['custom4-name']);
+  dit('trois déclinaisons au plus par produit', trop.length === 0,
+    trop.map((x) => x.id).join(', '));
+
+  const incomplets = [];
+  const valeursHorsListe = [];
+  for (const article of avecDecl) {
+    for (let n = 1; n <= 3; n += 1) {
+      const nom = article[`custom${n}-name`];
+      if (!nom) continue;
+      const options = article[`custom${n}-options`];
+      const valeur = article[`custom${n}-value`];
+      if (!options || !valeur) { incomplets.push(`${article.id}/${nom}`); continue; }
+      // Sans valeur par défaut valide, un acheteur qui ne touche pas au
+      // sélecteur commande une déclinaison vide — et le vendeur ne sait pas
+      // quelle taille expédier.
+      const nues = options.split('|').map((o) => o.replace(/\[[^\]]*\]\s*$/, '').trim());
+      if (!nues.includes(valeur)) valeursHorsListe.push(`${article.id}/${nom}="${valeur}"`);
+    }
+  }
+  dit('chaque déclinaison a ses options ET une valeur par défaut',
+    incomplets.length === 0, incomplets.join(', '));
+  dit('la valeur par défaut figure parmi les options',
+    valeursHorsListe.length === 0, valeursHorsListe.join(', '));
+
+  // Le supplément « [+6.00] » est une notation d'outil. S'il atteint la
+  // valeur envoyée, Snipcart reçoit une option qu'il ne reconnaît pas.
+  const notation = avecDecl.filter((a) => [1, 2, 3]
+    .some((n) => /\[/.test(a[`custom${n}-value`] || '')));
+  dit('aucune valeur ne porte la notation de supplément',
+    notation.length === 0, notation.map((x) => x.id).join(', '));
+
+  const sansScript = [...lu].filter(([, html]) => /data-declinaison=/.test(html)
+    && !/addEventListener/.test(html)).map(([f]) => f);
+  // Les écouteurs ne se sérialisent pas : une page publiée sans ce script
+  // montrerait des sélecteurs qui ne changent rien, ce qui est pire que pas
+  // de sélecteur — l'acheteur croit avoir choisi sa taille.
+  dit('les pages à sélecteurs portent le script qui les relie',
+    sansScript.length === 0, sansScript.join(', '));
+}
+
 console.log('\nLe panier');
 const accueil = lu.get('index.html') || '';
 // Le balisage des articles est écrit dans tous les cas ; le panier lui-même

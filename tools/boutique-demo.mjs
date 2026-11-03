@@ -32,6 +32,7 @@
  * dorme dans le dépôt, et sans charger un panier qui ne pourrait pas
  * s'ouvrir.
  */
+import { SCRIPT_DECLINAISONS } from '../admin/core/boutique.js';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -51,17 +52,23 @@ const CLE = process.env.SNIPCART_CLE || '';
  */
 const PRODUITS = [
   { id: 'miel-500', nom: 'Miel de montagne, 500 g', categorie: 'Épicerie', prix: 12.5, poids: 650,
-    description: 'Récolté à 1 400 m, en pot de verre consigné.', image: '/boutique/img/miel.svg' },
+    description: 'Récolté à 1 400 m, en pot de verre consigné.', image: '/boutique/img/miel.svg',
+    declinaisons: [{ nom: 'Contenance', options: ['250 g', '500 g[+5.50]'] }] },
   { id: 'confiture-myrtille', nom: 'Confiture de myrtille', categorie: 'Épicerie', prix: 7.9, poids: 400,
     description: 'Myrtilles sauvages, 60 % de fruits, cuite au chaudron.', image: '/boutique/img/confiture.svg' },
   { id: 'tisane-alpages', nom: 'Tisane des alpages', categorie: 'Épicerie', prix: 9, poids: 80,
     description: 'Mélange de huit plantes cueillies à la main.', image: '/boutique/img/tisane.svg' },
   { id: 'savon-chevre', nom: 'Savon au lait de chèvre', categorie: 'Maison', prix: 6.5, poids: 120,
-    description: 'Saponifié à froid, sans parfum de synthèse.', image: '/boutique/img/savon.svg' },
+    description: 'Saponifié à froid, sans parfum de synthèse.', image: '/boutique/img/savon.svg',
+    declinaisons: [{ nom: 'Parfum', options: ['Lavande', 'Miel', 'Sans parfum'] }] },
   { id: 'planche-noyer', nom: 'Planche à découper, noyer', categorie: 'Maison', prix: 48, poids: 1200,
     description: 'Taillée dans une seule pièce, huilée au lin.', image: '/boutique/img/planche.svg' },
   { id: 'carnet-relie', nom: 'Carnet relié à la main', categorie: 'Papeterie', prix: 18, poids: 300,
-    description: 'Papier 120 g, couture apparente, 144 pages.', image: '/boutique/img/carnet.svg' },
+    description: 'Papier 120 g, couture apparente, 144 pages.', image: '/boutique/img/carnet.svg',
+    declinaisons: [
+      { nom: 'Format', options: ['A6', 'A5[+6.00]'] },
+      { nom: 'Couverture', options: ['Bleu nuit', 'Terre', 'Écru'] },
+    ] },
 ];
 
 /**
@@ -239,6 +246,10 @@ for (const p of pages) {
 
 /** Ajoute le panier Snipcart au document, ou le repère qui dit ce qui manque. */
 function poserPanier(html) {
+  // Le même texte que celui qu'injecte `poserPanier` du module : les
+  // sélecteurs de déclinaison existent dès que le produit en a, que le
+  // panier soit ouvert ou non.
+  html = html.replace('</body>', `  <script>${SCRIPT_DECLINAISONS}<\/script>\n</body>`);
   if (!CLE) {
     return html.replace('</body>', `
   <div style="position:fixed;left:0;right:0;bottom:0;background:#1B3560;color:#fff;
@@ -250,7 +261,7 @@ function poserPanier(html) {
   return html.replace('</body>', `
   <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.css">
   <div id="snipcart" hidden data-api-key="${CLE}" data-config-modal-style="side"></div>
-  <script async src="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.js"></script>
+  <script async src="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.js"><\/script>
 </body>`);
 }
 

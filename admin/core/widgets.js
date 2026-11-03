@@ -16,7 +16,7 @@ import { uid } from './util.js';
 import { safeHtml, safeUrl, safeImageUrl, safeText } from './sanitize.js';
 import { applyStyleObject } from './style.js';
 import { SIZES, PREMIER_ECRAN, poserImage, srcsetSur } from './images.js';
-import { catalogueFiltre, prixLisible, boutonAchat } from './boutique.js';
+import { catalogueFiltre, prixLisible, boutonAchat, premiereOption, libelleOption } from './boutique.js';
 import { marqueDe, nomDeMarque, tracerMarque } from './marques.js';
 import { defautsFormulaire, champsPanneauFormulaire, rendreFormulaire } from './formulaire.js';
 
@@ -1308,6 +1308,31 @@ export function renderWidget(noeud, doc, contexte = {}) {
           prix.style.fontWeight = '600';
           carte.appendChild(prix);
         }
+        // Le repère que le script des déclinaisons suit pour relier un
+        // sélecteur au bon bouton : sans lui, deux produits de la même
+        // grille s'échangeraient leurs tailles.
+        carte.setAttribute('data-produit', produit.id);
+
+        for (const [rang, d] of produit.declinaisons.entries()) {
+          const bloc = doc.createElement('label');
+          bloc.style.cssText = 'display:block;margin:10px 0;font-size:.92em;';
+          bloc.append(d.nom + ' ');
+          const choix = doc.createElement('select');
+          choix.setAttribute('data-declinaison', String(rang + 1));
+          choix.style.cssText = 'font:inherit;padding:6px 10px;margin-top:4px;'
+            + 'border:1px solid rgba(0,0,0,.25);border-radius:7px;background:#fff;';
+          for (const option of d.options) {
+            const o = doc.createElement('option');
+            // La valeur est l'option NUE : le supplément « [+5.00] » est une
+            // notation de Snipcart, pas une partie du nom de la taille.
+            o.value = premiereOption(option);
+            o.textContent = libelleOption(option, produit.devise);
+            choix.appendChild(o);
+          }
+          bloc.appendChild(choix);
+          carte.appendChild(bloc);
+        }
+
         const achat = doc.createElement('div');
         achat.appendChild(boutonAchat(doc, produit, contexte.boutique, String(p.libelle || 'Acheter')));
         carte.appendChild(achat);
