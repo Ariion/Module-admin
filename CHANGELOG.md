@@ -15,6 +15,28 @@
 
 
 
+
+## 1.51.0 — L'accueil est converti, pas maquillé
+
+L'accueil n'était jamais passé dans la direction « Grille » : ses anciennes
+variables avaient été REMAPPÉES sur les nouvelles, et seul le haut de page
+avait été regardé. Le reste gardait ses couleurs de thème sombre écrites en
+dur — `#b7c7df` sur fond blanc, soit un contraste de 1,6:1 — des cartes
+grises à coins arrondis qui lisaient comme des trous, des titres d'une autre
+graisse et des vides de plusieurs centaines de pixels entre les sections.
+
+Un remappage ne convertit pas une direction artistique, il la maquille.
+
+La feuille est réécrite, comme l'avaient été celles de la vitrine et des
+tarifs : les deux parcours deviennent les colonnes d'une grille séparées par
+des filets, les captures passent en pleine largeur, les conseils en trois
+colonnes réglées, la note d'hébergement prend un filet vermillon.
+
+Un défaut vu au rendu : les deux captures n'ont pas les mêmes proportions,
+donc les titres des deux colonnes ne tombaient pas sur la même ligne — ce qui
+se voit immédiatement sur deux éléments censés se comparer. Un rapport imposé
+aux deux le corrige.
+
 ## 1.50.0 — La page publique cesse de décrire un produit qui n'existe plus
 
 Un audit extérieur a noté la maturité commerciale 4/10, en citant deux
