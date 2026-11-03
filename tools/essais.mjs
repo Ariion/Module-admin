@@ -47,6 +47,7 @@ const ESSAIS = [
   { nom: 'marque', quoi: 'couleurs et typographies du client' },
   { nom: 'portee', quoi: 'portée des variables de thème' },
   { nom: 'elements', quoi: 'identité des éléments détectés' },
+  { nom: 'blocs', quoi: 'horaires, articles, téléchargements, agenda' },
   { nom: 'images', quoi: 'chaîne des images' },
   { nom: 'mise-en-forme', quoi: 'gras, italique, couleurs' },
   { nom: 'assainissement', quoi: 'ce que le contenu garde, et ce qu’il ne laisse pas passer' },

@@ -55,6 +55,17 @@ function pistesColonnes(p) {
  * que les attributs `data-admin-*`. Une feuille posée dans `<head>` aurait
  * demandé un mécanisme de plus à tenir d'accord avec la publication.
  */
+/**
+ * Les jours, dans le code à deux lettres de schema.org.
+ *
+ * Écrit sans accents ni casse : le client tape « Mardi », « mardi » ou
+ * « MARDI », et aucun de ces trois ne doit perdre son horaire.
+ */
+const CODE_JOUR = {
+  lundi: 'Mo', mardi: 'Tu', mercredi: 'We', jeudi: 'Th',
+  vendredi: 'Fr', samedi: 'Sa', dimanche: 'Su',
+};
+
 const PREFIXE_COMPORTEMENT = 'admin-w-';
 
 /** La classe qui porte les règles d'un élément, dérivée de sa clé. */
@@ -487,6 +498,98 @@ export const WIDGETS = {
     fields: [
       { key: 'produit', type: 'produit', label: 'produitChoisi' },
       { key: 'libelle', type: 'text', label: 'catalogueLibelle' },
+    ],
+  },
+
+  /**
+   * Les horaires d'ouverture.
+   *
+   * Le bloc le plus demandé d'un site de commerce local, et celui qu'on
+   * cherche en premier sur son téléphone. Chaque ligne porte un jour et ses
+   * créneaux, et le rendu pose `itemprop="openingHours"` au format que
+   * schema.org attend : c'est ce que Google affiche directement dans sa
+   * fiche, sans que personne ait à remplir quoi que ce soit ailleurs.
+   */
+  horaires: {
+    category: 'basique', icon: 'list',
+    defaults: () => ({
+      items: 'Lundi|Fermé\nMardi|07:00-13:00 ; 15:30-19:00\nMercredi|07:00-13:00 ; 15:30-19:00\n'
+        + 'Jeudi|07:00-13:00 ; 15:30-19:00\nVendredi|07:00-13:00 ; 15:30-19:30\n'
+        + 'Samedi|07:00-19:30\nDimanche|07:30-12:30',
+      mention: '', align: 'left',
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'horairesItems', hint: 'horairesHint',
+        placeholder: 'Mardi|07:00-13:00 ; 15:30-19:00' },
+      { key: 'mention', type: 'text', label: 'horairesMention',
+        placeholder: 'Fermé les jours fériés' },
+      { key: 'align', type: 'align', label: 'alignLabel' },
+    ],
+  },
+
+  /**
+   * La liste des articles.
+   *
+   * Le module savait déjà composer une page d'article — quatre modèles — et
+   * n'avait aucun moyen de les lister. C'est l'état le plus frustrant d'un
+   * blog : les pages existent, personne ne les trouve.
+   */
+  articles: {
+    category: 'mise-en-page', icon: 'pages',
+    defaults: () => ({
+      items: 'Le pain au levain, jour après jour|pain-levain.html|12 mars 2026'
+        + '|Pourquoi une pâte lente donne un meilleur pain.\n'
+        + 'Nos farines, et d’où elles viennent|farines.html|28 février 2026'
+        + '|Trois moulins, tous à moins de cinquante kilomètres.',
+      largeurMini: 280, gap: 24, libelle: 'Lire',
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'articlesItems', hint: 'articlesHint',
+        placeholder: 'Titre|adresse.html|date|résumé' },
+      { key: 'libelle', type: 'text', label: 'articlesLibelle' },
+      { key: 'largeurMini', type: 'number', label: 'widthLabel', min: 180, max: 600, step: 20 },
+    ],
+  },
+
+  /**
+   * Les fichiers à télécharger.
+   *
+   * La carte en PDF, le tarif, le formulaire d'inscription. Le poids est
+   * affiché parce qu'un lien qui ouvre dix mégaoctets sur un forfait mobile
+   * sans prévenir est un lien qu'on regrette d'avoir suivi.
+   */
+  telechargement: {
+    category: 'media', icon: 'pages',
+    defaults: () => ({
+      items: 'Notre carte|carte.pdf|PDF|420 ko\nTarifs 2026|tarifs.pdf|PDF|180 ko',
+      align: 'left',
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'telechargementItems', hint: 'telechargementHint',
+        placeholder: 'Notre carte|carte.pdf|PDF|420 ko' },
+      { key: 'align', type: 'align', label: 'alignLabel' },
+    ],
+  },
+
+  /**
+   * L'agenda.
+   *
+   * Les dates passées ne sont PAS masquées : la page publiée est un fichier
+   * statique, elle ne sait pas quel jour on est. Les masquer demanderait du
+   * script, donc une page qui changerait toute seule — et un client qui ne
+   * comprendrait pas pourquoi son événement a disparu.
+   */
+  agenda: {
+    category: 'mise-en-page', icon: 'list',
+    defaults: () => ({
+      items: 'Sam. 14 mars|Portes ouvertes du fournil|10 h – 17 h, sur place\n'
+        + 'Dim. 5 avril|Marché de printemps|Place du village, dès 8 h',
+      align: 'left',
+    }),
+    fields: [
+      { key: 'items', type: 'lines', label: 'agendaItems', hint: 'agendaHint',
+        placeholder: 'Sam. 14 mars|Portes ouvertes|10 h – 17 h' },
+      { key: 'align', type: 'align', label: 'alignLabel' },
     ],
   },
 
@@ -1337,6 +1440,193 @@ export function renderWidget(noeud, doc, contexte = {}) {
         achat.appendChild(boutonAchat(doc, produit, contexte.boutique, String(p.libelle || 'Acheter')));
         carte.appendChild(achat);
         el.appendChild(carte);
+      }
+      break;
+    }
+
+    case 'horaires': {
+      el = doc.createElement('dl');
+      const jours = lignesDe(p.items);
+      if (!jours.length) {
+        el = doc.createElement('div');
+        el.appendChild(placeholder(doc, 'Une ligne par jour : Mardi|07:00-13:00 ; 15:30-19:00'));
+        break;
+      }
+      el.style.cssText = 'display:grid;grid-template-columns:auto 1fr;gap:6px 24px;margin:0;';
+      appliquerAlignement(el, p.align);
+
+      for (const ligne of jours) {
+        const [jour, creneaux] = champsDe(ligne);
+        const nom = doc.createElement('dt');
+        nom.textContent = jour;
+        nom.style.cssText = 'font-weight:600;';
+        const valeur = doc.createElement('dd');
+        valeur.style.cssText = 'margin:0;';
+        valeur.textContent = creneaux || 'Fermé';
+
+        // Ce que Google lit. Un jour fermé n'émet RIEN : en schema.org,
+        // l'absence de créneau EST la fermeture — déclarer « Fermé » comme
+        // un horaire ferait afficher un commerce ouvert à l'heure « Fermé ».
+        const code = CODE_JOUR[jour.toLowerCase().replace(/[^a-zà-ÿ]/g, '')];
+        if (code && creneaux && !/^ferm/i.test(creneaux)) {
+          for (const creneau of creneaux.split(';').map((c) => c.trim()).filter(Boolean)) {
+            // On accepte ce qu'un commerçant français écrit vraiment :
+            // « 7h30 – 12h30 », « 7 h 30-12 h 30 », « 07:30-12:30 ». Et on
+            // complète l'heure à deux chiffres, car schema.org lit HH:MM et
+            // ignore « 7:30 » — l'horaire disparaîtrait de la fiche Google
+            // sans que rien ne le signale sur la page.
+            const plage = creneau
+              .replace(/\s*[–—-]\s*/, '-')
+              .replace(/\s*h\s*(\d{2})/gi, ':$1')
+              .replace(/\s*h\s*(?!\d)/gi, ':00')
+              .replace(/\s+/g, '')
+              .replace(/\b(\d):/g, '0$1:');
+            if (!/^\d{2}:\d{2}-\d{2}:\d{2}$/.test(plage)) continue;
+            const marque = doc.createElement('meta');
+            marque.setAttribute('itemprop', 'openingHours');
+            marque.setAttribute('content', `${code} ${plage}`);
+            valeur.appendChild(marque);
+          }
+        }
+        el.appendChild(nom);
+        el.appendChild(valeur);
+      }
+
+      if (String(p.mention ?? '').trim()) {
+        const enveloppe = doc.createElement('div');
+        enveloppe.appendChild(el);
+        const note = doc.createElement('p');
+        note.textContent = remplacerJetons(p.mention);
+        note.style.cssText = 'margin:14px 0 0;font-size:.9em;opacity:.75;';
+        appliquerAlignement(note, p.align);
+        enveloppe.appendChild(note);
+        el = enveloppe;
+      }
+      break;
+    }
+
+    case 'articles': {
+      el = doc.createElement('div');
+      const billets = lignesDe(p.items);
+      if (!billets.length) {
+        el.appendChild(placeholder(doc, 'Une ligne par article : Titre|adresse.html|date|résumé'));
+        break;
+      }
+      grilleSouple(el, Math.max(180, Number(p.largeurMini) || 280), Math.max(0, p.gap ?? 24));
+
+      for (const ligne of billets) {
+        const [nom, adresse, date, resume] = champsDe(ligne);
+        const carte = doc.createElement('article');
+        carte.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+
+        if (date) {
+          const quand = doc.createElement('p');
+          quand.textContent = date;
+          quand.style.cssText = 'margin:0;font-size:.78em;letter-spacing:.1em;'
+            + 'text-transform:uppercase;opacity:.7;';
+          carte.appendChild(quand);
+        }
+        const titre = doc.createElement('h3');
+        titre.style.cssText = 'margin:0;';
+        if (adresse) {
+          const lien = doc.createElement('a');
+          lien.setAttribute('href', safeUrl(adresse));
+          lien.textContent = nom;
+          titre.appendChild(lien);
+        } else {
+          titre.textContent = nom;
+        }
+        carte.appendChild(titre);
+
+        if (resume) {
+          const texte = doc.createElement('p');
+          texte.textContent = resume;
+          texte.style.cssText = 'margin:0;';
+          carte.appendChild(texte);
+        }
+        if (adresse && String(p.libelle ?? '').trim()) {
+          const suite = doc.createElement('a');
+          suite.setAttribute('href', safeUrl(adresse));
+          suite.textContent = remplacerJetons(p.libelle);
+          suite.style.cssText = 'font-size:.9em;';
+          carte.appendChild(suite);
+        }
+        el.appendChild(carte);
+      }
+      break;
+    }
+
+    case 'telechargement': {
+      el = doc.createElement('ul');
+      const fichiers = lignesDe(p.items);
+      if (!fichiers.length) {
+        el = doc.createElement('div');
+        el.appendChild(placeholder(doc, 'Une ligne par fichier : Notre carte|carte.pdf|PDF|420 ko'));
+        break;
+      }
+      el.style.cssText = 'list-style:none;margin:0;padding:0;display:flex;'
+        + 'flex-direction:column;gap:10px;';
+      appliquerAlignement(el, p.align);
+
+      for (const ligne of fichiers) {
+        const [nom, adresse, type, poids] = champsDe(ligne);
+        const item = doc.createElement('li');
+        const lien = doc.createElement('a');
+        lien.setAttribute('href', safeUrl(adresse));
+        // `download` demande l'enregistrement plutôt que l'ouverture — c'est
+        // ce qu'attend quelqu'un qui clique sur « Notre carte en PDF ».
+        lien.setAttribute('download', '');
+        lien.textContent = nom;
+        lien.style.cssText = 'font-weight:600;';
+        item.appendChild(lien);
+
+        // Le poids et le format, dits avant le clic. Dix mégaoctets ouverts
+        // sans prévenir sur un forfait mobile, c'est un lien qu'on regrette.
+        const detail = [type, poids].map((x) => String(x || '').trim()).filter(Boolean);
+        if (detail.length) {
+          const mention = doc.createElement('span');
+          mention.textContent = ` — ${detail.join(', ')}`;
+          mention.style.cssText = 'font-size:.88em;opacity:.7;';
+          item.appendChild(mention);
+        }
+        el.appendChild(item);
+      }
+      break;
+    }
+
+    case 'agenda': {
+      el = doc.createElement('ul');
+      const dates = lignesDe(p.items);
+      if (!dates.length) {
+        el = doc.createElement('div');
+        el.appendChild(placeholder(doc, 'Une ligne par date : Sam. 14 mars|Portes ouvertes|10 h – 17 h'));
+        break;
+      }
+      el.style.cssText = 'list-style:none;margin:0;padding:0;display:flex;'
+        + 'flex-direction:column;gap:16px;';
+      appliquerAlignement(el, p.align);
+
+      for (const ligne of dates) {
+        const [quand, titre, detail] = champsDe(ligne);
+        const item = doc.createElement('li');
+        item.style.cssText = 'display:grid;grid-template-columns:auto 1fr;gap:4px 20px;'
+          + 'padding-bottom:14px;border-bottom:1px solid rgba(128,128,128,.25);';
+
+        const date = doc.createElement('p');
+        date.textContent = quand;
+        date.style.cssText = 'margin:0;grid-row:span 2;font-weight:600;white-space:nowrap;';
+        item.appendChild(date);
+
+        const nom = doc.createElement('p');
+        nom.textContent = titre || '';
+        nom.style.cssText = 'margin:0;font-weight:600;';
+        item.appendChild(nom);
+
+        const precision = doc.createElement('p');
+        precision.textContent = detail || '';
+        precision.style.cssText = 'margin:0;opacity:.78;font-size:.93em;';
+        item.appendChild(precision);
+        el.appendChild(item);
       }
       break;
     }

@@ -7,6 +7,37 @@
 
 
 
+
+## 1.43.0 — Horaires, articles, téléchargements, agenda
+
+Quatre blocs qui manquaient face aux solutions grand public, et qui portent
+une DONNÉE plutôt qu'une mise en page. 34 blocs au total.
+
+**Horaires** est le plus rentable : tout commerce local en a besoin, et c'est
+ce qu'on cherche en premier sur son téléphone. Il pose `itemprop="openingHours"`
+au format de schema.org, donc Google peut l'afficher directement.
+
+Il accepte ce qu'un commerçant écrit vraiment — « 7h30 – 12h30 », « 7 h 30 »,
+« 8h-12h », « 07:30-12:30 » — et complète l'heure à deux chiffres, car
+schema.org lit `HH:MM` et ignore « 7:30 ». Sans cela, l'horaire s'affichait
+parfaitement sur la page et manquait dans la fiche Google, sans aucun signe.
+Un jour « Fermé » n'émet rien : en schema.org, l'absence EST la fermeture.
+
+**Liste d'articles** comble un demi-blog : le module composait déjà quatre
+sortes d'article et n'avait aucun moyen de les lister.
+
+**Téléchargements** affiche le poids avant le clic — dix mégaoctets ouverts
+sans prévenir sur un forfait mobile, c'est un lien qu'on regrette.
+
+**Agenda** ne masque pas les dates passées : la page publiée est un fichier,
+elle ne sait pas quel jour on est. Les masquer demanderait du script, donc
+une page qui change toute seule, et un client qui ne comprend pas où est
+passé son événement.
+
+`npm run essai-blocs` fige la table de conversion des horaires, format par
+format, vérifie qu'un bloc vide explique ce qu'il attend plutôt que de
+laisser un trou, et qu'un lien `javascript:` reste neutralisé.
+
 ## 1.42.0 — Les déclinaisons produit
 
 Parfum, taille, couverture : jusqu'à trois par produit, avec supplément de
