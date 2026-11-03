@@ -35,33 +35,30 @@ document.body.prepend(barre);
 
 const pied = document.createElement('footer');
 pied.className = 'pied';
-pied.innerHTML = `<div class="enveloppe">
-  <div class="pied__cols">
-    <div>
-      <h3>Le produit</h3>
-      <ul>
-        <li><a href="/modeles">Les modèles de page</a></li>
-        <li><a href="/boutique">La démonstration boutique</a></li>
-        <li><a href="/tarifs">Les formules</a></li>
-      </ul>
-    </div>
-    <div>
-      <h3>Pour poser le module</h3>
-      <ul>
-        <li><a href="/distribution/installation.html">Guide d’installation</a></li>
-        <li><a href="/vierge">Page vierge d’essai</a></li>
-      </ul>
-    </div>
-    <div>
-      <h3>Ce qui ne change pas</h3>
-      <ul>
-        <li>Pas d’abonnement</li>
-        <li>Pas de commission</li>
-        <li>Le site reste au client</li>
-      </ul>
-    </div>
+pied.innerHTML = `<div class="pied__cols">
+  <div class="pied__col">
+    <h3>01 — Le produit</h3>
+    <ul>
+      <li><a href="/modeles">Les modèles de page</a></li>
+      <li><a href="/boutique">La démonstration boutique</a></li>
+      <li><a href="/tarifs">Les formules</a></li>
+    </ul>
   </div>
-  <p class="pied__bas">Module Admin — site de démonstration. Les pages de cette
-    vitrine sont elles-mêmes dessinées avec les blocs du module.</p>
-</div>`;
+  <div class="pied__col">
+    <h3>02 — Le poser</h3>
+    <ul>
+      <li><a href="/distribution/installation.html">Guide d’installation</a></li>
+      <li><a href="/vierge">Page vierge d’essai</a></li>
+    </ul>
+  </div>
+  <div class="pied__col">
+    <h3>03 — Ce qui ne change pas</h3>
+    <ul>
+      <li>Pas d’abonnement</li>
+      <li>Pas de commission</li>
+      <li>Le site reste au client</li>
+    </ul>
+  </div>
+</div>
+<p class="pied__bas">Module Admin — site de démonstration</p>`;
 document.body.appendChild(pied);

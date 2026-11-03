@@ -7,7 +7,7 @@
 <meta name="description" content="Module Admin : un éditeur visuel qui se greffe sur un site HTML existant. Démonstration en phase de test.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/commun.css">
 <style>
   /* Les anciens noms de cette page pointent désormais sur le système
@@ -15,11 +15,12 @@
      suivent continuent de fonctionner telles quelles, et la page change de
      direction sans que sa structure ni son contenu ne bougent. */
   :root{
-    --fond-a:var(--fond); --fond-b:var(--papier); --marine:var(--bleu-clair);
-    --cyan:var(--bleu); --serif:var(--titre);
+    --fond-a:var(--blanc); --fond-b:var(--blanc); --marine:var(--signal-pale);
+    --cyan:var(--signal); --serif:var(--grotesque);
+    --encre:var(--noir); --doux:var(--gris); --filet:var(--trait-fin);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{background:var(--fond)}
+  html{background:var(--blanc)}
   body{overflow-x:hidden}
   a{color:inherit}
   a:focus-visible,[contenteditable]:focus-visible{outline:1px solid var(--cyan);outline-offset:6px}
@@ -28,22 +29,30 @@
 
   .barre{display:flex;justify-content:space-between;align-items:center;padding:28px 0}
   .marque{font-family:var(--serif);font-size:22px}
-  .test{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--doux);
-    padding:7px 14px;border:1px solid var(--filet);border-radius:999px;display:inline-flex;align-items:center;gap:9px}
+  .test{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--signal);display:inline-flex;align-items:center;gap:8px}
   .test::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan)}
 
-  .ouverture{padding:clamp(48px,8vw,104px) 0 0;text-align:center}
-  h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,6.4vw,76px);line-height:1.06;letter-spacing:-.015em;
-    max-width:15ch;margin:22px auto 0;cursor:text}
+  .ouverture{padding:clamp(34px,6vw,76px) 0 0;
+    display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+    gap:clamp(20px,5vw,60px);align-items:end}
+  @media (max-width:900px){.ouverture{grid-template-columns:1fr;align-items:start;gap:22px}}
+  .ouverture__note{border-left:1px solid var(--trait);padding-left:clamp(16px,2.4vw,28px)}
+  @media (max-width:900px){.ouverture__note{border-left:0;border-top:1px solid var(--trait);
+    padding:18px 0 0}}
+  .ouverture .scene{grid-column:1 / -1;margin-top:clamp(32px,5vw,64px)}
+  h1{font-weight:700;font-size:clamp(2.5rem,6.8vw,5.4rem);line-height:.95;letter-spacing:-.045em;
+    max-width:13ch;margin:18px 0 0;cursor:text}
   h1[contenteditable]:hover{outline:1px dashed var(--filet);outline-offset:14px}
-  .essai-titre{margin-top:22px;font-size:13.5px;color:var(--doux)}
-  .chapo{margin:30px auto 0;max-width:56ch;color:var(--doux);font-size:17px}
-  .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+  .essai-titre{margin-top:18px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--gris)}
+  .chapo{margin:0;max-width:46ch;color:var(--noir)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
   .bouton{padding:14px 26px}
 
   /* fenêtre type macOS, capture réelle */
   .scene{position:relative;margin:clamp(56px,8vw,96px) auto 0;max-width:1000px}
-  .fenetre{border:1px solid var(--filet);border-radius:12px;overflow:hidden;background:#0b1424;
+  .fenetre{border:1px solid var(--trait);border-radius:0;overflow:hidden;background:#0b1424;
     box-shadow:0 24px 60px rgba(20,22,26,.10)}
   .fenetre .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--filet)}
   .fenetre .bar i{width:10px;height:10px;border-radius:50%;background:rgba(221,232,246,.2)}
@@ -103,14 +112,20 @@
 
 
   <header class="ouverture">
-    <p class="label">Éditeur visuel pour sites statiques</p>
-    <p class="test" style="margin:16px auto 0">En phase de test</p>
-    <h1 contenteditable="true" spellcheck="false" aria-label="Titre modifiable : cliquez et écrivez">Modifiez votre site en cliquant dessus.</h1>
-    <p class="essai-titre">Essayez : cliquez sur ce titre et écrivez. Rien n'est enregistré.</p>
-    <p class="chapo">Module Admin se greffe sur un site HTML existant. Pas de CMS, pas de build : deux lignes de code, et vos clients modifient eux-mêmes leurs textes, leurs images et leurs liens.</p>
-    <div class="actions">
-      <a class="bouton bouton--plein" href="/demo/?admin">Ouvrir l'éditeur</a>
-      <a class="bouton" href="/vierge?admin">Partir d'une page vierge</a>
+    <div>
+      <p class="label label--signal">Éditeur visuel pour sites statiques</p>
+      <h1 contenteditable="true" spellcheck="false" aria-label="Titre modifiable : cliquez et écrivez">Modifiez votre site en cliquant dessus.</h1>
+      <p class="essai-titre">Cliquez sur ce titre et écrivez — rien n’est enregistré</p>
+    </div>
+    <div class="ouverture__note">
+      <p class="test">En phase de test</p>
+      <p class="chapo" style="margin-top:12px">Module Admin se greffe sur un site HTML existant.
+        Pas de CMS, pas de build : deux lignes de code, et vos clients modifient eux-mêmes
+        leurs textes, leurs images et leurs liens.</p>
+      <div class="actions">
+        <a class="bouton bouton--plein" href="/demo/?admin">Ouvrir l'éditeur</a>
+        <a class="bouton" href="/vierge?admin">Page vierge</a>
+      </div>
     </div>
 
     <div class="scene">

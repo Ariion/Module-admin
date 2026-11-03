@@ -7,106 +7,121 @@
 <meta name="description" content="Trois formules selon ce qu’on vous livre : le module seul, le module posé sur votre site, ou le site complet. Un prix unique, pas d’abonnement, pas de commission.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/commun.css">
 <style>
-  /* La page des formules. Le système partagé fait presque tout : il ne reste
-     ici que ce qui n'existe qu'une fois — la grille des trois cartes, le
-     comparatif, la FAQ. */
-  .tete{padding:88px 0 10px;text-align:center}
-  .tete .label{display:block;margin-bottom:18px}
-  .tete .chapo{margin:20px auto 0}
+  /* La page des formules. Le système partagé donne la grille, l'échelle et
+     les trois couleurs ; il ne reste ici que ce qui n'existe qu'une fois. */
 
-  .sous{color:var(--doux);text-align:center;margin:12px auto 0;max-width:58ch;font-size:15.5px}
-  section + section{margin-top:84px}
+  /* ---- l'ouverture : asymétrique, pas centrée ---- */
+  .ouverture{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);
+    gap:clamp(20px,5vw,64px);align-items:end;
+    padding:clamp(40px,7vw,88px) 0 clamp(32px,5vw,56px)}
+  @media (max-width:860px){.ouverture{grid-template-columns:1fr;align-items:start;gap:22px}}
+  .ouverture h1{margin-top:18px}
+  .ouverture__note{border-left:1px solid var(--trait);padding-left:clamp(16px,2.4vw,28px)}
+  @media (max-width:860px){.ouverture__note{border-left:0;border-top:1px solid var(--trait);
+    padding:18px 0 0}}
 
-  /* ---- les trois formules ---- */
-  .formules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,286px),1fr));
-    gap:18px;margin-top:52px;align-items:stretch}
-  .formule{background:var(--papier);border:1px solid var(--filet);border-radius:var(--rayon);
-    padding:30px 26px 26px;display:flex;flex-direction:column;gap:13px}
-  /* La formule mise en avant se distingue par un TRAIT, pas par une couleur
-     de fond : une carte colorée au milieu de deux blanches attire l'œil et
-     rend les deux autres secondaires, ce qui n'est pas ce qu'on veut dire. */
-  .formule--phare{border-color:var(--encre)}
-  .formule__marque{font-size:11.5px;font-weight:600;letter-spacing:.13em;
-    text-transform:uppercase;color:var(--doux);margin:0}
-  .formule--phare .formule__marque{color:var(--bleu)}
-  .formule__pour{color:var(--doux);font-size:14.8px;margin:0;min-height:3em}
-  .prix{font-family:var(--titre);font-size:2.9rem;line-height:1;margin:10px 0 0;
-    letter-spacing:-.02em}
-  .prix small{font-family:var(--sans);font-size:.8rem;color:var(--doux);display:block;
-    margin-top:10px;line-height:1.5;letter-spacing:0}
-  .formule ul{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;
-    gap:10px;font-size:14.8px;flex:1}
-  .formule li{display:grid;grid-template-columns:16px 1fr;gap:10px;align-items:start}
-  .formule li::before{content:"";width:6px;height:6px;border-radius:50%;
-    background:var(--bleu);margin-top:9px}
-  .formule li.non{color:var(--doux)}
-  .formule li.non::before{background:var(--filet-fort)}
-  .formule .bouton{margin-top:20px;width:100%}
+  /* ---- les trois formules : des colonnes, pas des cartes ----
+     Trois cartes arrondies posées sur du vide, c'est le dessin par défaut.
+     Ici les formules sont des colonnes d'une même grille, séparées par des
+     filets : elles se comparent, donc elles se touchent. */
+  .formules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    border-top:1px solid var(--trait);border-bottom:1px solid var(--trait)}
+  @media (max-width:900px){.formules{grid-template-columns:1fr}}
+  .formule{padding:clamp(24px,2.6vw,34px) clamp(18px,2.2vw,30px) 30px;
+    border-left:1px solid var(--trait-fin);display:flex;flex-direction:column}
+  .formule:first-child{border-left:0}
+  @media (max-width:900px){
+    .formule{border-left:0;border-top:1px solid var(--trait-fin)}
+    .formule:first-child{border-top:0}
+  }
+  /* Mise en avant par un APLAT, pas par un contour : c'est le seul endroit
+     de la page où la couleur signal remplit une surface. */
+  .formule--phare{background:var(--signal-pale)}
+  .formule__num{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--gris);
+    display:flex;justify-content:space-between;gap:12px;margin-bottom:22px}
+  .formule--phare .formule__num span:last-child{color:var(--signal);font-weight:500}
+  .formule h3{font-size:clamp(1.35rem,2vw,1.7rem);font-weight:700;letter-spacing:-.03em}
+  .formule__pour{color:var(--gris);font-size:14.5px;margin-top:9px;min-height:2.9em}
+  .prix{font-size:clamp(2.6rem,4.6vw,3.6rem);font-weight:700;letter-spacing:-.05em;
+    line-height:1;margin-top:26px}
+  .prix small{display:block;font-family:var(--mono);font-size:10.5px;font-weight:400;
+    letter-spacing:.09em;text-transform:uppercase;color:var(--gris);margin-top:12px}
+  .formule ul{list-style:none;margin:26px 0 0;padding:0;flex:1;
+    display:flex;flex-direction:column}
+  .formule li{font-size:14.3px;padding:9px 0;border-top:1px solid var(--trait-fin);
+    display:grid;grid-template-columns:14px 1fr;gap:10px;align-items:start}
+  .formule li::before{content:"+";font-family:var(--mono);font-size:12px;color:var(--signal);
+    line-height:1.6}
+  .formule li.non{color:var(--gris)}
+  .formule li.non::before{content:"–";color:var(--trait-fin)}
+  .formule .bouton{margin-top:26px;width:100%;justify-content:space-between}
 
-  /* ---- la bande « dans les trois » ---- */
-  .partout{border-top:1px solid var(--filet);border-bottom:1px solid var(--filet);
-    padding:30px 0}
-  .partout ul{list-style:none;margin:20px 0 0;padding:0;
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,232px),1fr));
-    gap:14px 30px;font-size:14.8px}
-  .partout li{display:grid;grid-template-columns:16px 1fr;gap:10px;align-items:start}
-  .partout li::before{content:"";width:6px;height:6px;border-radius:50%;
-    background:var(--bleu);margin-top:9px}
+  /* ---- la bande transversale ---- */
+  .partout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));
+    border-bottom:1px solid var(--trait)}
+  .partout div{padding:22px clamp(14px,2vw,24px);border-left:1px solid var(--trait-fin);
+    font-size:14.2px}
+  .partout div:first-child{border-left:0}
+  .partout b{display:block;font-family:var(--mono);font-size:10.5px;font-weight:500;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--signal);margin-bottom:7px}
 
   /* ---- le comparatif ---- */
   .compare{overflow-x:auto}
-  table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.8px;margin-top:34px}
-  th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--filet)}
-  thead th{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--doux)}
+  table{border-collapse:collapse;width:100%;min-width:660px;font-size:14.3px}
+  th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--trait-fin)}
+  thead th{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--gris);border-bottom:1px solid var(--trait)}
   tbody th{font-weight:400}
-  td{text-align:center;color:var(--doux)}
-  td.oui{color:var(--encre);font-weight:500}
-  tr.famille th{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
-    color:var(--encre);padding-top:34px;border-bottom-color:var(--filet-fort)}
+  td{text-align:center;color:var(--gris);font-family:var(--mono);font-size:12px}
+  td.oui{color:var(--noir);font-weight:500}
+  tr.famille th{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--signal);padding-top:30px}
 
-  /* ---- la FAQ ---- */
-  .faq{max-width:760px;margin-inline:auto}
-  details{border-bottom:1px solid var(--filet)}
-  summary{cursor:pointer;padding:19px 0;font-size:16px;list-style:none;display:flex;
-    justify-content:space-between;gap:18px;align-items:center}
-  summary::-webkit-details-marker{display:none}
-  summary::after{content:"";width:9px;height:9px;flex:none;
-    border-right:1.5px solid var(--doux);border-bottom:1.5px solid var(--doux);
-    transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s}
-  details[open] summary::after{transform:rotate(-135deg) translate(-3px,-3px)}
-  details p{margin:0 0 22px;color:var(--doux);font-size:15.2px;max-width:66ch}
+  /* ---- la FAQ : deux colonnes, pas un accordéon centré ---- */
+  .faq{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));
+    gap:0;border-top:1px solid var(--trait)}
+  .faq article{padding:26px clamp(16px,2.4vw,30px) 28px;border-left:1px solid var(--trait-fin);
+    border-bottom:1px solid var(--trait-fin)}
+  .faq article:nth-child(odd){border-left:0}
+  .faq h3{font-size:1.02rem;font-weight:600;letter-spacing:-.015em;line-height:1.3}
+  .faq p{margin-top:11px;color:var(--gris);font-size:14.3px}
 
   /* ---- la fin ---- */
-  .final{margin-top:92px;padding:56px 28px;border-radius:var(--rayon);text-align:center;
-    background:var(--papier);border:1px solid var(--filet)}
-  .final .bouton{margin-top:26px}
-  @media (prefers-reduced-motion:reduce){summary::after{transition:none}}
+  .final{border-top:1px solid var(--trait);padding:clamp(44px,7vw,84px) 0;
+    display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);
+    gap:clamp(20px,4vw,56px);align-items:end}
+  @media (max-width:860px){.final{grid-template-columns:1fr;align-items:start;gap:24px}}
 </style>
 </head>
 <body>
 
 <div class="enveloppe">
-  <header class="tete">
-    <p class="label">Les formules</p>
-    <h1>Un prix <em>une fois</em>. Pas tous les mois.</h1>
-    <p class="chapo">Trois formules selon ce qu’on vous livre. Aucune ne prélève
-      d’abonnement, aucune ne prend de commission sur vos ventes, et dans les trois
-      le site reste le vôtre — vous pouvez retirer le module, il tient debout.</p>
+
+  <header class="ouverture">
+    <div>
+      <p class="label label--signal">Formules — 01 / 03</p>
+      <h1>Un prix<br>une fois.</h1>
+    </div>
+    <div class="ouverture__note">
+      <p class="chapo">Trois formules selon ce qu’on vous livre. Aucune ne prélève
+        d’abonnement, aucune ne prend de commission sur vos ventes.</p>
+      <p style="margin-top:16px;color:var(--gris);font-size:14.3px">Dans les trois, le site
+        reste le vôtre : vous retirez le module, il tient debout.</p>
+    </div>
   </header>
 
   <section class="formules">
     <article class="formule">
-      <p class="formule__marque">Vous l’installez</p>
+      <p class="formule__num"><span>01</span><span>Vous l’installez</span></p>
       <h3>Le module</h3>
       <p class="formule__pour">Pour qui sait déposer des fichiers et suivre un guide.</p>
-      <p class="prix">— €<small>prix à fixer · paiement unique</small></p>
+      <p class="prix">— €<small>Paiement unique</small></p>
       <ul>
         <li>Le module complet, 34 blocs</li>
-        <li>Les 11 modèles de page, 12 métiers</li>
+        <li>11 modèles de page, 12 métiers</li>
         <li>La boutique en ligne</li>
         <li>Le guide d’installation</li>
         <li>Les mises à jour</li>
@@ -117,15 +132,15 @@
     </article>
 
     <article class="formule formule--phare">
-      <p class="formule__marque">La plus demandée</p>
+      <p class="formule__num"><span>02</span><span>La plus demandée</span></p>
       <h3>Le module, posé</h3>
       <p class="formule__pour">Vous avez déjà un site. On y branche l’administration.</p>
-      <p class="prix">— €<small>prix à fixer · paiement unique</small></p>
+      <p class="prix">— €<small>Paiement unique</small></p>
       <ul>
         <li>Tout ce qui précède</li>
         <li>Projet et base créés pour vous</li>
         <li>Règles de sécurité déployées</li>
-        <li>Le compte de connexion du client</li>
+        <li>Le compte du client</li>
         <li>Branchement sur vos pages</li>
         <li>Une prise en main d’une heure</li>
         <li class="non">Création du site</li>
@@ -134,10 +149,10 @@
     </article>
 
     <article class="formule">
-      <p class="formule__marque">Clé en main</p>
+      <p class="formule__num"><span>03</span><span>Clé en main</span></p>
       <h3>Le site complet</h3>
-      <p class="formule__pour">Vous n’avez rien. On fait le site, et vous l’administrez.</p>
-      <p class="prix">— €<small>prix à fixer · paiement unique</small></p>
+      <p class="formule__pour">Vous n’avez rien. On fait le site, vous l’administrez.</p>
+      <p class="prix">— €<small>Paiement unique</small></p>
       <ul>
         <li>Tout ce qui précède</li>
         <li>Le site dessiné pour votre métier</li>
@@ -151,93 +166,105 @@
   </section>
 
   <section class="partout">
-    <p class="label">Dans les trois formules</p>
-    <ul>
-      <li>Aucun abonnement, jamais</li>
-      <li>Aucune commission sur vos ventes</li>
-      <li>Le site vous appartient, fichiers compris</li>
-      <li>Le module se retire sans casser la page</li>
-      <li>Pas de serveur applicatif à maintenir</li>
-      <li>Votre HTML n’est pas modifié</li>
-    </ul>
+    <div><b>Jamais</b>d’abonnement, quelle que soit la formule</div>
+    <div><b>Jamais</b>de commission sur vos ventes</div>
+    <div><b>À vous</b>le site et ses fichiers, dès la livraison</div>
+    <div><b>Retirable</b>sans casser une seule page</div>
+    <div><b>Aucun</b>serveur applicatif à maintenir</div>
   </section>
 
-  <section class="compare">
-    <h2>Ce que chaque formule comprend</h2>
-    <p class="sous">Le même module dans les trois cas. Ce qui change, c’est qui fait le travail.</p>
-    <table>
-      <thead>
-        <tr><th>Prestation</th><th>Le module</th><th>Posé</th><th>Site complet</th></tr>
-      </thead>
-      <tbody>
-        <tr class="famille"><th colspan="4">Le produit</th></tr>
-        <tr><th>Les 34 blocs</th><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
-        <tr><th>Les 11 modèles de page</th><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
-        <tr><th>Boutique et tunnel de vente</th><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
-        <tr><th>Mises à jour</th><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+  <section class="section">
+    <div class="section__tete">
+      <p class="label label--signal">Comparatif — 02 / 03</p>
+      <div>
+        <h2>Le même module<br>dans les trois cas.</h2>
+        <p class="chapo" style="margin-top:16px;color:var(--gris)">Ce qui change n’est pas ce
+          que le produit sait faire. C’est qui fait le travail.</p>
+      </div>
+    </div>
+    <div class="compare">
+      <table>
+        <thead>
+          <tr><th>Prestation</th><th>01 — Le module</th><th>02 — Posé</th><th>03 — Site complet</th></tr>
+        </thead>
+        <tbody>
+          <tr class="famille"><th colspan="4">Le produit</th></tr>
+          <tr><th>Les 34 blocs</th><td class="oui">inclus</td><td class="oui">inclus</td><td class="oui">inclus</td></tr>
+          <tr><th>Les 11 modèles de page</th><td class="oui">inclus</td><td class="oui">inclus</td><td class="oui">inclus</td></tr>
+          <tr><th>Boutique et tunnel de vente</th><td class="oui">inclus</td><td class="oui">inclus</td><td class="oui">inclus</td></tr>
+          <tr><th>Mises à jour</th><td class="oui">inclus</td><td class="oui">inclus</td><td class="oui">inclus</td></tr>
 
-        <tr class="famille"><th colspan="4">La mise en place</th></tr>
-        <tr><th>Base de données et comptes</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
-        <tr><th>Règles de sécurité</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
-        <tr><th>Branchement sur les pages</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
-        <tr><th>Prise en main</th><td>guide écrit</td><td class="oui">1 h</td><td class="oui">1 h</td></tr>
+          <tr class="famille"><th colspan="4">La mise en place</th></tr>
+          <tr><th>Base de données et comptes</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
+          <tr><th>Règles de sécurité</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
+          <tr><th>Branchement sur les pages</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
+          <tr><th>Prise en main</th><td>guide écrit</td><td class="oui">1 heure</td><td class="oui">1 heure</td></tr>
 
-        <tr class="famille"><th colspan="4">Le site lui-même</th></tr>
-        <tr><th>Mise en page</th><td>—</td><td>la vôtre</td><td class="oui">nous</td></tr>
-        <tr><th>Textes et photos</th><td>—</td><td>—</td><td class="oui">nous</td></tr>
-        <tr><th>Référencement local</th><td>—</td><td>—</td><td class="oui">nous</td></tr>
-      </tbody>
-    </table>
+          <tr class="famille"><th colspan="4">Le site lui-même</th></tr>
+          <tr><th>Mise en page</th><td>—</td><td>la vôtre</td><td class="oui">nous</td></tr>
+          <tr><th>Textes et photos</th><td>—</td><td>—</td><td class="oui">nous</td></tr>
+          <tr><th>Référencement local</th><td>—</td><td>—</td><td class="oui">nous</td></tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
-  <section class="faq">
-    <h2>Avant de vous décider</h2>
-    <p class="sous">Les questions qu’on nous pose le plus.</p>
-
-    <details open>
-      <summary>Que se passe-t-il si j’arrête de payer ?</summary>
-      <p>Rien, parce qu’il n’y a rien à arrêter. Le prix est unique. Votre site continue
-        de fonctionner, et l’administration aussi — elle tourne sur votre propre base,
-        pas sur nos serveurs.</p>
-    </details>
-    <details>
-      <summary>Et si je veux partir ?</summary>
-      <p>Vous retirez deux lignes de vos pages et le module disparaît. Le site reste
-        exactement tel quel : c’est du HTML, il n’a jamais cessé d’être le vôtre.
-        C’est la différence principale avec un site hébergé par une plateforme.</p>
-    </details>
-    <details>
-      <summary>Prenez-vous une commission sur mes ventes ?</summary>
-      <p>Aucune. Les paiements passent directement par votre prestataire — vous ne
-        payez que ses frais, et il n’y a pas d’intermédiaire de notre côté.</p>
-    </details>
-    <details>
-      <summary>Je n’y connais rien. Est-ce pour moi ?</summary>
-      <p>La formule « posé » ou « site complet », oui : vous ne voyez jamais la
-        technique, seulement votre site et un bouton pour le modifier. La formule
-        « module seul » demande de suivre un guide — c’est faisable, mais ce n’est
-        pas une heure de votre dimanche.</p>
-    </details>
-    <details>
-      <summary>Faut-il un hébergement ?</summary>
-      <p>Oui, comme pour tout site. N’importe lequel sert des fichiers : il n’y a pas
-        de serveur applicatif à installer, pas de PHP, pas de base à administrer.
-        Plusieurs hébergements conviennent gratuitement pour un site de commerce local.</p>
-    </details>
-    <details>
-      <summary>Mon site sera-t-il ralenti ?</summary>
-      <p>Mesuré, pas estimé : un point de performance Lighthouse sur mobile, et environ
-        130 Ko transférés. Un essai du dépôt tient ce budget et refuse de passer s’il
-        est dépassé.</p>
-    </details>
+  <section class="section">
+    <div class="section__tete">
+      <p class="label label--signal">Questions — 03 / 03</p>
+      <h2>Avant de<br>vous décider.</h2>
+    </div>
+    <div class="faq">
+      <article>
+        <h3>Que se passe-t-il si j’arrête de payer ?</h3>
+        <p>Rien, parce qu’il n’y a rien à arrêter. Le prix est unique. Votre site continue
+          de fonctionner, et l’administration aussi — elle tourne sur votre propre base,
+          pas sur nos serveurs.</p>
+      </article>
+      <article>
+        <h3>Et si je veux partir ?</h3>
+        <p>Vous retirez deux lignes de vos pages et le module disparaît. Le site reste
+          exactement tel quel : c’est du HTML, il n’a jamais cessé d’être le vôtre. C’est
+          la différence principale avec un site hébergé par une plateforme.</p>
+      </article>
+      <article>
+        <h3>Prenez-vous une commission sur mes ventes ?</h3>
+        <p>Aucune. Les paiements passent directement par votre prestataire — vous ne payez
+          que ses frais, et il n’y a pas d’intermédiaire de notre côté.</p>
+      </article>
+      <article>
+        <h3>Je n’y connais rien. Est-ce pour moi ?</h3>
+        <p>Les formules 02 et 03, oui : vous ne voyez jamais la technique, seulement votre
+          site et un bouton pour le modifier. La 01 demande de suivre un guide — c’est
+          faisable, mais ce n’est pas une heure de votre dimanche.</p>
+      </article>
+      <article>
+        <h3>Faut-il un hébergement ?</h3>
+        <p>Oui, comme pour tout site. N’importe lequel sert des fichiers : pas de serveur
+          applicatif à installer, pas de PHP, pas de base à administrer. Plusieurs
+          hébergements conviennent gratuitement pour un commerce local.</p>
+      </article>
+      <article>
+        <h3>Mon site sera-t-il ralenti ?</h3>
+        <p>Mesuré, pas estimé : un point de performance Lighthouse sur mobile, et environ
+          130 Ko transférés. Un essai du dépôt tient ce budget et refuse de passer s’il
+          est dépassé.</p>
+      </article>
+    </div>
   </section>
 
   <section class="final">
-    <h2>Regardez avant d’acheter</h2>
-    <p class="sous">Les modèles sont calculés en direct, pas
-      photographiés. Changez de métier, le site entier suit.</p>
-    <a class="bouton bouton--plein" href="/modeles">Ouvrir les modèles</a>
+    <div>
+      <p class="label label--signal">Essayez d’abord</p>
+      <h2 style="margin-top:16px">Regardez avant<br>d’acheter.</h2>
+    </div>
+    <div>
+      <p class="chapo" style="color:var(--gris);font-size:1rem">Les modèles sont calculés en
+        direct, pas photographiés. Changez de métier : le site entier suit.</p>
+      <a class="bouton bouton--plein" style="margin-top:22px" href="/modeles">Ouvrir les modèles</a>
+    </div>
   </section>
+
 </div>
 
 <script type="module" src="/commun.js"></script>

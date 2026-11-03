@@ -10,6 +10,41 @@
 
 
 
+
+## 1.46.0 — Direction « Grille »
+
+La version précédente était le chemin sûr : blanc cassé, serif à fort
+contraste, un mot en italique coloré, pilules arrondies, tout centré. Un
+dessin qu'on reconnaît d'emblée parce que tout le monde le fait. Elle est
+remplacée par une position, tenue en trois décisions.
+
+**La grille est visible.** Des filets noirs séparent les sections et les
+colonnes. La structure n'est pas suggérée par du vide, elle est tracée.
+
+**La typographie porte seule.** Une seule famille grotesque (Archivo),
+employée de 11 px à 112 px, avec un monospace (JetBrains Mono) réservé aux
+étiquettes — celles qui numérotent et situent, et qui ne se lisent pas en
+continu. C'est l'écart d'échelle qui fait la hiérarchie, pas la couleur.
+
+**Noir, blanc, une couleur signal.** Le vermillon ne colore jamais du texte
+courant : il remplit des blocs et souligne des repères. Dans la vitrine, il
+marque le métier dans le titre — c'est-à-dire exactement ce qui change quand
+on clique.
+
+Bannis, explicitement : les dégradés, les ombres portées, les angles arrondis
+au-delà de 2 px, les fonds gris doux, le centrage par défaut, et les couleurs
+écrites ailleurs que dans les jetons.
+
+### Ce que cela change dans les pages
+
+Les trois formules ne sont plus des cartes posées sur du vide mais les
+colonnes d'une même grille, séparées par des filets : elles se comparent,
+donc elles se touchent. La formule mise en avant est un aplat — le seul
+endroit de la page où la couleur signal remplit une surface. La FAQ est une
+grille de deux colonnes au lieu d'un accordéon centré. Les trois ouvertures
+sont asymétriques : titre à gauche, explication et actions dans une colonne
+de droite séparée par un filet.
+
 ## 1.45.0 — La direction artistique de la vitrine : blanc, et peu de choses
 
 Le site commercial passe du marine foncé au blanc. Le parti pris tient en une
