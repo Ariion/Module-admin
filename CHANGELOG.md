@@ -9,6 +9,46 @@
 
 
 
+
+## 1.45.0 — La direction artistique de la vitrine : blanc, et peu de choses
+
+Le site commercial passe du marine foncé au blanc. Le parti pris tient en une
+phrase : ce qui distingue les pages, c'est la TYPOGRAPHIE et le vide, pas la
+décoration. Aucun dégradé de fond, presque aucune ombre — des filets.
+
+- `Instrument Serif` pour les grandes lignes, avec son italique pour le mot
+  qu'on met en avant ; `Inter` pour tout le reste.
+- Le papier n'est pas blanc pur : `#FAFAF8` au fond, `#FFFFFF` pour les
+  cartes. C'est ce léger écart qui les décolle, sans ombre.
+- **Une seule couleur**, un bleu d'encre, et elle ne sert qu'à ce sur quoi on
+  clique, plus un objet mis en avant. Dès qu'un accent colore aussi des
+  titres, des icônes et des fonds, il cesse d'indiquer quoi que ce soit.
+- La formule mise en avant se distingue par un TRAIT, pas par un fond coloré :
+  une carte teintée entre deux blanches rend les deux autres secondaires, ce
+  qui n'est pas ce qu'on veut dire.
+
+Assumée claire, sans variante sombre : « blanc » est la demande, et une page
+qui bascule en sombre à moitié bien est pire que la même page assumée en
+clair. `color-scheme` est fixé pour que les champs du navigateur suivent.
+
+### Trois défauts trouvés en regardant les pages rendues
+
+- **Le texte d'introduction de l'accueil était illisible** : une couleur
+  écrite en dur, `#b7c7df`, pensée pour un fond sombre. Mesurée sur le
+  nouveau fond : **1,64:1**, quand le seuil de lisibilité est à 4,5. Passée au
+  jeton du système, elle est à 4,9.
+- **Le bouton « Tarifs » du menu était une pastille noire sans texte** sur la
+  page Tarifs elle-même : la règle `aria-current` passait après celle du
+  bouton et lui remettait l'encre en couleur de texte.
+- **Le bouton d'action de la vitrine était en pointillés.** En interface, un
+  contour tireté se lit comme « désactivé » ou « à remplir », alors que c'est
+  le bouton le plus important de la page.
+
+L'accueil a été converti en REMAPPANT ses variables sur le système partagé
+plutôt qu'en réécrivant ses règles : ses quarante déclarations continuent de
+fonctionner, et la page change de direction sans que sa structure ni son
+contenu ne bougent.
+
 ## 1.44.0 — Le site commercial : menu, formules, comparatif
 
 `/tarifs`, et une barre de navigation partagée par toutes les pages de la

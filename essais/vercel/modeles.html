@@ -7,88 +7,76 @@
 <meta name="description" content="Choisissez un métier, parcourez les modèles de page, et changez de métier sans changer de modèle. Tout est calculé en direct.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/commun.css">
 <style>
-  :root{
-    --fond-a:#050b18; --fond-b:#071228; --marine:#1B3560;
-    --cyan:#29B8D9; --encre:#dde8f6; --doux:#8fa3c2; --filet:rgba(221,232,246,.14);
-    --serif:Georgia,'Times New Roman',serif;
-    --sans:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
-    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  /* La vitrine. Le système partagé donne la barre, la typographie et les
+     couleurs ; il ne reste que la scène — les deux barres de choix, la liste
+     des modèles et le grand aperçu. */
+  header.tete{padding:76px 0 8px}
+  .tete .label{display:block;margin-bottom:16px}
+  .tete .chapo{margin-top:20px}
+
+  .barre{padding:22px 0;border-top:1px solid var(--filet)}
+  .barre:first-of-type{margin-top:44px}
+  .barre h2{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--doux);margin:0 0 13px}
+  .puces{display:flex;flex-wrap:wrap;gap:7px;padding:0;margin:0;list-style:none}
+  .puce{font:inherit;font-size:14.2px;cursor:pointer;color:var(--encre);
+    background:var(--papier);border:1px solid var(--filet-fort);
+    border-radius:999px;padding:7px 15px;transition:border-color .15s,background .15s,color .15s}
+  .puce:hover{border-color:var(--encre)}
+  .puce[aria-pressed="true"]{background:var(--encre);border-color:var(--encre);
+    color:var(--papier);font-weight:500}
+  /* Plein, pas tireté : en interface, un contour en pointillés se lit comme
+     « désactivé » ou « à remplir », alors que c'est le bouton le plus
+     important de la page. */
+  .puce--action{color:var(--bleu);border-color:var(--bleu);background:var(--papier);font-weight:500}
+  .puce--action:hover{background:var(--bleu-clair);border-color:var(--bleu)}
+
+  .scene{display:grid;grid-template-columns:218px 1fr;gap:28px;
+    padding:30px 0 20px;align-items:start}
+  @media (max-width:860px){.scene{grid-template-columns:1fr;gap:18px}}
+
+  .modeles{display:flex;flex-direction:column;gap:2px;position:sticky;top:78px}
+  @media (max-width:860px){
+    .modeles{position:static;flex-direction:row;overflow-x:auto;padding-bottom:8px;gap:8px}
   }
-  *{box-sizing:border-box}
-  body{
-    margin:0; background:linear-gradient(180deg,var(--fond-a),var(--fond-b) 60%,var(--fond-a));
-    font-family:var(--sans); font-size:16px; line-height:1.7; color:var(--encre);
-    min-height:100vh;
-  }
-  .enveloppe{max-width:1280px;margin:0 auto;padding:0 20px}
-  .label{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
-
-  header{padding:56px 0 26px}
-  h1{font-family:var(--serif);font-size:clamp(2rem,5vw,3.1rem);line-height:1.1;margin:.3em 0 .2em;font-weight:400;text-wrap:balance}
-  h1 em{font-style:italic;color:var(--cyan)}
-  .chapo{color:var(--doux);max-width:60ch;margin:0}
-
-  /* ---- les deux barres de choix ---- */
-  .barre{padding:14px 0;border-top:1px solid var(--filet)}
-  .barre h2{font-size:13px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;
-    color:var(--doux);margin:0 0 10px;font-weight:500}
-  .puces{display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0;list-style:none}
-  .puce{
-    font:inherit;font-size:14px;cursor:pointer;color:var(--encre);
-    background:rgba(255,255,255,.04);border:1px solid var(--filet);
-    border-radius:999px;padding:7px 15px;transition:background .15s,border-color .15s,color .15s;
-  }
-  .puce:hover{background:rgba(41,184,217,.12);border-color:rgba(41,184,217,.4)}
-  .puce[aria-pressed="true"]{background:var(--cyan);border-color:var(--cyan);color:#041018;font-weight:600}
-  .puce--action{border-style:dashed;color:var(--cyan)}
-
-  /* ---- la scène : liste des modèles + grand aperçu ---- */
-  .scene{display:grid;grid-template-columns:230px 1fr;gap:22px;padding:22px 0 60px;align-items:start}
-  @media (max-width:860px){.scene{grid-template-columns:1fr}}
-
-  .modeles{display:flex;flex-direction:column;gap:6px;position:sticky;top:16px}
-  @media (max-width:860px){.modeles{position:static;flex-direction:row;overflow-x:auto;padding-bottom:6px}}
-  .modele{
-    font:inherit;font-size:14px;text-align:left;cursor:pointer;white-space:nowrap;
+  .modele{font:inherit;font-size:14.4px;text-align:left;cursor:pointer;white-space:nowrap;
     background:transparent;border:1px solid transparent;border-radius:10px;
-    padding:9px 13px;color:var(--doux);transition:background .15s,color .15s;
-  }
-  .modele:hover{background:rgba(255,255,255,.05);color:var(--encre)}
-  .modele[aria-pressed="true"]{background:rgba(41,184,217,.14);color:var(--encre);
-    border-color:rgba(41,184,217,.35);font-weight:600}
-  .modele small{display:block;font-size:11px;font-family:var(--mono);opacity:.6;font-weight:400}
+    padding:10px 13px;color:var(--doux);transition:background .15s,color .15s}
+  .modele:hover{background:rgba(0,0,0,.035);color:var(--encre)}
+  .modele[aria-pressed="true"]{background:var(--bleu-clair);color:var(--encre);font-weight:500}
+  .modele small{display:block;font-size:11px;opacity:.72;font-weight:400;letter-spacing:.02em}
 
   .vue{min-width:0}
-  .vue__tete{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between;
-    margin-bottom:12px}
-  .vue__nom{font-family:var(--serif);font-size:1.5rem;margin:0;font-weight:400}
-  .vue__nom span{color:var(--doux);font-family:var(--sans);font-size:.85rem}
-  .cadre{
-    background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--filet);
-    box-shadow:0 24px 60px rgba(0,0,0,.45);
-  }
-  .cadre iframe{display:block;width:100%;height:min(74vh,760px);border:0;background:#fff}
-
-  .chargement{color:var(--doux);font-size:14px;padding:40px;text-align:center}
+  .vue__tete{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;
+    justify-content:space-between;margin-bottom:14px}
+  .vue__nom{font-family:var(--titre);font-size:1.6rem;margin:0;font-weight:400}
+  .vue__nom span{color:var(--doux);font-family:var(--sans);font-size:.84rem}
+  /* Le cadre est un simple filet : une ombre portée ferait croire que
+     l'aperçu flotte au-dessus de la page, alors qu'on veut le lire comme un
+     site posé dedans. */
+  .cadre{background:var(--papier);border-radius:var(--rayon);overflow:hidden;
+    border:1px solid var(--filet-fort)}
+  .cadre iframe{display:block;width:100%;height:min(74vh,780px);border:0;background:#fff}
 
   /* ---- le popup ---- */
-  .pop{
-    position:fixed;left:50%;bottom:22px;transform:translate(-50%,140%);
-    width:min(560px,calc(100vw - 32px));z-index:40;
-    background:rgba(7,18,40,.97);border:1px solid rgba(41,184,217,.4);border-radius:14px;
-    padding:16px 18px;box-shadow:0 20px 50px rgba(0,0,0,.6);
-    display:flex;gap:14px;align-items:center;flex-wrap:wrap;
-    transition:transform .4s cubic-bezier(.2,.8,.3,1);
-  }
+  .pop{position:fixed;left:50%;bottom:22px;transform:translate(-50%,160%);
+    width:min(540px,calc(100vw - 32px));z-index:40;
+    background:var(--papier);border:1px solid var(--filet-fort);border-radius:var(--rayon);
+    padding:17px 19px;box-shadow:0 18px 44px rgba(20,22,26,.14);
+    display:flex;gap:15px;align-items:center;flex-wrap:wrap;
+    transition:transform .4s cubic-bezier(.2,.8,.3,1)}
   .pop[data-ouvert="1"]{transform:translate(-50%,0)}
-  .pop p{margin:0;flex:1 1 220px;font-size:14.5px}
-  .pop strong{display:block;font-family:var(--serif);font-size:1.1rem;font-weight:400}
-  .pop a{background:var(--cyan);color:#041018;text-decoration:none;font-weight:600;font-size:14px;
-    border-radius:999px;padding:9px 18px;white-space:nowrap}
-  .pop button{background:none;border:0;color:var(--doux);cursor:pointer;font:inherit;font-size:13px;padding:4px}
+  .pop p{margin:0;flex:1 1 210px;font-size:14.6px;color:var(--doux)}
+  .pop strong{display:block;font-family:var(--titre);font-size:1.16rem;font-weight:400;
+    color:var(--encre);margin-bottom:2px}
+  .pop a{background:var(--encre);color:var(--papier);text-decoration:none;font-weight:500;
+    font-size:14.4px;border-radius:999px;padding:10px 19px;white-space:nowrap}
+  .pop a:hover{background:var(--bleu)}
+  .pop button{background:none;border:0;color:var(--doux);cursor:pointer;font:inherit;
+    font-size:13.4px;padding:4px}
   @media (prefers-reduced-motion:reduce){.pop{transition:none}}
 </style>
 </head>

@@ -1,45 +1,106 @@
-/* Le dessin partagé du site commercial : barre, menu, pied de page.
-   Écrit une fois, lu par toutes les pages — une barre recopiée dans quatre
-   fichiers diverge au premier changement, et personne ne s'en aperçoit. */
+/* =========================================================================
+   La direction artistique du site commercial.
+
+   Blanc, une seule couleur, beaucoup d'air. Le parti pris tient en une
+   phrase : ce qui distingue les pages, c'est la TYPOGRAPHIE et le vide, pas
+   la décoration. Aucun dégradé de fond, presque aucune ombre — des filets.
+   Une page qui doit être jolie sans rien raconter finit toujours chargée.
+
+   Elle est volontairement CLAIRE, sans variante sombre : « blanc » est la
+   demande, et une page qui bascule en sombre à moitié bien est pire que la
+   même page assumée en clair. `color-scheme` est donc fixé, pour que les
+   champs et les ascenseurs du navigateur suivent.
+   ========================================================================= */
 :root{
-  --fond-a:#050b18; --fond-b:#071228; --marine:#1B3560;
-  --cyan:#29B8D9; --encre:#dde8f6; --doux:#8fa3c2; --filet:rgba(221,232,246,.14);
-  --serif:Georgia,'Times New Roman',serif;
-  --sans:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme: light;
+
+  /* Le papier n'est pas blanc pur : un #fff plein cadre est plat et dur à
+     regarder longtemps. Les cartes, elles, sont en blanc — c'est ce léger
+     écart qui les décolle, sans ombre. */
+  --fond:#FAFAF8;
+  --papier:#FFFFFF;
+  --encre:#15161A;
+  --doux:#6A6E76;
+  --filet:#E7E7E2;
+  --filet-fort:#D6D6CF;
+
+  /* Une seule couleur, et elle ne sert qu'à ce sur quoi on clique — plus un
+     objet mis en avant. Dès qu'un accent colore aussi des titres, des
+     icônes et des fonds, il cesse d'indiquer quoi que ce soit. */
+  --bleu:#1B3BC4;
+  --bleu-clair:#EEF1FD;
+
+  --titre:'Instrument Serif',Georgia,'Times New Roman',serif;
+  --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  --rayon:14px;
 }
 *{box-sizing:border-box}
-body{margin:0;background:linear-gradient(180deg,var(--fond-a),var(--fond-b) 60%,var(--fond-a));
-  font-family:var(--sans);font-size:16px;line-height:1.7;color:var(--encre);min-height:100vh}
-.enveloppe{max-width:1180px;margin:0 auto;padding:0 20px}
-.label{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+body{
+  margin:0;background:var(--fond);color:var(--encre);
+  font-family:var(--sans);font-size:16.5px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.enveloppe{max-width:1120px;margin:0 auto;padding:0 22px}
 a{color:inherit}
 
-/* ---- la barre ---- */
-.barre-site{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
-  background:rgba(5,11,24,.86);border-bottom:1px solid var(--filet)}
-.barre-site__dedans{display:flex;align-items:center;gap:26px;
-  max-width:1180px;margin:0 auto;padding:12px 20px}
-.marque{font-family:var(--serif);font-size:1.18rem;text-decoration:none;white-space:nowrap}
-.marque b{color:var(--cyan);font-weight:400}
-.nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;align-items:center}
-.nav a{text-decoration:none;font-size:14.5px;color:var(--doux);padding:8px 13px;border-radius:9px}
-.nav a:hover{background:rgba(255,255,255,.06);color:var(--encre)}
-.nav a[aria-current="page"]{color:var(--encre);background:rgba(41,184,217,.14)}
-.nav .cta{background:var(--cyan);color:#041018;font-weight:600}
-.nav .cta:hover{background:#4ccbe8;color:#041018}
+/* ---- la typographie ------------------------------------------------- */
+h1,h2,h3{font-family:var(--titre);font-weight:400;line-height:1.08;
+  letter-spacing:-.012em;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,5.6vw,4rem)}
+h2{font-size:clamp(1.7rem,3.4vw,2.5rem)}
+h3{font-size:1.32rem;line-height:1.25}
+h1 em,h2 em{font-style:italic;color:var(--bleu)}
+p{margin:0}
+.chapo{color:var(--doux);font-size:1.06rem;max-width:62ch}
+.label{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--doux)}
+
+/* ---- la barre -------------------------------------------------------- */
+.barre-site{position:sticky;top:0;z-index:30;
+  background:rgba(250,250,248,.82);backdrop-filter:saturate(1.6) blur(12px);
+  border-bottom:1px solid var(--filet)}
+.barre-site__dedans{display:flex;align-items:center;gap:22px;
+  max-width:1120px;margin:0 auto;padding:13px 22px}
+.marque{font-family:var(--titre);font-size:1.3rem;text-decoration:none;white-space:nowrap}
+.marque b{font-weight:400;font-style:italic;color:var(--bleu)}
+.nav{display:flex;gap:2px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.nav a{text-decoration:none;font-size:14.5px;color:var(--doux);padding:8px 13px;
+  border-radius:9px;transition:color .15s,background .15s}
+.nav a:hover{color:var(--encre);background:rgba(0,0,0,.04)}
+.nav a[aria-current="page"]{color:var(--encre);font-weight:500}
+/* Sur sa propre page, le bouton d'appel garde son fond sombre : la règle
+   précédente lui remettait l'encre en couleur de texte, donc du noir sur
+   noir — une pastille vide. */
+.nav .cta[aria-current="page"]{color:var(--papier)}
+.nav .cta{background:var(--encre);color:var(--papier);font-weight:500}
+.nav .cta:hover{background:var(--bleu);color:var(--papier)}
 @media (max-width:760px){
-  .barre-site__dedans{flex-wrap:wrap;gap:10px}
-  .nav{margin-left:0;width:100%}
+  .barre-site__dedans{flex-wrap:wrap;gap:8px;padding:11px 18px}
+  .nav{margin-left:0;width:100%;gap:0}
   .nav a{padding:7px 10px;font-size:13.5px}
 }
 
-/* ---- le pied ---- */
-.pied{border-top:1px solid var(--filet);margin-top:72px;padding:36px 0 46px;color:var(--doux);font-size:14px}
-.pied__cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:26px}
-.pied h3{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--encre);margin:0 0 10px;font-weight:500}
-.pied ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+/* ---- les boutons ----------------------------------------------------- */
+.bouton{display:inline-block;text-align:center;text-decoration:none;
+  border-radius:999px;padding:12px 22px;font-size:14.8px;font-weight:500;
+  border:1px solid var(--filet-fort);background:var(--papier);color:var(--encre);
+  transition:border-color .15s,background .15s,color .15s}
+.bouton:hover{border-color:var(--encre)}
+.bouton--plein{background:var(--encre);border-color:var(--encre);color:var(--papier)}
+.bouton--plein:hover{background:var(--bleu);border-color:var(--bleu);color:var(--papier)}
+
+/* ---- les surfaces ---------------------------------------------------- */
+.carte{background:var(--papier);border:1px solid var(--filet);border-radius:var(--rayon)}
+
+/* ---- le pied --------------------------------------------------------- */
+.pied{border-top:1px solid var(--filet);margin-top:92px;padding:44px 0 52px;
+  color:var(--doux);font-size:14.5px;background:var(--papier)}
+.pied__cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:30px}
+.pied h3{font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--encre);margin:0 0 12px}
+.pied ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
 .pied a{text-decoration:none}
-.pied a:hover{color:var(--cyan)}
-.pied__bas{margin-top:28px;padding-top:18px;border-top:1px solid var(--filet);font-size:13px;opacity:.75}
+.pied a:hover{color:var(--bleu)}
+.pied__bas{margin-top:34px;padding-top:20px;border-top:1px solid var(--filet);font-size:13.5px}

@@ -7,81 +7,84 @@
 <meta name="description" content="Trois formules selon ce qu’on vous livre : le module seul, le module posé sur votre site, ou le site complet. Un prix unique, pas d’abonnement, pas de commission.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/commun.css">
 <style>
-  header.tete{padding:62px 0 16px;text-align:center}
-  h1{font-family:var(--serif);font-size:clamp(2rem,5.2vw,3.2rem);line-height:1.1;
-    margin:.3em 0 .25em;font-weight:400;text-wrap:balance}
-  h1 em{font-style:italic;color:var(--cyan)}
-  .chapo{color:var(--doux);max-width:62ch;margin:0 auto}
+  /* La page des formules. Le système partagé fait presque tout : il ne reste
+     ici que ce qui n'existe qu'une fois — la grille des trois cartes, le
+     comparatif, la FAQ. */
+  .tete{padding:88px 0 10px;text-align:center}
+  .tete .label{display:block;margin-bottom:18px}
+  .tete .chapo{margin:20px auto 0}
 
-  h2{font-family:var(--serif);font-size:clamp(1.4rem,3vw,2rem);font-weight:400;
-    text-align:center;margin:0 0 8px}
-  .sous{color:var(--doux);text-align:center;margin:0 auto 30px;max-width:58ch;font-size:15px}
+  .sous{color:var(--doux);text-align:center;margin:12px auto 0;max-width:58ch;font-size:15.5px}
+  section + section{margin-top:84px}
 
   /* ---- les trois formules ---- */
-  .formules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));
-    gap:20px;padding:26px 0 10px;align-items:start}
-  .formule{background:rgba(255,255,255,.035);border:1px solid var(--filet);
-    border-radius:16px;padding:26px 24px;display:flex;flex-direction:column;gap:14px;height:100%}
-  .formule--phare{border-color:rgba(41,184,217,.55);background:rgba(41,184,217,.07);
-    box-shadow:0 18px 50px rgba(0,0,0,.4)}
-  .formule__marque{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--cyan);margin:0}
-  .formule h3{font-family:var(--serif);font-size:1.45rem;font-weight:400;margin:0}
-  .formule__pour{color:var(--doux);font-size:14.5px;margin:0;min-height:3em}
-  .prix{font-family:var(--serif);font-size:2.5rem;line-height:1;margin:6px 0 0}
-  .prix small{font-family:var(--sans);font-size:.85rem;color:var(--doux);display:block;
-    margin-top:7px;line-height:1.5}
-  .formule ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:9px;
-    font-size:14.5px;flex:1}
-  .formule li{display:grid;grid-template-columns:18px 1fr;gap:9px;align-items:start}
-  .formule li::before{content:"✓";color:var(--cyan);font-weight:700;line-height:1.5}
-  .formule li.non{color:var(--doux);opacity:.65}
-  .formule li.non::before{content:"—";color:var(--doux);font-weight:400}
-  .bouton{display:block;text-align:center;text-decoration:none;border-radius:999px;
-    padding:11px 18px;font-weight:600;font-size:14.5px;margin-top:6px;
-    border:1px solid var(--filet);color:var(--encre)}
-  .bouton:hover{background:rgba(255,255,255,.07)}
-  .bouton--plein{background:var(--cyan);color:#041018;border-color:var(--cyan)}
-  .bouton--plein:hover{background:#4ccbe8;color:#041018}
+  .formules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,286px),1fr));
+    gap:18px;margin-top:52px;align-items:stretch}
+  .formule{background:var(--papier);border:1px solid var(--filet);border-radius:var(--rayon);
+    padding:30px 26px 26px;display:flex;flex-direction:column;gap:13px}
+  /* La formule mise en avant se distingue par un TRAIT, pas par une couleur
+     de fond : une carte colorée au milieu de deux blanches attire l'œil et
+     rend les deux autres secondaires, ce qui n'est pas ce qu'on veut dire. */
+  .formule--phare{border-color:var(--encre)}
+  .formule__marque{font-size:11.5px;font-weight:600;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--doux);margin:0}
+  .formule--phare .formule__marque{color:var(--bleu)}
+  .formule__pour{color:var(--doux);font-size:14.8px;margin:0;min-height:3em}
+  .prix{font-family:var(--titre);font-size:2.9rem;line-height:1;margin:10px 0 0;
+    letter-spacing:-.02em}
+  .prix small{font-family:var(--sans);font-size:.8rem;color:var(--doux);display:block;
+    margin-top:10px;line-height:1.5;letter-spacing:0}
+  .formule ul{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;
+    gap:10px;font-size:14.8px;flex:1}
+  .formule li{display:grid;grid-template-columns:16px 1fr;gap:10px;align-items:start}
+  .formule li::before{content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--bleu);margin-top:9px}
+  .formule li.non{color:var(--doux)}
+  .formule li.non::before{background:var(--filet-fort)}
+  .formule .bouton{margin-top:20px;width:100%}
 
-  /* ---- la bande « inclus partout » ---- */
-  .partout{margin:42px 0 0;padding:24px;border:1px solid var(--filet);border-radius:16px;
-    background:rgba(255,255,255,.03)}
-  .partout ul{list-style:none;margin:16px 0 0;padding:0;
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px 22px;
-    font-size:14.5px}
-  .partout li{display:grid;grid-template-columns:18px 1fr;gap:9px;align-items:start}
-  .partout li::before{content:"✓";color:var(--cyan);font-weight:700}
+  /* ---- la bande « dans les trois » ---- */
+  .partout{border-top:1px solid var(--filet);border-bottom:1px solid var(--filet);
+    padding:30px 0}
+  .partout ul{list-style:none;margin:20px 0 0;padding:0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,232px),1fr));
+    gap:14px 30px;font-size:14.8px}
+  .partout li{display:grid;grid-template-columns:16px 1fr;gap:10px;align-items:start}
+  .partout li::before{content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--bleu);margin-top:9px}
 
   /* ---- le comparatif ---- */
-  .compare{margin-top:62px;overflow-x:auto}
-  table{border-collapse:collapse;width:100%;min-width:620px;font-size:14.5px}
-  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--filet)}
-  thead th{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
-    color:var(--cyan);font-weight:500}
-  tbody th{font-weight:400;color:var(--encre)}
+  .compare{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:640px;font-size:14.8px;margin-top:34px}
+  th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--filet)}
+  thead th{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--doux)}
+  tbody th{font-weight:400}
   td{text-align:center;color:var(--doux)}
-  td.oui{color:var(--cyan);font-weight:600}
-  tr.famille th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--doux);padding-top:24px}
+  td.oui{color:var(--encre);font-weight:500}
+  tr.famille th{font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--encre);padding-top:34px;border-bottom-color:var(--filet-fort)}
 
   /* ---- la FAQ ---- */
-  .faq{margin-top:62px;max-width:800px;margin-inline:auto}
+  .faq{max-width:760px;margin-inline:auto}
   details{border-bottom:1px solid var(--filet)}
-  summary{cursor:pointer;padding:16px 0;font-size:15.5px;list-style:none;display:flex;
-    justify-content:space-between;gap:16px;align-items:center}
+  summary{cursor:pointer;padding:19px 0;font-size:16px;list-style:none;display:flex;
+    justify-content:space-between;gap:18px;align-items:center}
   summary::-webkit-details-marker{display:none}
-  summary::after{content:"+";color:var(--cyan);font-size:1.3rem;line-height:1}
-  details[open] summary::after{content:"–"}
-  details p{margin:0 0 18px;color:var(--doux);font-size:14.8px}
+  summary::after{content:"";width:9px;height:9px;flex:none;
+    border-right:1.5px solid var(--doux);border-bottom:1.5px solid var(--doux);
+    transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s}
+  details[open] summary::after{transform:rotate(-135deg) translate(-3px,-3px)}
+  details p{margin:0 0 22px;color:var(--doux);font-size:15.2px;max-width:66ch}
 
-  .final{margin:66px 0 0;padding:38px 28px;border-radius:18px;text-align:center;
-    background:linear-gradient(135deg,rgba(41,184,217,.16),rgba(27,53,96,.3));
-    border:1px solid rgba(41,184,217,.3)}
-  .final h2{margin-bottom:10px}
+  /* ---- la fin ---- */
+  .final{margin-top:92px;padding:56px 28px;border-radius:var(--rayon);text-align:center;
+    background:var(--papier);border:1px solid var(--filet)}
+  .final .bouton{margin-top:26px}
+  @media (prefers-reduced-motion:reduce){summary::after{transition:none}}
 </style>
 </head>
 <body>
@@ -148,7 +151,7 @@
   </section>
 
   <section class="partout">
-    <h2 style="text-align:left;font-size:1.15rem">Dans les trois formules</h2>
+    <p class="label">Dans les trois formules</p>
     <ul>
       <li>Aucun abonnement, jamais</li>
       <li>Aucune commission sur vos ventes</li>
@@ -231,9 +234,9 @@
 
   <section class="final">
     <h2>Regardez avant d’acheter</h2>
-    <p class="sous" style="margin-bottom:22px">Les modèles sont calculés en direct, pas
+    <p class="sous">Les modèles sont calculés en direct, pas
       photographiés. Changez de métier, le site entier suit.</p>
-    <a class="bouton bouton--plein" style="display:inline-block" href="/modeles">Ouvrir les modèles</a>
+    <a class="bouton bouton--plein" href="/modeles">Ouvrir les modèles</a>
   </section>
 </div>
 
