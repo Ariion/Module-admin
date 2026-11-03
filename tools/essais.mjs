@@ -52,6 +52,7 @@ const ESSAIS = [
   { nom: 'assainissement', quoi: 'ce que le contenu garde, et ce qu’il ne laisse pas passer' },
   { nom: 'formulaire', quoi: 'formulaire de contact' },
   { nom: 'debit', quoi: 'volume et vitesse' },
+  { nom: 'poids', quoi: 'ce qu’un visiteur télécharge' },
   { nom: 'audit', quoi: 'audit de page' },
   { nom: 'bibliotheque', quoi: 'modèles de pages' },
   { nom: 'illustrations', quoi: 'les 36 scènes dessinées' },

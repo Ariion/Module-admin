@@ -1231,7 +1231,7 @@ export async function startEditor(runtime) {
 
   /** Pose la trame d'une page entière. */
   async function appliquerModelePage(id, remplacer) {
-    if (!model.applyPageTemplate(id, remplacer)) return;
+    if (!await model.applyPageTemplate(id, remplacer)) return;
     markDirty();
     await autosave.flush();
     await loadPage(urlCourante(), { keepScroll: false });

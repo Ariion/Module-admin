@@ -3,6 +3,55 @@
 
 
 
+
+## 1.39.0 — Ce qu’un visiteur télécharge, mesuré et tenu
+
+### Le chiffre qui manquait
+
+Le module ajoute du JavaScript aux pages du visiteur, et rien ne mesurait ce
+que ça coûte. Lighthouse mobile, même page, avec et sans le module, servie
+compressée comme chez un vrai hébergeur :
+
+| | sans | avec | écart |
+|---|---|---|---|
+| Performance | 88 | 87 | −1 |
+| First Contentful Paint | 3,0 s | 3,2 s | +0,2 s |
+| Transféré | 144 Kio | 274 Kio | +131 Kio |
+| Requêtes | 8 | 38 | +30 |
+
+Un point. C’est défendable, et c’était jusqu’ici inconnu.
+
+**Première mesure fausse, et pourquoi.** Elle annonçait −8 points et +365 Kio.
+Le serveur d’essai ne compressait pas, alors que ces fichiers sont du source
+abondamment commenté — ils se réduisent d’un facteur 2,8 en gzip. Mesurer un
+module dans des conditions qu’aucun hébergeur ne reproduit ne mesure que le
+banc d’essai.
+
+### Le défaut réel, lui, existait
+
+L’en-tête de `runtime.js` promettait que le code de l’éditeur n’était
+téléchargé qu’à l’ouverture. Le graphe d’imports disait le contraire :
+`core/page-templates.js`, le catalogue des trames de page, était tiré par
+`core/model.js` pour UNE méthode que seul l’éditeur appelle — vérifié par
+fermeture transitive depuis `applySnapshot()`, le seul point d’entrée du
+visiteur : 17 méthodes sur 49 y sont atteignables, et celle-ci n’en est pas.
+
+Import rendu dynamique, en place dans la méthode. Le commentaire dit
+maintenant ce que fait le code.
+
+### `npm run essai-poids`
+
+Il trace le graphe STATIQUE depuis `runtime.js` — exactement ce qu’un
+navigateur va chercher avant la première ligne exécutée — et tient un budget :
+30 fichiers, 350 Kio bruts, plus une liste de modules qui ne doivent jamais
+s’y trouver.
+
+Pas Lighthouse : il demande un navigateur, trente secondes et une dépendance
+étrangère au module, et son score dépend de la page d’essai. Surtout,
+Lighthouse dit combien ça coûte ; celui-ci dit QUI l’a fait entrer — la seule
+information sur laquelle on peut agir. La régression rejouée le prouve :
+« ✗ core/page-templates.js — tiré par core/model.js ».
+
 ## 1.38.0 — Le contenu collé garde sa mise en forme, et `npm test` existe
 
 ### Ce qui était cassé

@@ -3,7 +3,14 @@
  *
  * Rôle : appliquer le contenu publié au HTML existant, le plus tôt possible,
  * et ouvrir l'éditeur si la personne est administratrice. Il ne contient
- * aucune interface : le code de l'éditeur n'est téléchargé qu'à l'ouverture.
+ * aucune interface : les panneaux de l'éditeur ne sont téléchargés qu'à
+ * l'ouverture.
+ *
+ * « Aucune interface » ne veut pas dire « rien que le strict nécessaire ».
+ * Mesuré, un visiteur télécharge une trentaine de fichiers du module : le
+ * moteur d'application du contenu, et lui seul, pèse ce qu'il pèse. Ce qui
+ * n'en fait PAS partie s'importe à la demande, dans la méthode qui s'en sert
+ * — `npm run essai-performance` tient le budget et dit lequel a glissé.
  *
  * Règle absolue : si quoi que ce soit échoue (réseau, base vide, contenu
  * illisible), la page reste telle que le développeur l'a écrite.

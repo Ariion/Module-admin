@@ -24,7 +24,6 @@ import { ecrireEntete } from './referencement.js';
 
 /** Réglages qui décident de la classe d'effets d'un bloc. */
 const EFFETS_CLES = ['survol', 'clic', 'entree', 'dureeEffet'];
-import { findPageTemplate } from './page-templates.js';
 import { clone, equal, uid } from './util.js';
 import { debug, safe } from './log.js';
 
@@ -297,7 +296,12 @@ export class PageModel {
    * @param {string} id
    * @param {boolean} remplacer masquer les sections existantes du site
    */
-  applyPageTemplate(id, remplacer) {
+  async applyPageTemplate(id, remplacer) {
+    // Importé ici, et non en tête de fichier : le catalogue des trames de
+    // page ne sert qu'à l'éditeur, et un import statique le faisait
+    // télécharger par TOUS les visiteurs du site — 22 Kio bruts qu'ils ne
+    // regarderont jamais. C'est le seul endroit qui s'en sert.
+    const { findPageTemplate } = await import('./page-templates.js');
     const modele = findPageTemplate(id);
     return modele ? this.applyTrees(modele.build(), remplacer) : false;
   }
