@@ -31,9 +31,13 @@ window.ADMIN_CONFIG = {
   // Laisse les traces dans la console du navigateur pendant le test.
   debug: true,
 
-  // Pas de téléversement sur un hébergement statique : la bibliothèque média
-  // se remplit par adresse (image déjà en ligne, vidéo YouTube, MP3 distant).
-  media: { adapter: 'url' },
+  // Les médias vont dans Firebase Storage — c'est le réglage par défaut, et
+  // il fonctionne sur TOUS les hébergements, y compris ceux dont le disque
+  // est en lecture seule : rien n'est écrit chez l'hébergeur.
+  //
+  // Cette ligne forçait auparavant l'adaptateur « url », au motif qu'un
+  // hébergement statique n'accepte pas de téléversement. C'était une
+  // confusion : l'hébergement n'a jamais été concerné.
 
   // Réécriture du HTML en un clic, sur Vercel aussi.
   //

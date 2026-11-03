@@ -421,7 +421,7 @@ function rafraichir() {
   document.getElementById('verifPhp').style.display = php ? '' : 'none';
   document.getElementById('explicationHote').textContent = php
     ? 'Le fichier .html du site est réécrit à chaque publication : le module peut être retiré, le site garde tout. Le client téléverse ses images depuis l’éditeur.'
-    : 'Pas de réécriture du .html ni de téléversement : la bibliothèque média se remplit par adresse, et l’éditeur propose un export manuel de la page figée.';
+    : 'Le .html est réécrit lui aussi : sur un hébergement qui se reconstruit à chaque écriture — Vercel, Netlify — la fonction api/admin.js committe dans le dépôt, et le site se redéploie. Les images vont dans Firebase Storage. Le client ne manipule aucun fichier.';
 }
 
 for (const id of Object.keys(champs)) champs[id].addEventListener('input', rafraichir);

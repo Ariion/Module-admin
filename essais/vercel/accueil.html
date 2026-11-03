@@ -180,7 +180,7 @@
       <div><h4>Sur la page vierge</h4><p>Cochez plusieurs intentions et regardez les propositions changer. Une fois la page construite, tout reste modifiable, déplaçable et supprimable.</p></div>
       <div><h4>Sur téléphone</h4><p>Le panneau devient une feuille qui se replie en bas de l'écran, pour modifier un site depuis sa poche.</p></div>
     </div>
-    <p class="note-heberg"><strong>Hébergement statique.</strong> Sur Vercel, le fichier <code>.html</code> ne peut pas être réécrit à la publication et les médias ne se téléversent pas : les fichiers sont en lecture seule après déploiement. Le contenu est servi au chargement, et l'éditeur propose un export manuel de la page figée. Sur un hébergement PHP, ces deux limites disparaissent.</p>
+    <p class="note-heberg"><strong>Publier, c'est un bouton.</strong> Le client clique, son site est à jour — sur un hébergement PHP comme sur Vercel. Le disque de Vercel est en lecture seule après déploiement : « écrire un fichier » y veut donc dire « committer dans le dépôt », ce que fait une fonction du module, et le site se redéploie tout seul. Les images, elles, vont dans Firebase Storage : elles ne touchent jamais le disque de l'hébergeur, quel qu'il soit. Personne n'a de fichier à télécharger ni à déposer à la main.</p>
   </section>
 
   <footer>

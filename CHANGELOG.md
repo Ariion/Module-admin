@@ -14,6 +14,38 @@
 
 
 
+
+## 1.50.0 — La page publique cesse de décrire un produit qui n'existe plus
+
+Un audit extérieur a noté la maturité commerciale 4/10, en citant deux
+limites : le HTML non réécrit sur Vercel, et les médias non téléversables.
+Les deux affirmations venaient de la page d'accueil. Les deux sont fausses.
+
+**La réécriture du HTML** fonctionne sur Vercel depuis 1.48.0 : la fonction
+`api/admin.js` committe dans le dépôt, et le site se redéploie.
+
+**Le téléversement des médias** a toujours fonctionné : `media.adapter` vaut
+`'firebase'` par défaut, et Firebase Storage ne touche jamais le disque de
+l'hébergeur. C'est la configuration de la démonstration qui forçait
+l'adaptateur « url », au motif qu'un hébergement statique n'accepte pas de
+téléversement — une confusion, puisque l'hébergement n'a jamais été concerné.
+
+Corrigés : la note de l'accueil, le message de la page d'installation, et la
+configuration de la démonstration.
+
+### Ce que l'audit demandait et qui existait déjà
+
+- **Annuler / rétablir** : boutons et Ctrl+Z, depuis longtemps.
+- **Enregistrement automatique avec indicateur** : quatre états — régénération,
+  enregistrement, non publié, publié — plus le nombre de modifications et
+  l'heure du dernier enregistrement. Plus riche que les trois demandés.
+- **Distinction édition / aperçu** : le bouton bascule existe.
+- **Sécurité de l'accès** : `?admin` n'ouvre que l'interface. Ce qui protège,
+  ce sont les règles Firestore, jouées contre un vrai émulateur sur 32 cas.
+
+Le produit était en avance sur la page qui le présente. C'est la page qui
+était en retard, et c'est elle qu'on vient de corriger.
+
 ## 1.49.0 — La fonction de publication ne dépend plus que d'elle-même
 
 `FUNCTION_INVOCATION_FAILED` au premier appel en production. Cause :
