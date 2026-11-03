@@ -5,6 +5,50 @@
 
 
 
+
+## 1.41.0 — Le tunnel de vente, de la fiche produit au paiement
+
+`/boutique` : une boutique de démonstration — six produits, six fiches, un
+panier. `SNIPCART_CLE=… npm run boutique-demo` et le tunnel est complet :
+ajout au panier, adresse, frais de port calculés au poids, carte de test,
+confirmation. Tout se passe SUR le site : en mode panier, l'acheteur ne part
+nulle part.
+
+**En HTML statique, et c'est le point.** Snipcart ne nous croit pas sur
+parole : avant d'encaisser, il va lire la page désignée par `data-item-url`
+et vérifie qu'il y retrouve le même identifiant au même prix — c'est ce qui
+empêche un visiteur de changer le prix dans son navigateur. Son robot ne nous
+est pas garanti exécuter le JavaScript. Ce n'est pas une entorse au module :
+`core/bake.js` fait exactement ce geste, et le script de fabrication emploie
+les mêmes fonctions — le `renderWidget` du site, le `boutonAchat` de
+`core/boutique.js`.
+
+### `npm run essai-snipcart`
+
+Il refait la vérification de Snipcart, en local et sans compte : il suit
+chaque `data-item-url`, ouvre la page visée et s'assure que l'article y
+figure au même prix. Sans lui, une commande peut échouer alors que la page
+est parfaite à l'œil — l'erreur n'apparaissant qu'au paiement, chez le
+client, devant son propre acheteur.
+
+Il tient aussi les deux pièges qu'un catalogue français tend tout seul : un
+prix écrit « 12,50 » au lieu de « 12.50 », que Snipcart lit comme 12, et un
+article expédiable sans poids, qu'il refuse.
+
+### Trois défauts vus en regardant la page
+
+- **Aucun `<meta charset>`** dans les documents de `documentDemo` :
+  « Récolté » s'affichait « RÃ©coltÃ© ». En aperçu, le document héritait de
+  l'encodage de la page parente et paraissait juste — le défaut n'existait
+  qu'une fois écrit dans un fichier. Corrigé à la source, donc aussi pour les
+  aperçus du back-office.
+- **`prixLisible` retirait les centimes ronds.** Seul, « 9 € » se lit très
+  bien ; dans une grille à côté de « 12,50 € », la virgule ne s'aligne plus
+  et la liste paraît bâclée.
+- **`boutonAchat` lit `doc.location`**, absent d'un document fabriqué hors
+  écran, où `data-item-url` vaut alors « / ». Le piège exact que l'essai
+  attrape.
+
 ## 1.40.0 — La vitrine des modèles
 
 `/modeles` : on choisit un métier, on parcourt les onze modèles, et surtout

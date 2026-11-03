@@ -53,6 +53,13 @@ const ESSAIS = [
   { nom: 'formulaire', quoi: 'formulaire de contact' },
   { nom: 'debit', quoi: 'volume et vitesse' },
   { nom: 'poids', quoi: 'ce qu’un visiteur télécharge' },
+  {
+    nom: 'snipcart',
+    quoi: 'le tunnel de vente tient le contrat de Snipcart',
+    empeche: () => (existsSync(a('essais/vercel/boutique/index.html'))
+      ? null
+      : 'boutique absente : npm run boutique-demo'),
+  },
   { nom: 'audit', quoi: 'audit de page' },
   { nom: 'bibliotheque', quoi: 'modèles de pages' },
   { nom: 'illustrations', quoi: 'les 36 scènes dessinées' },

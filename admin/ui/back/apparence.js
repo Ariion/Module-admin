@@ -332,6 +332,13 @@ export function creerApparence({ t, lire, appliquer, rendreDemo }) {
  */
 export function documentDemo(renderWidget, sections, reglageTheme) {
   const doc = document.implementation.createHTMLDocument('demo');
+  // Sans cette balise, le document est lu en latin-1 dès qu'il sort d'un
+  // `srcdoc` — « Récolté » devient « RÃ©coltÃ© ». En aperçu, il héritait de
+  // l'encodage de la page parente et paraissait juste : le défaut
+  // n'apparaissait qu'une fois le document écrit dans un fichier.
+  const charset = doc.createElement('meta');
+  charset.setAttribute('charset', 'utf-8');
+  doc.head.appendChild(charset);
   for (const arbre of sections) {
     const el = renderWidget(arbre, doc, {});
     if (el) doc.body.appendChild(el);

@@ -49,11 +49,17 @@ export function normaliserProduit(brut) {
   };
 }
 
-/** Prix lisible : « 24,90 € ». */
+/**
+ * Prix lisible : « 24,90 € », « 9,00 € ».
+ *
+ * Les centimes ronds étaient auparavant retirés. Seul, « 9 € » se lit très
+ * bien ; dans une grille de six produits à côté de « 12,50 € », la virgule
+ * ne s'aligne plus et la liste paraît bâclée. Un catalogue est le seul
+ * endroit où ce prix s'affiche — il suit donc la règle du catalogue.
+ */
 export function prixLisible(produit) {
   const symbole = DEVISES[produit.devise] || produit.devise;
-  const montant = produit.prix.toFixed(2).replace('.', ',').replace(/,00$/, '');
-  return `${montant} ${symbole}`;
+  return `${produit.prix.toFixed(2).replace('.', ',')} ${symbole}`;
 }
 
 /**

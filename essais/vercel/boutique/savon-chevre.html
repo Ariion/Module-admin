@@ -1,0 +1,60 @@
+<!DOCTYPE html><html><head><title>demo</title><meta charset="utf-8"><style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font:16px/1.65 system-ui,sans-serif}
+  section{padding:64px 24px}
+  section>*{max-width:1040px;margin-left:auto;margin-right:auto}
+  h1,h2,h3{line-height:1.15;margin-bottom:14px}
+  h1{font-size:2.6rem} h2{font-size:1.9rem} h3{font-size:1.25rem}
+  p{margin-bottom:14px}
+  img{max-width:100%;height:auto;display:block}
+  a{color:inherit}
+
+:root{
+  --admin-fond:#f5f7f2; --admin-fond-doux:#e9efe3; --admin-encre:#22301f;
+  --admin-doux:#55684f; --admin-trait:#d7e0cd; --admin-accent:#3d6b45;
+  --admin-sur-accent:#ffffff; --admin-accent-rgb:61,107,69;
+  --admin-secondaire:#3d6b45;
+  --admin-largeur:1040px; --admin-rayon:10px;
+  --admin-police-titres:"Lora", serif; --admin-police-textes:"Karla", sans-serif;
+  --fond:#f5f7f2; --fond-doux:#e9efe3; --encre:#22301f; --doux:#55684f;
+  --trait:#d7e0cd; --accent:#3d6b45; --secondaire:#3d6b45; --largeur:1040px;
+}
+
+body{
+  background:#f5f7f2; color:#22301f;
+  font-family:"Karla", sans-serif; font-size:17px; line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+h1, h2, h3, h4, h5, h6{
+  font-family:"Lora", serif; color:#22301f; font-weight:600;
+  letter-spacing:0; line-height:1.18; margin-bottom:.5em;
+  text-transform:none;
+}
+h1{ font-size:clamp(2rem, 5vw, 3.20rem) }
+h2{ font-size:clamp(1.55rem, 3.4vw, 2.20rem) }
+h3{ font-size:1.25rem }
+p, li{ color:#55684f }
+p{ margin-bottom:1em }
+strong, b{ color:#22301f }
+a{ color:#3d6b45 }
+img{ border-radius:10px; max-width:100%; display:block }
+hr{ border:0; border-top:1px solid #d7e0cd; margin:2em 0 }
+blockquote{
+  border-left:3px solid #3d6b45; padding-left:18px; color:#55684f; font-style:italic;
+}
+div > a:only-child:not(:has(img)), .bouton{ display:inline-block;padding:13px 28px;border:0;border-radius:999px;background:#3d6b45;color:#ffffff;text-decoration:none;font-weight:600;text-transform:none;transition:opacity .15s; }
+div > a:only-child:not(:has(img)):hover, .bouton:hover{ opacity:.85; }
+section{ padding:80px 24px }
+section > *{ max-width:1040px; margin-left:auto; margin-right:auto }
+section:nth-of-type(even){ background:#e9efe3 }
+header, footer{ background:#f5f7f2; color:#22301f }
+footer{ border-top:1px solid #d7e0cd }
+@media (max-width:760px){
+  [data-admin-section] [style*="grid-template-columns"]{ grid-template-columns:1fr !important }
+  section{ padding:50px 18px }
+}</style><link id="admin-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600&amp;family=Lora:wght@400;500;600;700&amp;display=swap"></head><body><section data-admin-widget="undefined" data-admin-type="section"><div style="max-width: 1080px; margin: 0px auto; padding: 28px 24px;"><h2 data-admin-widget="undefined" data-admin-type="heading" style="text-align: center;">Comptoir du Centre</h2><div data-admin-widget="undefined" data-admin-type="text" style="text-align: center;"><a href="./">← Retour à la boutique</a></div></div></section><section data-admin-widget="undefined" data-admin-type="section"><div style="max-width: 1080px; margin: 0px auto; padding: 28px 24px;"><div data-admin-widget="undefined" data-admin-type="produit"><div><img src="/boutique/img/savon.svg" alt="Savon au lait de chèvre" loading="lazy" style="width: 100%; height: auto; display: block; margin-bottom: 14px;"><h3>Savon au lait de chèvre</h3><p>Saponifié à froid, sans parfum de synthèse.</p><p style="font-weight: 600;">6,50 €</p><div><a class="snipcart-add-item" href="#" data-item-id="savon-chevre" data-item-name="Savon au lait de chèvre" data-item-price="6.5" data-item-url="/boutique/savon-chevre.html" data-item-shippable="true" data-item-image="/boutique/img/savon.svg" data-item-description="Saponifié à froid, sans parfum de synthèse." data-item-weight="120">Ajouter au panier</a></div></div></div></div></section>
+  <div style="position:fixed;left:0;right:0;bottom:0;background:#1B3560;color:#fff;
+    font:14px/1.5 system-ui,sans-serif;padding:12px 18px;text-align:center">
+    Panier fermé : lancez <code>SNIPCART_CLE=… npm run boutique-demo</code> avec votre clé de test.
+  </div>
+</body></html>

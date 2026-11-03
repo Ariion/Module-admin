@@ -10,6 +10,14 @@
       "destination": "/essais/vercel/modeles.html"
     },
     {
+      "source": "/boutique",
+      "destination": "/essais/vercel/boutique/index.html"
+    },
+    {
+      "source": "/boutique/:fichier*",
+      "destination": "/essais/vercel/boutique/:fichier*"
+    },
+    {
       "source": "/vierge",
       "destination": "/essais/vercel/vierge.html"
     },
