@@ -1,5 +1,5 @@
 /* =========================================================================
-   Module Admin — configuration du site
+   Calqo — configuration du site
 
    Copiez ce fichier en « admin-config.js » à la racine du site, et
    renseignez les valeurs. C'est le SEUL fichier qui diffère d'un site à

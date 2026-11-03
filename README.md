@@ -1,4 +1,4 @@
-# Module Admin
+# Calqo
 
 Interface d'édition visuelle pour sites statiques **codés à la main**.
 

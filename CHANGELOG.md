@@ -11,6 +11,30 @@
 
 
 
+
+## 1.47.0 — Le produit s'appelle Calqo
+
+« Module Admin » avait deux défauts. « Module » veut dire « bloc » pour
+quiconque a vu SiteW ou Wix — on comprenait un widget, pas un éditeur. Et
+« admin » parle au développeur, pas au commerçant.
+
+**Calqo** vient de « calque » : une couche posée sur un site existant, qu'on
+retire sans laisser de trace. C'est ce que fait le produit. Le O final rend
+le mot prononçable à l'identique en français, anglais, espagnol, allemand et
+italien — ce que « Calq » seul ne fait pas, puisqu'un anglophone y lit
+« calc ». Et comme mot inventé, il se protège mieux qu'un nom commun :
+« calque » en français, « calco » en espagnol et en italien décrivent le
+produit, ce qui se dépose mal.
+
+Renommé : les neuf fichiers visibles par l'utilisateur, et le nom du paquet.
+
+**Le dossier `admin/` ne change PAS**, et c'est délibéré. C'est un chemin
+technique, pas une surface de marque : il figure dans la balise `<script>` de
+chaque page installée, dans `core/bake.js`, dans les réécritures de
+l'hébergement, dans `tools/sync.mjs` et dans l'essai de poids. Le renommer
+casserait toutes les installations existantes pour un gain nul — et
+`/admin/` se lit très bien dans une adresse.
+
 ## 1.46.0 — Direction « Grille »
 
 La version précédente était le chemin sûr : blanc cassé, serif à fort

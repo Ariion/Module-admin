@@ -7,7 +7,7 @@ présente licence.
 
 1. OBJET
 
-L'éditeur concède au titulaire une licence d'utilisation du Module Admin
+L'éditeur concède au titulaire une licence d'utilisation du Calqo
 (ci-après « le module ») : code source, script serveur, documentation et
 fichiers de configuration fournis avec la présente licence.
 

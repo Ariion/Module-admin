@@ -24,7 +24,7 @@ const ici = location.pathname.replace(/index\.html$/, '').replace(/\/$/, '') || 
 const barre = document.createElement('header');
 barre.className = 'barre-site';
 barre.innerHTML = `<div class="barre-site__dedans">
-  <a class="marque" href="/">Module <b>Admin</b></a>
+  <a class="marque" href="/">Cal<b>q</b>o</a>
   <nav class="nav">${PAGES.map(([url, nom]) => {
     const courant = url.replace(/\/$/, '') === ici || (url === '/' && ici === '/');
     const classe = url === '/tarifs' ? ' class="cta"' : '';
@@ -60,5 +60,5 @@ pied.innerHTML = `<div class="pied__cols">
     </ul>
   </div>
 </div>
-<p class="pied__bas">Module Admin — site de démonstration</p>`;
+<p class="pied__bas">Calqo — site de démonstration</p>`;
 document.body.appendChild(pied);
