@@ -40,7 +40,25 @@ const racine = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'admin');
  * et visible dans l'historique.
  */
 const BUDGET_FICHIERS = 30;
-const BUDGET_KIO = 350;
+const BUDGET_KIO = 375;
+
+/**
+ * Historique des relèvements, et ce qu'on sait pouvoir rendre.
+ *
+ * 350 → 375 (1.43.0) : les blocs horaires, articles, téléchargements et
+ * agenda. Ils rendent du contenu que le VISITEUR doit voir — une page
+ * publiée avec des horaires doit savoir les dessiner —, donc leur place est
+ * bien ici. Relèvement assumé, pas contourné.
+ *
+ * RÉDUCTION CONNUE, NON FAITE : ~20 Kio. Le catalogue `WIDGETS` de
+ * `core/widgets.js` (catégories, champs, valeurs par défaut) ne sert qu'aux
+ * panneaux de l'éditeur — `renderWidget` est un `switch` qui ne le consulte
+ * jamais. Il part chez tous les visiteurs parce que `createWidget` le lit, et
+ * que `core/sections.js` appelle `createWidget` de façon SYNCHRONE depuis
+ * `ops.addBlank`. Le sortir demande donc de rendre cette opération
+ * asynchrone, ce qui remonte jusqu'à l'éditeur. C'est mesuré et faisable ;
+ * ce n'est pas fait.
+ */
 
 /**
  * Ce qui ne doit JAMAIS se retrouver sur le chemin du visiteur.
