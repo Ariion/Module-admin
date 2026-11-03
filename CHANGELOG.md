@@ -8,6 +8,31 @@
 
 
 
+
+## 1.44.0 — Le site commercial : menu, formules, comparatif
+
+`/tarifs`, et une barre de navigation partagée par toutes les pages de la
+vitrine. Les trois formules sont rangées par LIVRABLE, pas par quota : le
+module seul, le module posé sur un site existant, le site complet. Ce qui
+change d'une formule à l'autre n'est pas ce que le produit sait faire — c'est
+qui fait le travail. Le comparatif le dit colonne par colonne : « vous » ou
+« nous ».
+
+**Ce qui n'est pas copié des plateformes :** la bascule mensuel/annuel. Le
+prix est unique, et c'est l'argument central — « un prix une fois, pas tous
+les mois ». Une bascule d'abonnement sur cette page contredirait la page.
+
+Les prix sont laissés à « — € ». Ils ne se devinent pas, et un chiffre inventé
+dans une page de vente est pire qu'un chiffre absent.
+
+La barre et le pied sont posés par `commun.js`, non recopiés dans chaque
+fichier : une barre dupliquée dans quatre pages diverge au premier
+changement, et le site se retrouve avec quatre menus différents sans que
+personne le remarque. Ils dépendent donc du JavaScript — acceptable ICI et
+nulle part ailleurs, car ces pages sont la vitrine du module, pas le site
+d'un client. Les pages produites POUR un client restent du HTML statique
+complet : c'est l'objet de `core/bake.js`.
+
 ## 1.43.0 — Horaires, articles, téléchargements, agenda
 
 Quatre blocs qui manquaient face aux solutions grand public, et qui portent

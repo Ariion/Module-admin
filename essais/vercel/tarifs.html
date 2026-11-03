@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tarifs · Module Admin</title>
+<meta name="description" content="Trois formules selon ce qu’on vous livre : le module seul, le module posé sur votre site, ou le site complet. Un prix unique, pas d’abonnement, pas de commission.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/commun.css">
+<style>
+  header.tete{padding:62px 0 16px;text-align:center}
+  h1{font-family:var(--serif);font-size:clamp(2rem,5.2vw,3.2rem);line-height:1.1;
+    margin:.3em 0 .25em;font-weight:400;text-wrap:balance}
+  h1 em{font-style:italic;color:var(--cyan)}
+  .chapo{color:var(--doux);max-width:62ch;margin:0 auto}
+
+  h2{font-family:var(--serif);font-size:clamp(1.4rem,3vw,2rem);font-weight:400;
+    text-align:center;margin:0 0 8px}
+  .sous{color:var(--doux);text-align:center;margin:0 auto 30px;max-width:58ch;font-size:15px}
+
+  /* ---- les trois formules ---- */
+  .formules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));
+    gap:20px;padding:26px 0 10px;align-items:start}
+  .formule{background:rgba(255,255,255,.035);border:1px solid var(--filet);
+    border-radius:16px;padding:26px 24px;display:flex;flex-direction:column;gap:14px;height:100%}
+  .formule--phare{border-color:rgba(41,184,217,.55);background:rgba(41,184,217,.07);
+    box-shadow:0 18px 50px rgba(0,0,0,.4)}
+  .formule__marque{font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--cyan);margin:0}
+  .formule h3{font-family:var(--serif);font-size:1.45rem;font-weight:400;margin:0}
+  .formule__pour{color:var(--doux);font-size:14.5px;margin:0;min-height:3em}
+  .prix{font-family:var(--serif);font-size:2.5rem;line-height:1;margin:6px 0 0}
+  .prix small{font-family:var(--sans);font-size:.85rem;color:var(--doux);display:block;
+    margin-top:7px;line-height:1.5}
+  .formule ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:9px;
+    font-size:14.5px;flex:1}
+  .formule li{display:grid;grid-template-columns:18px 1fr;gap:9px;align-items:start}
+  .formule li::before{content:"✓";color:var(--cyan);font-weight:700;line-height:1.5}
+  .formule li.non{color:var(--doux);opacity:.65}
+  .formule li.non::before{content:"—";color:var(--doux);font-weight:400}
+  .bouton{display:block;text-align:center;text-decoration:none;border-radius:999px;
+    padding:11px 18px;font-weight:600;font-size:14.5px;margin-top:6px;
+    border:1px solid var(--filet);color:var(--encre)}
+  .bouton:hover{background:rgba(255,255,255,.07)}
+  .bouton--plein{background:var(--cyan);color:#041018;border-color:var(--cyan)}
+  .bouton--plein:hover{background:#4ccbe8;color:#041018}
+
+  /* ---- la bande « inclus partout » ---- */
+  .partout{margin:42px 0 0;padding:24px;border:1px solid var(--filet);border-radius:16px;
+    background:rgba(255,255,255,.03)}
+  .partout ul{list-style:none;margin:16px 0 0;padding:0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px 22px;
+    font-size:14.5px}
+  .partout li{display:grid;grid-template-columns:18px 1fr;gap:9px;align-items:start}
+  .partout li::before{content:"✓";color:var(--cyan);font-weight:700}
+
+  /* ---- le comparatif ---- */
+  .compare{margin-top:62px;overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:620px;font-size:14.5px}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--filet)}
+  thead th{font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--cyan);font-weight:500}
+  tbody th{font-weight:400;color:var(--encre)}
+  td{text-align:center;color:var(--doux)}
+  td.oui{color:var(--cyan);font-weight:600}
+  tr.famille th{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--doux);padding-top:24px}
+
+  /* ---- la FAQ ---- */
+  .faq{margin-top:62px;max-width:800px;margin-inline:auto}
+  details{border-bottom:1px solid var(--filet)}
+  summary{cursor:pointer;padding:16px 0;font-size:15.5px;list-style:none;display:flex;
+    justify-content:space-between;gap:16px;align-items:center}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--cyan);font-size:1.3rem;line-height:1}
+  details[open] summary::after{content:"–"}
+  details p{margin:0 0 18px;color:var(--doux);font-size:14.8px}
+
+  .final{margin:66px 0 0;padding:38px 28px;border-radius:18px;text-align:center;
+    background:linear-gradient(135deg,rgba(41,184,217,.16),rgba(27,53,96,.3));
+    border:1px solid rgba(41,184,217,.3)}
+  .final h2{margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div class="enveloppe">
+  <header class="tete">
+    <p class="label">Les formules</p>
+    <h1>Un prix <em>une fois</em>. Pas tous les mois.</h1>
+    <p class="chapo">Trois formules selon ce qu’on vous livre. Aucune ne prélève
+      d’abonnement, aucune ne prend de commission sur vos ventes, et dans les trois
+      le site reste le vôtre — vous pouvez retirer le module, il tient debout.</p>
+  </header>
+
+  <section class="formules">
+    <article class="formule">
+      <p class="formule__marque">Vous l’installez</p>
+      <h3>Le module</h3>
+      <p class="formule__pour">Pour qui sait déposer des fichiers et suivre un guide.</p>
+      <p class="prix">— €<small>prix à fixer · paiement unique</small></p>
+      <ul>
+        <li>Le module complet, 34 blocs</li>
+        <li>Les 11 modèles de page, 12 métiers</li>
+        <li>La boutique en ligne</li>
+        <li>Le guide d’installation</li>
+        <li>Les mises à jour</li>
+        <li class="non">Mise en place par nos soins</li>
+        <li class="non">Création du site</li>
+      </ul>
+      <a class="bouton" href="/distribution/installation.html">Voir le guide</a>
+    </article>
+
+    <article class="formule formule--phare">
+      <p class="formule__marque">La plus demandée</p>
+      <h3>Le module, posé</h3>
+      <p class="formule__pour">Vous avez déjà un site. On y branche l’administration.</p>
+      <p class="prix">— €<small>prix à fixer · paiement unique</small></p>
+      <ul>
+        <li>Tout ce qui précède</li>
+        <li>Projet et base créés pour vous</li>
+        <li>Règles de sécurité déployées</li>
+        <li>Le compte de connexion du client</li>
+        <li>Branchement sur vos pages</li>
+        <li>Une prise en main d’une heure</li>
+        <li class="non">Création du site</li>
+      </ul>
+      <a class="bouton bouton--plein" href="/modeles">Voir ce que ça donne</a>
+    </article>
+
+    <article class="formule">
+      <p class="formule__marque">Clé en main</p>
+      <h3>Le site complet</h3>
+      <p class="formule__pour">Vous n’avez rien. On fait le site, et vous l’administrez.</p>
+      <p class="prix">— €<small>prix à fixer · paiement unique</small></p>
+      <ul>
+        <li>Tout ce qui précède</li>
+        <li>Le site dessiné pour votre métier</li>
+        <li>Vos textes mis en page</li>
+        <li>Vos photos préparées</li>
+        <li>Référencement local et horaires</li>
+        <li>Mise en ligne</li>
+      </ul>
+      <a class="bouton" href="/modeles">Choisir un modèle</a>
+    </article>
+  </section>
+
+  <section class="partout">
+    <h2 style="text-align:left;font-size:1.15rem">Dans les trois formules</h2>
+    <ul>
+      <li>Aucun abonnement, jamais</li>
+      <li>Aucune commission sur vos ventes</li>
+      <li>Le site vous appartient, fichiers compris</li>
+      <li>Le module se retire sans casser la page</li>
+      <li>Pas de serveur applicatif à maintenir</li>
+      <li>Votre HTML n’est pas modifié</li>
+    </ul>
+  </section>
+
+  <section class="compare">
+    <h2>Ce que chaque formule comprend</h2>
+    <p class="sous">Le même module dans les trois cas. Ce qui change, c’est qui fait le travail.</p>
+    <table>
+      <thead>
+        <tr><th>Prestation</th><th>Le module</th><th>Posé</th><th>Site complet</th></tr>
+      </thead>
+      <tbody>
+        <tr class="famille"><th colspan="4">Le produit</th></tr>
+        <tr><th>Les 34 blocs</th><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+        <tr><th>Les 11 modèles de page</th><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+        <tr><th>Boutique et tunnel de vente</th><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+        <tr><th>Mises à jour</th><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+
+        <tr class="famille"><th colspan="4">La mise en place</th></tr>
+        <tr><th>Base de données et comptes</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
+        <tr><th>Règles de sécurité</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
+        <tr><th>Branchement sur les pages</th><td>vous</td><td class="oui">nous</td><td class="oui">nous</td></tr>
+        <tr><th>Prise en main</th><td>guide écrit</td><td class="oui">1 h</td><td class="oui">1 h</td></tr>
+
+        <tr class="famille"><th colspan="4">Le site lui-même</th></tr>
+        <tr><th>Mise en page</th><td>—</td><td>la vôtre</td><td class="oui">nous</td></tr>
+        <tr><th>Textes et photos</th><td>—</td><td>—</td><td class="oui">nous</td></tr>
+        <tr><th>Référencement local</th><td>—</td><td>—</td><td class="oui">nous</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="faq">
+    <h2>Avant de vous décider</h2>
+    <p class="sous">Les questions qu’on nous pose le plus.</p>
+
+    <details open>
+      <summary>Que se passe-t-il si j’arrête de payer ?</summary>
+      <p>Rien, parce qu’il n’y a rien à arrêter. Le prix est unique. Votre site continue
+        de fonctionner, et l’administration aussi — elle tourne sur votre propre base,
+        pas sur nos serveurs.</p>
+    </details>
+    <details>
+      <summary>Et si je veux partir ?</summary>
+      <p>Vous retirez deux lignes de vos pages et le module disparaît. Le site reste
+        exactement tel quel : c’est du HTML, il n’a jamais cessé d’être le vôtre.
+        C’est la différence principale avec un site hébergé par une plateforme.</p>
+    </details>
+    <details>
+      <summary>Prenez-vous une commission sur mes ventes ?</summary>
+      <p>Aucune. Les paiements passent directement par votre prestataire — vous ne
+        payez que ses frais, et il n’y a pas d’intermédiaire de notre côté.</p>
+    </details>
+    <details>
+      <summary>Je n’y connais rien. Est-ce pour moi ?</summary>
+      <p>La formule « posé » ou « site complet », oui : vous ne voyez jamais la
+        technique, seulement votre site et un bouton pour le modifier. La formule
+        « module seul » demande de suivre un guide — c’est faisable, mais ce n’est
+        pas une heure de votre dimanche.</p>
+    </details>
+    <details>
+      <summary>Faut-il un hébergement ?</summary>
+      <p>Oui, comme pour tout site. N’importe lequel sert des fichiers : il n’y a pas
+        de serveur applicatif à installer, pas de PHP, pas de base à administrer.
+        Plusieurs hébergements conviennent gratuitement pour un site de commerce local.</p>
+    </details>
+    <details>
+      <summary>Mon site sera-t-il ralenti ?</summary>
+      <p>Mesuré, pas estimé : un point de performance Lighthouse sur mobile, et environ
+        130 Ko transférés. Un essai du dépôt tient ce budget et refuse de passer s’il
+        est dépassé.</p>
+    </details>
+  </section>
+
+  <section class="final">
+    <h2>Regardez avant d’acheter</h2>
+    <p class="sous" style="margin-bottom:22px">Les modèles sont calculés en direct, pas
+      photographiés. Changez de métier, le site entier suit.</p>
+    <a class="bouton bouton--plein" style="display:inline-block" href="/modeles">Ouvrir les modèles</a>
+  </section>
+</div>
+
+<script type="module" src="/commun.js"></script>
+</body>
+</html>

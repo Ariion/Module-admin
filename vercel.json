@@ -10,6 +10,18 @@
       "destination": "/essais/vercel/modeles.html"
     },
     {
+      "source": "/tarifs",
+      "destination": "/essais/vercel/tarifs.html"
+    },
+    {
+      "source": "/commun.css",
+      "destination": "/essais/vercel/commun.css"
+    },
+    {
+      "source": "/commun.js",
+      "destination": "/essais/vercel/commun.js"
+    },
+    {
       "source": "/boutique",
       "destination": "/essais/vercel/boutique/index.html"
     },

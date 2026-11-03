@@ -1,0 +1,45 @@
+/* Le dessin partagé du site commercial : barre, menu, pied de page.
+   Écrit une fois, lu par toutes les pages — une barre recopiée dans quatre
+   fichiers diverge au premier changement, et personne ne s'en aperçoit. */
+:root{
+  --fond-a:#050b18; --fond-b:#071228; --marine:#1B3560;
+  --cyan:#29B8D9; --encre:#dde8f6; --doux:#8fa3c2; --filet:rgba(221,232,246,.14);
+  --serif:Georgia,'Times New Roman',serif;
+  --sans:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,var(--fond-a),var(--fond-b) 60%,var(--fond-a));
+  font-family:var(--sans);font-size:16px;line-height:1.7;color:var(--encre);min-height:100vh}
+.enveloppe{max-width:1180px;margin:0 auto;padding:0 20px}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+a{color:inherit}
+
+/* ---- la barre ---- */
+.barre-site{position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
+  background:rgba(5,11,24,.86);border-bottom:1px solid var(--filet)}
+.barre-site__dedans{display:flex;align-items:center;gap:26px;
+  max-width:1180px;margin:0 auto;padding:12px 20px}
+.marque{font-family:var(--serif);font-size:1.18rem;text-decoration:none;white-space:nowrap}
+.marque b{color:var(--cyan);font-weight:400}
+.nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.nav a{text-decoration:none;font-size:14.5px;color:var(--doux);padding:8px 13px;border-radius:9px}
+.nav a:hover{background:rgba(255,255,255,.06);color:var(--encre)}
+.nav a[aria-current="page"]{color:var(--encre);background:rgba(41,184,217,.14)}
+.nav .cta{background:var(--cyan);color:#041018;font-weight:600}
+.nav .cta:hover{background:#4ccbe8;color:#041018}
+@media (max-width:760px){
+  .barre-site__dedans{flex-wrap:wrap;gap:10px}
+  .nav{margin-left:0;width:100%}
+  .nav a{padding:7px 10px;font-size:13.5px}
+}
+
+/* ---- le pied ---- */
+.pied{border-top:1px solid var(--filet);margin-top:72px;padding:36px 0 46px;color:var(--doux);font-size:14px}
+.pied__cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:26px}
+.pied h3{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--encre);margin:0 0 10px;font-weight:500}
+.pied ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.pied a{text-decoration:none}
+.pied a:hover{color:var(--cyan)}
+.pied__bas{margin-top:28px;padding-top:18px;border-top:1px solid var(--filet);font-size:13px;opacity:.75}
