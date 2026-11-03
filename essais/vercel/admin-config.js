@@ -35,9 +35,19 @@ window.ADMIN_CONFIG = {
   // se remplit par adresse (image déjà en ligne, vidéo YouTube, MP3 distant).
   media: { adapter: 'url' },
 
-  // Réécriture du HTML : impossible sur Vercel, dont les fichiers sont en
-  // lecture seule après déploiement. À activer sur un hébergement PHP.
-  // host: { endpoint: '/admin-endpoint.php' },
+  // Réécriture du HTML en un clic, sur Vercel aussi.
+  //
+  // Le disque de Vercel est en lecture seule après déploiement : « écrire un
+  // fichier » veut donc dire « committer dans le dépôt GitHub », ce qui
+  // déclenche un redéploiement. C'est ce que fait `api/admin.js`.
+  //
+  // Décommentez la ligne APRÈS avoir renseigné les cinq variables
+  // d'environnement listées dans `api/admin.js` — sans elles la fonction
+  // répond 500, et publier afficherait une erreur au client.
+  //
+  // Sur un hébergement PHP, remplacez simplement l'adresse par
+  // '/admin-endpoint.php' : le protocole est le même.
+  // host: { endpoint: '/api/admin' },
 };
 
 if (!RENSEIGNE) {

@@ -12,6 +12,42 @@
 
 
 
+
+## 1.48.0 — La publication en un clic fonctionne sur Vercel
+
+Le portage Vercel de l'endpoint existait depuis le début — 434 lignes, le
+protocole du script PHP à l'identique, l'écriture d'un fichier devenant un
+commit GitHub qui déclenche le redéploiement. **Il n'a jamais fonctionné**,
+pour deux raisons que rien ne signalait.
+
+**1. Il n'était pas atteignable.** Vercel n'exécute que ce qui se trouve dans
+`api/`, et ce dossier n'existait pas. `api/admin.js` le branche.
+
+**2. Il était inexécutable.** `package.json` déclare `"type": "module"` —
+donc tout `.js` du dépôt est lu comme un module ES. Le portage était écrit en
+CommonJS (`require`, `module.exports`). Il se lisait très bien et ne pouvait
+pas tourner, ni ici ni sur Vercel. Converti en modules ES.
+
+Conséquence : sur Vercel, « Publier » écrivait bien le contenu dans Firestore
+— donc le site du client était à jour pour ses visiteurs — mais le HTML
+n'était jamais réécrit. Les robots d'indexation, qui n'exécutent pas tous le
+JavaScript, voyaient le texte d'origine. Pour un commerce local dont tout
+l'enjeu est d'être trouvé, c'est le défaut qui comptait.
+
+### `npm run essai-endpoint`
+
+L'essai qui manquait, et dont l'absence a coûté deux défauts silencieux. Il
+vérifie que la fonction se CHARGE et s'EXÉCUTE dans ce dépôt tel qu'il est
+configuré, puis qu'elle refuse ce qu'elle doit refuser : configuration
+incomplète annoncée et non devinée (500), absence de jeton (401), jeton
+illisible (401), action inconnue (404), méthode GET (405). Plus deux
+contrôles qui ne coûtent rien : aucune réponse mise en cache, aucun
+identifiant écrit en dur dans le source.
+
+Reste à faire côté hébergement : renseigner les cinq variables
+d'environnement listées dans `api/admin.js`, puis décommenter
+`host: { endpoint: '/api/admin' }` dans la configuration du site.
+
 ## 1.47.0 — Le produit s'appelle Calqo
 
 « Module Admin » avait deux défauts. « Module » veut dire « bloc » pour

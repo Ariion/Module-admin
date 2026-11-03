@@ -54,6 +54,7 @@ const ESSAIS = [
   { nom: 'formulaire', quoi: 'formulaire de contact' },
   { nom: 'debit', quoi: 'volume et vitesse' },
   { nom: 'poids', quoi: 'ce qu’un visiteur télécharge' },
+  { nom: 'endpoint', quoi: 'la fonction de publication Vercel' },
   {
     nom: 'snipcart',
     quoi: 'le tunnel de vente tient le contrat de Snipcart',

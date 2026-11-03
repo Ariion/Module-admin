@@ -1,6 +1,6 @@
 {
   "name": "calqo",
-  "version": "1.47.0",
+  "version": "1.48.0",
   "description": "Interface d'édition visuelle pour sites statiques codés à la main. Firebase, aucun serveur, aucun build.",
   "type": "module",
   "private": true,
@@ -28,6 +28,7 @@
     "essai-poids": "node tools/essai-poids.mjs",
     "essai-snipcart": "node tools/essai-snipcart.mjs",
     "essai-regles": "node tools/essai-regles.mjs",
+    "essai-endpoint": "node tools/essai-endpoint.mjs",
     "essai-audit": "node tools/essai-audit.mjs",
     "essai-bibliotheque": "node tools/essai-bibliotheque.mjs",
     "paquet": "node tools/paquet.mjs",

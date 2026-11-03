@@ -21,6 +21,12 @@
  * le compte doit être membre du site dans Firestore — exactement les règles
  * déjà publiées, aucune liste d'UID à tenir à jour ici.
  *
+ * ÉCRIT EN MODULES ES, et il faut que ça le reste : `package.json` déclare
+ * `"type": "module"`, donc tout `.js` de ce dépôt est lu comme un module. Ce
+ * fichier était en CommonJS — `require`, `module.exports` — et ne pouvait donc
+ * pas s'exécuter, ici comme sur Vercel. Il ne manquait pas seulement d'être
+ * branché : il était inexécutable, et rien ne le disait.
+ *
  * Variables d'environnement (Vercel → Settings → Environment Variables) :
  *   GITHUB_TOKEN         jeton fin, permission « Contents: read and write »
  *                        sur ce dépôt uniquement
@@ -30,7 +36,7 @@
  *   SITE_ID              « procomsolution »
  */
 
-const crypto = require('crypto');
+import crypto from 'node:crypto';
 
 const CERTS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 const FIRESTORE = 'https://firestore.googleapis.com/v1';
@@ -396,7 +402,7 @@ const actions = {
 
 /* ──────────────────────────────── handler ──────────────────────────────── */
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
