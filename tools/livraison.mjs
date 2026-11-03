@@ -48,7 +48,7 @@ cpSync(resolve(racine, 'tools/admin-endpoint.php'), resolve(cible, 'admin-endpoi
 // seule, « écrire un fichier » veut dire committer dans le dépôt. À déposer
 // en `api/admin-endpoint.js` sur Vercel, Netlify ou Cloudflare Pages.
 mkdirSync(resolve(cible, 'api'), { recursive: true });
-cpSync(resolve(racine, 'tools/admin-endpoint.js'), resolve(cible, 'api/admin-endpoint.js'));
+cpSync(resolve(racine, 'api/admin.js'), resolve(cible, 'api/admin.js'));
 
 // --- Dossier des médias, avec un index vide pour éviter le listing ---------
 mkdirSync(resolve(cible, 'medias'), { recursive: true });

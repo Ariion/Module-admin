@@ -98,10 +98,30 @@ dit('rien n’est mis en cache', (pre.entetes['Cache-Control'] || '') === 'no-st
 
 console.log('\nAucun identifiant ne traîne dans le dépôt');
 const { readFileSync } = await import('node:fs');
-const source = readFileSync(new URL('./admin-endpoint.js', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../api/admin.js', import.meta.url), 'utf8');
 // Un jeton GitHub commence par ghp_ / github_pat_ ; une clé Firebase par AIza.
 dit('aucun jeton écrit en dur', !/\b(ghp_|github_pat_|AIza)[A-Za-z0-9_-]{10,}/.test(source));
 dit('les secrets viennent de l’environnement', /process\.env\.GITHUB_TOKEN/.test(source));
+
+console.log('\nLa fonction ne dépend que d’elle-même');
+// Le défaut qui a cassé le premier déploiement : `api/admin.js` ré-exportait
+// son code depuis `tools/`, dossier que `.vercelignore` exclut. La fonction
+// s'installait parfaitement et plantait au premier appel, sur un
+// FUNCTION_INVOCATION_FAILED qui ne nommait pas la cause.
+const relatifs = [...source.matchAll(/^\s*import\s[^;]*?from\s*['"](\.[^'"]+)['"]/gm)]
+  .map((m) => m[1]);
+const sortants = relatifs.filter((chemin) => chemin.startsWith('..'));
+dit('aucun import ne sort du dossier api/', sortants.length === 0, sortants.join(', '));
+
+const ignore = readFileSync(new URL('../.vercelignore', import.meta.url), 'utf8')
+  .split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+// Un dossier exclu du déploiement ne peut pas servir de dépendance : on le
+// dit ici plutôt que de le découvrir en production.
+const exclus = ignore.filter((regle) => relatifs.some((c) => c.includes(regle.replace(/\/$/, ''))));
+dit('aucun import vers un dossier exclu du déploiement',
+  exclus.length === 0, `exclus par .vercelignore : ${exclus.join(', ')}`);
+dit('api/ n’est pas exclu du déploiement',
+  !ignore.some((r) => r.replace(/\/$/, '') === 'api'));
 
 console.log(echecs.length ? `\n${echecs.length} échec(s)\n` : '\nTout est bon.\n');
 process.exit(echecs.length ? 1 : 0);

@@ -13,6 +13,30 @@
 
 
 
+
+## 1.49.0 — La fonction de publication ne dépend plus que d'elle-même
+
+`FUNCTION_INVOCATION_FAILED` au premier appel en production. Cause :
+`api/admin.js` ré-exportait son code depuis `tools/admin-endpoint.js`, et
+`.vercelignore` exclut `tools/` du déploiement. La fonction s'installait
+parfaitement et plantait au chargement, sur une erreur qui ne nommait pas sa
+cause.
+
+L'implémentation vit désormais dans `api/admin.js`, sans aucun import vers
+l'extérieur du dossier. `tools/livraison.mjs` copie depuis là.
+
+### Le garde-fou
+
+`npm run essai-endpoint` vérifie maintenant trois choses de plus, toutes
+tirées de ce défaut :
+
+- aucun import de la fonction ne sort de `api/` ;
+- aucun import ne vise un dossier listé dans `.vercelignore` ;
+- `api/` lui-même n'est pas exclu du déploiement.
+
+Régression rejouée pour le prouver : un import vers `admin/core/` fait rougir
+l'essai en nommant le fichier fautif.
+
 ## 1.48.0 — La publication en un clic fonctionne sur Vercel
 
 Le portage Vercel de l'endpoint existait depuis le début — 434 lignes, le
