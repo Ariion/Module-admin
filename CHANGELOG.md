@@ -16,6 +16,46 @@
 
 
 
+
+## 1.52.0 — Le module a son propre panier
+
+Jusqu'ici tout passait par Snipcart. Sans compte payant chez un tiers, un
+site vendait **un produit à la fois**, par un lien qui emmenait l'acheteur
+ailleurs — et la démonstration ne pouvait rien montrer du tout.
+
+`core/panier.js` additionne, compte et se souvient. Ce qu'il ne fait pas, et
+ne fera pas : encaisser. Un paiement demande un serveur, des obligations et
+une responsabilité qu'un module posé sur un site statique n'a pas à porter.
+Au moment de payer, il passe la main.
+
+- un tiroir avec compteur, quantités, options retenues et sous-total ;
+- un bloc **page panier** (35 blocs au total) ;
+- l'état partagé entre les onglets et entre les pages ;
+- un style neutre, parce qu'il atterrit sur le site d'un client dont on ne
+  connaît pas la charte.
+
+Le comportement est un script EN TEXTE, comme celui des déclinaisons : la
+page publiée est un fichier statique, et un écouteur posé à l'exécution ne
+s'y sérialise pas.
+
+### Deux défauts que seul un navigateur pouvait trouver
+
+**Le script arrivait corrompu.** Le générateur l'insérait avec
+`String.replace('</body>', …)`, et `replace` donne un sens à `$` dans sa
+chaîne de remplacement : `$'` y désigne tout ce qui suit la correspondance.
+Le `'$'` de la table des devises a donc été remplacé par la fin du document.
+La page se chargeait, le panier ne faisait rien, la console disait seulement
+« Invalid or unexpected token ». Toutes les insertions passent désormais par
+une FONCTION de remplacement, qui n'interprète rien.
+
+**Le voile avalait la page.** Refermer le tiroir ne retirait que l'attribut
+qui lance l'animation de sortie : le voile restait devant la page et
+interceptait tous les clics. La boutique devenait inutilisable dès qu'on
+avait ouvert le panier une seule fois, sans message et sans erreur.
+
+`npm run essai-panier` tient les deux, plus le parcours complet : ajouter,
+quantités, déclinaisons reportées, page panier, vider.
+
 ## 1.51.0 — L'accueil est converti, pas maquillé
 
 L'accueil n'était jamais passé dans la direction « Grille » : ses anciennes

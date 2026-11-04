@@ -593,6 +593,24 @@ export const WIDGETS = {
     ],
   },
 
+  /**
+   * La page panier.
+   *
+   * Le tiroir suffit pour ajouter et vérifier ; il ne suffit pas pour
+   * décider. Au moment de passer commande, on veut voir la liste entière
+   * sans qu'un panneau recouvre la boutique — et on veut pouvoir envoyer
+   * l'adresse de cette page à quelqu'un.
+   */
+  panier: {
+    category: 'boutique', icon: 'grid',
+    defaults: () => ({ libelle: 'Commander', suite: '', vide: 'Votre panier est vide.' }),
+    fields: [
+      { key: 'libelle', type: 'text', label: 'panierLibelle' },
+      { key: 'suite', type: 'text', label: 'panierSuite', placeholder: 'boutique.html' },
+      { key: 'vide', type: 'text', label: 'panierVide' },
+    ],
+  },
+
   menu: {
     category: 'basique', icon: 'list',
     defaults: () => ({ liens: '', align: 'center' }),
@@ -1628,6 +1646,81 @@ export function renderWidget(noeud, doc, contexte = {}) {
         item.appendChild(precision);
         el.appendChild(item);
       }
+      break;
+    }
+
+    case 'panier': {
+      el = doc.createElement('div');
+      el.setAttribute('data-panier-page', '');
+
+      const vide = doc.createElement('div');
+      vide.setAttribute('data-panier-vide', '');
+      vide.style.cssText = 'padding:40px 0;text-align:center;';
+      const motVide = doc.createElement('p');
+      motVide.textContent = String(p.vide || 'Votre panier est vide.');
+      motVide.style.cssText = 'margin:0 0 16px;opacity:.65;';
+      vide.appendChild(motVide);
+      if (String(p.suite ?? '').trim()) {
+        const retour = doc.createElement('a');
+        retour.setAttribute('href', safeUrl(p.suite));
+        retour.textContent = 'Retour à la boutique';
+        vide.appendChild(retour);
+      }
+      el.appendChild(vide);
+
+      const plein = doc.createElement('div');
+      plein.setAttribute('data-panier-plein', '');
+      plein.hidden = true;
+
+      const liste = doc.createElement('ul');
+      liste.className = 'panier__lignes';
+      liste.setAttribute('data-panier-lignes', '');
+      liste.style.cssText = 'list-style:none;margin:0;padding:0;';
+      plein.appendChild(liste);
+
+      const total = doc.createElement('div');
+      total.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;'
+        + 'padding:20px 0 6px;font-size:1.1em;';
+      const mot = doc.createElement('span');
+      mot.textContent = 'Sous-total';
+      const somme = doc.createElement('strong');
+      somme.setAttribute('data-panier-total', '');
+      somme.textContent = '0,00 €';
+      total.append(mot, somme);
+      plein.appendChild(total);
+
+      // Le port n'est pas calculé ici : il dépend du pays et du poids, et
+      // annoncer un total qui changera à l'étape suivante fait abandonner.
+      const note = doc.createElement('p');
+      note.textContent = 'Frais de port calculés à l’étape suivante.';
+      note.style.cssText = 'margin:0 0 20px;font-size:.88em;opacity:.6;';
+      plein.appendChild(note);
+
+      const commander = doc.createElement('a');
+      commander.setAttribute('href', '#');
+      commander.textContent = remplacerJetons(p.libelle || 'Commander');
+      commander.style.cssText = 'display:inline-block;padding:14px 28px;background:currentColor;'
+        + 'text-decoration:none;font-weight:600;';
+      const dedans = doc.createElement('span');
+      dedans.style.cssText = 'color:#fff;mix-blend-mode:difference;';
+      dedans.textContent = commander.textContent;
+      commander.textContent = '';
+      commander.appendChild(dedans);
+      plein.appendChild(commander);
+
+      // Vider depuis la page elle-même : le tiroir le propose, mais il est
+      // fermé quand on arrive ici par un lien, et on ne va pas demander à
+      // quelqu'un de rouvrir un panneau pour renoncer.
+      const vider = doc.createElement('button');
+      vider.type = 'button';
+      vider.setAttribute('data-panier-vider', '');
+      vider.textContent = 'Vider le panier';
+      vider.style.cssText = 'display:block;margin-top:16px;background:none;border:0;'
+        + 'font:inherit;font-size:.88em;opacity:.6;cursor:pointer;padding:4px 0;'
+        + 'text-decoration:underline;text-underline-offset:3px;';
+      plein.appendChild(vider);
+
+      el.appendChild(plein);
       break;
     }
 

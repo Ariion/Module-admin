@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><title>demo</title><meta charset="utf-8"><style>
+<!DOCTYPE html><html data-panier-cle="admin:panier:comptoir"><head><title>demo</title><meta charset="utf-8"><style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font:16px/1.65 system-ui,sans-serif}
   section{padding:64px 24px}
@@ -52,7 +52,191 @@ footer{ border-top:1px solid #d7e0cd }
 @media (max-width:760px){
   [data-admin-section] [style*="grid-template-columns"]{ grid-template-columns:1fr !important }
   section{ padding:50px 18px }
-}</style><link id="admin-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600&amp;family=Lora:wght@400;500;600;700&amp;display=swap"></head><body><section data-admin-widget="undefined" data-admin-type="section"><div style="max-width: 1080px; margin: 0px auto; padding: 28px 24px;"><h2 data-admin-widget="undefined" data-admin-type="heading" style="text-align: center;">Comptoir du Centre</h2><div data-admin-widget="undefined" data-admin-type="text" style="text-align: center;"><a href="./">← Retour à la boutique</a></div></div></section><section data-admin-widget="undefined" data-admin-type="section"><div style="max-width: 1080px; margin: 0px auto; padding: 28px 24px;"><div data-admin-widget="undefined" data-admin-type="produit"><div data-produit="confiture-myrtille"><img src="/boutique/img/confiture.svg" alt="Confiture de myrtille" loading="lazy" style="width: 100%; height: auto; display: block; margin-bottom: 14px;"><h3>Confiture de myrtille</h3><p>Myrtilles sauvages, 60 % de fruits, cuite au chaudron.</p><p style="font-weight: 600;">7,90 €</p><div><a class="snipcart-add-item" href="#" data-item-id="confiture-myrtille" data-item-name="Confiture de myrtille" data-item-price="7.9" data-item-url="/boutique/confiture-myrtille.html" data-item-shippable="true" data-item-image="/boutique/img/confiture.svg" data-item-description="Myrtilles sauvages, 60 % de fruits, cuite au chaudron." data-item-weight="400">Ajouter au panier</a></div></div></div></div></section>  <script>document.addEventListener('change', function (e) {
+}</style><link id="admin-fonts" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Karla:wght@300;400;500;600&amp;family=Lora:wght@400;500;600;700&amp;display=swap"><title>Comptoir du Centre</title><style data-admin-ui="">
+.panier-bulle{position:fixed;right:18px;bottom:18px;z-index:40;display:flex;align-items:center;
+  gap:9px;border:1px solid currentColor;background:#fff;color:inherit;cursor:pointer;
+  font:inherit;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:12px 17px}
+.panier-bulle__compte{font-weight:700;font-variant-numeric:tabular-nums}
+.panier{position:fixed;inset:0;z-index:50}
+.panier[hidden]{display:none}
+/* Ceinture et bretelles : tant que le tiroir n'est pas ouvert, il ne capte
+   aucun clic, même si le script n'a pas encore posé son hidden. */
+.panier:not([data-ouvert]){pointer-events:none}
+.panier[data-ouvert]{pointer-events:auto}
+.panier__fond{position:absolute;inset:0;background:rgba(0,0,0,.34);opacity:0;transition:opacity .25s}
+.panier[data-ouvert] .panier__fond{opacity:1}
+.panier__boite{position:absolute;top:0;right:0;height:100%;width:min(390px,100%);
+  background:#fff;border-left:1px solid rgba(0,0,0,.18);padding:20px;overflow:auto;
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.8,.3,1)}
+.panier[data-ouvert] .panier__boite{transform:none}
+.panier__tete{display:flex;justify-content:space-between;align-items:center;
+  padding-bottom:14px;border-bottom:1px solid rgba(0,0,0,.12)}
+.panier__tete button{background:none;border:0;font:inherit;font-size:22px;cursor:pointer;line-height:1}
+.panier__vide{padding:34px 0;opacity:.6;font-size:14px}
+.panier__lignes{list-style:none;margin:0;padding:0}
+.panier__lignes li{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;
+  padding:14px 0;border-bottom:1px solid rgba(0,0,0,.1)}
+.panier__lignes img,.panier__trou{width:54px;height:54px;object-fit:cover;display:block;
+  background:rgba(0,0,0,.05)}
+.panier__nom{margin:0;font-weight:600;font-size:14px}
+.panier__opt{margin:3px 0 0;font-size:12px;opacity:.6}
+.panier__prix{margin:3px 0 0;font-size:13px}
+.panier__qte{display:flex;align-items:center;gap:9px;font-variant-numeric:tabular-nums}
+.panier__qte button{width:26px;height:26px;border:1px solid rgba(0,0,0,.25);background:#fff;
+  cursor:pointer;font:inherit;line-height:1}
+.panier__total{display:flex;justify-content:space-between;padding:16px 0 6px;font-size:15px}
+.panier__note{margin:0 0 16px;font-size:12.5px;opacity:.6}
+.panier__commander{display:block;text-align:center;text-decoration:none;padding:13px;
+  background:#111;color:#fff;font-weight:600;font-size:14px}
+.panier__vider{display:block;width:100%;margin-top:10px;background:none;border:0;
+  font:inherit;font-size:12.5px;opacity:.6;cursor:pointer;padding:6px}
+@media (prefers-reduced-motion:reduce){.panier__fond,.panier__boite{transition:none}}</style></head><body><section data-admin-widget="undefined" data-admin-type="section"><div style="max-width: 1080px; margin: 0px auto; padding: 28px 24px;"><h2 data-admin-widget="undefined" data-admin-type="heading" style="text-align: center;">Comptoir du Centre</h2><div data-admin-widget="undefined" data-admin-type="text" style="text-align: center;"><a href="./">← Retour à la boutique</a></div></div></section><section data-admin-widget="undefined" data-admin-type="section"><div style="max-width: 1080px; margin: 0px auto; padding: 28px 24px;"><div data-admin-widget="undefined" data-admin-type="produit"><div data-produit="confiture-myrtille"><img src="/boutique/img/confiture.svg" alt="Confiture de myrtille" loading="lazy" style="width: 100%; height: auto; display: block; margin-bottom: 14px;"><h3>Confiture de myrtille</h3><p>Myrtilles sauvages, 60 % de fruits, cuite au chaudron.</p><p style="font-weight: 600;">7,90 €</p><div><a class="panier-ajouter" href="#" data-p-id="confiture-myrtille" data-p-nom="Confiture de myrtille" data-p-prix="7.9" data-p-devise="EUR" data-p-image="/boutique/img/confiture.svg" data-p-poids="400">Ajouter au panier</a></div></div></div></div></section><button type="button" class="panier-bulle" data-panier-ouvrir="" aria-label="Ouvrir le panier"><span aria-hidden="true">Panier</span><span class="panier-bulle__compte" data-panier-badge="" hidden="">0</span></button><aside class="panier" data-panier-tiroir="" hidden="">
+    <div class="panier__fond" data-panier-fermer=""></div>
+    <div class="panier__boite" role="dialog" aria-label="Panier">
+      <header class="panier__tete">
+        <strong>Votre panier</strong>
+        <button type="button" data-panier-fermer="" aria-label="Fermer">×</button>
+      </header>
+      <p class="panier__vide" data-panier-vide="">Votre panier est vide.</p>
+      <div data-panier-plein="" hidden="">
+        <ul class="panier__lignes" data-panier-lignes=""></ul>
+        <div class="panier__total">
+          <span>Sous-total</span><strong data-panier-total="">0,00 €</strong>
+        </div>
+        <p class="panier__note">Frais de port calculés à l'étape suivante.</p>
+        <a class="panier__commander" href="/boutique/panier.html">Commander</a>
+        <button type="button" class="panier__vider" data-panier-vider="">Vider le panier</button>
+      </div>
+    </div></aside><script data-admin-ui="">(function () {
+  var CLE = document.documentElement.getAttribute('data-panier-cle') || 'admin:panier:site';
+  var DEVISE = { EUR: '\u20AC', USD: '$', GBP: '\u00A3', CHF: 'CHF', CAD: '$ CA' };
+
+  function lire() {
+    try { return JSON.parse(localStorage.getItem(CLE)) || []; } catch (e) { return []; }
+  }
+  function ecrire(lignes) {
+    try { localStorage.setItem(CLE, JSON.stringify(lignes)); } catch (e) { /* navigation privée */ }
+    peindre();
+  }
+  function prix(valeur, devise) {
+    return valeur.toFixed(2).replace('.', ',') + ' ' + (DEVISE[devise] || devise || '\u20AC');
+  }
+  function total(lignes) {
+    var s = 0;
+    for (var i = 0; i < lignes.length; i++) s += lignes[i].prix * lignes[i].quantite;
+    return s;
+  }
+  /* Deux fois le même produit dans la même déclinaison, c'est une quantité,
+     pas deux lignes : sinon l'acheteur croit s'être trompé. */
+  function cle(ligne) { return ligne.id + '|' + (ligne.options || []).join('|'); }
+
+  function ajouter(bouton) {
+    var carte = bouton.closest('[data-produit]') || document;
+    var options = [];
+    var selects = carte.querySelectorAll('[data-declinaison]');
+    for (var i = 0; i < selects.length; i++) {
+      options.push(selects[i].previousSibling && selects[i].parentNode.firstChild.textContent
+        ? selects[i].parentNode.firstChild.textContent.trim() + ' : ' + selects[i].value
+        : selects[i].value);
+    }
+    var ligne = {
+      id: bouton.getAttribute('data-p-id'),
+      nom: bouton.getAttribute('data-p-nom'),
+      prix: parseFloat(bouton.getAttribute('data-p-prix')) || 0,
+      devise: bouton.getAttribute('data-p-devise') || 'EUR',
+      image: bouton.getAttribute('data-p-image') || '',
+      options: options,
+      quantite: 1
+    };
+    var lignes = lire();
+    var trouve = null;
+    for (var j = 0; j < lignes.length; j++) if (cle(lignes[j]) === cle(ligne)) trouve = lignes[j];
+    if (trouve) trouve.quantite += 1; else lignes.push(ligne);
+    ecrire(lignes);
+    ouvrir();
+  }
+
+  function changer(index, delta) {
+    var lignes = lire();
+    if (!lignes[index]) return;
+    lignes[index].quantite += delta;
+    if (lignes[index].quantite < 1) lignes.splice(index, 1);
+    ecrire(lignes);
+  }
+
+  function ouvrir() {
+    var t = document.querySelector('[data-panier-tiroir]');
+    if (t) { t.hidden = false; requestAnimationFrame(function () { t.setAttribute('data-ouvert', '1'); }); }
+  }
+  function fermer() {
+    var t = document.querySelector('[data-panier-tiroir]');
+    if (!t) return;
+    t.removeAttribute('data-ouvert');
+    /* Retirer l'attribut ne fait que lancer l'animation de sortie : le voile
+       reste dans la page et continue d'intercepter les clics. Sans ce
+       hidden, la boutique devient inutilisable dès qu'on a ouvert le panier
+       une fois — et rien ne le signale, les clics tombent simplement dans le
+       vide. */
+    setTimeout(function () { if (!t.hasAttribute('data-ouvert')) t.hidden = true; }, 320);
+  }
+
+  function lignesHtml(lignes) {
+    var html = '';
+    for (var i = 0; i < lignes.length; i++) {
+      var l = lignes[i];
+      html += '<li data-ligne="' + i + '">'
+        + (l.image ? '<img src="' + l.image + '" alt="">' : '<span class="panier__trou"></span>')
+        + '<div><p class="panier__nom">' + l.nom + '</p>'
+        + (l.options.length ? '<p class="panier__opt">' + l.options.join(' \u00B7 ') + '</p>' : '')
+        + '<p class="panier__prix">' + prix(l.prix, l.devise) + '</p></div>'
+        + '<div class="panier__qte">'
+        + '<button type="button" data-moins="' + i + '" aria-label="Retirer un">\u2212</button>'
+        + '<span>' + l.quantite + '</span>'
+        + '<button type="button" data-plus="' + i + '" aria-label="Ajouter un">+</button>'
+        + '</div></li>';
+    }
+    return html;
+  }
+
+  function peindre() {
+    var lignes = lire();
+    var compte = 0;
+    for (var i = 0; i < lignes.length; i++) compte += lignes[i].quantite;
+    var devise = lignes.length ? lignes[0].devise : 'EUR';
+
+    var badges = document.querySelectorAll('[data-panier-badge]');
+    for (var b = 0; b < badges.length; b++) {
+      badges[b].textContent = compte;
+      badges[b].hidden = compte === 0;
+    }
+    var vides = document.querySelectorAll('[data-panier-vide]');
+    for (var v = 0; v < vides.length; v++) vides[v].hidden = compte > 0;
+    var pleins = document.querySelectorAll('[data-panier-plein]');
+    for (var p = 0; p < pleins.length; p++) pleins[p].hidden = compte === 0;
+
+    var listes = document.querySelectorAll('[data-panier-lignes]');
+    for (var k = 0; k < listes.length; k++) listes[k].innerHTML = lignesHtml(lignes);
+    var totaux = document.querySelectorAll('[data-panier-total]');
+    for (var t = 0; t < totaux.length; t++) totaux[t].textContent = prix(total(lignes), devise);
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-p-id],[data-panier-ouvrir],[data-panier-fermer],[data-plus],[data-moins],[data-panier-vider]') : null;
+    if (!el) return;
+    if (el.hasAttribute('data-p-id')) { e.preventDefault(); ajouter(el); return; }
+    if (el.hasAttribute('data-panier-ouvrir')) { e.preventDefault(); ouvrir(); return; }
+    if (el.hasAttribute('data-panier-fermer')) { e.preventDefault(); fermer(); return; }
+    if (el.hasAttribute('data-panier-vider')) { e.preventDefault(); ecrire([]); return; }
+    if (el.hasAttribute('data-plus')) { e.preventDefault(); changer(+el.getAttribute('data-plus'), 1); return; }
+    if (el.hasAttribute('data-moins')) { e.preventDefault(); changer(+el.getAttribute('data-moins'), -1); }
+  });
+
+  /* Un panier rempli dans un autre onglet doit se voir ici aussi : sinon on
+     commande deux fois, ou on croit avoir perdu sa sélection. */
+  window.addEventListener('storage', function (e) { if (e.key === CLE) peindre(); });
+  document.addEventListener('DOMContentLoaded', peindre);
+  peindre();
+})();</script>  <script>document.addEventListener('change', function (e) {
   var sel = e.target;
   if (!sel.matches || !sel.matches('[data-declinaison]')) return;
   var carte = sel.closest('[data-produit]');
@@ -61,8 +245,8 @@ footer{ border-top:1px solid #d7e0cd }
   bouton.setAttribute('data-item-custom' + sel.dataset.declinaison + '-value', sel.value);
 });</script>
 
-  <div style="position:fixed;left:0;right:0;bottom:0;background:#1B3560;color:#fff;
-    font:14px/1.5 system-ui,sans-serif;padding:12px 18px;text-align:center">
-    Panier fermé : lancez <code>SNIPCART_CLE=… npm run boutique-demo</code> avec votre clé de test.
+  <div style="position:fixed;left:0;bottom:0;background:#111;color:#fff;
+    font:12px/1.4 system-ui,sans-serif;padding:9px 14px;letter-spacing:.04em">
+    Panier du module actif. Le paiement demande une clé Snipcart.
   </div>
 </body></html>

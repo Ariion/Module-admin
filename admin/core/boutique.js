@@ -18,6 +18,7 @@
  * @module core/boutique
  */
 import { safeUrl, safeImageUrl, safeText } from './sanitize.js';
+import { SCRIPT_PANIER, clePanier, attributsProduit } from './panier.js';
 
 /** Où le paiement se fait. */
 export const VENDEURS = [
@@ -101,6 +102,18 @@ export function boutonAchat(doc, produit, boutique = {}, libelle = 'Acheter') {
     lien.setAttribute('aria-disabled', 'true');
     lien.style.opacity = '.55';
     lien.style.pointerEvents = 'none';
+    return lien;
+  }
+
+  // Le panier du module. C'est le mode par DÉFAUT dès qu'un produit n'a pas
+  // de lien de paiement propre : un catalogue sans panier obligerait à
+  // acheter un article à la fois, et à repartir du site entre chaque.
+  if (boutique.mode === 'panier' || (!boutique.mode && !produit.lien)) {
+    lien.className = 'panier-ajouter';
+    lien.setAttribute('href', '#');
+    for (const [nom, valeur] of Object.entries(attributsProduit(produit))) {
+      lien.setAttribute(nom, valeur);
+    }
     return lien;
   }
 
@@ -226,6 +239,104 @@ export function poserPanier(doc, boutique) {
   doc.body.appendChild(declinaisons);
   return true;
 }
+
+/**
+ * Le tiroir du panier, son bouton flottant, son style et son comportement.
+ *
+ * Tout est posé en une fois et ne dépend de rien : la page publiée est un
+ * fichier, elle doit se suffire. Le style est volontairement neutre — des
+ * filets, pas de couleur — parce qu'il atterrit sur le site d'un client dont
+ * on ne connaît pas la charte, et qu'un panier fluo sur une boutique sobre
+ * est pire qu'un panier discret.
+ */
+export function poserPanierLocal(doc, { siteId = 'site', pagePanier = '' } = {}) {
+  if (doc.querySelector('[data-panier-tiroir]')) return false;
+  doc.documentElement.setAttribute('data-panier-cle', clePanier(siteId));
+
+  const style = doc.createElement('style');
+  style.setAttribute('data-admin-ui', '');
+  style.textContent = STYLE_PANIER;
+  doc.head.appendChild(style);
+
+  const bouton = doc.createElement('button');
+  bouton.type = 'button';
+  bouton.className = 'panier-bulle';
+  bouton.setAttribute('data-panier-ouvrir', '');
+  bouton.setAttribute('aria-label', 'Ouvrir le panier');
+  bouton.innerHTML = '<span aria-hidden="true">Panier</span>'
+    + '<span class="panier-bulle__compte" data-panier-badge hidden>0</span>';
+  doc.body.appendChild(bouton);
+
+  const tiroir = doc.createElement('aside');
+  tiroir.className = 'panier';
+  tiroir.setAttribute('data-panier-tiroir', '');
+  tiroir.hidden = true;
+  tiroir.innerHTML = `
+    <div class="panier__fond" data-panier-fermer></div>
+    <div class="panier__boite" role="dialog" aria-label="Panier">
+      <header class="panier__tete">
+        <strong>Votre panier</strong>
+        <button type="button" data-panier-fermer aria-label="Fermer">&#215;</button>
+      </header>
+      <p class="panier__vide" data-panier-vide>Votre panier est vide.</p>
+      <div data-panier-plein hidden>
+        <ul class="panier__lignes" data-panier-lignes></ul>
+        <div class="panier__total">
+          <span>Sous-total</span><strong data-panier-total>0,00 &#8364;</strong>
+        </div>
+        <p class="panier__note">Frais de port calculés à l'étape suivante.</p>
+        <a class="panier__commander" href="${safeUrl(pagePanier) || '#'}">Commander</a>
+        <button type="button" class="panier__vider" data-panier-vider>Vider le panier</button>
+      </div>
+    </div>`;
+  doc.body.appendChild(tiroir);
+
+  const script = doc.createElement('script');
+  script.setAttribute('data-admin-ui', '');
+  script.textContent = SCRIPT_PANIER;
+  doc.body.appendChild(script);
+  return true;
+}
+
+const STYLE_PANIER = `
+.panier-bulle{position:fixed;right:18px;bottom:18px;z-index:40;display:flex;align-items:center;
+  gap:9px;border:1px solid currentColor;background:#fff;color:inherit;cursor:pointer;
+  font:inherit;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:12px 17px}
+.panier-bulle__compte{font-weight:700;font-variant-numeric:tabular-nums}
+.panier{position:fixed;inset:0;z-index:50}
+.panier[hidden]{display:none}
+/* Ceinture et bretelles : tant que le tiroir n'est pas ouvert, il ne capte
+   aucun clic, même si le script n'a pas encore posé son hidden. */
+.panier:not([data-ouvert]){pointer-events:none}
+.panier[data-ouvert]{pointer-events:auto}
+.panier__fond{position:absolute;inset:0;background:rgba(0,0,0,.34);opacity:0;transition:opacity .25s}
+.panier[data-ouvert] .panier__fond{opacity:1}
+.panier__boite{position:absolute;top:0;right:0;height:100%;width:min(390px,100%);
+  background:#fff;border-left:1px solid rgba(0,0,0,.18);padding:20px;overflow:auto;
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.8,.3,1)}
+.panier[data-ouvert] .panier__boite{transform:none}
+.panier__tete{display:flex;justify-content:space-between;align-items:center;
+  padding-bottom:14px;border-bottom:1px solid rgba(0,0,0,.12)}
+.panier__tete button{background:none;border:0;font:inherit;font-size:22px;cursor:pointer;line-height:1}
+.panier__vide{padding:34px 0;opacity:.6;font-size:14px}
+.panier__lignes{list-style:none;margin:0;padding:0}
+.panier__lignes li{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;
+  padding:14px 0;border-bottom:1px solid rgba(0,0,0,.1)}
+.panier__lignes img,.panier__trou{width:54px;height:54px;object-fit:cover;display:block;
+  background:rgba(0,0,0,.05)}
+.panier__nom{margin:0;font-weight:600;font-size:14px}
+.panier__opt{margin:3px 0 0;font-size:12px;opacity:.6}
+.panier__prix{margin:3px 0 0;font-size:13px}
+.panier__qte{display:flex;align-items:center;gap:9px;font-variant-numeric:tabular-nums}
+.panier__qte button{width:26px;height:26px;border:1px solid rgba(0,0,0,.25);background:#fff;
+  cursor:pointer;font:inherit;line-height:1}
+.panier__total{display:flex;justify-content:space-between;padding:16px 0 6px;font-size:15px}
+.panier__note{margin:0 0 16px;font-size:12.5px;opacity:.6}
+.panier__commander{display:block;text-align:center;text-decoration:none;padding:13px;
+  background:#111;color:#fff;font-weight:600;font-size:14px}
+.panier__vider{display:block;width:100%;margin-top:10px;background:none;border:0;
+  font:inherit;font-size:12.5px;opacity:.6;cursor:pointer;padding:6px}
+@media (prefers-reduced-motion:reduce){.panier__fond,.panier__boite{transition:none}}`;
 
 /** Les catégories présentes dans le catalogue. */
 export function categoriesDe(produits) {

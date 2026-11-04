@@ -56,6 +56,13 @@ const ESSAIS = [
   { nom: 'poids', quoi: 'ce qu’un visiteur télécharge' },
   { nom: 'endpoint', quoi: 'la fonction de publication Vercel' },
   {
+    nom: 'panier',
+    quoi: 'le panier du module, dans un navigateur',
+    empeche: () => (existsSync(a('essais/vercel/boutique/panier.html'))
+      ? null
+      : 'boutique absente : npm run boutique-demo'),
+  },
+  {
     nom: 'snipcart',
     quoi: 'le tunnel de vente tient le contrat de Snipcart',
     empeche: () => (existsSync(a('essais/vercel/boutique/index.html'))
