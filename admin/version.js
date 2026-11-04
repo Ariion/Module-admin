@@ -16,4 +16,4 @@
  * quoi que ce soit si les deux ont divergé.
  * @module version
  */
-export const VERSION = '1.52.0';
+export const VERSION = '1.53.0';

@@ -55,6 +55,7 @@ const ESSAIS = [
   { nom: 'debit', quoi: 'volume et vitesse' },
   { nom: 'poids', quoi: 'ce qu’un visiteur télécharge' },
   { nom: 'endpoint', quoi: 'la fonction de publication Vercel' },
+  { nom: 'paiement', quoi: 'la caisse Stripe et ses prix' },
   {
     nom: 'panier',
     quoi: 'le panier du module, dans un navigateur',

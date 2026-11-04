@@ -17,6 +17,41 @@
 
 
 
+
+## 1.53.0 — La caisse, chez Stripe, dans `api/`
+
+Snipcart est écarté. Le panier est à nous depuis 1.52.0, le paiement va
+directement chez Stripe, et rien ne s'intercale : pas d'abonnement mensuel,
+pas de commission en plus de celle du paiement, aucun script tiers sur le
+site du client. L'argent arrive sur le compte Stripe du vendeur.
+
+`api/paiement.js` suit la convention déjà en place sur l'autre projet : une
+fonction par service, dans `api/`. Pas de SDK — le module n'a aucune
+dépendance et n'en prend pas pour un appel HTTP ; `api/admin.js` parle déjà à
+Firestore et GitHub de la même façon.
+
+### Le point qui commande tout
+
+**Les prix envoyés par le navigateur ne sont jamais crus.** Le panier vit
+dans le `localStorage` de l'acheteur, qui peut y écrire 0,01 € pour une
+planche à 48 €. La fonction relit donc le catalogue publié dans Firestore et
+n'utilise QUE les prix qu'elle y trouve ; la requête ne dit que *quels*
+articles, en quelle quantité, dans quelle déclinaison.
+
+C'était exactement la protection de Snipcart, qui allait lire la page avant
+d'encaisser. Elle est refaite en mieux : lire la base est plus sûr que lire
+une page, et ne dépend pas d'un robot qui exécute ou non le JavaScript.
+
+`npm run essai-paiement` l'éprouve en envoyant un panier falsifié et en
+regardant ce qui part : 4800 centimes, pas 1. Il tient aussi les quantités
+démesurées ou négatives, l'article épuisé, l'article hors catalogue, et
+vérifie qu'aucune clé n'est écrite en dur.
+
+### À renseigner
+
+`STRIPE_SECRET_KEY` dans les variables Vercel. Le reste —
+`FIREBASE_PROJECT_ID`, `SITE_ID` — est déjà là pour la publication.
+
 ## 1.52.0 — Le module a son propre panier
 
 Jusqu'ici tout passait par Snipcart. Sans compte payant chez un tiers, un

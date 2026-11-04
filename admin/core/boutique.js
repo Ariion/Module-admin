@@ -285,7 +285,9 @@ export function poserPanierLocal(doc, { siteId = 'site', pagePanier = '' } = {})
           <span>Sous-total</span><strong data-panier-total>0,00 &#8364;</strong>
         </div>
         <p class="panier__note">Frais de port calculés à l'étape suivante.</p>
-        <a class="panier__commander" href="${safeUrl(pagePanier) || '#'}">Commander</a>
+        <p class="panier__erreur" data-panier-erreur hidden></p>
+        <a class="panier__commander" href="${safeUrl(pagePanier) || '#'}"
+           data-panier-commander="/api/paiement">Commander</a>
         <button type="button" class="panier__vider" data-panier-vider>Vider le panier</button>
       </div>
     </div>`;
@@ -334,6 +336,8 @@ const STYLE_PANIER = `
 .panier__note{margin:0 0 16px;font-size:12.5px;opacity:.6}
 .panier__commander{display:block;text-align:center;text-decoration:none;padding:13px;
   background:#111;color:#fff;font-weight:600;font-size:14px}
+.panier__erreur{margin:0 0 12px;padding:10px 12px;background:#fdecea;color:#7a1f14;
+  font-size:13px;border-left:3px solid #c0392b}
 .panier__vider{display:block;width:100%;margin-top:10px;background:none;border:0;
   font:inherit;font-size:12.5px;opacity:.6;cursor:pointer;padding:6px}
 @media (prefers-reduced-motion:reduce){.panier__fond,.panier__boite{transition:none}}`;

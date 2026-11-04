@@ -1696,8 +1696,16 @@ export function renderWidget(noeud, doc, contexte = {}) {
       note.style.cssText = 'margin:0 0 20px;font-size:.88em;opacity:.6;';
       plein.appendChild(note);
 
+      const erreurPanier = doc.createElement('p');
+      erreurPanier.setAttribute('data-panier-erreur', '');
+      erreurPanier.hidden = true;
+      erreurPanier.style.cssText = 'margin:0 0 14px;padding:11px 13px;background:#fdecea;'
+        + 'color:#7a1f14;font-size:.9em;border-left:3px solid #c0392b;';
+      plein.appendChild(erreurPanier);
+
       const commander = doc.createElement('a');
       commander.setAttribute('href', '#');
+      commander.setAttribute('data-panier-commander', '/api/paiement');
       commander.textContent = remplacerJetons(p.libelle || 'Commander');
       commander.style.cssText = 'display:inline-block;padding:14px 28px;background:currentColor;'
         + 'text-decoration:none;font-weight:600;';

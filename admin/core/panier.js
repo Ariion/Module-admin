@@ -180,9 +180,41 @@ export const SCRIPT_PANIER = `
     for (var t = 0; t < totaux.length; t++) totaux[t].textContent = prix(total(lignes), devise);
   }
 
+  function commander(bouton) {
+    var lignes = lire();
+    if (!lignes.length) return;
+    var ancien = bouton.textContent;
+    bouton.textContent = 'Un instant\u2026';
+    bouton.setAttribute('aria-busy', 'true');
+    /* On n'envoie que des identifiants, des quantités et des options : le
+       serveur relit les prix dans le catalogue. Envoyer les nôtres ne
+       servirait qu'à laisser croire qu'ils comptent. */
+    var charge = [];
+    for (var i = 0; i < lignes.length; i++) {
+      charge.push({ id: lignes[i].id, quantite: lignes[i].quantite, options: lignes[i].options });
+    }
+    fetch(bouton.getAttribute('data-panier-commander') || '/api/paiement', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lignes: charge })
+    }).then(function (r) { return r.json(); }).then(function (json) {
+      if (json && json.url) { location.href = json.url; return; }
+      throw new Error((json && json.error) || 'Paiement indisponible.');
+    }).catch(function (err) {
+      bouton.textContent = ancien;
+      bouton.removeAttribute('aria-busy');
+      var note = document.querySelector('[data-panier-erreur]');
+      /* Un échec de caisse doit se VOIR : sans message, l'acheteur reclique,
+         puis s'en va en pensant que la boutique est cassée. */
+      if (note) { note.textContent = err.message; note.hidden = false; }
+      else alert(err.message);
+    });
+  }
+
   document.addEventListener('click', function (e) {
-    var el = e.target.closest ? e.target.closest('[data-p-id],[data-panier-ouvrir],[data-panier-fermer],[data-plus],[data-moins],[data-panier-vider]') : null;
+    var el = e.target.closest ? e.target.closest('[data-p-id],[data-panier-ouvrir],[data-panier-fermer],[data-plus],[data-moins],[data-panier-vider],[data-panier-commander]') : null;
     if (!el) return;
+    if (el.hasAttribute('data-panier-commander')) { e.preventDefault(); commander(el); return; }
     if (el.hasAttribute('data-p-id')) { e.preventDefault(); ajouter(el); return; }
     if (el.hasAttribute('data-panier-ouvrir')) { e.preventDefault(); ouvrir(); return; }
     if (el.hasAttribute('data-panier-fermer')) { e.preventDefault(); fermer(); return; }
