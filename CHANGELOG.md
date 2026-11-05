@@ -18,6 +18,52 @@
 
 
 
+## 1.54.0 — L'installeur : dix étapes manuelles ramenées à trois
+
+`tools/installer.mjs`. Lancé sur sa propre machine (la connexion Firebase
+ouvre un navigateur), il connecte, choisit ou crée le projet, enregistre
+l'application web et écrit les cinq clés dans le fichier de configuration
+donné, crée la base Firestore, et propose de créer le premier compte — tout
+par la ligne de commande officielle de Firebase, rien de plus.
+
+**Une clé de compte de service, facultative**, pousse l'automatisation plus
+loin : publier les deux fichiers de règles et activer la connexion par mot
+de passe. Sans elle, le script imprime le texte exact à coller, au moment où
+il en a besoin — jamais après coup dans un message d'erreur.
+
+### Le défaut qu'il a fallu chercher pour le trouver
+
+Créer un compte Firebase Auth ne donne PAS accès au module : les règles
+exigent en plus un document `sites/{siteId}/members/{uid}` avec un champ
+`role`. Ce document n'était créé nulle part dans le parcours principal du
+guide d'installation — seulement cité dans son tableau de pannes, comme
+réponse à « Ce compte n'a pas accès à ce site ». Quelqu'un qui suivait le
+guide à la lettre tombait donc sur cette erreur à coup sûr, en dernière
+étape, sans que rien ne l'ait prévenu. L'installeur pose ce document.
+
+### Vérifié sans toucher à un vrai projet Google
+
+Aucun essai ne peut faire jouer une vraie installation ici : il faudrait un
+compte Google et un navigateur pour la connexion. `npm run essai-installeur`
+vérifie ce qui se vérifie sans ça — la forme de chaque requête REST, et la
+signature RS256 du compte de service, dont une charge utile falsifiée casse
+bien la vérification avec la clé publique correspondante. Le reste engage sa
+responsabilité la première fois qu'il tourne pour de vrai ; le script
+imprime la marche à suivre à la main partout où un appel échoue, plutôt que
+de s'arrêter.
+
+### Deux manques trouvés en préparant la livraison
+
+`api/paiement.js` n'était jamais parti dans le paquet vendu :
+`tools/livraison.mjs` copiait `api/admin.js` par son nom, et personne n'avait
+mis à jour cette ligne quand la caisse Stripe est arrivée. La caisse livrée
+aurait manqué sans qu'aucun essai ne le voie — rien n'examine ce que la
+livraison produit. Le dossier `api/` se copie désormais en entier.
+
+Et `tools/installer.mjs` est à présent du paquet vendu, dans un dossier
+`tools/` placé comme dans ce dépôt — c'est ce qui lui permet de retrouver
+`firebase/firestore.rules` qu'il livre à son tour, où qu'il tourne.
+
 ## 1.53.0 — La caisse, chez Stripe, dans `api/`
 
 Snipcart est écarté. Le panier est à nous depuis 1.52.0, le paiement va

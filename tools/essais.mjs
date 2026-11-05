@@ -73,6 +73,7 @@ const ESSAIS = [
   { nom: 'audit', quoi: 'audit de page' },
   { nom: 'bibliotheque', quoi: 'modèles de pages' },
   { nom: 'illustrations', quoi: 'les 36 scènes dessinées' },
+  { nom: 'installeur', quoi: 'les requêtes de l’installeur, et sa signature' },
   {
     nom: 'regles',
     quoi: 'règles Firestore — la frontière de sécurité',

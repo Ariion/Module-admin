@@ -61,6 +61,35 @@ C'est tout. Le site fonctionne déjà exactement comme avant.
 Une seule fois si vous mutualisez, une fois par client si vous préférez
 isoler. Les deux fonctionnent avec le même code — voir la fin de ce document.
 
+### Le chemin court : `tools/installer.mjs`
+
+Ce qui suit (B.1 à B.5) est aussi ce qu'un script fait à votre place :
+
+```
+node tools/installer.mjs chemin/vers/admin-config.js
+```
+
+(dans ce dépôt de développement, `npm run installer -- chemin/vers/admin-config.js`
+revient au même). Le script ne dépend que de Node — aucune installation
+préalable, `npx` récupère `firebase-tools` tout seul.
+
+À lancer **sur votre machine**, pas dans une session cloud — la connexion à
+Firebase ouvre un navigateur. Il demande le projet (ou en crée un), écrit les
+cinq clés dans le fichier donné, crée la base Firestore, propose de créer le
+premier compte, et — si vous lui donnez une clé de compte de service
+(détaillée au moment où il la demande) — publie les deux fichiers de règles
+et active la connexion par mot de passe tout seul.
+
+Ce qu'il ne fait PAS, dans tous les cas : B.4.b (votre propre accès
+`superadmins`, facultatif et volontairement hors de portée d'un script —
+c'est la seule porte que les règles n'ouvrent à personne depuis le web),
+B.6 (l'index de l'historique, que Firestore propose de lui-même au premier
+besoin), et A.3 (les deux balises `<script>`, qui prennent moins de temps à
+coller qu'à expliquer).
+
+Sans la clé de compte de service, il imprime exactement le texte à coller
+pour B.5 — les étapes suivantes restent la référence complète.
+
 ### 1. Le projet
 
 [console.firebase.google.com](https://console.firebase.google.com) →

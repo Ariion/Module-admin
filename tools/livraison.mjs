@@ -46,9 +46,19 @@ cpSync(resolve(racine, 'tools/admin-endpoint.php'), resolve(cible, 'admin-endpoi
 
 // Même contrat, pour un hébergement sans PHP : le disque y étant en lecture
 // seule, « écrire un fichier » veut dire committer dans le dépôt. À déposer
-// en `api/admin-endpoint.js` sur Vercel, Netlify ou Cloudflare Pages.
-mkdirSync(resolve(cible, 'api'), { recursive: true });
-cpSync(resolve(racine, 'api/admin.js'), resolve(cible, 'api/admin.js'));
+// tel quel sur Vercel, Netlify ou Cloudflare Pages.
+//
+// Le dossier entier, pas un fichier nommé : `api/paiement.js` est arrivé
+// après `api/admin.js`, et une copie fichier par fichier l'aurait laissé de
+// côté en silence — la caisse aurait manqué à la livraison sans qu'aucun
+// essai ne le voie, puisque aucun n'examine ce que `livraison.mjs` produit.
+cpSync(resolve(racine, 'api'), resolve(cible, 'api'), { recursive: true });
+
+// L'installeur : ce que B.1 à B.5 de docs/INSTALLATION.md font à la main,
+// un script les fait pour qui préfère. Il ne dépend que de Node, et suppose
+// de vivre dans un dossier `tools/` à côté de `firebase/` — comme ici.
+mkdirSync(resolve(cible, 'tools'), { recursive: true });
+cpSync(resolve(racine, 'tools/installer.mjs'), resolve(cible, 'tools/installer.mjs'));
 
 // --- Dossier des médias, avec un index vide pour éviter le listing ---------
 mkdirSync(resolve(cible, 'medias'), { recursive: true });
