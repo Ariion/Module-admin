@@ -18,6 +18,28 @@
 
 
 
+## 1.57.0 — L'assistant rapide, couvert à son tour
+
+Après le questionnaire de brief (1.56.0), l'autre moitié de l'assistant de
+création : `composerPropositions` (`core/page-templates.js`), qui transforme
+les intentions cochées dans l'assistant rapide en propositions de page.
+Aucun essai ne la couvrait non plus.
+
+`npm run essai-assistant` vérifie une intention seule, plusieurs sur une
+même page (assemblage puis page complète de repli), plusieurs pages,
+les cas limites (rien coché, une intention inconnue), et une invariante
+silencieuse qu'aucune erreur ne signalerait si elle se cassait : pour
+chaque modèle, le nombre de sections « résumées » dans un assemblage ne
+doit jamais dépasser ni ce que le modèle construit réellement, ni le
+nombre de vignettes d'aperçu disponibles — sinon un assemblage de
+plusieurs intentions perdrait des vignettes en silence.
+
+En l'écrivant, un piège évité plutôt qu'un défaut trouvé : chaque widget
+reçoit une clé aléatoire à sa construction (`uid()`), ce qui aurait rendu
+le test de stabilité (« deux appels identiques rendent la même chose »)
+rouge à chaque exécution si la comparaison n'avait pas ignoré cette clé —
+comme le fait déjà `essai-bibliotheque` pour la même raison.
+
 ## 1.56.0 — L'assistant de création, enfin couvert par un essai
 
 Le module avait deux façons de démarrer une page vide : l'assistant rapide

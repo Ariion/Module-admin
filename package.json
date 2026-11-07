@@ -1,6 +1,6 @@
 {
   "name": "atelier",
-  "version": "1.56.0",
+  "version": "1.57.0",
   "description": "Interface d'édition visuelle pour sites statiques codés à la main. Firebase, aucun serveur, aucun build.",
   "type": "module",
   "private": true,
@@ -34,6 +34,7 @@
     "essai-audit": "node tools/essai-audit.mjs",
     "essai-bibliotheque": "node tools/essai-bibliotheque.mjs",
     "essai-redacteur": "node tools/essai-redacteur.mjs",
+    "essai-assistant": "node tools/essai-assistant.mjs",
     "paquet": "node tools/paquet.mjs",
     "livraison": "node tools/livraison.mjs",
     "essai-illustrations": "node tools/essai-illustrations.mjs",

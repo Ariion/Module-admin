@@ -73,6 +73,7 @@ const ESSAIS = [
   { nom: 'audit', quoi: 'audit de page' },
   { nom: 'bibliotheque', quoi: 'modèles de pages' },
   { nom: 'redacteur', quoi: 'le brief et le rédacteur — l’assistant de création' },
+  { nom: 'assistant', quoi: 'l’assistant rapide — intentions cochées, pages proposées' },
   { nom: 'illustrations', quoi: 'les 36 scènes dessinées' },
   { nom: 'installeur', quoi: 'les requêtes de l’installeur, et sa signature' },
   {
