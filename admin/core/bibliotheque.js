@@ -139,31 +139,6 @@ function marqueDuModele(noeud) {
   return !!noeud.props.exemple;
 }
 
-/**
- * Marque comme exemples le premier titre et la première étiquette du modèle.
- *
- * Les textes des modèles sont déjà marqués ; leurs titres ne le sont pas,
- * alors qu'ils en sont tout autant — « Le titre de votre site » n'attend que
- * d'être remplacé. Les marquer ici plutôt que d'accepter n'importe quel titre
- * non vide ferme un piège : sans cela, `poserLesMots` appelée sur une page
- * déjà écrite remplaçait le titre du client par une enseigne inventée.
- * Éprouvé — c'est l'essai qui l'a trouvé, pas la relecture.
- */
-function marquerExemples(sections) {
-  const reste = { heading: true, etiquette: true };
-  const parcourir = (noeuds) => {
-    for (const noeud of noeuds || []) {
-      if (reste[noeud.type] && noeud.props) {
-        noeud.props.exemple = true;
-        reste[noeud.type] = false;
-      }
-      if (noeud.children) parcourir(noeud.children);
-    }
-  };
-  parcourir(sections);
-  return sections;
-}
-
 const ECHAPPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
 const echapper = (texte) => String(texte).replace(/[&<>]/g, (c) => ECHAPPES[c]);
 
@@ -236,7 +211,7 @@ export function pageDuModele(modeleId, { metier = 'autre', ville, theme = null }
   // `clone` plutôt que l'arbre rendu par `build()` : la galerie en dessine
   // douze à la suite, et deux vignettes qui partageraient un nœud se
   // peindraient l'une sur l'autre.
-  const sections = marquerExemples(clone(modele.build()));
+  const sections = clone(modele.build());
   poserLesMots(sections, briefDuMetier(metier, ville));
   poserLesVisuels(sections, theme, metier);
   return sections;

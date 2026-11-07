@@ -18,6 +18,43 @@
 
 
 
+## 1.56.0 — L'assistant de création, enfin couvert par un essai
+
+Le module avait deux façons de démarrer une page vide : l'assistant rapide
+(deux questions, des modèles génériques) et le questionnaire de brief
+(métier, ville, prestations, atouts), qui écrit une page entière via
+`redigerPage`. C'est ce second parcours qui porte la vraie promesse du
+produit — « vous ne savez pas quoi écrire, le module écrit à votre place » —
+et il n'avait jusqu'ici aucun essai dédié : une régression sur le rédacteur,
+le brief ou l'assainissement du texte saisi serait passée inaperçue jusqu'à
+atterrir chez un client.
+
+`npm run essai-redacteur` couvre maintenant les douze métiers (page
+complète, ambiance suggérée cohérente), vérifie que rien de saisi par le
+client n'est jamais écrasé — ni son titre, ni sa phrase d'accroche, même
+quand l'IA propose un texte de remplacement — qu'aucun témoignage n'est
+jamais inventé (le bloc reste une consigne à remplir, jamais un nom ou une
+ville imaginés), et surtout que le texte saisi, rendu dans un vrai
+navigateur par le même chemin que le site publié, ne peut jamais devenir du
+HTML actif.
+
+**Trouvé en écrivant cet essai** : quand aucune banque d'images n'est
+configurée, le repli vers les scènes dessinées (`chercherPhotos`, dans
+`admin/ui/editor.js`) ignorait le métier du brief et montrait toujours les
+scènes génériques — alors que `illustrations()` sait depuis longtemps
+dessiner une scène par métier, et que c'est exactement ce qui sert déjà la
+vitrine des modèles. Un client qui remplissait le questionnaire avec son
+vrai métier recevait donc des visuels neutres au lieu d'illustrations de son
+secteur, sans qu'aucune erreur ne le signale.
+
+Et un nettoyage, trouvé en vérifiant plutôt qu'en relisant :
+`bibliotheque.js` marquait « à la main » le premier titre et la première
+étiquette de chaque modèle comme texte d'exemple — une protection devenue
+inutile depuis que `w()` (`core/templates.js`) le fait déjà pour chaque
+titre et étiquette du modèle, pas seulement le premier. Vérifié sur un
+modèle réel avant de l'enlever : tous les titres portaient déjà `exemple:
+true` sans cette fonction.
+
 ## 1.55.0 — Le produit s'appelle Atelier
 
 Calqo est écarté : une société britannique de logiciel porte ce nom presque

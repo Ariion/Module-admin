@@ -944,7 +944,7 @@ export async function startEditor(runtime) {
     notify(t('briefEnCours'));
 
     const plan = redigerPage(brief);
-    const images = await chercherPhotos(plan.requetes, plan.besoinImages);
+    const images = await chercherPhotos(plan.requetes, plan.besoinImages, brief.metier);
 
     let textes = null;
     if (ia) {
@@ -972,7 +972,7 @@ export async function startEditor(runtime) {
    * rien mettre laisserait des cadres vides, et c'est précisément ce qui
    * décourage quelqu'un qui découvre.
    */
-  async function chercherPhotos(requetes, combien) {
+  async function chercherPhotos(requetes, combien, metierId) {
     const trouvees = [];
     if (media.banque?.disponible) {
       for (const requete of requetes) {
@@ -992,7 +992,7 @@ export async function startEditor(runtime) {
       library?.charger();
     }
     if (trouvees.length < combien) {
-      const dessins = illustrations(model.reglages?.theme);
+      const dessins = illustrations(model.reglages?.theme, metierId);
       for (let i = trouvees.length; i < combien; i += 1) {
         trouvees.push(dessins[i % dessins.length].url);
       }
