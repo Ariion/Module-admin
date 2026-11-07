@@ -1,4 +1,4 @@
-# Calqo
+# Atelier
 
 Une interface d'édition visuelle pour les sites codés à la main. Le client
 modifie ses textes, ses images et ses liens lui-même ; le développeur garde

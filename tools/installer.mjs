@@ -210,7 +210,7 @@ async function main() {
   };
 
   console.log(`
-  Calqo — installeur
+  Atelier — installeur
   ───────────────────
   Dix étapes manuelles, ramenées à trois. Ctrl+C à tout moment : rien n'est
   perdu, relancez pour reprendre où vous en étiez.

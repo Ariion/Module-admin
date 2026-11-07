@@ -1,4 +1,4 @@
-# Calqo
+# Atelier
 
 Interface d'édition visuelle pour sites statiques **codés à la main**.
 

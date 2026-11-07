@@ -18,6 +18,39 @@
 
 
 
+## 1.55.0 — Le produit s'appelle Atelier
+
+Calqo est écarté : une société britannique de logiciel porte ce nom presque
+exact (`CALQO LIMITED`, calqo.io), domaines `.com`/`.app`/`.io` compris —
+découvert après coup, en vérifiant un domaine de repli. Continuer aurait payé
+un référencement contre une fintech installée, pour toujours.
+
+Le produit prend place sous le studio plutôt que de chercher un nom mondial
+de plus : **Atelier**, par **AARDESIGN**. Ça ferme d'un coup tout ce qui a
+bloqué la recherche précédente — aucune marque à déposer, aucun domaine à
+acheter, aucun risque d'homonyme : le sous-domaine `atelier.aardesign.fr`
+appartient déjà à son propriétaire.
+
+Le choix n'est pas qu'un nom. AARDESIGN est un studio de création d'identité
+visuelle ; Atelier est un outil, pas un substitut à ce travail — les deux
+formules où AARDESIGN pose le module ou construit le site restent des
+prestations du studio, et la bibliothèque d'ambiances reste volontairement
+ce qu'elle a toujours été : appliquer une direction déjà choisie, jamais en
+inventer une. C'est cette frontière qui évite qu'Atelier ne devienne son
+propre concurrent.
+
+Le logotype porte le même dispositif qu'avant — une lettre en couleur signal
+— appliqué à la première lettre d'Atelier plutôt qu'au Q de Calqo, avec la
+mention « AARDESIGN » posée juste derrière un filet : secondaire, mais
+visible. Renommé partout où la marque apparaissait : README, licence,
+guide d'installation, les quatre pages de la vitrine, l'installeur. Le
+journal garde les anciennes entrées sous leur nom d'alors — elles décrivent
+ce qui s'appelait Calqo au moment où ça s'appelait ainsi.
+
+Trouvé en vérifiant la page rendue plutôt que le texte source : le nombre de
+blocs affiché sur la page Tarifs (34) n'avait pas suivi l'ajout du bloc
+panier en 1.52.0, qui l'avait porté à 35.
+
 ## 1.54.0 — L'installeur : dix étapes manuelles ramenées à trois
 
 `tools/installer.mjs`. Lancé sur sa propre machine (la connexion Firebase
