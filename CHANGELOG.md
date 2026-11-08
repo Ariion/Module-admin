@@ -18,6 +18,25 @@
 
 
 
+## 1.59.0 — La page Modèles ne se dédouble plus en capture pleine page
+
+Signalé par une capture d'écran : la barre, l'accroche et une partie du
+contenu de `essais/vercel/modeles.html` apparaissaient une seconde fois, au
+milieu de la page. Pas un bug d'affichage normal — en défilement réel, rien
+ne clochait, vérifié directement (position de la barre contrôlée à chaque
+palier de défilement). Le défaut ne se montrait que dans une capture
+**pleine page** : deux éléments `position:sticky` imbriqués — la barre du
+haut, et la liste des modèles juste en dessous — et le moteur de rendu s'y
+perdait en figeant la mise en page par morceaux pour la capturer, dupliquant
+la barre et l'amorce de page au passage.
+
+Repéré par un aller-retour entre capture pleine page et défilement réel sous
+Playwright : la seconde capture, sans la liste des modèles en
+`position:sticky`, ne montrait plus rien d'anormal. La liste perd son
+maintien en haut d'écran — un confort mineur — et gagne de ne plus jamais se
+dédoubler sur la page qui sert justement à montrer le module : une capture
+d'écran de sa propre vitrine, personne ne pouvait prévoir à quel point.
+
 ## 1.58.0 — Le mode démo n'affiche plus une connexion qu'il ne vérifie pas
 
 Signalé par une capture d'écran : ouvrir le site de démonstration (ou le

@@ -42,10 +42,18 @@
   .scene{display:grid;grid-template-columns:200px minmax(0,1fr);
     border-top:1px solid var(--trait);border-bottom:1px solid var(--trait)}
   @media (max-width:900px){.scene{grid-template-columns:1fr}}
-  .modeles{display:flex;flex-direction:column;border-right:1px solid var(--trait-fin);
-    position:sticky;top:58px;align-self:start}
+  /* `position:sticky` ici, sous la barre elle-même sticky, produisait une
+     vraie casse : une capture pleine page (navigateur, outil de capture, un
+     simple export) montrait la barre et l'amorce de page une seconde fois,
+     au milieu de l'écran — deux ancrages sticky imbriqués, et le moteur de
+     rendu s'y perd en figeant la mise en page par morceaux. Vérifié : en
+     défilement normal, rien ne clochait ; seule une capture pleine page
+     révélait le défaut — mais la vitrine du module est justement le genre
+     de page qu'on capture pour la montrer. Liste statique : elle défile
+     avec le reste, et c'est tout aussi lisible sur une page aussi courte. */
+  .modeles{display:flex;flex-direction:column;border-right:1px solid var(--trait-fin)}
   @media (max-width:900px){
-    .modeles{position:static;flex-direction:row;overflow-x:auto;border-right:0;
+    .modeles{flex-direction:row;overflow-x:auto;border-right:0;
       border-bottom:1px solid var(--trait-fin)}
   }
   .modele{font:inherit;font-size:13.6px;text-align:left;cursor:pointer;white-space:nowrap;
