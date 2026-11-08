@@ -58,6 +58,22 @@
   .formule li.non{color:var(--gris)}
   .formule li.non::before{content:"–";color:var(--trait-fin)}
   .formule .bouton{margin-top:26px;width:100%;justify-content:space-between}
+  .formule__acheter{margin-top:10px;width:100%;justify-content:center;cursor:pointer}
+  .formule__acheter::after{content:none}
+  .formule__acheter:disabled{opacity:.4;cursor:not-allowed}
+  /* `.bouton` fixe `display:inline-flex` avec la même spécificité que
+     l'attribut `[hidden]` : en CSS, l'auteur l'emporte toujours sur la
+     feuille par défaut du navigateur, donc `[hidden]` seul ne suffit pas à
+     cacher un bouton qui porte aussi `.bouton` — trouvé à l'essai, pas à la
+     relecture : le bouton restait visible, grisé, pour une formule sans prix. */
+  .formule__acheter[hidden]{display:none}
+  .formule__erreur{margin-top:10px;font-size:12.5px;color:var(--signal)}
+
+  /* ---- le consentement : une case, pas une ligne qu'on devine ---- */
+  .consentement{border-top:1px solid var(--trait);padding:20px 0;
+    display:flex;gap:12px;align-items:flex-start;font-size:13.6px;color:var(--gris)}
+  .consentement input{margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:var(--signal)}
+  .consentement a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 
   /* ---- la bande transversale ---- */
   .partout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));
@@ -114,11 +130,11 @@
   </header>
 
   <section class="formules">
-    <article class="formule">
+    <article class="formule" data-formule="module">
       <p class="formule__num"><span>01</span><span>Vous l’installez</span></p>
       <h3>Le module</h3>
       <p class="formule__pour">Pour qui sait déposer des fichiers et suivre un guide.</p>
-      <p class="prix">— €<small>Paiement unique</small></p>
+      <p class="prix" data-prix>— €<small>Paiement unique</small></p>
       <ul>
         <li>Le module complet, 35 blocs</li>
         <li>11 modèles de page, 12 métiers</li>
@@ -129,13 +145,15 @@
         <li class="non">Création du site</li>
       </ul>
       <a class="bouton" href="/distribution/installation.html">Voir le guide</a>
+      <button type="button" class="bouton bouton--plein formule__acheter" data-acheter disabled hidden>Acheter</button>
+      <p class="formule__erreur" data-erreur hidden></p>
     </article>
 
-    <article class="formule formule--phare">
+    <article class="formule formule--phare" data-formule="pose">
       <p class="formule__num"><span>02</span><span>La plus demandée</span></p>
       <h3>Le module, posé</h3>
       <p class="formule__pour">Vous avez déjà un site. On y branche l’administration.</p>
-      <p class="prix">— €<small>Paiement unique</small></p>
+      <p class="prix" data-prix>— €<small>Paiement unique</small></p>
       <ul>
         <li>Tout ce qui précède</li>
         <li>Projet et base créés pour vous</li>
@@ -145,14 +163,16 @@
         <li>Une prise en main d’une heure</li>
         <li class="non">Création du site</li>
       </ul>
-      <a class="bouton bouton--plein" href="/modeles">Voir ce que ça donne</a>
+      <a class="bouton" href="/modeles">Voir ce que ça donne</a>
+      <button type="button" class="bouton bouton--plein formule__acheter" data-acheter disabled hidden>Acheter</button>
+      <p class="formule__erreur" data-erreur hidden></p>
     </article>
 
-    <article class="formule">
+    <article class="formule" data-formule="complet">
       <p class="formule__num"><span>03</span><span>Clé en main</span></p>
       <h3>Le site complet</h3>
       <p class="formule__pour">Vous n’avez rien. On fait le site, vous l’administrez.</p>
-      <p class="prix">— €<small>Paiement unique</small></p>
+      <p class="prix" data-prix>— €<small>Paiement unique</small></p>
       <ul>
         <li>Tout ce qui précède</li>
         <li>Le site dessiné pour votre métier</li>
@@ -162,8 +182,28 @@
         <li>Mise en ligne</li>
       </ul>
       <a class="bouton" href="/modeles">Choisir un modèle</a>
+      <button type="button" class="bouton bouton--plein formule__acheter" data-acheter disabled hidden>Acheter</button>
+      <p class="formule__erreur" data-erreur hidden></p>
     </article>
   </section>
+
+  <!--
+    La case est hors des trois colonnes plutôt que répétée trois fois : c'est
+    une seule autorisation, donnée une fois, qui vaut pour l'achat qu'on va
+    faire — pas une formalité qu'on recoche à chaque formule.
+    Non cochée par défaut : un consentement qu'on doit donner soi-même,
+    jamais un consentement qu'il faudrait refuser.
+  -->
+  <!-- À REMPLIR : aucune adresse de contact Aardesign n'existe encore ailleurs
+       dans ce dépôt. « contact@exemple.fr » est un repère, pas une vraie
+       adresse — à remplacer avant mise en ligne, comme pour admin-config.js. -->
+  <label class="consentement">
+    <input type="checkbox" id="consentement" data-consentement>
+    <span>J’autorise AARDESIGN à présenter mon site et mon logo dans son portfolio et ses
+      supports de communication (site, réseaux, études de cas), avec mention du studio comme
+      réalisateur. Autorisation donnée au moment de l’achat, retirable à tout moment par
+      simple message à <a href="mailto:contact@exemple.fr">contact@exemple.fr</a>.</span>
+  </label>
 
   <section class="partout">
     <div><b>Jamais</b>d’abonnement, quelle que soit la formule</div>
@@ -268,5 +308,72 @@
 </div>
 
 <script type="module" src="/commun.js"></script>
+<script type="module">
+  const cartes = [...document.querySelectorAll('.formule[data-formule]')];
+  const consentement = document.querySelector('[data-consentement]');
+
+  /** Un seul interrupteur : tant que rien n'est coché, aucun achat n'est possible. */
+  function majBoutons() {
+    for (const carte of cartes) {
+      const bouton = carte.querySelector('[data-acheter]');
+      if (!bouton.dataset.prixConnu) continue; // prix pas encore chargé, ou absent
+      bouton.disabled = !consentement.checked;
+    }
+  }
+  consentement.addEventListener('change', majBoutons);
+
+  // Le prix affiché vient du MÊME endroit que le prix facturé : jamais deux
+  // sources qui pourraient diverger. Tant qu'une formule n'a pas de prix
+  // configuré, son bouton reste absent plutôt que de proposer un achat à 0 €.
+  fetch('/api/achat-atelier').then((r) => r.json()).then((prix) => {
+    for (const carte of cartes) {
+      const id = carte.dataset.formule;
+      const euros = prix[id];
+      const affichage = carte.querySelector('[data-prix]');
+      const bouton = carte.querySelector('[data-acheter]');
+      if (euros) {
+        affichage.innerHTML = euros.toLocaleString('fr-FR') + ' €<small>Paiement unique</small>';
+        bouton.hidden = false;
+        bouton.dataset.prixConnu = '1';
+      } else {
+        bouton.hidden = true;
+      }
+    }
+    majBoutons();
+  }).catch(() => { /* API indisponible en local : les boutons restent masqués */ });
+
+  for (const carte of cartes) {
+    const bouton = carte.querySelector('[data-acheter]');
+    const erreur = carte.querySelector('[data-erreur]');
+    bouton.addEventListener('click', async () => {
+      erreur.hidden = true;
+      bouton.disabled = true;
+      bouton.textContent = 'Un instant…';
+      try {
+        const reponse = await fetch('/api/achat-atelier', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ formule: carte.dataset.formule, consentement: consentement.checked }),
+        });
+        const json = await reponse.json().catch(() => null);
+        if (!reponse.ok || !json?.url) throw new Error(json?.error || 'Le paiement a échoué.');
+        location.href = json.url;
+      } catch (e) {
+        erreur.textContent = e.message;
+        erreur.hidden = false;
+        bouton.disabled = !consentement.checked;
+        bouton.textContent = 'Acheter';
+      }
+    });
+  }
+
+  if (new URLSearchParams(location.search).get('paiement') === 'annule') {
+    const note = document.createElement('p');
+    note.className = 'formule__erreur';
+    note.style.cssText = 'max-width:640px;margin:0 0 -10px;padding:14px 0';
+    note.textContent = 'Paiement annulé — rien n’a été débité, vous pouvez réessayer quand vous le souhaitez.';
+    document.querySelector('.formules').before(note);
+  }
+</script>
 </body>
 </html>

@@ -34,6 +34,10 @@
       "destination": "/essais/vercel/vierge.html"
     },
     {
+      "source": "/merci",
+      "destination": "/essais/vercel/merci.html"
+    },
+    {
       "source": "/distribution/admin/:chemin*",
       "destination": "/admin/:chemin*"
     }

@@ -54,6 +54,12 @@ cpSync(resolve(racine, 'tools/admin-endpoint.php'), resolve(cible, 'admin-endpoi
 // essai ne le voie, puisque aucun n'examine ce que `livraison.mjs` produit.
 cpSync(resolve(racine, 'api'), resolve(cible, 'api'), { recursive: true });
 
+// `achat-atelier.js` encaisse pour AARDESIGN quand quelqu'un achète Atelier
+// lui-même — un outil de vente du studio, sans rapport avec le site de
+// l'acquéreur, qui n'a ni les variables d'environnement pour le faire tourner
+// ni aucune raison de s'interroger sur sa présence dans ses fichiers.
+rmSync(resolve(cible, 'api/achat-atelier.js'), { force: true });
+
 // L'installeur : ce que B.1 à B.5 de docs/INSTALLATION.md font à la main,
 // un script les fait pour qui préfère. Il ne dépend que de Node, et suppose
 // de vivre dans un dossier `tools/` à côté de `firebase/` — comme ici.

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Merci · Atelier</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/commun.css">
+<style>
+  .accueil{padding:clamp(48px,8vw,96px) 0;max-width:640px}
+  .accueil .label{margin-bottom:18px}
+  .accueil p{margin-top:16px;color:var(--gris);font-size:1.05rem;line-height:1.55}
+  .accueil .bouton{margin-top:30px}
+  .num{font-family:var(--mono);font-size:12px;color:var(--gris);margin-top:28px}
+</style>
+</head>
+<body>
+<div class="enveloppe">
+  <section class="accueil">
+    <p class="label label--signal">Commande enregistrée</p>
+    <h1 id="titre">Merci.</h1>
+    <p id="texte">Votre paiement a bien été transmis.</p>
+    <p class="num" id="numero" hidden></p>
+    <a class="bouton bouton--plein" href="/">Retour à l’accueil</a>
+  </section>
+</div>
+<script type="module" src="/commun.js"></script>
+<script type="module">
+  const params = new URLSearchParams(location.search);
+  const formule = params.get('formule');
+  const session = params.get('session_id');
+
+  const TEXTES = {
+    module: {
+      titre: 'Le module est à vous.',
+      texte: 'Tout est dans le dépôt public, avec son guide d’installation complet et '
+        + 'l’installeur en ligne de commande qui fait l’essentiel du travail à votre place. '
+        + 'Un reçu vous a été envoyé par e-mail depuis Stripe.',
+      lien: '/distribution/installation.html', libelle: 'Ouvrir le guide d’installation',
+    },
+    pose: {
+      titre: 'C’est noté.',
+      texte: 'Nous revenons vers vous sous 48 h ouvrées pour organiser la pose : le projet, '
+        + 'la base et les comptes créés pour vous, le module branché sur vos pages. Un reçu '
+        + 'vous a été envoyé par e-mail depuis Stripe.',
+      lien: '/', libelle: 'Retour à l’accueil',
+    },
+    complet: {
+      titre: 'C’est noté.',
+      texte: 'Nous revenons vers vous sous 48 h ouvrées pour démarrer le site : votre métier, '
+        + 'vos textes, vos photos. Un reçu vous a été envoyé par e-mail depuis Stripe.',
+      lien: '/', libelle: 'Retour à l’accueil',
+    },
+  };
+
+  const t = TEXTES[formule];
+  if (t) {
+    document.getElementById('titre').textContent = t.titre;
+    document.getElementById('texte').textContent = t.texte;
+    const bouton = document.querySelector('.accueil .bouton');
+    bouton.setAttribute('href', t.lien);
+    bouton.textContent = t.libelle;
+  }
+  if (session) {
+    const num = document.getElementById('numero');
+    num.hidden = false;
+    num.textContent = 'Référence : ' + session.slice(0, 24);
+  }
+</script>
+</body>
+</html>

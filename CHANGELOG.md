@@ -18,6 +18,55 @@
 
 
 
+## 1.60.0 — Un vrai parcours d'achat pour Atelier, avec consentement explicite
+
+La page Tarifs affichait trois formules à « — € » et des boutons qui ne
+menaient qu'à « en savoir plus » — rien ne permettait réellement d'acheter
+Atelier. `api/achat-atelier.js` (nouveau) crée une session Stripe pour l'une
+des trois formules, avec la même discipline que `api/paiement.js` : le prix
+ne vient jamais du navigateur, il vient d'une variable d'environnement lue
+côté serveur (`PRIX_MODULE`, `PRIX_POSE`, `PRIX_COMPLET`), et la MÊME
+fonction sert ce prix à l'affichage (`GET`) et à la facturation (`POST`) —
+deux sources qui pourraient diverger, ça n'existe donc pas.
+
+Tant qu'un prix n'est pas configuré, son bouton **Acheter** n'apparaît pas :
+« — € » n'était pas qu'un texte, c'est maintenant aussi ce que le serveur
+vérifie avant d'accepter une vente.
+
+**Le consentement demandé :** à l'achat, une case — non cochée par défaut —
+autorise AARDESIGN à présenter le site et le logo de l'acquéreur dans son
+portfolio et ses supports de communication, avec mention du studio comme
+réalisateur, révocable à tout moment. Vérifiée aux DEUX bouts : le bouton
+Acheter reste désactivé tant qu'elle n'est pas cochée, et le serveur refuse
+la vente si elle ne l'accompagne pas — une case cochée dans le navigateur ne
+prouve rien si personne ne la revérifie à la caisse. La trace du
+consentement (formule, horodatage) est posée dans les métadonnées de la
+session Stripe elle-même, plutôt que dans un enregistrement à part qui
+pourrait se perdre.
+
+Une adresse de contact reste À REMPLIR dans `essais/vercel/tarifs.html` —
+aucune n'existe encore ailleurs dans ce dépôt, et il valait mieux un repère
+visible qu'une adresse inventée dans un texte de consentement.
+
+**Trouvé en vérifiant dans un vrai navigateur** : `.bouton` fixe
+`display:inline-flex` avec la même spécificité que l'attribut `[hidden]` —
+en CSS, l'auteur l'emporte toujours sur la feuille par défaut du navigateur,
+donc `[hidden]` seul ne suffisait pas à cacher le bouton Acheter d'une
+formule sans prix : il restait visible, grisé. Une règle `[hidden]` plus
+spécifique corrige ça — un défaut qu'une simple relecture du code n'aurait
+pas montré.
+
+`npm run essai-achat-atelier` (nouveau) couvre les deux garanties : le prix
+affiché est bien celui facturé, et aucune session n'est créée sans
+consentement — y compris face à une requête fabriquée à la main, sans
+navigateur ni JavaScript, qui enverrait `consentement: "true"` (une chaîne)
+plutôt que `true` (un booléen).
+
+`achat-atelier.js` est un outil de vente d'AARDESIGN, pas quelque chose
+qu'un acquéreur doit retrouver dans ses propres fichiers : `tools/livraison.mjs`
+l'exclut désormais explicitement du paquet livré, après avoir copié tout le
+reste de `api/`.
+
 ## 1.59.0 — La page Modèles ne se dédouble plus en capture pleine page
 
 Signalé par une capture d'écran : la barre, l'accroche et une partie du
