@@ -1763,6 +1763,10 @@ export async function startEditor(runtime) {
       state.user = user;
       state.access = access;
       if (!user) {
+        // Même raison qu'au back-office : le back-end de démonstration ne
+        // vérifie rien, donc la vraie fenêtre de connexion — faite pour un
+        // compte Firebase réel — n'a rien à demander ici.
+        if (backend.demo) { await backend.signIn(); return; }
         runtime.markEditing(false);
         openLogin({ root, t, backend });
         return;

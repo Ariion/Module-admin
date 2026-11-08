@@ -89,7 +89,15 @@ async function demarrer() {
   // le site est accessible sans mot de passe.
   backend.onUser((user, access) => {
     clear(hote);
-    if (!user) { ecranConnexion(); return; }
+    if (!user) {
+      // Le back-end de démonstration accepte n'importe quelles informations
+      // — il n'y a littéralement aucun compte à vérifier, tout reste dans ce
+      // navigateur. Demander un e-mail et un mot de passe qui ne seront
+      // jamais contrôlés n'est qu'une friction : on entre directement.
+      if (backend.demo) { backend.signIn(); return; }
+      ecranConnexion();
+      return;
+    }
     if (!canEdit(access?.role)) { ecranRefus(user); return; }
     ouvrirBackOffice(user);
   });

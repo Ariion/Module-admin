@@ -18,6 +18,27 @@
 
 
 
+## 1.58.0 — Le mode démo n'affiche plus une connexion qu'il ne vérifie pas
+
+Signalé par une capture d'écran : ouvrir le site de démonstration (ou le
+back-office) avec `backend: 'demo'` montrait quand même le vrai écran de
+connexion — adresse e-mail, mot de passe, bouton « Se connecter ». Or le
+back-end de démonstration (`MemoryBackend`) ne vérifie rien du tout :
+`signIn()` accepte n'importe quelle valeur, y compris vide. Le commentaire
+du fichier de configuration dit bien « aucun compte à créer », mais l'écran
+donnait l'impression inverse.
+
+`admin/back.js` et `admin/ui/editor.js` : quand `backend.demo` est vrai, on
+entre directement au lieu d'ouvrir le formulaire. La vraie fenêtre de
+connexion (`ui/login.js`), celle d'un compte Firebase réel, reste strictement
+inchangée — c'est le seul rempart de sécurité d'un site client, et ce mode
+démo (localStorage, jamais de production) est le seul concerné.
+
+Vérifié dans un vrai navigateur, sur les deux points d'entrée : la page
+qui charge `admin/runtime.js` (le site + l'éditeur en direct) et celle qui
+charge `admin/back.js` (le back-office) entrent désormais sans aucun écran
+intermédiaire.
+
 ## 1.57.0 — L'assistant rapide, couvert à son tour
 
 Après le questionnaire de brief (1.56.0), l'autre moitié de l'assistant de
