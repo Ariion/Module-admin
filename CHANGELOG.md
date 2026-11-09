@@ -18,6 +18,37 @@
 
 
 
+## 1.61.0 — Les premières vraies photos de la bibliothèque de modèles
+
+29 photos générées par IA (10 métiers sur 12) remplacent les scènes
+dessinées dans la vitrine des modèles : `restaurant`, `alimentaire`,
+`beaute`, `batiment`, `sante`, `conseil`, `boutique`, `creatif`,
+`hebergement`, `sport`. `association` et `autre` gardent leurs scènes
+dessinées en attendant — rien n'est jamais à moitié fait, c'est précisément
+ce que l'architecture du catalogue (`admin/core/photos.js`) permet : une
+photo l'emporte sur un dessin métier par métier, pas tout ou rien.
+
+Chaque photo a été relue une par une avant intégration — pas seulement
+collée telle quelle. Une image a été écartée (une silhouette visible à
+travers une vitrine, même floue et lointaine, contrevient à la règle « aucune
+personne visible » de `docs/PHOTOS-PROMPTS.md`) ; les 29 retenues ont été
+vérifiées contre les trois interdits (personne, texte, marque) avant
+conversion.
+
+**Trouvé en relançant la batterie après coup** : `essai-illustrations.mjs`
+supposait que toute scène produite par `illustrations()` est un SVG dessiné
+porteur de `fond()` — vrai tant qu'aucune photo n'existait. Un métier
+désormais photographié renvoie une URL `.webp` ordinaire, sans rien de tout
+ça, et l'essai le comptait à tort comme une scène mal formée. Corrigé en
+ignorant, pour ce contrôle précis, tout visuel qui n'est pas une
+illustration dessinée (`estIllustration()`, déjà exportée) — les photos
+restent couvertes par les autres contrôles de l'essai (aucun hôte extérieur,
+etc.), seul celui qui n'a plus de sens pour elles est écarté.
+
+`docs/PHOTOS-CREDITS.json` note la provenance (génération IA, aucun ayant
+droit tiers à créditer) plutôt que de rester muet sur l'origine des 29
+fichiers.
+
 ## 1.60.0 — Un vrai parcours d'achat pour Atelier, avec consentement explicite
 
 La page Tarifs affichait trois formules à « — € » et des boutons qui ne

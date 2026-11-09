@@ -1,0 +1,19 @@
+{
+  "_note": "Photos d'exemple de la bibliothèque de modèles. Celles listées ici sont générées par IA (ChatGPT/gpt-image) à partir des prompts de docs/PHOTOS-PROMPTS.md, et non issues d'une banque libre : aucun ayant droit tiers, donc rien à créditer ici individuellement — voir la dernière section de PHOTOS-PROMPTS.md. Une future photo moissonnée via npm run moissonner (Pexels/Openverse) ajouterait, elle, une entrée par fichier avec son auteur.",
+  "_generees_ia": {
+    "source": "ChatGPT (gpt-image)",
+    "date": "2026-11-09",
+    "fichiers": [
+      "alimentaire-1.jpg", "alimentaire-2.jpg",
+      "batiment-1.jpg", "batiment-2.jpg",
+      "beaute-1.jpg",
+      "boutique-1.jpg", "boutique-2.jpg", "boutique-3.jpg", "boutique-4.jpg", "boutique-5.jpg",
+      "conseil-1.jpg", "conseil-2.jpg", "conseil-3.jpg", "conseil-4.jpg",
+      "creatif-1.jpg", "creatif-2.jpg", "creatif-3.jpg", "creatif-4.jpg", "creatif-5.jpg", "creatif-6.jpg",
+      "hebergement-1.jpg", "hebergement-2.jpg",
+      "restaurant-1.jpg",
+      "sante-1.jpg", "sante-2.jpg", "sante-3.jpg",
+      "sport-1.jpg", "sport-2.jpg", "sport-3.jpg"
+    ]
+  }
+}

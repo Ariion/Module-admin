@@ -9,7 +9,7 @@
  * Un essai qui regarde les images ne verrait rien non plus, parce que l'absence
  * d'un flou ne saute pas aux yeux. D'où ce contrôle, purement textuel.
  */
-import { illustrations, METIERS_ILLUSTRES } from '../admin/core/illustrations.js';
+import { illustrations, METIERS_ILLUSTRES, estIllustration } from '../admin/core/illustrations.js';
 
 const echecs = [];
 const dit = (quoi, ok, detail = '') => {
@@ -30,6 +30,11 @@ for (const theme of THEMES) {
   for (const metier of metiers) {
     for (const image of illustrations({ id: theme }, metier)) {
       scenes += 1;
+      // Un métier photographié (`npm run photos`) sert ses photos plutôt que
+      // les scènes dessinées — c'est le comportement voulu. Une photo n'a ni
+      // `fond()` ni `url(#…)` à vérifier ; seules les scènes encore dessinées
+      // le sont ici.
+      if (!estIllustration(image.url)) continue;
       const svg = decodeURIComponent(image.url.replace(/^data:image\/svg\+xml;charset=utf-8,/, ''));
       const definis = new Set([...svg.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
       for (const [, ref] of svg.matchAll(/url\(#([^)]+)\)/g)) {
