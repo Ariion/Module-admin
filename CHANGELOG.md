@@ -18,6 +18,13 @@
 
 
 
+## 1.62.0 — 11 métiers sur 12 photographiés
+
+15 photos de plus (association, et des variantes pour batiment, conseil,
+restaurant), toutes relues une par une avant intégration — aucune écartée
+cette fois. Il ne reste que `autre` sans photo, par nature : c'est le métier
+qui n'a pas de décor propre.
+
 ## 1.61.0 — Les premières vraies photos de la bibliothèque de modèles
 
 29 photos générées par IA (10 métiers sur 12) remplacent les scènes

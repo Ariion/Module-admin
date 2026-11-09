@@ -24,6 +24,26 @@ export const PHOTOS = {
       "hauteur": 1024
     }
   ],
+  "association": [
+    {
+      "srcset": "/medias/exemples/association-1-480.webp 480w, /medias/exemples/association-1-960.webp 960w, /medias/exemples/association-1-1440.webp 1440w, /medias/exemples/association-1-1536.webp 1536w",
+      "src": "/medias/exemples/association-1-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/association-2-480.webp 480w, /medias/exemples/association-2-960.webp 960w, /medias/exemples/association-2-1440.webp 1440w, /medias/exemples/association-2-1536.webp 1536w",
+      "src": "/medias/exemples/association-2-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/association-3-480.webp 480w, /medias/exemples/association-3-960.webp 960w, /medias/exemples/association-3-1440.webp 1440w, /medias/exemples/association-3-1536.webp 1536w",
+      "src": "/medias/exemples/association-3-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    }
+  ],
   "batiment": [
     {
       "srcset": "/medias/exemples/batiment-1-480.webp 480w, /medias/exemples/batiment-1-960.webp 960w, /medias/exemples/batiment-1-1440.webp 1440w, /medias/exemples/batiment-1-1536.webp 1536w",
@@ -34,6 +54,30 @@ export const PHOTOS = {
     {
       "srcset": "/medias/exemples/batiment-2-480.webp 480w, /medias/exemples/batiment-2-960.webp 960w, /medias/exemples/batiment-2-1440.webp 1440w, /medias/exemples/batiment-2-1536.webp 1536w",
       "src": "/medias/exemples/batiment-2-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/batiment-3-480.webp 480w, /medias/exemples/batiment-3-960.webp 960w, /medias/exemples/batiment-3-1440.webp 1440w, /medias/exemples/batiment-3-1536.webp 1536w",
+      "src": "/medias/exemples/batiment-3-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/batiment-4-480.webp 480w, /medias/exemples/batiment-4-960.webp 960w, /medias/exemples/batiment-4-1440.webp 1440w, /medias/exemples/batiment-4-1536.webp 1536w",
+      "src": "/medias/exemples/batiment-4-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/batiment-5-480.webp 480w, /medias/exemples/batiment-5-960.webp 960w, /medias/exemples/batiment-5-1440.webp 1440w, /medias/exemples/batiment-5-1536.webp 1536w",
+      "src": "/medias/exemples/batiment-5-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/batiment-6-480.webp 480w, /medias/exemples/batiment-6-960.webp 960w, /medias/exemples/batiment-6-1440.webp 1440w, /medias/exemples/batiment-6-1536.webp 1536w",
+      "src": "/medias/exemples/batiment-6-1536.webp",
       "largeur": 1536,
       "hauteur": 1024
     }
@@ -102,6 +146,18 @@ export const PHOTOS = {
       "src": "/medias/exemples/conseil-4-1536.webp",
       "largeur": 1536,
       "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/conseil-5-480.webp 480w, /medias/exemples/conseil-5-960.webp 960w, /medias/exemples/conseil-5-1440.webp 1440w, /medias/exemples/conseil-5-1536.webp 1536w",
+      "src": "/medias/exemples/conseil-5-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/conseil-6-480.webp 480w, /medias/exemples/conseil-6-960.webp 960w, /medias/exemples/conseil-6-1440.webp 1440w, /medias/exemples/conseil-6-1536.webp 1536w",
+      "src": "/medias/exemples/conseil-6-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
     }
   ],
   "creatif": [
@@ -160,6 +216,42 @@ export const PHOTOS = {
     {
       "srcset": "/medias/exemples/restaurant-1-480.webp 480w, /medias/exemples/restaurant-1-960.webp 960w, /medias/exemples/restaurant-1-1440.webp 1440w, /medias/exemples/restaurant-1-1536.webp 1536w",
       "src": "/medias/exemples/restaurant-1-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/restaurant-2-480.webp 480w, /medias/exemples/restaurant-2-960.webp 960w, /medias/exemples/restaurant-2-1440.webp 1440w, /medias/exemples/restaurant-2-1536.webp 1536w",
+      "src": "/medias/exemples/restaurant-2-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/restaurant-3-480.webp 480w, /medias/exemples/restaurant-3-960.webp 960w, /medias/exemples/restaurant-3-1440.webp 1440w, /medias/exemples/restaurant-3-1536.webp 1536w",
+      "src": "/medias/exemples/restaurant-3-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/restaurant-4-480.webp 480w, /medias/exemples/restaurant-4-960.webp 960w, /medias/exemples/restaurant-4-1440.webp 1440w, /medias/exemples/restaurant-4-1536.webp 1536w",
+      "src": "/medias/exemples/restaurant-4-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/restaurant-5-480.webp 480w, /medias/exemples/restaurant-5-960.webp 960w, /medias/exemples/restaurant-5-1440.webp 1440w, /medias/exemples/restaurant-5-1536.webp 1536w",
+      "src": "/medias/exemples/restaurant-5-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/restaurant-6-480.webp 480w, /medias/exemples/restaurant-6-960.webp 960w, /medias/exemples/restaurant-6-1440.webp 1440w, /medias/exemples/restaurant-6-1536.webp 1536w",
+      "src": "/medias/exemples/restaurant-6-1536.webp",
+      "largeur": 1536,
+      "hauteur": 1024
+    },
+    {
+      "srcset": "/medias/exemples/restaurant-7-480.webp 480w, /medias/exemples/restaurant-7-960.webp 960w, /medias/exemples/restaurant-7-1440.webp 1440w, /medias/exemples/restaurant-7-1536.webp 1536w",
+      "src": "/medias/exemples/restaurant-7-1536.webp",
       "largeur": 1536,
       "hauteur": 1024
     }
