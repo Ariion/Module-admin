@@ -18,6 +18,16 @@
 
 
 
+## 1.64.0 — L'accroche de l'accueil parle au client, pas au développeur
+
+Le paragraphe sous le titre (« Atelier se greffe sur un site HTML
+existant. Pas de CMS, pas de build : deux lignes de code… ») décrivait
+l'intégration technique avant tout bénéfice — juste après un titre
+(« Modifiez votre site en cliquant dessus ») qui, lui, dit immédiatement
+ce que ça change pour quelqu'un. Remplacé par une phrase qui reste au
+même niveau que le titre : ce que le client garde (son site, pas
+d'abonnement de plus), pas comment le module s'y accroche.
+
 ## 1.63.0 — Les 12 métiers photographiés
 
 24 photos de plus : `autre` et `beaute` reçoivent leurs premières, les dix
