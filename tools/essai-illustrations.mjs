@@ -9,7 +9,7 @@
  * Un essai qui regarde les images ne verrait rien non plus, parce que l'absence
  * d'un flou ne saute pas aux yeux. D'où ce contrôle, purement textuel.
  */
-import { illustrations, METIERS_ILLUSTRES, estIllustration } from '../admin/core/illustrations.js';
+import { illustrations, scenesDessinees, METIERS_ILLUSTRES } from '../admin/core/illustrations.js';
 
 const echecs = [];
 const dit = (quoi, ok, detail = '') => {
@@ -26,15 +26,15 @@ let scenes = 0;
 const orphelins = [];
 const sansFond = [];
 
+// `scenesDessinees()`, pas `illustrations()` : cet essai juge le DESSIN
+// lui-même — `fond()`, les références `url(#…)`, la lumière commune. Un
+// métier photographié (`npm run photos`) ne passe plus par cette branche en
+// usage normal, mais la scène qu'il garde en repli doit rester correcte :
+// retirez les photos un jour, et c'est elle qui réapparaît.
 for (const theme of THEMES) {
   for (const metier of metiers) {
-    for (const image of illustrations({ id: theme }, metier)) {
+    for (const image of scenesDessinees({ id: theme }, metier)) {
       scenes += 1;
-      // Un métier photographié (`npm run photos`) sert ses photos plutôt que
-      // les scènes dessinées — c'est le comportement voulu. Une photo n'a ni
-      // `fond()` ni `url(#…)` à vérifier ; seules les scènes encore dessinées
-      // le sont ici.
-      if (!estIllustration(image.url)) continue;
       const svg = decodeURIComponent(image.url.replace(/^data:image\/svg\+xml;charset=utf-8,/, ''));
       const definis = new Set([...svg.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
       for (const [, ref] of svg.matchAll(/url\(#([^)]+)\)/g)) {
@@ -65,7 +65,7 @@ console.log('\nLa lumière est la même pour toute la série');
 // la redéclare pour son compte.
 const jours = new Set();
 for (const metier of metiers) {
-  for (const image of illustrations({ id: 'sobre' }, metier)) {
+  for (const image of scenesDessinees({ id: 'sobre' }, metier)) {
     const svg = decodeURIComponent(image.url.replace(/^data:image\/svg\+xml;charset=utf-8,/, ''));
     const m = svg.match(/id="jour"[^>]*cx="([^"]+)"[^>]*cy="([^"]+)"/);
     if (m) jours.add(`${m[1]},${m[2]}`);

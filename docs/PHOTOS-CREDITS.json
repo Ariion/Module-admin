@@ -4,17 +4,18 @@
     "source": "ChatGPT (gpt-image)",
     "date": "2026-11-09",
     "fichiers": [
-      "alimentaire-1.jpg", "alimentaire-2.jpg",
-      "association-1.jpg", "association-2.jpg", "association-3.jpg",
+      "alimentaire-1.jpg", "alimentaire-2.jpg", "alimentaire-3.jpg",
+      "association-1.jpg", "association-2.jpg", "association-3.jpg", "association-4.jpg", "association-5.jpg", "association-6.jpg",
+      "autre-1.jpg", "autre-2.jpg", "autre-3.jpg", "autre-4.jpg", "autre-5.jpg", "autre-6.jpg",
       "batiment-1.jpg", "batiment-2.jpg", "batiment-3.jpg", "batiment-4.jpg", "batiment-5.jpg", "batiment-6.jpg",
-      "beaute-1.jpg",
+      "beaute-1.jpg", "beaute-2.jpg", "beaute-3.jpg",
       "boutique-1.jpg", "boutique-2.jpg", "boutique-3.jpg", "boutique-4.jpg", "boutique-5.jpg",
       "conseil-1.jpg", "conseil-2.jpg", "conseil-3.jpg", "conseil-4.jpg", "conseil-5.jpg", "conseil-6.jpg",
       "creatif-1.jpg", "creatif-2.jpg", "creatif-3.jpg", "creatif-4.jpg", "creatif-5.jpg", "creatif-6.jpg",
-      "hebergement-1.jpg", "hebergement-2.jpg",
-      "restaurant-1.jpg", "restaurant-2.jpg", "restaurant-3.jpg", "restaurant-4.jpg", "restaurant-5.jpg", "restaurant-6.jpg", "restaurant-7.jpg",
-      "sante-1.jpg", "sante-2.jpg", "sante-3.jpg",
-      "sport-1.jpg", "sport-2.jpg", "sport-3.jpg"
+      "hebergement-1.jpg", "hebergement-2.jpg", "hebergement-3.jpg", "hebergement-4.jpg", "hebergement-5.jpg", "hebergement-6.jpg",
+      "restaurant-1.jpg", "restaurant-2.jpg", "restaurant-3.jpg", "restaurant-4.jpg", "restaurant-5.jpg", "restaurant-6.jpg", "restaurant-7.jpg", "restaurant-8.jpg", "restaurant-9.jpg",
+      "sante-1.jpg", "sante-2.jpg", "sante-3.jpg", "sante-4.jpg", "sante-5.jpg", "sante-6.jpg",
+      "sport-1.jpg", "sport-2.jpg", "sport-3.jpg", "sport-4.jpg", "sport-5.jpg", "sport-6.jpg"
     ]
   }
 }

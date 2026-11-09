@@ -18,6 +18,34 @@
 
 
 
+## 1.63.0 — Les 12 métiers photographiés
+
+24 photos de plus : `autre` et `beaute` reçoivent leurs premières, les dix
+autres métiers gagnent des variantes. Les 68 photos relues une par une,
+aucune écartée cette fois. Plus aucun métier ne dépend de ses scènes
+dessinées par défaut — elles restent le repli si des photos venaient à
+manquer.
+
+**Trouvé en relançant la batterie après coup, deux essais cette fois** :
+`essai-redacteur` comparait un métier inconnu à « autre » pour vérifier le
+repli générique — une comparaison qui ne voulait plus rien dire dès
+qu'« autre » a cessé d'être dessiné. `essai-illustrations` vérifiait la
+cohérence des 36 scènes (une seule direction de lumière, aucune référence
+`url(#…)` orpheline) en passant par `illustrations()` — qui sert désormais
+des photos pour les 12 métiers, donc plus aucune scène dessinée à
+inspecter : le test de lumière se retrouvait à comparer un ensemble vide
+contre lui-même, invisible tant que personne ne regardait le détail.
+
+Les deux essais testaient en réalité deux choses différentes sous le même
+nom : ce que l'API publique renvoie (qui doit préférer la photo), et si le
+DESSIN lui-même reste correct (qui doit continuer à exister, pour le jour
+où une photo serait retirée). `admin/core/illustrations.js` sépare
+maintenant les deux : `scenesDessinees()`, nouvelle export, rend
+explicitement la scène dessinée d'un métier sans jamais regarder s'il a des
+photos — c'est elle qu'interroge désormais l'essai de cohérence, et c'est
+elle qui garantit qu'un métier redevient correctement illustré le jour où
+ses photos disparaissent de `photos-source/`.
+
 ## 1.62.0 — 11 métiers sur 12 photographiés
 
 15 photos de plus (association, et des variantes pour batiment, conseil,

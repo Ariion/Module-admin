@@ -452,7 +452,18 @@ export function illustrations(reglageTheme, metierId = 'autre') {
       hauteur: photo.hauteur,
     }));
   }
+  return scenesDessinees(reglageTheme, metierId);
+}
 
+/**
+ * Les scènes DESSINÉES d'un métier, sans jamais regarder s'il a des photos.
+ *
+ * `illustrations()` s'en sert comme repli ; elle existe aussi à part pour
+ * ce qui doit juger le dessin lui-même — l'essai de cohérence des SVG, par
+ * exemple — puisqu'un métier désormais photographié ne passe plus par cette
+ * branche en usage normal.
+ */
+export function scenesDessinees(reglageTheme, metierId = 'autre') {
   const theme = themeApplique(reglageTheme);
   const c = theme ? theme.couleurs : NEUTRE;
   const scenes = SCENES[metierId] || SCENES.autre;

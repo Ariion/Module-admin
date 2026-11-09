@@ -22,7 +22,7 @@ import {
   phrasesDesAtouts, motsClesPhotos, themeSuggere,
 } from '../admin/core/brief.js';
 import { redigerPage } from '../admin/core/redacteur.js';
-import { illustrations } from '../admin/core/illustrations.js';
+import { illustrations, estIllustration } from '../admin/core/illustrations.js';
 
 const racine = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -91,8 +91,12 @@ const scenesParMetier = new Set(
 );
 dit(`au moins ${METIERS.length - 1} rendus distincts sur ${METIERS.length} métiers`,
   scenesParMetier.size >= METIERS.length - 1, String(scenesParMetier.size));
-dit('un métier non reconnu retombe sur les scènes génériques',
-  illustrations(null, 'nexistepas')[0]?.url === illustrations(null, 'autre')[0]?.url);
+// « autre » peut désormais être photographié — ce n'est plus la référence
+// à laquelle comparer. La vraie garantie reste que personne ne tombe sur
+// rien : un métier absent reçoit quand même une scène dessinée, valide.
+const repli = illustrations(null, 'nexistepas')[0];
+dit('un métier non reconnu retombe sur une scène dessinée, jamais sur rien',
+  !!repli?.url && estIllustration(repli.url), JSON.stringify(repli));
 
 /* --------------------------------------------- rien écrit par le client n'est écrasé */
 
