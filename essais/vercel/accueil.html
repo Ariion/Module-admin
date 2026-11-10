@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Atelier, démonstration (phase de test)</title>
-<meta name="description" content="Atelier : un éditeur visuel qui se greffe sur un site HTML existant. Démonstration en phase de test.">
+<title>Atelier — éditeur visuel pour sites statiques</title>
+<meta name="description" content="Modifiez votre site directement, en cliquant dessus. Pas de CMS, pas d'abonnement. Essayez l'éditeur en direct, sur un site existant ou depuis une page vierge.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
   .page{max-width:1320px;margin:0 auto;padding:0 var(--marge)}
   code{font-family:var(--mono);font-size:.86em;color:var(--signal)}
 
-  /* ---- ouverture ---- */
+  /* ---- ouverture : le texte seul, la preuve vient juste après ---- */
   .ouverture{padding:clamp(34px,6vw,76px) 0 0;
     display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
     gap:clamp(20px,5vw,60px);align-items:end}
@@ -33,14 +33,13 @@
   h1[contenteditable]:hover{outline:1px dashed var(--trait-fin);outline-offset:12px}
   .essai-titre{margin-top:18px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
     text-transform:uppercase;color:var(--gris)}
-  .test{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--signal);display:inline-flex;align-items:center;gap:8px}
-  .test::before{content:'';width:6px;height:6px;background:var(--signal)}
   .chapo{margin:12px 0 0}
   .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
 
-  /* ---- la capture de l'éditeur ---- */
-  .scene{grid-column:1 / -1;position:relative;margin-top:clamp(32px,5vw,64px)}
+  /* ---- la capture de l'éditeur : son propre temps fort, pas un à-côté ---- */
+  .demo{border-top:1px solid var(--trait)}
+  .demo .section__tete{margin-bottom:clamp(28px,4vw,48px)}
+  .scene{position:relative}
   .fenetre{border:1px solid var(--trait);overflow:hidden;background:#0b1424}
   .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;
     border-bottom:1px solid rgba(255,255,255,.08)}
@@ -52,19 +51,21 @@
   .flottante img{display:block;width:100%;height:auto}
   @media (max-width:760px){.flottante{display:none}}
 
-  /* ---- le bandeau d'état ---- */
-  .avis{margin-top:clamp(74px,9vw,116px);border-top:1px solid var(--trait);
-    border-bottom:1px solid var(--trait);padding:22px 0;
-    display:flex;flex-wrap:wrap;gap:14px 30px;align-items:baseline}
-  .avis strong{font-weight:600;font-size:1.22rem;letter-spacing:-.025em}
-  .avis #etat{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--gris)}
+  /* ---- les trois gestes ---- */
+  .gestes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    margin-top:clamp(40px,6vw,72px);border-top:1px solid var(--trait-fin)}
+  @media (max-width:760px){.gestes{grid-template-columns:1fr}}
+  .gestes > div{padding:22px clamp(14px,2vw,24px) 0;border-left:1px solid var(--trait-fin)}
+  .gestes > div:first-child{border-left:0}
+  @media (max-width:760px){
+    .gestes > div{border-left:0;border-top:1px solid var(--trait-fin);padding-top:18px}
+    .gestes > div:first-child{border-top:0}
+  }
+  .gestes b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+    color:var(--signal);margin-bottom:8px}
+  .gestes p{font-size:14.6px;color:var(--gris)}
 
-  /* ---- les sections ---- */
-  section{padding:clamp(52px,7vw,96px) 0 0}
-  .titre-section{margin-top:14px}
-  section > .label{display:block}
-
-  /* ---- les deux parcours : des colonnes de la grille, pas des cartes ---- */
+  /* ---- deux façons de commencer : des colonnes, pas des cartes ---- */
   .cartes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:clamp(26px,4vw,44px);
     border-top:1px solid var(--trait)}
   @media (max-width:820px){.cartes{grid-template-columns:1fr}}
@@ -75,10 +76,6 @@
     .carte{border-left:0;border-top:1px solid var(--trait-fin)}
     .carte:first-child{border-top:0}
   }
-  /* Un rapport imposé aux deux : les captures n'ont pas les mêmes
-     proportions, et sans cela les titres des deux colonnes ne tombent pas
-     sur la même ligne — ce qui se voit immédiatement sur deux éléments
-     censés se comparer. */
   .carte .vis{overflow:hidden;border-bottom:1px solid var(--trait-fin);aspect-ratio:16/10}
   .carte .vis img{display:block;width:100%;height:100%;object-fit:cover;
     transition:transform .4s cubic-bezier(.2,.8,.3,1)}
@@ -91,7 +88,11 @@
     text-transform:uppercase;color:var(--signal);font-weight:500}
   .carte:hover .aller{text-decoration:underline;text-underline-offset:4px}
 
-  /* ---- les trois conseils ---- */
+  .fictif{margin-top:20px;display:flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--gris)}
+  .fictif::before{content:'';width:6px;height:6px;background:var(--signal);flex-shrink:0}
+
   .colonnes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
     margin-top:clamp(26px,4vw,44px);border-top:1px solid var(--trait)}
   @media (max-width:820px){.colonnes{grid-template-columns:1fr}}
@@ -101,14 +102,55 @@
     .colonnes > div{border-left:0;border-top:1px solid var(--trait-fin)}
     .colonnes > div:first-child{border-top:0}
   }
-  .colonnes h3{font-size:1.06rem;font-weight:600;letter-spacing:-.015em}
+  .colonnes h4{font-size:1.06rem;font-weight:600;letter-spacing:-.015em}
   .colonnes p{margin-top:9px;color:var(--gris);font-size:14.4px}
 
-  /* ---- la note d'hébergement ---- */
-  .note-heberg{margin-top:clamp(44px,6vw,72px);padding:24px clamp(16px,2.4vw,28px);
-    border-left:2px solid var(--signal);background:var(--signal-pale);
-    color:var(--encre,var(--noir));font-size:14.6px;max-width:72ch}
-  .note-heberg strong{font-weight:600}
+  /* ---- fonctionnalités : la même grille numérotée que les formules ---- */
+  .fonctions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    margin-top:clamp(28px,4vw,48px);border-top:1px solid var(--trait);border-bottom:1px solid var(--trait)}
+  @media (max-width:860px){.fonctions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:560px){.fonctions{grid-template-columns:1fr}}
+  .fonction{padding:clamp(22px,2.6vw,30px) clamp(16px,2vw,24px);
+    border-left:1px solid var(--trait-fin);border-top:1px solid var(--trait-fin)}
+  .fonction:nth-child(3n+1){border-left:0}
+  @media (max-width:860px){
+    .fonction:nth-child(3n+1){border-left:1px solid var(--trait-fin)}
+    .fonction:nth-child(2n+1){border-left:0}
+  }
+  @media (max-width:560px){.fonction{border-left:0!important}}
+  .fonction:nth-child(-n+3){border-top:0}
+  @media (max-width:860px){.fonction:nth-child(-n+3){border-top:1px solid var(--trait-fin)}
+    .fonction:nth-child(-n+2){border-top:0}}
+  @media (max-width:560px){.fonction:nth-child(-n+2){border-top:1px solid var(--trait-fin)}
+    .fonction:first-child{border-top:0}}
+  .fonction__num{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--signal);
+    margin-bottom:14px}
+  .fonction h3{font-size:1.08rem;font-weight:600;letter-spacing:-.02em}
+  .fonction p{margin-top:9px;color:var(--gris);font-size:14.3px}
+
+  /* ---- publication : la note devient une vraie section ---- */
+  .pub{max-width:72ch}
+  .pub p + p{margin-top:14px}
+  .pub p{color:var(--gris);font-size:15px}
+  .pub strong{color:var(--noir);font-weight:600}
+
+  /* ---- tarifs, en résumé : trois lignes, pas trois cartes ---- */
+  .tarifs-resume{margin-top:clamp(26px,4vw,44px);border-top:1px solid var(--trait)}
+  .tr-ligne{display:grid;grid-template-columns:2fr 3fr auto auto;gap:clamp(14px,2vw,28px);
+    align-items:center;padding:20px 0;border-bottom:1px solid var(--trait-fin)}
+  @media (max-width:760px){.tr-ligne{grid-template-columns:1fr;gap:8px;text-align:left}}
+  .tr-ligne h3{font-size:1.15rem;font-weight:700;letter-spacing:-.025em}
+  .tr-ligne p{color:var(--gris);font-size:14px}
+  .tr-prix{font-family:var(--mono);font-size:1.05rem;font-weight:500;white-space:nowrap}
+  .tr-prix small{display:block;font-size:10px;color:var(--gris);font-weight:400;
+    letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+
+  /* ---- la fin ---- */
+  .final{border-top:1px solid var(--trait);padding:clamp(44px,7vw,84px) 0;
+    display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);
+    gap:clamp(20px,4vw,56px);align-items:end}
+  @media (max-width:860px){.final{grid-template-columns:1fr;align-items:start;gap:24px}}
+  .final .actions{margin-top:22px}
 
   a:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
 </style>
@@ -116,16 +158,14 @@
 <body>
 <div class="page">
 
-
   <header class="ouverture">
     <div>
       <p class="label label--signal">Éditeur visuel pour sites statiques</p>
       <h1 contenteditable="true" spellcheck="false" aria-label="Titre modifiable : cliquez et écrivez">Modifiez votre site en cliquant dessus.</h1>
-      <p class="essai-titre">Cliquez sur ce titre et écrivez — rien n’est enregistré</p>
+      <p class="essai-titre">Essayez ici — ce titre est une démonstration, rien n’est enregistré</p>
     </div>
     <div class="ouverture__note">
-      <p class="test">En phase de test</p>
-      <p class="chapo" style="margin-top:12px">Votre site reste le vôtre. Pas de CMS à
+      <p class="chapo">Votre site reste le vôtre. Pas de CMS à
         apprendre, pas d’abonnement de plus : vos textes, vos images et vos liens se
         modifient directement sur la page, par vous ou par qui vous voulez.</p>
       <div class="actions">
@@ -133,7 +173,18 @@
         <a class="bouton" href="/vierge?admin">Page vierge</a>
       </div>
     </div>
+  </header>
 
+  <section class="section demo">
+    <div class="section__tete">
+      <p class="label label--signal">Démonstration — 01 / 05</p>
+      <div>
+        <h2>Ce que votre client voit.</h2>
+        <p class="chapo" style="margin-top:16px;color:var(--gris)">Le panneau à gauche, le
+          site à droite. Ce qui est modifié ici est modifié sur la vraie page — aucun
+          aller-retour, aucun aperçu séparé du résultat.</p>
+      </div>
+    </div>
     <div class="scene">
       <div class="fenetre">
         <div class="bar"><i></i><i></i><i></i><span>Hôtel des Pins, en cours de modification</span></div>
@@ -143,56 +194,170 @@
         <img src="/essais/vercel/img/mobile.jpg" width="480" height="1040" alt="" loading="lazy">
       </div>
     </div>
-  </header>
-
-  <section class="avis" aria-label="Phase de test">
-    <strong>Phase de test</strong>
-    <div>
-      <p>Ce module est en cours d'essai. Des fonctions peuvent changer ou se comporter de façon inattendue, et les deux sites ci-dessous sont fictifs. Pour ouvrir l'éditeur, ajoutez <code>?admin</code> à l'adresse de la page.</p>
-      <p id="etat"></p>
+    <div class="gestes">
+      <div><b>01 — Survolez</b><p>Un contour apparaît autour de ce qui peut se modifier — un texte, une image, un lien.</p></div>
+      <div><b>02 — Cliquez</b><p>L'élément devient modifiable sur place, dans la page elle-même : pas de formulaire à part.</p></div>
+      <div><b>03 — Publiez</b><p>Un bouton, et le fichier HTML du site est réécrit avec le nouveau contenu dedans.</p></div>
     </div>
   </section>
 
-  <section class="essais">
-    <p class="label">Essais</p>
-    <h2 class="titre-section">Deux façons de l'essayer</h2>
+  <section class="section">
+    <div class="section__tete">
+      <p class="label label--signal">Deux façons de commencer — 02 / 05</p>
+      <div>
+        <h2>Vous avez déjà un site, ou vous n'avez rien encore.</h2>
+        <p class="chapo" style="margin-top:16px;color:var(--gris)">Le module s'adapte aux
+          deux situations, et le fait avec le même moteur — pas deux produits différents.</p>
+      </div>
+    </div>
     <div class="cartes">
       <a class="carte" href="/demo/?admin">
         <div class="vis"><img src="/demo/images/hero.jpg" alt="" loading="lazy"></div>
         <div class="txt">
-          <span class="label">Sur un site existant</span>
+          <span class="label">Vous avez déjà un site</span>
           <h3>Hôtel des Pins</h3>
-          <p>Un site écrit à la main, laissé tel quel. Le module repère seul les textes, les images et les liens, et gère les listes de cartes. Seules deux balises <code>&lt;script&gt;</code> ont été ajoutées.</p>
+          <p>Un site écrit à la main, laissé tel quel. Le module repère seul les textes, les
+            images et les liens, et gère les listes de cartes. Seules deux balises
+            <code>&lt;script&gt;</code> ont été ajoutées — rien d'autre n'a changé.</p>
           <span class="aller">Ouvrir l'éditeur →</span>
         </div>
       </a>
       <a class="carte" href="/vierge?admin">
         <div class="vis"><img src="/essais/vercel/img/vierge.jpg" alt="" loading="lazy"></div>
         <div class="txt">
-          <span class="label">Sans site de départ</span>
+          <span class="label">Vous n'avez rien encore</span>
           <h3>Page vierge</h3>
-          <p>Un titre, un pied de page, une feuille de style minimale. Un assistant pose deux questions, puis propose des mises en page et construit celle que vous choisissez.</p>
+          <p>Un titre, un pied de page, une feuille de style minimale. Un assistant pose
+            quelques questions, propose des mises en page, et construit celle que vous
+            choisissez — ou écrit la page entière si vous ne savez pas quoi y mettre.</p>
           <span class="aller">Lancer l'assistant →</span>
         </div>
       </a>
     </div>
-  </section>
-
-  <section class="regard">
-    <p class="label">À regarder</p>
-    <h2 class="titre-section">Ce qu'il faut tester</h2>
+    <p class="fictif">Les deux sites ci-dessus sont fictifs — pour essayer sans rien risquer. <span id="etat"></span></p>
     <div class="colonnes">
-      <div><h4>Sur l'hôtel</h4><p>Survolez un titre, cliquez, écrivez. Dupliquez une carte de chambre, puis rechargez la page sans <code>?admin</code> pour voir le résultat.</p></div>
+      <div><h4>Sur l'hôtel</h4><p>Survolez un titre, cliquez, écrivez. Dupliquez une carte de chambre, puis rechargez la page sans <code>?admin</code> pour voir le résultat tenir.</p></div>
       <div><h4>Sur la page vierge</h4><p>Cochez plusieurs intentions et regardez les propositions changer. Une fois la page construite, tout reste modifiable, déplaçable et supprimable.</p></div>
       <div><h4>Sur téléphone</h4><p>Le panneau devient une feuille qui se replie en bas de l'écran, pour modifier un site depuis sa poche.</p></div>
     </div>
-    <p class="note-heberg"><strong>Publier, c'est un bouton.</strong> Le client clique, son site est à jour — sur un hébergement PHP comme sur Vercel. Le disque de Vercel est en lecture seule après déploiement : « écrire un fichier » y veut donc dire « committer dans le dépôt », ce que fait une fonction du module, et le site se redéploie tout seul. Les images, elles, vont dans Firebase Storage : elles ne touchent jamais le disque de l'hébergeur, quel qu'il soit. Personne n'a de fichier à télécharger ni à déposer à la main.</p>
   </section>
 
-  <footer>
-    <span>Atelier, en phase de test</span>
-    <span>Conçu par <a href="https://aardesign.fr/dev">Anthony Armand</a></span>
-  </footer>
+  <section class="section">
+    <div class="section__tete">
+      <p class="label label--signal">Ce qu'il y a dedans — 03 / 05</p>
+      <div>
+        <h2>Un module complet, pas une démonstration limitée.</h2>
+        <p class="chapo" style="margin-top:16px;color:var(--gris)">35 blocs, 11 modèles de
+          page pour 12 métiers, une boutique, un formulaire qui continue de fonctionner sans
+          le module — ceci n'en montre que les six premiers.</p>
+      </div>
+    </div>
+    <div class="fonctions">
+      <article class="fonction">
+        <p class="fonction__num">01</p>
+        <h3>Détection automatique</h3>
+        <p>Le module analyse le HTML et repère seul les textes, les images et les liens. Rien à annoter dans le code.</p>
+      </article>
+      <article class="fonction">
+        <p class="fonction__num">02</p>
+        <h3>35 blocs, composables</h3>
+        <p>Bandeaux plein cadre, cartes image, colonnes en proportions, accordéons, témoignages, chiffres clés — de quoi composer une page, pas empiler des blocs dans une colonne.</p>
+      </article>
+      <article class="fonction">
+        <p class="fonction__num">03</p>
+        <h3>« Je ne sais pas quoi écrire »</h3>
+        <p>Un questionnaire — métier, ville, prestations — et le module écrit la page entière : accroche, présentation, coordonnées, photos.</p>
+      </article>
+      <article class="fonction">
+        <p class="fonction__num">04</p>
+        <h3>Boutique intégrée</h3>
+        <p>Un panier, un paiement Stripe, un prix toujours relu côté serveur avant d'encaisser. Aucune commission prélevée sur vos ventes.</p>
+      </article>
+      <article class="fonction">
+        <p class="fonction__num">05</p>
+        <h3>Formulaire de contact</h3>
+        <p>Les messages arrivent dans le back-office, pas dans une boîte mail à surveiller. Et il continue de fonctionner même si le module est un jour retiré.</p>
+      </article>
+      <article class="fonction">
+        <p class="fonction__num">06</p>
+        <h3>Neuf ambiances</h3>
+        <p>Polices, couleurs, boutons, rythme vertical — un thème complet posé en un clic, pas un réglage à la fois.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section__tete">
+      <p class="label label--signal">Publier — 04 / 05</p>
+      <div>
+        <h2>Publier, c'est un bouton.</h2>
+      </div>
+    </div>
+    <div class="pub">
+      <p><strong>Le client clique, son site est à jour</strong> — sur un hébergement PHP comme
+        sur Vercel. Le disque de Vercel est en lecture seule après déploiement : « écrire un
+        fichier » y veut donc dire « committer dans le dépôt », ce que fait une fonction du
+        module, et le site se redéploie tout seul.</p>
+      <p>Les images, elles, vont dans Firebase Storage : elles ne touchent jamais le disque de
+        l'hébergeur, quel qu'il soit. Personne n'a de fichier à télécharger ni à déposer à la
+        main.</p>
+      <p><strong>Et si le module est retiré un jour</strong>, le site garde tout : à chaque
+        publication, le fichier HTML est réécrit avec le contenu à l'intérieur. Ce n'est pas
+        une promesse, c'est la façon dont le module fonctionne — il n'y a rien d'autre à
+        faire pour que ça reste vrai.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section__tete">
+      <p class="label label--signal">Tarifs — 05 / 05</p>
+      <div>
+        <h2>Un prix, une fois.</h2>
+        <p class="chapo" style="margin-top:16px;color:var(--gris)">Trois formules selon ce
+          qu'on vous livre. Aucune ne prélève d'abonnement, aucune ne prend de commission sur
+          vos ventes.</p>
+      </div>
+    </div>
+    <div class="tarifs-resume">
+      <div class="tr-ligne">
+        <h3>Le module</h3>
+        <p>Vous l'installez — pour qui sait déposer des fichiers et suivre un guide.</p>
+        <p class="tr-prix" data-prix="module">— €<small>Paiement unique</small></p>
+        <a class="bouton bouton--nu" href="/tarifs">Détails →</a>
+      </div>
+      <div class="tr-ligne">
+        <h3>Le module, posé</h3>
+        <p>Vous avez déjà un site. On y branche l'administration pour vous.</p>
+        <p class="tr-prix" data-prix="pose">— €<small>Paiement unique</small></p>
+        <a class="bouton bouton--nu" href="/tarifs">Détails →</a>
+      </div>
+      <div class="tr-ligne">
+        <h3>Le site complet</h3>
+        <p>Vous n'avez rien. On fait le site, vous l'administrez ensuite.</p>
+        <p class="tr-prix" data-prix="complet">— €<small>Paiement unique</small></p>
+        <a class="bouton bouton--nu" href="/tarifs">Détails →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="final">
+    <div>
+      <p class="label label--signal">Essayez d'abord</p>
+      <h2 style="margin-top:16px">Regardez avant<br>de vous décider.</h2>
+    </div>
+    <div>
+      <p class="chapo" style="color:var(--gris);font-size:1rem">Les modèles sont calculés en
+        direct pour douze métiers, pas photographiés une fois pour toutes.</p>
+      <div class="actions">
+        <a class="bouton bouton--plein" href="/modeles">Ouvrir les modèles</a>
+        <a class="bouton" href="/tarifs">Voir les tarifs</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pas de <footer> ici : commun.js en injecte déjà un (le même qu'ailleurs
+       sur le site), et le doubler l'affichait deux fois à la suite —
+       trouvé en relisant la capture pleine page après coup. -->
 
 </div>
 
@@ -202,9 +367,20 @@
     const etat = document.getElementById('etat');
     const demo = (window.ADMIN_CONFIG || {}).backend !== 'firebase';
     etat.textContent = demo
-      ? 'Mode démonstration : l’éditeur s’ouvre avec n’importe quel identifiant, et tout reste dans votre navigateur.'
-      : 'Connecté à Firebase : connexion avec le compte créé dans la console, et les publications sont visibles par tout le monde.';
+      ? '· Mode démonstration : l’éditeur s’ouvre avec n’importe quel identifiant, tout reste dans votre navigateur.'
+      : '· Connecté à Firebase : connexion avec le compte créé dans la console, publications visibles par tout le monde.';
   })();
+</script>
+<script type="module">
+  // Les trois prix viennent de la même source que la page Tarifs — jamais
+  // un chiffre écrit à la main ici, qui pourrait un jour s'en écarter.
+  fetch('/api/achat-atelier').then((r) => r.json()).then((prix) => {
+    for (const [id, euros] of Object.entries(prix)) {
+      if (!euros) continue;
+      const cible = document.querySelector(`[data-prix="${id}"]`);
+      if (cible) cible.innerHTML = euros.toLocaleString('fr-FR') + ' €<small>Paiement unique</small>';
+    }
+  }).catch(() => { /* API indisponible en local : les « — € » restent affichés */ });
 </script>
 <script type="module" src="/commun.js"></script>
 </body>

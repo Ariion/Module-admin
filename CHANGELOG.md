@@ -18,6 +18,42 @@
 
 
 
+## 1.65.0 — L'accueil restructuré, en six temps
+
+La page ne suivait aucune progression commerciale : une accroche, un
+bandeau « phase de test », deux cartes de démo, trois conseils de
+navigation, une note de publication perdue au milieu — rien qui mène
+quelque part. Reconstruite en six sections, chacune avec son intention :
+
+1. **Démonstration** — la capture de l'éditeur, sortie de la grille du
+   hero pour devenir son propre temps fort, avec trois gestes expliqués
+   en dessous (survoler, cliquer, publier).
+2. **Deux façons de commencer** — les mêmes deux parcours (site existant,
+   page vierge), présentés comme deux réponses à deux situations plutôt
+   que deux liens de démo.
+3. **Ce qu'il y a dedans** — nouvelle section : six des 35 blocs, pris
+   dans `admin/core/widgets.js` et `README.md`, pour qu'on sache ce
+   qu'on regarde avant d'ouvrir l'éditeur.
+4. **Publier** — l'ancienne note sur la publication, devenue une vraie
+   section plutôt qu'un encadré en bas de page.
+5. **Tarifs** — un résumé des trois formules, les prix tirés en direct
+   de `/api/achat-atelier` (la même source que la page Tarifs : jamais
+   deux chiffres qui pourraient diverger), chacun renvoyant vers le
+   détail.
+6. **CTA final** — reprise du modèle déjà posé sur la page Tarifs.
+
+Le bandeau « Ce module est en cours d'essai, des fonctions peuvent
+changer » disparaît : il entrait en contradiction directe avec un vrai
+paiement Stripe disponible sur `/tarifs`. Ce qui restait exact — les
+deux sites de démonstration sont fictifs — reste dit, en une ligne
+discrète sous les deux cartes plutôt qu'en bandeau d'alerte.
+
+**Trouvé en vérifiant après coup** : la page portait son propre
+`<footer>` ET le pied injecté par `commun.js`, empilés l'un sur
+l'autre — doublon qu'aucune des autres pages du site n'a, invisible
+tant que personne ne faisait défiler jusqu'en bas. Retiré ; le pied
+partagé suffit, comme partout ailleurs.
+
 ## 1.64.0 — L'accroche de l'accueil parle au client, pas au développeur
 
 Le paragraphe sous le titre (« Atelier se greffe sur un site HTML
