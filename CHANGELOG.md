@@ -18,6 +18,24 @@
 
 
 
+## 1.66.0 — Prototype : nouvelle direction pour le hero (en attente de validation)
+
+Retour direct : le système « Grille » (noir/blanc/vermillon, grille à
+filets, étiquettes mono) lit comme daté et comme un gabarit généré par IA
+— ironique, il avait justement été choisi pour fuir le générique SaaS,
+mais il en est devenu un lui-même à force d'être le défaut de beaucoup
+d'outils depuis 2024-2025.
+
+Trois références fournies (Stripe, deux sites de curation design 2026) :
+dégradé mesh vif, typographie énorme et confiante, mockup du produit qui
+flotte avec une vraie ombre portée, boutons en pilule.
+
+Premier passage, sur le hero de l'accueil SEULEMENT — pas encore la barre
+de navigation, pas encore le reste de la page, pas encore `/tarifs` ni
+`/modeles`. Le dégradé part de la couleur de marque (le vermillon)
+plutôt qu'un violet générique, pour rester identifiable comme Atelier
+plutôt qu'un clone de Stripe. En attente du retour avant d'étendre.
+
 ## 1.65.0 — L'accueil restructuré, en six temps
 
 La page ne suivait aucune progression commerciale : une accroche, un
