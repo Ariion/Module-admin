@@ -19,27 +19,22 @@
     padding:clamp(40px,7vw,88px) 0 clamp(32px,5vw,56px)}
   @media (max-width:860px){.ouverture{grid-template-columns:1fr;align-items:start;gap:22px}}
   .ouverture h1{margin-top:18px}
-  .ouverture__note{border-left:1px solid var(--trait);padding-left:clamp(16px,2.4vw,28px)}
-  @media (max-width:860px){.ouverture__note{border-left:0;border-top:1px solid var(--trait);
-    padding:18px 0 0}}
+  .ouverture__note{padding-left:clamp(16px,2.4vw,28px)}
+  @media (max-width:860px){.ouverture__note{padding-left:0}}
 
-  /* ---- les trois formules : des colonnes, pas des cartes ----
-     Trois cartes arrondies posées sur du vide, c'est le dessin par défaut.
-     Ici les formules sont des colonnes d'une même grille, séparées par des
-     filets : elles se comparent, donc elles se touchent. */
+  /* ---- les trois formules : des cartes qui flottent, pas des colonnes
+     tracées — elles se comparent déjà par leur alignement, pas par un filet. */
   .formules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-    border-top:1px solid var(--trait);border-bottom:1px solid var(--trait)}
+    gap:clamp(16px,2.2vw,22px)}
   @media (max-width:900px){.formules{grid-template-columns:1fr}}
   .formule{padding:clamp(24px,2.6vw,34px) clamp(18px,2.2vw,30px) 30px;
-    border-left:1px solid var(--trait-fin);display:flex;flex-direction:column}
-  .formule:first-child{border-left:0}
-  @media (max-width:900px){
-    .formule{border-left:0;border-top:1px solid var(--trait-fin)}
-    .formule:first-child{border-top:0}
-  }
-  /* Mise en avant par un APLAT, pas par un contour : c'est le seul endroit
+    border-radius:22px;background:var(--blanc);border:1px solid var(--trait-fin);
+    box-shadow:0 20px 44px -26px rgba(10,10,10,.2);
+    display:flex;flex-direction:column}
+  /* Mise en avant par un APLAT ET un contour signal : c'est le seul endroit
      de la page où la couleur signal remplit une surface. */
-  .formule--phare{background:var(--signal-pale)}
+  .formule--phare{background:var(--signal-pale);border-color:var(--signal);
+    box-shadow:0 24px 52px -24px rgba(255,59,0,.28)}
   .formule__num{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--gris);
     display:flex;justify-content:space-between;gap:12px;margin-bottom:22px}
   .formule--phare .formule__num span:last-child{color:var(--signal);font-weight:500}
@@ -69,47 +64,41 @@
   .formule__acheter[hidden]{display:none}
   .formule__erreur{margin-top:10px;font-size:12.5px;color:var(--signal)}
 
-  /* ---- le consentement : une case, pas une ligne qu'on devine ---- */
-  .consentement{border-top:1px solid var(--trait);padding:20px 0;
+  /* ---- le consentement : une carte posée, pas une ligne qu'on devine ---- */
+  .consentement{border-radius:18px;background:var(--signal-pale);padding:20px clamp(18px,2.4vw,26px);
     display:flex;gap:12px;align-items:flex-start;font-size:13.6px;color:var(--gris)}
   .consentement input{margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:var(--signal)}
   .consentement a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 
-  /* ---- la bande transversale ---- */
+  /* ---- la bande transversale : des puces, pas une rangée tracée ---- */
   .partout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));
-    border-bottom:1px solid var(--trait)}
-  .partout div{padding:22px clamp(14px,2vw,24px);border-left:1px solid var(--trait-fin);
+    gap:12px}
+  .partout div{padding:20px clamp(14px,2vw,22px);border-radius:16px;background:#FAFAF8;
     font-size:14.2px}
-  .partout div:first-child{border-left:0}
-  .partout b{display:block;font-family:var(--mono);font-size:10.5px;font-weight:500;
-    letter-spacing:.1em;text-transform:uppercase;color:var(--signal);margin-bottom:7px}
+  .partout b{display:block;font-family:var(--grotesque);font-weight:700;font-size:13px;
+    color:var(--signal);margin-bottom:7px}
 
-  /* ---- le comparatif ---- */
-  .compare{overflow-x:auto}
+  /* ---- le comparatif : une carte qui contient le tableau ---- */
+  .compare{overflow-x:auto;border-radius:20px;border:1px solid var(--trait-fin);
+    box-shadow:0 20px 44px -28px rgba(10,10,10,.18)}
   table{border-collapse:collapse;width:100%;min-width:660px;font-size:14.3px}
   th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--trait-fin)}
   thead th{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--gris);border-bottom:1px solid var(--trait)}
+    text-transform:uppercase;color:var(--gris);background:#FAFAF8}
   tbody th{font-weight:400}
   td{text-align:center;color:var(--gris);font-family:var(--mono);font-size:12px}
   td.oui{color:var(--noir);font-weight:500}
   tr.famille th{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--signal);padding-top:30px}
+    text-transform:uppercase;color:var(--signal);padding-top:30px;background:transparent}
 
-  /* ---- la FAQ : deux colonnes, pas un accordéon centré ---- */
+  /* ---- la FAQ : des cartes qui flottent, pas un quadrillage ---- */
   .faq{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));
-    gap:0;border-top:1px solid var(--trait)}
-  .faq article{padding:26px clamp(16px,2.4vw,30px) 28px;border-left:1px solid var(--trait-fin);
-    border-bottom:1px solid var(--trait-fin)}
-  .faq article:nth-child(odd){border-left:0}
+    gap:clamp(14px,2vw,18px)}
+  .faq article{padding:26px clamp(16px,2.4vw,30px) 28px;border-radius:20px;
+    background:var(--blanc);border:1px solid var(--trait-fin);
+    box-shadow:0 18px 38px -26px rgba(10,10,10,.18)}
   .faq h3{font-size:1.02rem;font-weight:600;letter-spacing:-.015em;line-height:1.3}
   .faq p{margin-top:11px;color:var(--gris);font-size:14.3px}
-
-  /* ---- la fin ---- */
-  .final{border-top:1px solid var(--trait);padding:clamp(44px,7vw,84px) 0;
-    display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);
-    gap:clamp(20px,4vw,56px);align-items:end}
-  @media (max-width:860px){.final{grid-template-columns:1fr;align-items:start;gap:24px}}
 </style>
 </head>
 <body>
@@ -299,9 +288,9 @@
       <h2 style="margin-top:16px">Regardez avant<br>d’acheter.</h2>
     </div>
     <div>
-      <p class="chapo" style="color:var(--gris);font-size:1rem">Les modèles sont calculés en
+      <p class="chapo" style="font-size:1rem">Les modèles sont calculés en
         direct, pas photographiés. Changez de métier : le site entier suit.</p>
-      <a class="bouton bouton--plein" style="margin-top:22px" href="/modeles">Ouvrir les modèles</a>
+      <a class="bouton bouton--clair" style="margin-top:22px" href="/modeles">Ouvrir les modèles</a>
     </div>
   </section>
 

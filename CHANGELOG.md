@@ -18,6 +18,47 @@
 
 
 
+## 1.69.0 — La nouvelle direction étendue à /tarifs et /modeles
+
+Suite de 1.67.0 : « modifié toutes les pages en fonction de ce qu'on
+vient de faire ». Le même geste partout — plus de filets noirs entre les
+blocs, des cartes qui flottent, des pilules plutôt que des rectangles à
+bordure vive.
+
+Dans `commun.css`, le panneau de clôture en dégradé du hero
+(`.final`) devient un composant partagé : il n'est plus écrit en double
+dans `accueil.html`, et `/tarifs` le reprend tel quel au lieu de garder
+son propre filet noir suivi de texte.
+
+Dans `/tarifs` : les trois formules deviennent des cartes qui flottent
+(coins arrondis, ombre portée), celle « la plus demandée » gagne un
+contour vermillon plutôt qu'un simple aplat ; la bande de garanties
+devient des puces posées plutôt qu'une rangée tracée ; le tableau
+comparatif est maintenant contenu dans une carte ; la FAQ devient des
+cartes au lieu d'un quadrillage ; la case de consentement est posée sur
+un fond teinté plutôt que délimitée par un filet.
+
+Dans `/modeles` : les puces de filtre (métier, ambiance) passent en
+pilules pleinement arrondies — elles empruntaient encore l'ancien style
+à bordure vive et angle vif ; le panneau de la bibliothèque (liste des
+modèles + aperçu) flotte maintenant dans une carte à coins arrondis et
+ombre portée plutôt que d'être un cadre tracé au ras de la page ; le
+popup de fin de page devient une pilule de verre sombre flottante,
+dans le même esprit que la barre de navigation.
+
+Corrigé au passage : sur `accueil.html` et `tarifs.html`, le texte du
+panneau de clôture restait gris sur fond sombre — une couleur posée en
+ligne (`style="color:var(--gris)"`) l'emportait sur la règle partagée
+qui le voulait blanc. Trouvé à la capture d'écran, pas à la relecture.
+
+`vierge.html` n'a pas été touchée : c'est la base neutre que reçoit un
+nouveau site client, pas une page de ce site vitrine — lui donner notre
+identité visuelle serait la rendre inutilisable comme point de départ
+pour un métier qui n'est pas le nôtre.
+
+Vérifié : aucune erreur console, aucun débordement horizontal (bureau
+et mobile) sur les quatre pages, batterie de tests complète au vert.
+
 ## 1.68.0 — Le modèle « Page de vente » devient une vraie fiche produit
 
 Retour : le modèle manquait ce qu'une page de vente a toujours — un

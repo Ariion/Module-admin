@@ -123,20 +123,6 @@
   .tr-prix small{display:block;font-size:10px;color:var(--gris);font-weight:400;
     letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
 
-  /* ---- la fin : un panneau sombre, pas une ligne tracée suivie de texte ---- */
-  .final{margin:clamp(36px,5vw,64px) 0 0;border-radius:28px;overflow:hidden;position:relative;
-    padding:clamp(40px,6vw,72px) clamp(28px,4vw,56px);
-    background:
-      radial-gradient(70% 90% at 90% 110%, #FF3B8F 0%, transparent 60%),
-      radial-gradient(70% 70% at 0% 0%, #7C3AED 0%, transparent 65%),
-      linear-gradient(155deg, #2B1152 0%, #FF3B00 115%);
-    display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);
-    gap:clamp(20px,4vw,56px);align-items:end}
-  @media (max-width:860px){.final{grid-template-columns:1fr;align-items:start;gap:24px}}
-  .final h2,.final .chapo{color:var(--blanc)}
-  .final .label--signal{background:rgba(255,255,255,.16);color:var(--blanc)}
-  .final .actions{margin-top:22px}
-
   a:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
 
   .hero-mesh{
@@ -378,7 +364,7 @@
       <h2 style="margin-top:16px">Regardez avant<br>de vous décider.</h2>
     </div>
     <div>
-      <p class="chapo" style="color:var(--gris);font-size:1rem">Les modèles sont calculés en
+      <p class="chapo" style="font-size:1rem">Les modèles sont calculés en
         direct pour douze métiers, pas photographiés une fois pour toutes.</p>
       <div class="actions">
         <a class="bouton bouton--clair" href="/modeles">Ouvrir les modèles</a>

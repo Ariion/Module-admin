@@ -18,29 +18,31 @@
   @media (max-width:860px){.ouverture{grid-template-columns:1fr;align-items:start;gap:20px}}
   .ouverture h1{margin-top:18px;font-size:clamp(2.3rem,6.4vw,5rem)}
   #titre-metier{color:var(--signal)}
-  .ouverture__note{border-left:1px solid var(--trait);padding-left:clamp(16px,2.4vw,28px)}
-  @media (max-width:860px){.ouverture__note{border-left:0;border-top:1px solid var(--trait);
-    padding:18px 0 0}}
+  .ouverture__note{padding-left:clamp(16px,2.4vw,28px)}
+  @media (max-width:860px){.ouverture__note{padding-left:0}}
 
-  /* ---- les barres de choix : des rangées de la grille ---- */
+  /* ---- les barres de choix : de l'espace, pas des rangées tracées ---- */
   .barre{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);
-    gap:clamp(14px,2.4vw,30px);padding:18px 0;border-top:1px solid var(--trait)}
+    gap:clamp(14px,2.4vw,30px);padding:10px 0}
   @media (max-width:760px){.barre{grid-template-columns:1fr;gap:10px}}
-  .barre h2{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--gris);margin:0;padding-top:7px}
-  .puces{display:flex;flex-wrap:wrap;gap:6px;padding:0;margin:0;list-style:none}
-  .puce{font:inherit;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;
+  .barre h2{font-family:var(--grotesque);font-size:13px;font-weight:600;
+    color:var(--gris);margin:0;padding-top:7px}
+  .puces{display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0;list-style:none}
+  /* Les mêmes pilules que partout ailleurs sur le site maintenant — plus un
+     bouton rectangulaire à bordure vive, resté de l'ancien système. */
+  .puce{font:inherit;font-family:var(--grotesque);font-size:13px;font-weight:500;
     cursor:pointer;color:var(--noir);background:var(--blanc);
-    border:1px solid var(--trait-fin);border-radius:0;padding:8px 13px;
-    transition:background .12s,border-color .12s,color .12s}
+    border:1px solid var(--trait-fin);border-radius:999px;padding:9px 16px;
+    transition:background .12s,border-color .12s,color .12s,box-shadow .12s}
   .puce:hover{border-color:var(--noir)}
   .puce[aria-pressed="true"]{background:var(--noir);border-color:var(--noir);color:var(--blanc)}
-  .puce--action{border-color:var(--signal);color:var(--signal);font-weight:500}
+  .puce--action{border-color:var(--signal);color:var(--signal);font-weight:600}
   .puce--action:hover{background:var(--signal);color:var(--blanc);border-color:var(--signal)}
 
-  /* ---- la scène ---- */
+  /* ---- la scène : un panneau qui flotte, pas un cadre tracé ---- */
   .scene{display:grid;grid-template-columns:200px minmax(0,1fr);
-    border-top:1px solid var(--trait);border-bottom:1px solid var(--trait)}
+    margin-top:14px;border-radius:22px;overflow:hidden;
+    border:1px solid var(--trait-fin);box-shadow:0 24px 50px -28px rgba(10,10,10,.2)}
   @media (max-width:900px){.scene{grid-template-columns:1fr}}
   /* `position:sticky` ici, sous la barre elle-même sticky, produisait une
      vraie casse : une capture pleine page (navigateur, outil de capture, un
@@ -76,24 +78,25 @@
   .cadre{background:var(--blanc);overflow:hidden;flex:1}
   .cadre iframe{display:block;width:100%;height:min(76vh,800px);border:0;background:#fff}
 
-  /* ---- le popup ---- */
-  .pop{position:fixed;left:50%;bottom:0;transform:translate(-50%,110%);
-    width:min(620px,100vw);z-index:40;
-    background:var(--noir);color:var(--blanc);border-radius:0;
-    padding:16px clamp(16px,3vw,24px);
+  /* ---- le popup : une pilule de verre flottante, pas un bandeau tracé ---- */
+  .pop{position:fixed;left:50%;bottom:clamp(14px,3vw,24px);transform:translate(-50%,160%);
+    width:min(600px,calc(100vw - 28px));z-index:40;
+    background:rgba(16,16,20,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    color:var(--blanc);border-radius:20px;border:1px solid rgba(255,255,255,.1);
+    box-shadow:0 24px 50px -16px rgba(0,0,0,.45);
+    padding:16px clamp(16px,3vw,22px);
     display:flex;gap:16px;align-items:center;flex-wrap:wrap;
     transition:transform .35s cubic-bezier(.2,.8,.3,1)}
   .pop[data-ouvert="1"]{transform:translate(-50%,0)}
   .pop p{margin:0;flex:1 1 200px;font-size:13.6px;color:rgba(255,255,255,.66)}
   .pop strong{display:block;font-size:1.02rem;font-weight:600;letter-spacing:-.02em;
     color:var(--blanc);margin-bottom:2px}
-  .pop a{background:var(--signal);color:var(--blanc);text-decoration:none;font-weight:500;
-    font-family:var(--mono);font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;
-    padding:12px 18px;white-space:nowrap}
-  .pop a:hover{background:var(--blanc);color:var(--noir)}
+  .pop a{background:var(--signal);color:var(--blanc);text-decoration:none;font-weight:600;
+    font-family:var(--grotesque);font-size:13.5px;border-radius:999px;
+    padding:12px 20px;white-space:nowrap;transition:transform .15s,box-shadow .15s}
+  .pop a:hover{background:var(--blanc);color:var(--noir);transform:translateY(-1px)}
   .pop button{background:none;border:0;color:rgba(255,255,255,.5);cursor:pointer;
-    font:inherit;font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;
-    text-transform:uppercase;padding:4px}
+    font:inherit;font-family:var(--grotesque);font-size:12.5px;padding:4px}
   .pop button:hover{color:var(--blanc)}
   @media (prefers-reduced-motion:reduce){.pop{transition:none}}
 </style>
