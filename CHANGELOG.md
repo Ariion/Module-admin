@@ -18,6 +18,29 @@
 
 
 
+## 1.70.0 — /tarifs répond à l'objection de l'abonnement
+
+Retour : 149 €, 349 € ou 899 € en une fois peut sembler plus cher qu'un
+abonnement à 10 €/mois — jusqu'à ce qu'on pose les deux côte à côte sur
+plusieurs années, où ça cesse vite d'être vrai.
+
+Nouvelle section « Sur la durée », juste après les formules : un tableau
+à trois lignes (chez nous, une plateforme à 10 €/mois, une plateforme à
+27 €/mois — le tarif réel d'un plan professionnel avec boutique) sur
+quatre colonnes (An 1/2/3/5). La ligne « chez nous » reprend le MÊME
+prix que la formule 03, posé une fois dans `/api/achat-atelier` — jamais
+un second chiffre écrit à la main qui pourrait s'en écarter du premier.
+Les tarifs de plateforme sont volontairement génériques (pas de nom de
+marque cité) : ce sont des ordres de grandeur illustratifs, pas des prix
+vérifiés à l'instant où quelqu'un lit la page.
+
+Les trois sections suivantes (comparatif, questions) sont renumérotées
+en conséquence (03/04, 04/04).
+
+Vérifié : le prix s'injecte bien depuis l'API, aucune erreur console,
+aucun débordement horizontal (le tableau scrolle dans sa propre carte
+sur mobile, pas la page), batterie de tests complète au vert.
+
 ## 1.69.0 — La nouvelle direction étendue à /tarifs et /modeles
 
 Suite de 1.67.0 : « modifié toutes les pages en fonction de ce qu'on
