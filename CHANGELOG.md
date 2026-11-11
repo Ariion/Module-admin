@@ -18,6 +18,37 @@
 
 
 
+## 1.71.0 — Une page /exemples avec six sites complets, cliquables de bout en bout
+
+Retour : au-delà du prix, ce qui retient quelqu'un qui n'y connaît rien,
+c'est de se projeter — « je ferais quoi, moi, avec ça ? ». Un modèle vide
+ou une simple capture ne répond pas à cette question ; un site entier,
+qu'on peut vraiment parcourir, si.
+
+Nouvelle page `/exemples` : une galerie de six métiers (boutique,
+portfolio, cabinet de conseil, presse, contact/services, restaurant),
+chacun avec sa propre mise en page, sa propre palette, son propre
+enchaînement de pages — pas un même gabarit repeint six fois. Trois des
+six proposent en plus plusieurs styles totalement différents pour le
+même site, changeables depuis la barre du haut, pour montrer qu'un seul
+contenu peut porter des habillages très éloignés. Chaque site se
+parcourt en entier : sur la boutique, de l'accueil au bouton d'achat en
+passant par la fiche produit et le panier ; sur la presse, de la liste
+des articles jusqu'aux commentaires d'un article ouvert ; sur le
+restaurant, du menu filtrable à la prise de réservation. Textes,
+avis clients et photos sont fictifs mais présentés comme un vrai site le
+ferait — carrousels, animations au défilement, formulaires de contact
+qui confirment l'envoi.
+
+Page autonome (comme `/boutique` et `/vierge`, pas de barre ni de pied
+communs : c'est un aperçu de ce qu'un client reçoit, pas une page
+marketing d'Atelier), reliée par un lien dans la navigation et le pied
+de page des pages communes (`commun.js`).
+
+Vérifié : aucune erreur console, les 35 photos se chargent depuis
+`/medias/exemples`, aucun débordement horizontal sur mobile, batterie de
+tests complète au vert.
+
 ## 1.70.0 — /tarifs répond à l'objection de l'abonnement
 
 Retour : 149 €, 349 € ou 899 € en une fois peut sembler plus cher qu'un

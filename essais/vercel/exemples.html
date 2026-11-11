@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exemples de sites complets · Atelier</title>
+<meta name="description" content="Six types de site, chacun pensé pour ce qu'il vend : accueil, catalogue, fiche produit, panier, articles, prise de rendez-vous. Plusieurs styles différents pour chacun.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+  /* Six sites distincts, pas un gabarit générique rejoué six fois : chaque
+     catégorie a sa propre palette, sa propre typo d'accent, son propre
+     enchaînement de sections. Deux sont « plusieurs pages » (onglets internes
+     qui changent le panneau visible, sans recharger) ; quatre sont « une
+     page » (tout en un seul défilement). */
+  :root{
+    --noir:#0A0A0A;--blanc:#FFFFFF;--gris:#6B6B68;--trait-fin:#E6E6E2;--fond-douce:#FAFAF8;
+    --grotesque:'Archivo',system-ui,-apple-system,'Helvetica Neue',sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --serif:'Fraunces',Georgia,'Times New Roman',serif;
+    --marge:clamp(18px,4vw,48px);color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--blanc);color:var(--noir);font-family:var(--grotesque);
+    font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{margin:0;text-wrap:balance}
+  p{margin:0}
+  button{font:inherit;cursor:pointer}
+  [hidden]{display:none!important}
+  img{max-width:100%}
+  button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
+    outline:2px solid #FF3B00;outline-offset:2px}
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important;transition:none!important}
+    .flotte{animation:none!important}}
+
+  .note-proto{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;
+    background:var(--noir);color:rgba(255,255,255,.8);font-family:var(--mono);font-size:11px;
+    letter-spacing:.04em;padding:9px 16px;border-radius:999px;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);
+    white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis}
+  .note-proto b{color:#fff;font-weight:600}
+
+  /* ================= VUE 1 — LA BIBLIOTHÈQUE ================= */
+  .enveloppe{max-width:1240px;margin:0 auto;padding:0 var(--marge)}
+  .eyebrow{display:inline-flex;align-items:center;padding:6px 14px;border-radius:999px;
+    background:#FFEDE8;color:#FF3B00;font-weight:600;font-size:12.5px}
+  .biblio-hero{padding:clamp(48px,7vw,84px) 0 clamp(28px,4vw,40px)}
+  .biblio-hero h1{font-size:clamp(2.4rem,5.6vw,4rem);font-weight:800;letter-spacing:-.04em;
+    line-height:1;margin-top:18px;max-width:16ch}
+  .biblio-hero p{margin-top:16px;color:var(--gris);font-size:clamp(1rem,1.4vw,1.15rem);max-width:56ch}
+
+  .grille-cartes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:clamp(14px,2vw,20px);padding-bottom:clamp(56px,8vw,96px)}
+  @media (max-width:980px){.grille-cartes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:620px){.grille-cartes{grid-template-columns:1fr}}
+  .carte-type{border-radius:22px;background:var(--blanc);border:1px solid var(--trait-fin);
+    box-shadow:0 20px 44px -28px rgba(10,10,10,.2);overflow:hidden;text-align:left;
+    display:flex;flex-direction:column;transition:transform .2s ease,box-shadow .2s ease}
+  .carte-type:hover{transform:translateY(-4px);box-shadow:0 28px 54px -24px rgba(10,10,10,.26)}
+  .carte-type .vis{height:132px;position:relative;overflow:hidden}
+  .carte-type .vis img{width:100%;height:100%;object-fit:cover;display:block}
+  .carte-type .badge-pages{position:absolute;top:10px;right:10px;background:rgba(10,10,10,.68);
+    color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.05em;padding:5px 9px;border-radius:999px;
+    backdrop-filter:blur(4px)}
+  .carte-type .txt{padding:18px 20px 22px}
+  .carte-type h3{font-size:1.1rem;font-weight:700;letter-spacing:-.02em;margin-top:10px}
+  .carte-type p{margin-top:7px;color:var(--gris);font-size:13.6px;line-height:1.45}
+  .carte-type .aller{margin-top:14px;font-size:13px;font-weight:600;color:#FF3B00;display:block}
+
+  /* ================= VUE 2 — LA DÉMO (barre commune) ================= */
+  .demo-barre{position:sticky;top:0;z-index:40;background:rgba(10,10,10,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:2px solid #FF3B00;color:#fff;
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px var(--marge)}
+  .demo-retour{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;
+    border-radius:999px;padding:8px 14px;font-size:13px;font-weight:500}
+  .demo-retour:hover{background:rgba(255,255,255,.2)}
+  .demo-info{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:rgba(255,255,255,.55)}
+  .demo-info b{color:#FF3B00;font-weight:600}
+  .demo-badge{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+    color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 12px}
+  .demo-skins{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+  .demo-skins button{background:transparent;border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.7);
+    border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:500}
+  .demo-skins button[aria-pressed="true"]{background:#FF3B00;border-color:#FF3B00;color:#fff;font-weight:600}
+  @media (max-width:700px){.demo-info{display:none}}
+
+  /* ---- composants partagés par les sites à plusieurs écrans (vente/presse/vitrine) ---- */
+  .cta-pleine{display:inline-flex;align-items:center;justify-content:center;border:0;
+    border-radius:var(--radius-pill,999px);padding:14px 26px;font-weight:600;font-size:14.5px;
+    background:var(--accent,#111);color:var(--accent-ink,#fff);transition:transform .15s,opacity .15s,box-shadow .15s}
+  .cta-pleine:hover{transform:translateY(-2px);opacity:.92;box-shadow:0 14px 28px -14px rgba(0,0,0,.35)}
+  /* même geste de survol pour TOUS les boutons d'appel à l'action, quel que
+     soit le site — un vocabulaire d'interaction commun, pas un par page */
+  .cta{transition:transform .15s ease,box-shadow .15s ease,opacity .15s ease;cursor:pointer}
+  .cta:hover{transform:translateY(-2px)}
+  .nav button,.nav a{transition:opacity .15s ease,color .15s ease,background .15s ease}
+  .carte-produit,.carte-article,.vignette,.projet-slide,
+  .site-presentation .equipe button,.site-contact .equipe-grille div,.site-contact .services-grille div,
+  .site-presentation .services div,.site-vente .produit,.lien-tout,.lien-retour{
+    transition:transform .2s ease,box-shadow .2s ease}
+  .carte-article:hover,.projet-slide:hover{transform:translateY(-4px)}
+  .site-contact .equipe-grille div:hover,.site-contact .services-grille div:hover{
+    transform:translateY(-4px);box-shadow:0 18px 36px -24px rgba(18,24,38,.25)}
+  .lien-retour{background:none;border:0;color:inherit;opacity:.7;font-size:13.5px;font-weight:500;padding:0 0 18px}
+  .lien-retour:hover{opacity:1;text-decoration:underline}
+  .lien-tout{background:none;border:1px solid currentColor;border-radius:999px;padding:10px 20px;
+    font-size:13px;font-weight:600;color:inherit;transition:transform .15s ease,background .15s ease}
+  .lien-tout:hover{transform:translateY(-2px);background:rgba(127,127,127,.1)}
+  .stepper{display:inline-flex;align-items:center;gap:14px;margin:16px 0}
+  .stepper button{width:32px;height:32px;border-radius:999px;border:1px solid var(--card-border,#ddd);
+    background:#fff;font-size:16px;line-height:1}
+  .stepper span{min-width:1.4em;text-align:center;font-weight:600}
+
+  /* ---- carrousel générique : une piste qui glisse, des flèches, des points ---- */
+  .carrousel{position:relative}
+  .carrousel__cadre{overflow:hidden;border-radius:var(--radius,16px)}
+  .carrousel__piste{display:flex;transition:transform .45s cubic-bezier(.3,.8,.3,1)}
+  .carrousel__item{flex:0 0 100%;min-width:0}
+  .carrousel__fleche{position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+    width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.92);
+    color:#141414;font-size:16px;box-shadow:0 10px 24px -10px rgba(0,0,0,.35);
+    display:flex;align-items:center;justify-content:center;transition:transform .15s,background .15s}
+  .carrousel__fleche:hover{transform:translateY(-50%) scale(1.08);background:#fff}
+  .carrousel__fleche--prev{left:-18px}
+  .carrousel__fleche--next{right:-18px}
+  @media (max-width:560px){.carrousel__fleche--prev{left:4px}.carrousel__fleche--next{right:4px}}
+  .carrousel__points{display:flex;justify-content:center;gap:7px;margin-top:16px}
+  .carrousel__points button{width:8px;height:8px;border-radius:50%;border:0;background:var(--card-border,#ddd);padding:0}
+  .carrousel__points button[aria-current="true"]{background:var(--accent,#111);width:22px;border-radius:4px;transition:width .25s,border-radius .25s}
+
+  /* ---- outils communs à tous les sites ---- */
+  .reveal-wrap{overflow:hidden}
+  details.faq{border-bottom:1px solid var(--trait-fin);padding:16px 0}
+  details.faq summary{cursor:pointer;font-weight:600;list-style:none;display:flex;
+    justify-content:space-between;gap:12px}
+  details.faq summary::-webkit-details-marker{display:none}
+  details.faq summary::after{content:'+';font-weight:400;color:var(--gris)}
+  details.faq[open] summary::after{content:'–'}
+  details.faq p{margin-top:12px;color:var(--gris);font-size:14.3px;line-height:1.5}
+
+  .form-champ{display:flex;flex-direction:column;gap:6px}
+  .form-champ label{font-size:12.5px;font-weight:600}
+  .form-champ input,.form-champ textarea{font:inherit;padding:11px 13px;border-radius:10px;
+    border:1px solid var(--trait-fin);background:#fff;color:var(--noir)}
+  .form-champ input:focus,.form-champ textarea:focus{outline:2px solid currentColor;outline-offset:1px}
+  .form-ok{display:none;padding:14px 16px;border-radius:12px;background:#E7F6EC;color:#1C6B35;
+    font-size:13.6px;font-weight:500}
+  .form-ok.on{display:block}
+
+  /* =========================================================================
+     SITE 1 — VENTE : « Le Comptoir du Centre »
+     Trois habillages totalement différents (vibrant / minimal / chaleureux)
+     sur le MÊME parcours : accueil → catalogue → fiche produit → panier →
+     commande. Toutes les pages existent et s'enchaînent par clic, avec un
+     panier qui retient ce qu'on y met d'une page à l'autre.
+     ========================================================================= */
+  .site-vente{background:var(--bg,#fff);color:var(--fg,#0A0A0A);
+    --accent:#FF3B00;--accent-ink:#fff;--pale:#FFEDE8;--card-bg:#fff;--card-border:#E6E6E2;
+    --radius:18px;--radius-pill:999px;--shadow:0 20px 44px -28px rgba(10,10,10,.2);
+    font-family:var(--grotesque)}
+  .site-vente[data-skin="minimal"]{--accent:#111;--accent-ink:#fff;--pale:#F2F2F0;
+    --card-border:#ddd;--radius:2px;--radius-pill:2px;--shadow:none}
+  .site-vente[data-skin="chaleureux"]{background:#FBF3EA;--fg:#2B1E14;--accent:#C96A3B;--accent-ink:#fff;
+    --pale:#F3E3D3;--card-border:#EADFD0;--radius:22px;--radius-pill:999px;
+    --shadow:0 20px 40px -24px rgba(90,60,30,.22);font-family:var(--grotesque)}
+  .site-vente[data-skin="chaleureux"] h1,.site-vente[data-skin="chaleureux"] h2{font-family:var(--serif)}
+
+  .site-vente .nav{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--card-border);
+    display:flex;align-items:center;gap:8px;padding:14px var(--marge)}
+  .site-vente[data-skin="chaleureux"] .nav{background:rgba(251,243,234,.9)}
+  .site-vente .nav .marque{font-weight:800;letter-spacing:-.02em;background:none;border:0;font:inherit;cursor:pointer;color:inherit}
+  .site-vente .nav button:not(.marque):not(.panier){margin-left:14px;text-decoration:none;color:#3a3a38;font-size:14px;font-weight:500;
+    background:none;border:0;font-family:inherit;cursor:pointer;padding:8px 2px}
+  .site-vente .nav button:not(.marque):not(.panier):hover{color:var(--accent)}
+  .site-vente .nav .panier{margin-left:auto;position:relative;background:var(--fg,#0A0A0A);color:#fff;
+    border-radius:var(--radius-pill);padding:9px 16px;font-size:13px;font-weight:600;border:0}
+  .site-vente .nav .panier b{position:absolute;top:-6px;right:-6px;background:var(--accent);
+    border-radius:999px;width:19px;height:19px;font-size:10.5px;display:flex;align-items:center;justify-content:center;color:var(--accent-ink)}
+
+  /* ---- hero : structure différente par habillage, pas juste recoloré ---- */
+  .site-vente .hero{position:relative;overflow:hidden;padding:clamp(56px,9vw,100px) var(--marge)}
+  .site-vente[data-skin="vibrant"] .hero{color:#fff;display:grid;
+    grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:center}
+  @media (max-width:860px){.site-vente[data-skin="vibrant"] .hero{grid-template-columns:1fr}}
+  .site-vente .hero img.fond{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+  .site-vente[data-skin="vibrant"] .hero .voile{position:absolute;inset:0;z-index:1;
+    background:radial-gradient(60% 55% at 15% 15%,rgba(255,106,61,.8) 0%,transparent 60%),
+      radial-gradient(55% 55% at 85% 10%,rgba(255,59,143,.75) 0%,transparent 60%),
+      linear-gradient(160deg,rgba(61,26,107,.88) 0%,rgba(255,59,0,.85) 100%)}
+  .site-vente .hero .cont{position:relative;z-index:2}
+  .site-vente .hero h1{font-size:clamp(2.2rem,5.2vw,3.6rem);font-weight:800;letter-spacing:-.04em;line-height:1}
+  .site-vente .hero p{margin-top:14px;max-width:40ch}
+  .site-vente[data-skin="vibrant"] .hero p{color:rgba(255,255,255,.9)}
+  .site-vente .hero .cta{display:inline-flex;margin-top:24px;font-weight:600;
+    border-radius:var(--radius-pill);padding:14px 24px;font-size:14.5px;text-decoration:none;border:0}
+  .site-vente[data-skin="vibrant"] .hero .cta{background:#fff;color:#1A0B33}
+  .site-vente .hero .carte-flotte{position:relative;z-index:2;border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 30px 60px -16px rgba(0,0,0,.5);animation:flotte 5s ease-in-out infinite}
+  .site-vente .hero .carte-flotte img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+  @keyframes flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  /* minimal : pas d'image plein cadre, juste du texte posé, très strict */
+  .site-vente[data-skin="minimal"] .hero{text-align:left;border-bottom:1px solid #ddd;padding-bottom:48px}
+  .site-vente[data-skin="minimal"] .hero .cta{background:#111;color:#fff}
+  .site-vente[data-skin="minimal"] .hero h1{max-width:18ch}
+  /* chaleureux : photo en médaillon à côté du texte, warm et doux */
+  .site-vente[data-skin="chaleureux"] .hero{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}
+  @media (max-width:860px){.site-vente[data-skin="chaleureux"] .hero{grid-template-columns:1fr}}
+  .site-vente[data-skin="chaleureux"] .hero img.medaillon{border-radius:28px;width:100%;aspect-ratio:4/3;object-fit:cover}
+  .site-vente[data-skin="chaleureux"] .hero .cta{background:var(--accent);color:#fff}
+
+  .site-vente section{padding:clamp(48px,6vw,76px) var(--marge)}
+  .site-vente .tete{max-width:620px;margin:0 auto 32px;text-align:center}
+  .site-vente .tete h2{font-size:clamp(1.7rem,3vw,2.3rem);font-weight:800;letter-spacing:-.025em}
+  .site-vente .tete p{margin-top:10px;color:var(--gris)}
+  .site-vente .produits{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .site-vente .produits.petits{grid-template-columns:repeat(3,1fr)}
+  @media (max-width:900px){.site-vente .produits{grid-template-columns:repeat(2,1fr)}}
+  .carte-produit{border-radius:var(--radius);background:var(--card-bg);border:1px solid var(--card-border);overflow:hidden;
+    transition:transform .2s,box-shadow .2s;text-align:left;padding:0;font:inherit;cursor:pointer;color:inherit;
+    box-shadow:var(--shadow);display:flex;flex-direction:column}
+  .carte-produit:hover{transform:translateY(-4px)}
+  .carte-produit img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .carte-produit .d{padding:14px 16px}
+  .carte-produit h4{font-size:14.5px;font-weight:600}
+  .carte-produit .px{margin-top:6px;font-weight:700;color:var(--accent)}
+
+  .site-vente .avis-bande{background:var(--pale)}
+  .site-vente .avis{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:860px){.site-vente .avis{grid-template-columns:1fr}}
+  .site-vente .avis div{background:var(--card-bg);border-radius:var(--radius);padding:20px}
+  .site-vente .etoiles{color:var(--accent);font-size:13px;letter-spacing:2px}
+  .site-vente .avis p{margin-top:10px;font-style:italic;font-size:14px}
+  .site-vente .avis small{display:block;margin-top:10px;color:var(--gris);font-size:12.5px}
+  .site-vente .avis-slide{text-align:center;padding:8px 44px 0}
+  .site-vente .avis-slide p{margin-top:16px;font-size:1.15rem;font-style:italic;line-height:1.5}
+  .site-vente .avis-slide small{display:block;margin-top:14px;color:var(--gris);font-size:13px}
+
+  .site-vente .chiffres{display:flex;justify-content:center;gap:clamp(30px,6vw,80px);text-align:center;flex-wrap:wrap}
+  .site-vente .chiffres b{display:block;font-size:clamp(1.8rem,3vw,2.3rem);font-weight:800}
+  .site-vente .chiffres span{color:var(--gris);font-size:12.5px}
+
+  .site-vente .faq{max-width:680px;margin:0 auto}
+  .site-vente footer{background:var(--fg,#0A0A0A);color:rgba(255,255,255,.7);padding:40px var(--marge) 24px}
+  .site-vente footer .cols{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;font-size:13.5px}
+  @media (max-width:700px){.site-vente footer .cols{grid-template-columns:1fr}}
+  .site-vente footer h5{color:#fff;font-size:12px;letter-spacing:.08em;margin-bottom:10px;font-family:var(--mono)}
+  .site-vente footer p+p{margin-top:6px}
+  .site-vente footer .bas{text-align:center;margin-top:28px;font-size:11.5px;color:rgba(255,255,255,.4)}
+
+  /* ---- fiche produit ---- */
+  .site-vente .fiche-grille{display:grid;grid-template-columns:1fr 1fr;gap:48px;max-width:1120px;margin:0 auto}
+  @media (max-width:800px){.site-vente .fiche-grille{grid-template-columns:1fr}}
+  .site-vente .fiche-grille img{width:100%;border-radius:var(--radius);aspect-ratio:1/1;object-fit:cover}
+  .site-vente .fiche-grille h1{font-size:clamp(1.6rem,3vw,2.1rem)}
+  .site-vente .px-grand{font-size:1.5rem;font-weight:700;color:var(--accent);margin-top:10px}
+  .site-vente .desc{margin-top:14px;color:var(--gris);line-height:1.6}
+  .site-vente .confirme{margin-top:10px;color:#1C6B35;font-weight:600;font-size:13.5px}
+
+  /* ---- panier & commande ---- */
+  .site-vente .panier-vide,.site-vente .commande{max-width:640px;margin:0 auto;text-align:center}
+  .site-vente .ligne-panier{max-width:720px;margin:0 auto 14px;display:grid;
+    grid-template-columns:72px 1fr auto auto;gap:14px;align-items:center;
+    background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:12px}
+  .site-vente .ligne-panier img{width:72px;height:72px;border-radius:12px;object-fit:cover}
+  .site-vente .ligne-panier h4{font-size:14.5px;font-weight:600}
+  .site-vente .ligne-panier p{color:var(--gris);font-size:13.5px;margin-top:2px}
+  .site-vente .retirer{background:none;border:0;color:var(--accent);font-size:12.5px;font-weight:600}
+  .site-vente .sous-total{max-width:720px;margin:20px auto;display:flex;justify-content:space-between;
+    font-size:1.1rem;font-weight:700;padding-top:14px;border-top:1px solid var(--card-border)}
+  .site-vente .commande{text-align:left}
+  .site-vente .commande form{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+  .site-vente .recap{color:var(--gris)}
+  .site-vente .confirmation-commande{text-align:center}
+  .site-vente .confirmation-commande h2{color:#1C6B35}
+  .site-vente .confirmation-commande p{margin-top:10px;color:var(--gris)}
+  .site-vente .confirmation-commande .cta-pleine{margin-top:20px}
+
+  /* =========================================================================
+     SITE 2 — PORTFOLIO : « Studio Lumière »
+     Deux habillages (noir dramatique / clair aéré) sur le même parcours :
+     accueil → galerie → un projet ouvert en entier → à propos → tarifs →
+     contact. Cliquer une photo de la galerie ouvre son propre projet.
+     ========================================================================= */
+  .site-portfolio{background:#101012;color:#F3F1ED;font-family:var(--grotesque)}
+  .site-portfolio[data-skin="clair"]{background:#F7F5F2;color:#1A1814}
+  .site-portfolio h1,.site-portfolio h2{font-family:var(--serif)}
+  .site-portfolio .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:18px var(--marge);
+    border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap;
+    background:rgba(16,16,18,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .site-portfolio[data-skin="clair"] .nav{border-bottom:1px solid #e4e0d8;background:rgba(247,245,242,.85)}
+  .site-portfolio .nav .marque{font-family:var(--serif);font-size:1.1rem;margin-right:auto;
+    background:none;border:0;cursor:pointer;color:inherit}
+  .site-portfolio .nav button{background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);
+    border-radius:999px;padding:8px 16px;font-size:13px;font-family:inherit}
+  .site-portfolio .nav button[aria-pressed="true"]{background:#fff;color:#101012;border-color:#fff;font-weight:600}
+  .site-portfolio[data-skin="clair"] .nav button{border-color:#d8d2c4;color:#5a5448}
+  .site-portfolio[data-skin="clair"] .nav button[aria-pressed="true"]{background:#1A1814;color:#F7F5F2;border-color:#1A1814}
+  .site-portfolio .panneau{padding:clamp(40px,7vw,72px) var(--marge)}
+  .site-portfolio .p-accueil{position:relative;min-height:70vh;display:flex;align-items:center;
+    justify-content:center;text-align:center;overflow:hidden;padding:0}
+  .site-portfolio .p-accueil img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.55)}
+  .site-portfolio .p-accueil .c{position:relative;z-index:1}
+  .site-portfolio .p-accueil h1{font-size:clamp(2.6rem,7vw,5rem);font-weight:500}
+  .site-portfolio .p-accueil p{margin-top:16px;color:rgba(255,255,255,.75);font-size:1.05rem}
+  .site-portfolio .p-accueil button{margin-top:28px;border:1px solid #fff;background:transparent;color:#fff;
+    border-radius:999px;padding:12px 24px;font-size:13.5px;font-family:inherit}
+  .site-portfolio .p-accueil button:hover{background:#fff;color:#101012}
+  .site-portfolio .galerie{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:1120px;margin:0 auto}
+  @media (max-width:760px){.site-portfolio .galerie{grid-template-columns:repeat(2,1fr)}}
+  .site-portfolio .vignette{position:relative;overflow:hidden;border-radius:4px;aspect-ratio:4/5;
+    background:none;border:0;padding:0;cursor:pointer}
+  .site-portfolio .vignette img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease;display:block}
+  .site-portfolio .vignette:hover img{transform:scale(1.07)}
+  .site-portfolio .vignette span{position:absolute;left:0;right:0;bottom:0;padding:14px;font-size:12.5px;
+    color:#fff;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);
+    transform:translateY(100%);transition:transform .25s ease;text-align:left}
+  .site-portfolio .vignette:hover span{transform:translateY(0)}
+  .site-portfolio .p-apropos{display:grid;grid-template-columns:.9fr 1.3fr;gap:48px;max-width:1040px;margin:0 auto;align-items:start}
+  @media (max-width:800px){.site-portfolio .p-apropos{grid-template-columns:1fr}}
+  .site-portfolio .p-apropos img{border-radius:6px;width:100%;aspect-ratio:4/5;object-fit:cover}
+  .site-portfolio .p-apropos h2{font-size:clamp(1.8rem,3vw,2.4rem);font-weight:500}
+  .site-portfolio .p-apropos p{margin-top:14px;color:rgba(255,255,255,.75);line-height:1.6}
+  .site-portfolio[data-skin="clair"] .p-apropos p{color:#4a443a}
+  .site-portfolio .parcours{margin-top:20px;font-size:13.5px;color:rgba(255,255,255,.55)}
+  .site-portfolio[data-skin="clair"] .parcours{color:#7a7366}
+  .site-portfolio .parcours div{display:flex;gap:14px;padding:8px 0;border-top:1px solid rgba(255,255,255,.1)}
+  .site-portfolio[data-skin="clair"] .parcours div{border-top-color:#e4e0d8}
+  .site-portfolio .parcours b{color:#fff;font-family:var(--mono);font-weight:400}
+  .site-portfolio[data-skin="clair"] .parcours b{color:#1A1814}
+  .site-portfolio blockquote{margin:28px 0 0;font-family:var(--serif);font-style:italic;font-size:1.2rem;
+    color:#fff;border-left:2px solid rgba(255,255,255,.3);padding-left:18px}
+  .site-portfolio[data-skin="clair"] blockquote{color:#1A1814;border-left-color:#c9c2b2}
+  .site-portfolio blockquote footer{font-family:var(--grotesque);font-style:normal;font-size:12.5px;
+    color:rgba(255,255,255,.5);margin-top:8px}
+  .site-portfolio[data-skin="clair"] blockquote footer{color:#7a7366}
+  .site-portfolio .p-contact{max-width:520px;margin:0 auto}
+  .site-portfolio .p-contact h2{font-size:clamp(1.8rem,3vw,2.3rem);font-weight:500;margin-bottom:20px}
+  .site-portfolio .p-contact .form-champ input,.site-portfolio .p-contact .form-champ textarea{
+    background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.2);color:#fff}
+  .site-portfolio[data-skin="clair"] .p-contact .form-champ input,
+  .site-portfolio[data-skin="clair"] .p-contact .form-champ textarea{background:#fff;border-color:#d8d2c4;color:#1A1814}
+  .site-portfolio .p-contact label{color:rgba(255,255,255,.7)}
+  .site-portfolio[data-skin="clair"] .p-contact label{color:#4a443a}
+  .site-portfolio .p-contact form{display:flex;flex-direction:column;gap:14px}
+  .site-portfolio .p-contact button[type=submit]{background:#fff;color:#101012;border:0;border-radius:999px;
+    padding:13px;font-weight:600;font-size:14px;font-family:inherit}
+  .site-portfolio[data-skin="clair"] .p-contact button[type=submit]{background:#1A1814;color:#F7F5F2}
+  .site-portfolio .coord{margin-top:20px;font-size:13.5px;color:rgba(255,255,255,.6)}
+  .site-portfolio[data-skin="clair"] .coord{color:#4a443a}
+  .site-portfolio footer{text-align:center;padding:24px;font-size:11.5px;color:rgba(255,255,255,.35);
+    border-top:1px solid rgba(255,255,255,.08)}
+  .site-portfolio[data-skin="clair"] footer{color:#9a9384;border-top-color:#e4e0d8}
+
+  .site-portfolio .projet-slide{background:none;border:0;padding:0;text-align:left;cursor:pointer;
+    color:inherit;font:inherit;width:100%}
+  .site-portfolio .projet-slide img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;display:block}
+  .site-portfolio .projet-slide .d{padding:14px 4px 0}
+  .site-portfolio .projet-slide h4{font-size:1.1rem;font-weight:500}
+  .site-portfolio .projet-slide p{margin-top:4px;color:rgba(255,255,255,.55);font-size:13px}
+  .site-portfolio[data-skin="clair"] .projet-slide p{color:#7a7366}
+
+  /* ---- un projet ouvert en entier (drill-down depuis la galerie) ---- */
+  .site-portfolio .p-projet{max-width:900px;margin:0 auto}
+  .site-portfolio .p-projet .duo-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 28px}
+  @media (max-width:700px){.site-portfolio .p-projet .duo-photos{grid-template-columns:1fr}}
+  .site-portfolio .p-projet .duo-photos img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:4px}
+  .site-portfolio .p-projet .meta{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,.5);letter-spacing:.06em}
+  .site-portfolio[data-skin="clair"] .p-projet .meta{color:#9a9384}
+  .site-portfolio .p-projet h1{font-size:clamp(1.8rem,4vw,2.6rem);margin-top:8px}
+  .site-portfolio .p-projet .texte{margin-top:16px;color:rgba(255,255,255,.78);line-height:1.65;max-width:68ch}
+  .site-portfolio[data-skin="clair"] .p-projet .texte{color:#3a342a}
+
+  /* ---- tarifs ---- */
+  .site-portfolio .formules-photo{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1040px;margin:30px auto 0}
+  @media (max-width:760px){.site-portfolio .formules-photo{grid-template-columns:1fr}}
+  .site-portfolio .formule-photo{border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:22px}
+  .site-portfolio[data-skin="clair"] .formule-photo{border-color:#e4e0d8}
+  .site-portfolio .formule-photo h3{font-size:1.1rem}
+  .site-portfolio .formule-photo .px{font-family:var(--mono);font-size:1.3rem;margin-top:10px;color:#fff}
+  .site-portfolio[data-skin="clair"] .formule-photo .px{color:#1A1814}
+  .site-portfolio .formule-photo p{margin-top:10px;color:rgba(255,255,255,.65);font-size:13.5px;line-height:1.5}
+  .site-portfolio[data-skin="clair"] .formule-photo p{color:#5a5448}
+
+  /* =========================================================================
+     SITE 3 — PRÉSENTATION : « Cabinet des Tilleuls »
+     Deux habillages (sauge calme / clinique bleu-blanc) sur le même
+     parcours : accueil → équipe (cliquer un praticien ouvre sa fiche) →
+     consultations → avis → contact.
+     ========================================================================= */
+  .site-presentation{background:#F2F6F3;color:#17251E;--acc:#1F4B3F;--acc-pale:#E3EEE6}
+  .site-presentation[data-skin="clinique"]{background:#F3F7FB;color:#122033;--acc:#2158A6;--acc-pale:#E4EEFA}
+  .site-presentation .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:16px var(--marge);
+    background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid #E1EAE4;box-shadow:0 1px 0 rgba(23,37,30,.03)}
+  .site-presentation[data-skin="clinique"] .nav{border-bottom-color:#DCE7F2}
+  .site-presentation .nav .marque{font-weight:700;background:none;border:0;cursor:pointer;color:inherit;font:inherit}
+  .site-presentation .nav button:not(.marque):not(.cta){margin-left:14px;text-decoration:none;color:#3f5048;font-size:14px;
+    background:none;border:0;font-family:inherit;cursor:pointer;padding:8px 2px}
+  .site-presentation .nav button:not(.marque):not(.cta):hover{color:var(--acc)}
+  .site-presentation[data-skin="clinique"] .nav button:not(.marque):not(.cta){color:#2c3e52}
+  .site-presentation .nav .cta{margin-left:auto;background:var(--acc);color:#fff;border-radius:999px;
+    padding:10px 18px;font-size:13px;font-weight:600;text-decoration:none;border:0;font-family:inherit;cursor:pointer}
+  .site-presentation .hero{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;
+    padding:clamp(48px,7vw,80px) var(--marge);max-width:1120px;margin:0 auto}
+  @media (max-width:820px){.site-presentation .hero{grid-template-columns:1fr}}
+  .site-presentation .hero img{border-radius:20px;width:100%;aspect-ratio:4/3;object-fit:cover}
+  .site-presentation[data-skin="clinique"] .hero img{border-radius:10px}
+  .site-presentation .hero h1{font-size:clamp(2rem,4vw,2.9rem);font-weight:700;letter-spacing:-.02em}
+  .site-presentation .hero p{margin-top:14px;color:#415048;max-width:40ch}
+  .site-presentation[data-skin="clinique"] .hero p{color:#3b4a5c}
+  .site-presentation .hero .cta{display:inline-flex;margin-top:22px;background:var(--acc);color:#fff;
+    border-radius:999px;padding:13px 22px;font-size:14px;font-weight:600;text-decoration:none;border:0;font-family:inherit;cursor:pointer}
+  .site-presentation section{padding:clamp(40px,6vw,64px) var(--marge);max-width:1120px;margin:0 auto}
+  .site-presentation h2{font-size:clamp(1.6rem,2.8vw,2.1rem);font-weight:700;text-align:center;letter-spacing:-.02em}
+  .site-presentation .equipe{margin-top:30px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media (max-width:800px){.site-presentation .equipe{grid-template-columns:1fr}}
+  .site-presentation .equipe button{background:#fff;border-radius:18px;overflow:hidden;transition:transform .2s;
+    border:0;padding:0;text-align:left;font:inherit;cursor:pointer;color:inherit;display:block;width:100%}
+  .site-presentation .equipe button:hover{transform:translateY(-4px)}
+  .site-presentation .equipe img{width:100%;aspect-ratio:1/1;object-fit:cover}
+  .site-presentation .equipe .d{padding:14px 16px}
+  .site-presentation .equipe h4{font-size:14.5px;font-weight:700}
+  .site-presentation .equipe p{margin-top:4px;color:#5a695f;font-size:13px}
+  /* bento : une tuile principale qui domine, les autres en appoint — une
+     grille qui a une hiérarchie, pas quatre cases identiques */
+  .site-presentation .services{margin-top:28px;display:grid;
+    grid-template-columns:1.3fr 1fr 1fr;grid-template-rows:repeat(2,1fr);gap:14px}
+  @media (max-width:760px){.site-presentation .services{grid-template-columns:1fr;grid-template-rows:none}}
+  .site-presentation .services div{background:#fff;border-radius:16px;padding:18px 20px}
+  .site-presentation .services h4{font-size:15px;font-weight:700}
+  .site-presentation .services p{margin-top:6px;color:#5a695f;font-size:13.5px}
+  .site-presentation .services div:first-child{grid-row:span 2;background:var(--acc-pale);
+    display:flex;flex-direction:column;justify-content:center;padding:28px 24px}
+  @media (max-width:760px){.site-presentation .services div:first-child{grid-row:auto}}
+  .site-presentation .services div:first-child h4{font-size:1.2rem;color:var(--acc)}
+  .site-presentation .services div:first-child p{margin-top:10px;font-size:14.5px;color:#2f4238}
+  .site-presentation .recos{margin-top:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:860px){.site-presentation .recos{grid-template-columns:1fr}}
+  .site-presentation .recos div{background:#fff;border-radius:16px;padding:20px}
+  .site-presentation .recos .etoiles{color:var(--acc)}
+  .site-presentation .recos p{margin-top:10px;font-style:italic;font-size:14px;color:#223a30}
+  .site-presentation .recos small{display:block;margin-top:10px;color:#6b7a70}
+  .site-presentation .infos{margin-top:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center}
+  @media (max-width:700px){.site-presentation .infos{grid-template-columns:1fr}}
+  .site-presentation .infos div{background:#fff;border-radius:16px;padding:20px}
+  .site-presentation .infos h4{font-size:13px;font-family:var(--mono);color:var(--acc);letter-spacing:.04em}
+  .site-presentation .infos p{margin-top:8px;font-size:14px}
+  .site-presentation .form-ok{background:var(--acc-pale)}
+  .site-presentation form{max-width:560px;margin:24px auto 0;display:flex;flex-direction:column;gap:14px}
+  .site-presentation button[type=submit]{background:var(--acc);color:#fff;border:0;border-radius:999px;
+    padding:13px;font-weight:600;font-size:14px}
+  .site-presentation footer{text-align:center;padding:24px;font-size:12px;color:#5a695f;border-top:1px solid #E1EAE4}
+
+  /* ---- fiche d'un membre de l'équipe (drill-down) ---- */
+  .site-presentation .p-membre{max-width:720px;margin:0 auto}
+  .site-presentation .p-membre .tete-membre{display:flex;gap:20px;align-items:center}
+  .site-presentation .p-membre img{width:100px;height:100px;border-radius:50%;object-fit:cover;flex-shrink:0}
+  .site-presentation .p-membre h1{font-size:1.5rem;text-align:left}
+  .site-presentation .p-membre .specialite{color:var(--acc);font-weight:600;font-size:13.5px;margin-top:4px}
+  .site-presentation .p-membre .bio{margin-top:20px;color:#415048;line-height:1.6}
+  .site-presentation[data-skin="clinique"] .p-membre .bio{color:#3b4a5c}
+
+  /* =========================================================================
+     SITE 4 — PRESSE : « Delaunay Rénovation »
+     Deux habillages (éditorial crème / magazine coloré) sur le même
+     parcours : accueil avec les derniers articles → toutes les actualités →
+     un article en entier, avec ses commentaires, qu'on peut compléter.
+     ========================================================================= */
+  .site-presse{background:#F6F2EA;color:#201C16;font-family:var(--grotesque)}
+  .site-presse[data-skin="magazine"]{background:#fff;color:#161616}
+  .site-presse h1,.site-presse h2,.site-presse h3{font-family:var(--serif)}
+  .site-presse[data-skin="magazine"] h1,.site-presse[data-skin="magazine"] h2,.site-presse[data-skin="magazine"] h3{font-family:var(--grotesque);font-weight:800}
+  .site-presse .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:16px var(--marge);
+    border-bottom:2px solid #201C16;flex-wrap:wrap;background:rgba(246,242,234,.92);
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .site-presse[data-skin="magazine"] .nav{border-bottom:3px solid #FF3B00;background:rgba(255,255,255,.92)}
+  .site-presse .nav .marque{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin-right:auto;
+    background:none;border:0;cursor:pointer;color:inherit}
+  .site-presse[data-skin="magazine"] .nav .marque{font-family:var(--grotesque);font-weight:800;letter-spacing:-.02em}
+  .site-presse .nav button{background:transparent;border:1px solid #201C16;color:#201C16;
+    border-radius:999px;padding:7px 15px;font-size:12.5px;font-family:inherit}
+  .site-presse .nav button[aria-pressed="true"]{background:#201C16;color:#F6F2EA}
+  .site-presse[data-skin="magazine"] .nav button{border-color:#161616;color:#161616;border-radius:3px}
+  .site-presse[data-skin="magazine"] .nav button[aria-pressed="true"]{background:#FF3B00;border-color:#FF3B00;color:#fff}
+  .site-presse .panneau{padding:clamp(40px,6vw,64px) var(--marge);max-width:900px;margin:0 auto}
+  .site-presse .masthead{font-family:var(--serif);font-size:clamp(1.9rem,5vw,3.2rem);
+    font-weight:600;letter-spacing:-.01em;text-align:center}
+  .site-presse[data-skin="magazine"] .masthead{font-family:var(--grotesque);font-weight:800;text-align:left;font-size:clamp(2.2rem,6vw,3.8rem)}
+  .site-presse .souslignee{text-align:center;font-family:var(--mono);font-size:11.5px;
+    letter-spacing:.14em;color:#8a8070;margin-top:8px;text-transform:uppercase}
+  .site-presse[data-skin="magazine"] .souslignee{text-align:left;color:#FF3B00;font-weight:700}
+  .site-presse .intro-img{width:100%;border-radius:4px;margin-top:30px;aspect-ratio:16/8;object-fit:cover}
+  .site-presse[data-skin="magazine"] .intro-img{border-radius:16px}
+  .site-presse p.intro{margin-top:24px;font-size:1.05rem;line-height:1.65;max-width:68ch;margin-left:auto;margin-right:auto}
+  .site-presse[data-skin="magazine"] p.intro{margin-left:0;text-align:left}
+
+  /* liste d'articles (accueil = 3 ; toutes les actualités = tous) */
+  .site-presse .liste-articles{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:32px}
+  @media (max-width:820px){.site-presse .liste-articles{grid-template-columns:1fr}}
+  .site-presse .carte-article{text-align:left;background:none;border:0;padding:0;font:inherit;cursor:pointer;color:inherit}
+  .site-presse .carte-article img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px}
+  .site-presse[data-skin="magazine"] .carte-article img{border-radius:14px}
+  .site-presse .carte-article .date{font-family:var(--mono);font-size:11px;color:#8a8070;margin-top:10px;display:block}
+  .site-presse .carte-article h3{font-size:1.15rem;font-weight:600;margin-top:6px}
+  .site-presse[data-skin="magazine"] .carte-article h3{font-weight:800}
+  .site-presse .carte-article p{margin-top:6px;color:#4a4536;font-size:13.8px}
+  .site-presse .lien-voir-tout{margin-top:28px;text-align:center}
+  .site-presse[data-skin="magazine"] .lien-voir-tout{text-align:left}
+
+  /* article en entier */
+  .site-presse .article-tete .date{font-family:var(--mono);font-size:11.5px;color:#8a8070}
+  .site-presse .article-tete h1{font-size:clamp(1.8rem,4vw,2.6rem);margin-top:10px}
+  .site-presse .article-img{width:100%;border-radius:4px;margin:24px 0;aspect-ratio:16/9;object-fit:cover}
+  .site-presse[data-skin="magazine"] .article-img{border-radius:16px}
+  .site-presse .article-corps p{margin-top:14px;line-height:1.7;font-size:1.02rem;color:#2c2820}
+  .site-presse[data-skin="magazine"] .article-corps p{color:#2a2a2a}
+
+  /* commentaires */
+  .site-presse .commentaires{margin-top:40px;border-top:1px solid #d9d2c3;padding-top:28px}
+  .site-presse .commentaires h3{font-size:1.2rem}
+  .site-presse .commentaire{display:flex;gap:12px;margin-top:18px}
+  .site-presse .commentaire .avatar{width:38px;height:38px;border-radius:50%;background:#201C16;color:#F6F2EA;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+  .site-presse[data-skin="magazine"] .commentaire .avatar{background:#FF3B00;color:#fff;border-radius:10px}
+  .site-presse .commentaire .corps-com b{font-size:13.6px}
+  .site-presse .commentaire .corps-com span{color:#8a8070;font-size:11.5px;margin-left:8px}
+  .site-presse .commentaire .corps-com p{margin-top:4px;font-size:14px;color:#2c2820}
+  .site-presse .form-commentaire{margin-top:24px;display:flex;flex-direction:column;gap:10px;max-width:480px}
+
+  .site-presse .mentions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+  .site-presse .mentions span{border:1px solid #201C16;border-radius:999px;padding:7px 14px;font-size:12.5px;font-family:var(--mono)}
+  .site-presse[data-skin="magazine"] .mentions span{border-radius:3px;border-color:#161616}
+  .site-presse blockquote{margin:28px 0 0;font-family:var(--serif);font-style:italic;font-size:1.3rem;
+    border-left:3px solid #201C16;padding-left:18px}
+  .site-presse[data-skin="magazine"] blockquote{font-family:var(--grotesque);font-style:normal;font-weight:600;border-left-color:#FF3B00}
+  .site-presse blockquote footer{font-family:var(--mono);font-size:12px;color:#8a8070;margin-top:8px;font-style:normal}
+  .site-presse .coord{margin-top:20px;font-size:14.5px}
+  .site-presse .coord b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:#8a8070;margin-bottom:4px}
+  .site-presse footer{text-align:center;padding:22px;font-size:11.5px;color:#8a8070;border-top:1px solid #d9d2c3}
+
+  /* =========================================================================
+     SITE 5 — CONTACT : « Verger Conseil »
+     Deux habillages (bleu-gris net / ivoire chaleureux) sur un petit site
+     à quatre pages : accueil, services, équipe, contact — la page qu'on
+     juge en premier n'est plus seule, elle a un site autour d'elle.
+     ========================================================================= */
+  .site-contact{background:#F5F7FA;color:#121826;--acc:#1B2A4A;--card:#fff;--bord:#E3E8EF}
+  .site-contact[data-skin="ivoire"]{background:#FAF6EE;color:#211C14;--acc:#8C5A2B;--card:#fff;--bord:#EADFC8}
+  .site-contact .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:16px var(--marge);
+    background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--bord);box-shadow:0 1px 0 rgba(18,24,38,.03)}
+  .site-contact[data-skin="ivoire"] .nav{background:rgba(255,255,255,.9)}
+  .site-contact .nav .marque{font-weight:700;background:none;border:0;font:inherit;cursor:pointer;color:inherit}
+  .site-contact .nav button{margin-left:14px;text-decoration:none;color:#3b4456;font-size:14px;
+    background:none;border:0;font-family:inherit;cursor:pointer}
+  .site-contact[data-skin="ivoire"] .nav button{color:#4a3f2e}
+  .site-contact .hero{padding:clamp(44px,6vw,64px) var(--marge) clamp(24px,4vw,32px);max-width:900px;margin:0 auto;text-align:center}
+  .site-contact .hero h1{font-size:clamp(2rem,4vw,2.7rem);font-weight:700;letter-spacing:-.02em}
+  .site-contact .hero p{margin-top:12px;color:#525d70}
+  .site-contact[data-skin="ivoire"] .hero p{color:#6b5c42}
+  .site-contact section{padding:clamp(28px,5vw,48px) var(--marge);max-width:1040px;margin:0 auto}
+  .site-contact h2{font-size:clamp(1.5rem,2.6vw,1.9rem);font-weight:700;text-align:center}
+  .site-contact .tuiles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:760px){.site-contact .tuiles{grid-template-columns:1fr}}
+  .site-contact .tuiles div{background:var(--card);border-radius:16px;padding:20px;border:1px solid var(--bord)}
+  .site-contact .tuiles h4{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--acc);text-transform:uppercase}
+  .site-contact .tuiles p{margin-top:8px;font-size:14.5px}
+  .site-contact .grille-form{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;align-items:start}
+  @media (max-width:800px){.site-contact .grille-form{grid-template-columns:1fr}}
+  .site-contact form{display:flex;flex-direction:column;gap:14px}
+  .site-contact button[type=submit]{background:var(--acc);color:#fff;border:0;border-radius:10px;
+    padding:13px;font-weight:600;font-size:14px}
+  .site-contact .carte-ph{border-radius:16px;overflow:hidden;position:relative;aspect-ratio:4/3}
+  .site-contact .carte-ph img{width:100%;height:100%;object-fit:cover;filter:grayscale(.3)}
+  .site-contact .carte-ph span{position:absolute;left:14px;bottom:14px;background:#fff;border-radius:999px;
+    padding:8px 14px;font-size:12.5px;font-weight:600;box-shadow:0 10px 20px -10px rgba(0,0,0,.3)}
+  .site-contact footer{text-align:center;padding:22px;font-size:12px;color:#525d70;border-top:1px solid var(--bord)}
+
+  /* ---- services (page) ---- */
+  .site-contact .services-grille{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+  @media (max-width:800px){.site-contact .services-grille{grid-template-columns:1fr}}
+  .site-contact .services-grille div{background:var(--card);border:1px solid var(--bord);border-radius:16px;padding:20px}
+  .site-contact .services-grille h4{font-size:15px;font-weight:700;color:var(--acc)}
+  .site-contact .services-grille p{margin-top:8px;color:#525d70;font-size:13.8px;line-height:1.5}
+  .site-contact[data-skin="ivoire"] .services-grille p{color:#6b5c42}
+
+  /* ---- équipe (page) ---- */
+  .site-contact .equipe-grille{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px}
+  @media (max-width:800px){.site-contact .equipe-grille{grid-template-columns:1fr}}
+  .site-contact .equipe-grille div{background:var(--card);border:1px solid var(--bord);border-radius:16px;padding:20px;text-align:center}
+  .site-contact .equipe-grille img{width:76px;height:76px;border-radius:50%;object-fit:cover;margin:0 auto}
+  .site-contact .equipe-grille h4{margin-top:12px;font-size:14.5px;font-weight:700}
+  .site-contact .equipe-grille p{margin-top:4px;color:#525d70;font-size:13px}
+
+  /* =========================================================================
+     SITE 6 — VITRINE : « La Table du Marché »
+     Deux habillages (chaleureux de jour / nuit aux chandelles) sur le même
+     parcours : accueil vivant (photo en Ken Burns, bandeau qui tourne) →
+     menu filtrable par catégorie → galerie → réservation avec confirmation.
+     ========================================================================= */
+  .site-accueil{background:#FBF3EA;color:#2B1E14;--accent:#C96A3B;--card-bg:#fff}
+  .site-accueil[data-skin="nuit"]{background:#17110B;color:#F3E9DD;--accent:#E0A458;--card-bg:#241A10}
+  .site-accueil .nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:16px var(--marge);
+    background:rgba(251,243,234,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .site-accueil[data-skin="nuit"] .nav{background:rgba(23,17,11,.82)}
+  .site-accueil .nav .marque{font-weight:800;letter-spacing:-.01em;background:none;border:0;font:inherit;cursor:pointer;color:inherit}
+  .site-accueil .nav button:not(.marque):not(.cta){margin-left:14px;text-decoration:none;color:#5a4433;font-size:14px;
+    background:none;border:0;font-family:inherit;cursor:pointer;padding:8px 2px}
+  .site-accueil .nav button:not(.marque):not(.cta):hover{color:var(--accent)}
+  .site-accueil[data-skin="nuit"] .nav button:not(.marque):not(.cta){color:#cdb8a0}
+  .site-accueil .nav .cta{margin-left:auto;background:var(--accent);color:#fff;border-radius:999px;
+    padding:10px 18px;font-size:13px;font-weight:600;text-decoration:none;border:0;font-family:inherit;cursor:pointer}
+  .site-accueil .hero{position:relative;min-height:62vh;display:flex;align-items:flex-end;overflow:hidden}
+  .site-accueil .hero img{position:absolute;inset:0;width:110%;height:110%;object-fit:cover;
+    animation:kenburns 14s ease-in-out infinite alternate}
+  @keyframes kenburns{from{transform:scale(1) translate(0,0)}to{transform:scale(1.12) translate(-2%,-2%)}}
+  .site-accueil .hero .voile{position:absolute;inset:0;background:linear-gradient(0deg,rgba(20,10,5,.78),transparent 60%)}
+  .site-accueil[data-skin="nuit"] .hero .voile{background:linear-gradient(0deg,rgba(10,6,2,.9),rgba(20,12,4,.25) 70%)}
+  .site-accueil .hero .c{position:relative;z-index:1;color:#fff;padding:40px var(--marge) 20px}
+  .site-accueil .hero h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:800;letter-spacing:-.03em;max-width:14ch}
+  .site-accueil[data-skin="nuit"] h1{font-family:var(--serif);font-weight:500}
+  .site-accueil .hero p{margin-top:12px;max-width:40ch;color:rgba(255,255,255,.88)}
+  .site-accueil .hero .cta{display:inline-flex;margin-top:20px;background:#fff;color:#2B1E14;
+    border-radius:999px;padding:13px 22px;font-size:14px;font-weight:700;text-decoration:none}
+  .site-accueil[data-skin="nuit"] .hero .cta{background:var(--accent);color:#1a1208}
+  /* le bandeau vivant : les spécialités du jour défilent, et les places
+     restantes ce soir donnent un vrai sentiment de « maintenant ». */
+  .ticker{position:relative;z-index:1;background:rgba(0,0,0,.35);backdrop-filter:blur(4px);
+    padding:10px var(--marge);display:flex;align-items:center;gap:14px;overflow:hidden;color:#fff;font-size:13.5px}
+  .ticker .puce-live{width:8px;height:8px;border-radius:50%;background:#6FCF97;flex-shrink:0;
+    animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .ticker .defile{white-space:nowrap;animation:defile 16s linear infinite}
+  @media (prefers-reduced-motion:reduce){.ticker .defile{animation:none}}
+  @keyframes defile{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .ticker .places{margin-left:auto;font-weight:600;white-space:nowrap;flex-shrink:0}
+
+  .site-accueil section{padding:clamp(40px,6vw,64px) var(--marge);max-width:1120px;margin:0 auto}
+  .site-accueil h2{font-size:clamp(1.6rem,2.8vw,2.1rem);font-weight:800;text-align:center;letter-spacing:-.02em}
+  .site-accueil[data-skin="nuit"] h2{font-family:var(--serif);font-weight:500}
+
+  /* le menu, filtrable sans recharger */
+  .onglets-menu{display:flex;justify-content:center;gap:8px;margin-top:22px;flex-wrap:wrap}
+  .onglets-menu button{background:none;border:1px solid var(--accent);color:var(--accent);
+    border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;font-family:inherit}
+  .onglets-menu button[aria-pressed="true"]{background:var(--accent);color:#fff}
+  .site-accueil .menu{margin-top:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media (max-width:860px){.site-accueil .menu{grid-template-columns:repeat(2,1fr)}}
+  .site-accueil .plat{background:var(--card-bg);border-radius:16px;padding:16px;
+    animation:apparait .35s ease both}
+  @keyframes apparait{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .site-accueil .plat h4{font-size:14.5px;font-weight:700}
+  .site-accueil .plat p.d{margin-top:6px;color:var(--gris);font-size:12.8px;line-height:1.4;min-height:2.6em}
+  .site-accueil[data-skin="nuit"] .plat p.d{color:#cdb8a0}
+  .site-accueil .plat .px{margin-top:8px;color:var(--accent);font-weight:700;font-size:13px}
+
+  .site-accueil .galerie{margin-top:28px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media (max-width:760px){.site-accueil .galerie{grid-template-columns:repeat(2,1fr)}}
+  .site-accueil .galerie img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;transition:transform .3s}
+  .site-accueil .galerie img:hover{transform:scale(1.04)}
+  .site-accueil .galerie-grande{width:100%;aspect-ratio:16/10;object-fit:cover;display:block}
+  .site-accueil .avis{margin-top:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media (max-width:860px){.site-accueil .avis{grid-template-columns:1fr}}
+  .site-accueil .avis div{background:var(--card-bg);border-radius:16px;padding:20px}
+  .site-accueil .avis .etoiles{color:var(--accent)}
+  .site-accueil .avis p{margin-top:10px;font-style:italic;font-size:14px}
+  .site-accueil .avis small{display:block;margin-top:8px;color:#8a7360}
+  .site-accueil .infos{margin-top:28px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center}
+  @media (max-width:700px){.site-accueil .infos{grid-template-columns:1fr}}
+  .site-accueil .infos div{background:var(--card-bg);border-radius:16px;padding:20px}
+  .site-accueil .infos h4{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.04em}
+  .site-accueil .infos p{margin-top:8px;font-size:14px}
+  .site-accueil footer{text-align:center;padding:24px;font-size:12px;color:#8a7360}
+
+  /* réservation */
+  .site-accueil .reservation{max-width:480px;margin:0 auto;text-align:left}
+  .site-accueil .reservation form{display:flex;flex-direction:column;gap:14px;margin-top:20px}
+  .site-accueil .ligne-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media (max-width:520px){.site-accueil .ligne-3{grid-template-columns:1fr}}
+  .site-accueil .confirmation-reservation{text-align:center}
+  .site-accueil .confirmation-reservation h2{color:#2E7D46}
+  .site-accueil[data-skin="nuit"] .confirmation-reservation h2{color:#8FD9A8}
+</style>
+
+<div class="note-proto"><b>Exemples fictifs</b> — pour s’imaginer dedans, pas de vraies entreprises. Toutes les pages sont cliquables ; changez de style depuis la barre du haut.</div>
+
+<main id="vue-bibliotheque">
+  <div class="enveloppe">
+    <header class="biblio-hero">
+      <span class="eyebrow">La bibliothèque — 6 sites complets</span>
+      <h1>Six types de site, chacun pensé pour ce qu’il vend.</h1>
+      <p>Chaque carte ouvre un site entier, avec toutes ses pages cliquables : sur la boutique,
+        on va vraiment de l’accueil au paiement en passant par la fiche produit ; sur la presse,
+        d’un article à ses commentaires. Trois sites proposent aussi plusieurs styles totalement
+        différents pour le même site — changez-en depuis la barre du haut.</p>
+    </header>
+    <section class="grille-cartes" id="cartes"></section>
+  </div>
+</main>
+
+<main id="vue-demo" hidden>
+  <div class="demo-barre">
+    <button class="demo-retour" id="retour">← Bibliothèque</button>
+    <span class="demo-info">DÉMO — <b id="demo-famille"></b></span>
+    <span class="demo-badge" id="demo-badge"></span>
+    <div class="demo-skins" id="demo-skins"></div>
+  </div>
+  <div id="demo-corps"></div>
+</main>
+
+<script>
+(function(){
+  var PH = {
+    boutique:['/medias/exemples/boutique-1-960.webp','/medias/exemples/boutique-2-960.webp',
+      '/medias/exemples/boutique-3-960.webp','/medias/exemples/boutique-4-960.webp','/medias/exemples/boutique-5-960.webp'],
+    creatif:['/medias/exemples/creatif-1-960.webp','/medias/exemples/creatif-2-960.webp',
+      '/medias/exemples/creatif-3-960.webp','/medias/exemples/creatif-4-960.webp',
+      '/medias/exemples/creatif-5-960.webp','/medias/exemples/creatif-6-960.webp'],
+    sante:['/medias/exemples/sante-1-960.webp','/medias/exemples/sante-2-960.webp',
+      '/medias/exemples/sante-3-960.webp','/medias/exemples/sante-4-960.webp',
+      '/medias/exemples/sante-5-960.webp','/medias/exemples/sante-6-960.webp'],
+    batiment:['/medias/exemples/batiment-1-960.webp','/medias/exemples/batiment-2-960.webp',
+      '/medias/exemples/batiment-3-960.webp','/medias/exemples/batiment-4-960.webp',
+      '/medias/exemples/batiment-5-960.webp','/medias/exemples/batiment-6-960.webp'],
+    conseil:['/medias/exemples/conseil-1-960.webp','/medias/exemples/conseil-2-960.webp',
+      '/medias/exemples/conseil-3-960.webp','/medias/exemples/conseil-4-960.webp',
+      '/medias/exemples/conseil-5-960.webp','/medias/exemples/conseil-6-960.webp'],
+    restaurant:['/medias/exemples/restaurant-1-960.webp','/medias/exemples/restaurant-2-960.webp',
+      '/medias/exemples/restaurant-3-960.webp','/medias/exemples/restaurant-4-960.webp',
+      '/medias/exemples/restaurant-5-960.webp','/medias/exemples/restaurant-6-960.webp']
+  };
+
+  function formulaire(cible){
+    return '<form data-form="' + cible + '">' +
+      '<div class="form-champ"><label for="'+cible+'-nom">Nom</label>' +
+        '<input id="'+cible+'-nom" required></div>' +
+      '<div class="form-champ"><label for="'+cible+'-email">E-mail</label>' +
+        '<input id="'+cible+'-email" type="email" required></div>' +
+      '<div class="form-champ"><label for="'+cible+'-msg">Message</label>' +
+        '<textarea id="'+cible+'-msg" rows="4" required></textarea></div>' +
+      '<button type="submit">Envoyer le message</button>' +
+      '<p class="form-ok" data-ok>Message envoyé — c’est une démonstration, rien n’est transmis.</p>' +
+    '</form>';
+  }
+
+  function avisHtml(etoiles,texte,qui){
+    return '<div><span class="etoiles">'+etoiles+'</span><p>« '+texte+' »</p><small>'+qui+'</small></div>';
+  }
+  function faqHtml(q,r){
+    return '<details class="faq"><summary>'+q+'</summary><p>'+r+'</p></details>';
+  }
+
+  /* ---- carrousel générique : une piste qui glisse, flèches + points ---- */
+  var carrouselSeq = 0;
+  function carrouselHtml(itemsHtml){
+    var id = 'car-' + (carrouselSeq++);
+    return '<div class="carrousel" data-carrousel id="'+id+'">' +
+      '<div class="carrousel__cadre"><div class="carrousel__piste">' +
+        itemsHtml.map(function(h){ return '<div class="carrousel__item">'+h+'</div>'; }).join('') +
+      '</div></div>' +
+      (itemsHtml.length>1 ?
+        '<button class="carrousel__fleche carrousel__fleche--prev" data-car-prev aria-label="Précédent">‹</button>' +
+        '<button class="carrousel__fleche carrousel__fleche--next" data-car-next aria-label="Suivant">›</button>' +
+        '<div class="carrousel__points" data-car-points>' +
+          itemsHtml.map(function(_,i){ return '<button aria-current="'+(i===0?'true':'false')+'" data-car-point="'+i+'"></button>'; }).join('') +
+        '</div>' : '') +
+    '</div>';
+  }
+  function brancherCarrousels(racine){
+    racine.querySelectorAll('[data-carrousel]').forEach(function(car){
+      var piste = car.querySelector('.carrousel__piste');
+      var items = piste.children.length;
+      var index = 0;
+      function aller(i){
+        index = (i + items) % items;
+        piste.style.transform = 'translateX(-' + (index*100) + '%)';
+        car.querySelectorAll('[data-car-point]').forEach(function(p){
+          p.setAttribute('aria-current', parseInt(p.dataset.carPoint,10)===index ? 'true' : 'false');
+        });
+      }
+      var prev = car.querySelector('[data-car-prev]'), next = car.querySelector('[data-car-next]');
+      if (prev) prev.addEventListener('click', function(){ aller(index-1); });
+      if (next) next.addEventListener('click', function(){ aller(index+1); });
+      car.querySelectorAll('[data-car-point]').forEach(function(p){
+        p.addEventListener('click', function(){ aller(parseInt(p.dataset.carPoint,10)); });
+      });
+    });
+  }
+
+  /* ===================== 1. VENTE — accueil, catalogue, fiche produit,
+     panier, commande : tout le parcours, avec un panier qui retient ce
+     qu'on y met d'une page à l'autre. Trois habillages au choix. ===================== */
+  function creerVente(){
+    var p = PH.boutique;
+    var PRODUITS = [
+      { id:'vase', nom:'Vase tourné en grès', prix:32, img:p[0],
+        desc:'Tourné à la main sur un tour de potier, émail mat couleur sable. Pièce unique : deux vases ne sont jamais identiques.' },
+      { id:'plaid', nom:'Plaid en laine mérinos', prix:68, img:p[1],
+        desc:'Tissé en France, 130×180 cm. Se patine bien, ne boulotte pas après lavage à froid.' },
+      { id:'bougie', nom:'Bougie de soja, cèdre', prix:19, img:p[2],
+        desc:'Cire végétale, mèche en bois, 40 h de combustion. Sans paraffine ni parfum de synthèse.' },
+      { id:'carnet', nom:'Carnet relié main', prix:24, img:p[3],
+        desc:'Couverture en cuir végétal, 120 pages de papier recyclé 90 g. Relié à la main, à plat ouvert.' },
+      { id:'osier', nom:'Panier en osier tressé', prix:45, img:p[4] || p[0],
+        desc:'Tressé à la main par un atelier du Jura. Deux anses, 35 cm de diamètre, pour le marché ou le rangement.' }
+    ];
+    var etat = { page:'accueil', skin:'vibrant', produitId:PRODUITS[0].id, panier:{} };
+
+    function trouve(id){ for (var i=0;i<PRODUITS.length;i++) if (PRODUITS[i].id===id) return PRODUITS[i]; return PRODUITS[0]; }
+    function totalArticles(){ var n=0; for (var id in etat.panier) n += etat.panier[id]; return n; }
+    function sousTotal(){ var s=0; for (var id in etat.panier) s += trouve(id).prix*etat.panier[id]; return s; }
+
+    function carteProduit(pr){
+      return '<button class="carte-produit" data-produit="'+pr.id+'"><img src="'+pr.img+'" alt="">' +
+        '<div class="d"><h4>'+pr.nom+'</h4><p class="px">'+pr.prix+' €</p></div></button>';
+    }
+    function avisSlide(etoiles,texte,qui){
+      return '<div class="avis-slide"><span class="etoiles">'+etoiles+'</span><p>« '+texte+' »</p><small>'+qui+'</small></div>';
+    }
+
+    function navHtml(){
+      return '<nav class="nav"><button class="marque" data-nav="accueil">Comptoir du Centre</button>' +
+        '<button data-nav="accueil">Accueil</button><button data-nav="catalogue">Catalogue</button>' +
+        '<button class="panier" data-nav="panier">Panier<b>'+totalArticles()+'</b></button></nav>';
+    }
+
+    function heroHtml(){
+      if (etat.skin==='chaleureux'){
+        return '<header class="hero"><div class="cont reveal"><h1>Des objets qu’on garde.</h1>' +
+          '<p>Fabriqués à la main, par petites séries, expédiés depuis Annecy.</p>' +
+          '<button class="cta" data-nav="catalogue">Voir la boutique →</button></div>' +
+          '<img class="medaillon reveal" src="'+p[0]+'" alt=""></header>';
+      }
+      if (etat.skin==='minimal'){
+        return '<header class="hero"><div class="cont reveal"><h1>Des objets qu’on garde.</h1>' +
+          '<p>Fabriqués à la main, par petites séries, expédiés depuis Annecy.</p>' +
+          '<button class="cta" data-nav="catalogue">Voir la boutique →</button></div></header>';
+      }
+      return '<header class="hero"><img class="fond" src="'+p[0]+'" alt=""><div class="voile"></div>' +
+        '<div class="cont"><h1>Des objets qu’on garde.</h1>' +
+        '<p>Fabriqués à la main, par petites séries, expédiés depuis Annecy.</p>' +
+        '<button class="cta" data-nav="catalogue">Voir la boutique →</button></div>' +
+        '<div class="carte-flotte flotte reveal"><img src="'+p[1]+'" alt=""></div></header>';
+    }
+
+    function pageAccueil(){
+      return heroHtml() +
+        '<section id="produits"><div class="tete reveal"><h2>Nos pièces phares</h2>' +
+        '<p>Trois objets pour donner le ton — le catalogue complet en compte cinq.</p></div>' +
+        '<div class="produits">' + [PRODUITS[0],PRODUITS[1],PRODUITS[2]].map(carteProduit).join('') + '</div>' +
+        '<p class="lien-tout-zone" style="text-align:center;margin-top:22px">' +
+        '<button class="lien-tout" data-nav="catalogue">Voir tout le catalogue →</button></p></section>' +
+        '<section class="avis-bande"><div class="tete reveal"><h2>Ce qu’en disent les clientes et clients</h2></div>' +
+        '<div style="max-width:620px;margin:0 auto">' + carrouselHtml([
+          avisSlide('★★★★★','Reçu en trois jours, emballé avec soin. Exactement la photo.','Camille R. — Cliente'),
+          avisSlide('★★★★★','Le détail qui change tout : la qualité tient dans le temps.','Hugo B. — Client depuis 2023'),
+          avisSlide('★★★★★','Service après-vente réactif pour un échange de taille.','Inès T. — Cliente')
+        ]) + '</div></section>' +
+        '<section class="reveal"><div class="chiffres">' +
+          '<div><b>4,8/5</b><span>NOTE MOYENNE</span></div>' +
+          '<div><b>1 200+</b><span>COMMANDES LIVRÉES</span></div>' +
+          '<div><b>48 h</b><span>DÉLAI DE PRÉPARATION</span></div>' +
+        '</div></section>' +
+        '<section class="reveal"><div class="tete"><h2>Livraison, retours, questions</h2></div>' +
+        '<div class="faq">' +
+          faqHtml('Sous combien de temps je reçois ma commande ?','Entre 2 et 4 jours ouvrés, avec un suivi dès l’expédition.') +
+          faqHtml('Je peux retourner un article ?','Oui, sous 14 jours, remboursé dès réception.') +
+          faqHtml('La livraison est-elle payante ?','Offerte dès 50 € d’achat, sinon un forfait fixe est indiqué au panier.') +
+        '</div></section>';
+    }
+
+    function pageCatalogue(){
+      return '<section class="reveal"><div class="tete"><h2>Tout le catalogue</h2>' +
+        '<p>Cinq pièces, renouvelées par petites séries.</p></div>' +
+        '<div class="produits">' + PRODUITS.map(carteProduit).join('') + '</div></section>';
+    }
+
+    function pageFiche(){
+      var pr = trouve(etat.produitId);
+      var autres = PRODUITS.filter(function(x){ return x.id!==pr.id; }).slice(0,3);
+      return '<section class="reveal" style="max-width:1120px;margin:0 auto;padding:clamp(28px,5vw,48px) var(--marge)">' +
+        '<button class="lien-retour" data-nav="catalogue">← Retour au catalogue</button>' +
+        '<div class="fiche-grille"><img src="'+pr.img+'" alt="">' +
+          '<div><h1>'+pr.nom+'</h1><p class="px-grand">'+pr.prix+' €</p>' +
+          '<p class="desc">'+pr.desc+'</p>' +
+          '<div class="stepper"><button data-qte="-1">–</button><span id="qte-aff">1</span><button data-qte="1">+</button></div><br>' +
+          '<button class="cta-pleine" data-ajouter="'+pr.id+'">Ajouter au panier</button>' +
+          '<p class="confirme" data-confirme hidden>Ajouté au panier ✓</p></div></div>' +
+        '<h3 style="margin-top:44px;font-size:1.2rem">Vous aimerez aussi</h3>' +
+        '<div class="produits petits" style="margin-top:16px">' + autres.map(carteProduit).join('') + '</div></section>';
+    }
+
+    function pagePanier(){
+      var ids = Object.keys(etat.panier);
+      if (!ids.length){
+        return '<section class="panier-vide reveal" style="padding:clamp(56px,8vw,88px) var(--marge)">' +
+          '<h2>Votre panier est vide</h2><p style="color:var(--gris);margin-top:10px">Ajoutez une pièce depuis le catalogue.</p>' +
+          '<button class="cta-pleine" style="margin-top:20px" data-nav="catalogue">Voir le catalogue</button></section>';
+      }
+      var lignes = ids.map(function(id){
+        var pr = trouve(id), qte = etat.panier[id];
+        return '<div class="ligne-panier"><img src="'+pr.img+'" alt=""><div class="d"><h4>'+pr.nom+'</h4>' +
+          '<p>'+pr.prix+' € × '+qte+'</p></div>' +
+          '<div class="stepper"><button data-panier-qte="'+id+'" data-delta="-1">–</button><span>'+qte+'</span>' +
+          '<button data-panier-qte="'+id+'" data-delta="1">+</button></div>' +
+          '<button class="retirer" data-retirer="'+id+'">Retirer</button></div>';
+      }).join('');
+      return '<section class="reveal" style="padding:clamp(40px,6vw,64px) var(--marge)">' +
+        '<div class="tete"><h2>Votre panier</h2></div>' + lignes +
+        '<div class="sous-total"><span>Sous-total</span><b>'+sousTotal()+' €</b></div>' +
+        '<p style="text-align:center;margin-top:20px"><button class="cta-pleine" data-nav="commande">Passer la commande</button></p></section>';
+    }
+
+    function pageCommande(){
+      if (!Object.keys(etat.panier).length){
+        return '<section class="reveal" style="padding:clamp(56px,8vw,88px) var(--marge);text-align:center">' +
+          '<h2>Rien à commander</h2><button class="cta-pleine" style="margin-top:16px" data-nav="catalogue">Voir le catalogue</button></section>';
+      }
+      return '<section class="commande reveal" id="vente-commande" style="padding:clamp(40px,6vw,64px) var(--marge)">' +
+        '<h2>Finaliser la commande</h2><p class="recap">Total à payer : <b>'+sousTotal()+' €</b></p>' +
+        '<form data-form-commande>' +
+          champFormulaire('v-nom','Nom') + champFormulaire('v-adresse','Adresse de livraison') +
+          champFormulaire('v-carte','Numéro de carte (démonstration)') +
+          '<button type="submit" class="cta-pleine">Payer '+sousTotal()+' €</button>' +
+        '</form></section>';
+    }
+    function champFormulaire(id,label){
+      return '<div class="form-champ"><label for="'+id+'">'+label+'</label><input id="'+id+'" required></div>';
+    }
+
+    function html(){
+      var corps = etat.page==='accueil' ? pageAccueil()
+        : etat.page==='catalogue' ? pageCatalogue()
+        : etat.page==='fiche' ? pageFiche()
+        : etat.page==='panier' ? pagePanier()
+        : pageCommande();
+      return '<div class="site-vente" data-skin="'+etat.skin+'">' + navHtml() + corps +
+        '<footer><div class="cols">' +
+          '<div><h5>LE COMPTOIR</h5><p>Nos pièces</p><p>Catalogue</p><p>Avis clients</p></div>' +
+          '<div><h5>INFOS</h5><p>Livraison</p><p>Retours</p><p>CGV</p></div>' +
+          '<div><h5>CONTACT</h5><p>contact@exemple.fr</p><p>Annecy, France</p></div>' +
+        '</div><p class="bas">Comptoir du Centre — site de démonstration</p></footer></div>';
+    }
+
+    function bind(root, repeindre){
+      root.querySelectorAll('[data-nav]').forEach(function(el){
+        el.addEventListener('click', function(){ etat.page = el.dataset.nav; repeindre(); });
+      });
+      root.querySelectorAll('[data-produit]').forEach(function(el){
+        el.addEventListener('click', function(){ etat.produitId = el.dataset.produit; etat.page='fiche'; repeindre(); });
+      });
+      var qteAff = root.querySelector('#qte-aff');
+      if (qteAff){
+        root.querySelectorAll('[data-qte]').forEach(function(b){
+          b.addEventListener('click', function(){
+            qteAff.textContent = Math.max(1, parseInt(qteAff.textContent,10) + parseInt(b.dataset.qte,10));
+          });
+        });
+      }
+      root.querySelectorAll('[data-ajouter]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var id = b.dataset.ajouter, qte = parseInt((root.querySelector('#qte-aff')||{textContent:'1'}).textContent,10) || 1;
+          etat.panier[id] = (etat.panier[id]||0) + qte;
+          var confirme = root.querySelector('[data-confirme]'); if (confirme) confirme.hidden = false;
+          var badge = root.querySelector('.site-vente .panier b'); if (badge) badge.textContent = totalArticles();
+        });
+      });
+      root.querySelectorAll('[data-panier-qte]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var id = b.dataset.panierQte, delta = parseInt(b.dataset.delta,10);
+          etat.panier[id] = Math.max(0,(etat.panier[id]||0)+delta);
+          if (!etat.panier[id]) delete etat.panier[id];
+          repeindre();
+        });
+      });
+      root.querySelectorAll('[data-retirer]').forEach(function(b){
+        b.addEventListener('click', function(){ delete etat.panier[b.dataset.retirer]; repeindre(); });
+      });
+      var formCommande = root.querySelector('[data-form-commande]');
+      if (formCommande){
+        formCommande.addEventListener('submit', function(ev){
+          ev.preventDefault();
+          var zone = root.querySelector('#vente-commande');
+          var numero = Math.floor(1000 + Math.random()*9000);
+          zone.innerHTML = '<div class="confirmation-commande reveal in"><h2>Commande confirmée !</h2>' +
+            '<p>Merci — numéro de commande #'+numero+'. C’est une démonstration, rien n’a été débité.</p>' +
+            '<button class="cta-pleine" data-retour-accueil>Retour à l’accueil</button></div>';
+          zone.querySelector('[data-retour-accueil]').addEventListener('click', function(){
+            etat.panier = {}; etat.page = 'accueil'; repeindre();
+          });
+        });
+      }
+    }
+
+    return {
+      skins:['vibrant','minimal','chaleureux'],
+      actif: function(){ return etat.skin; },
+      setSkin: function(s){ etat.skin = s; },
+      html: html,
+      bind: bind
+    };
+  }
+
+  /* ===================== 2. PORTFOLIO (plusieurs pages) ===================== */
+  function creerPortfolio(){
+    var p = PH.creatif;
+    var PROJETS = [
+      { titre:'Mariage de Claire &amp; Thomas', lieu:'Les Gets', date:'2025', photos:[p[0],p[1]],
+        texte:'Un mariage de montagne, lumière de fin d’après-midi. Deux heures de couple seuls avant la cérémonie, pour des images sans personne qui regarde l’objectif.',
+        citation:'Studio Lumière a su capter exactement ce qu’on voulait, sans qu’on ait à poser.', qui:'Claire &amp; Thomas, mariés en 2025' },
+      { titre:'Portrait de famille, les Rochet', lieu:'Studio, Annecy', date:'2025', photos:[p[2],p[3]],
+        texte:'Trois générations dans la même pièce : le défi n’est pas la lumière, c’est de faire tenir tout le monde immobile le même quart de seconde.',
+        citation:'La seule séance où mes parents n’ont pas eu l’air mal à l’aise devant un appareil photo.', qui:'Inès Rochet' },
+      { titre:'Reportage à Chamonix', lieu:'Chamonix', date:'2023', photos:[p[4]||p[0],p[5]||p[1]],
+        texte:'Un reportage de trois jours pour un client hôtelier, entre lever de soleil sur les Aiguilles et service du soir en salle.',
+        citation:'Des photos qu’on peut encore utiliser trois ans après — ça ne date pas.', qui:'Hôtel du Mont-Blanc' }
+    ];
+    var etat = { page:'accueil', skin:'noir', projetIdx:0 };
+
+    function navHtml(){
+      return '<nav class="nav"><button class="marque" data-nav="accueil">Studio Lumière</button>' +
+        bouton('accueil','Accueil') + bouton('galerie','Galerie') + bouton('apropos','À propos') +
+        bouton('tarifs','Tarifs') + bouton('contact','Contact') + '</nav>';
+      function bouton(id,nom){
+        return '<button data-nav="'+id+'" aria-pressed="'+(etat.page===id?'true':'false')+'">'+nom+'</button>';
+      }
+    }
+
+    function pageAccueil(){
+      return '<section class="panneau p-accueil"><img src="'+p[0]+'" alt="">' +
+        '<div class="c reveal"><h1>Studio Lumière</h1>' +
+        '<p>Portraits &amp; mariages, en argentique et en numérique.</p>' +
+        '<button data-nav="galerie">Voir la galerie</button></div></section>' +
+        '<section class="panneau reveal" style="padding-top:0"><h2 style="font-size:1.4rem;margin-bottom:20px">Projets récents</h2>' +
+        '<div style="max-width:620px;margin:0 auto">' + carrouselHtml(PROJETS.map(function(pr,i){
+          return '<button class="projet-slide" data-projet="'+i+'"><img src="'+pr.photos[0]+'" alt="">' +
+            '<div class="d"><h4>'+pr.titre.replace(/&amp;/g,'&')+'</h4><p>'+pr.lieu+', '+pr.date+'</p></div></button>';
+        })) + '</div></section>';
+    }
+
+    function pageGalerie(){
+      var vignettes = PROJETS.map(function(pr,i){
+        return '<button class="vignette" data-projet="'+i+'"><img src="'+pr.photos[0]+'" alt="">' +
+          '<span>'+pr.titre.replace(/&amp;/g,'&')+' — '+pr.lieu+', '+pr.date+'</span></button>';
+      }).join('');
+      return '<section class="panneau reveal"><div class="galerie">'+vignettes+'</div></section>';
+    }
+
+    function pageProjet(){
+      var pr = PROJETS[etat.projetIdx];
+      return '<section class="panneau p-projet reveal">' +
+        '<button class="lien-retour" data-nav="galerie">← Retour à la galerie</button>' +
+        '<div class="duo-photos"><img src="'+pr.photos[0]+'" alt=""><img src="'+pr.photos[1]+'" alt=""></div>' +
+        '<p class="meta">'+pr.lieu+' — '+pr.date+'</p><h1>'+pr.titre+'</h1>' +
+        '<p class="texte">'+pr.texte+'</p>' +
+        '<blockquote>« '+pr.citation+' »<footer>'+pr.qui+'</footer></blockquote></section>';
+    }
+
+    function pageApropos(){
+      return '<section class="panneau p-apropos">' +
+        '<img src="'+p[1]+'" alt="">' +
+        '<div><h2>Vingt ans derrière l’objectif</h2>' +
+        '<p>Je photographie depuis quinze ans, d’abord les mariages de mes proches, puis ceux de'+
+        ' leurs proches. Toujours en lumière naturelle, toujours sans mise en scène forcée.</p>' +
+        '<div class="parcours">' +
+          '<div><b>2010</b> Premiers reportages de mariage</div>' +
+          '<div><b>2016</b> Ouverture du studio à Annecy</div>' +
+          '<div><b>2023</b> Exposition « Visages », galerie du Pâquier</div>' +
+        '</div></div></section>';
+    }
+
+    function pageTarifs(){
+      return '<section class="panneau reveal"><h2 style="text-align:center">Formules</h2>' +
+        '<div class="formules-photo">' +
+          '<div class="formule-photo"><h3>Portrait</h3><p class="px">150 €</p><p>Une heure en studio ou en extérieur, quinze photos retouchées livrées sous 10 jours.</p></div>' +
+          '<div class="formule-photo"><h3>Mariage</h3><p class="px">À partir de 900 €</p><p>Préparatifs, cérémonie, vin d’honneur — galerie complète livrée sous 3 semaines.</p></div>' +
+          '<div class="formule-photo"><h3>Reportage pro</h3><p class="px">Sur devis</p><p>Hôtellerie, restauration, artisanat — une demi-journée sur site.</p></div>' +
+        '</div></section>';
+    }
+
+    function pageContact(){
+      return '<section class="panneau p-contact reveal"><h2>Parlons de votre projet</h2>' + formulaire('portfolio') +
+        '<p class="coord">studiolumiere@exemple.fr — 06 00 00 00 00</p></section>';
+    }
+
+    function html(){
+      var corps = etat.page==='accueil' ? pageAccueil()
+        : etat.page==='galerie' ? pageGalerie()
+        : etat.page==='projet' ? pageProjet()
+        : etat.page==='apropos' ? pageApropos()
+        : etat.page==='tarifs' ? pageTarifs()
+        : pageContact();
+      return '<div class="site-portfolio" data-skin="'+etat.skin+'">' + navHtml() + corps +
+        '<footer>Studio Lumière — site de démonstration</footer></div>';
+    }
+
+    function bind(root, repeindre){
+      root.querySelectorAll('[data-nav]').forEach(function(el){
+        el.addEventListener('click', function(){ etat.page = el.dataset.nav; repeindre(); });
+      });
+      root.querySelectorAll('[data-projet]').forEach(function(el){
+        el.addEventListener('click', function(){
+          etat.projetIdx = parseInt(el.dataset.projet,10); etat.page='projet'; repeindre();
+        });
+      });
+      brancherFormulaires(root);
+    }
+
+    return {
+      skins:['noir','clair'], actif:function(){ return etat.skin; }, setSkin:function(s){ etat.skin=s; },
+      html:html, bind:bind
+    };
+  }
+
+  /* ===================== 3. PRÉSENTATION — accueil, équipe (chaque
+     praticien a sa propre fiche), consultations, avis, contact. Deux
+     habillages. ===================== */
+  function creerPresentation(){
+    var p = PH.sante;
+    var EQUIPE = [
+      { img:p[1], nom:'Dr Camille Vasseur', titre:'Médecine générale',
+        bio:'En exercice depuis 2012, spécialisée dans le suivi des maladies chroniques. Consulte le lundi, mardi et jeudi.' },
+      { img:p[2], nom:'Dr Lucas Ferrand', titre:'Médecine générale',
+        bio:'Arrivé au cabinet en 2019, porte un intérêt particulier à la médecine du sport. Consulte du mercredi au vendredi.' },
+      { img:p[3], nom:'Anaïs Rochet', titre:'Infirmière coordinatrice',
+        bio:'Coordonne les soins à domicile et le suivi infirmier du cabinet depuis 2017.' }
+    ];
+    var etat = { page:'accueil', skin:'sauge', membreIdx:0 };
+
+    function navHtml(){
+      return '<nav class="nav"><button class="marque" data-nav="accueil">Cabinet des Tilleuls</button>' +
+        bouton('accueil','Présentation') + bouton('equipe','Équipe') + bouton('consultations','Consultations') +
+        '<button class="cta" data-nav="contact">Prendre rendez-vous</button></nav>';
+      function bouton(id,nom){ return '<button data-nav="'+id+'">'+nom+'</button>'; }
+    }
+
+    function pageAccueil(){
+      return '<header class="hero">' +
+        '<div class="reveal"><h1>Un cabinet, une équipe, votre santé au centre.</h1>' +
+        '<p>Médecine générale, à Annecy, sur rendez-vous ou en urgence du jour.</p>' +
+        '<button class="cta" data-nav="contact">Prendre rendez-vous</button></div>' +
+        '<img class="reveal" src="'+p[0]+'" alt=""></header>' +
+        '<section class="reveal"><h2>Ce que disent nos patients</h2><div class="recos">' +
+          reco('★★★★★','On nous a écoutés avant de nous proposer quoi que ce soit.','Paul D. — patient depuis 2019') +
+          reco('★★★★★','Un rendez-vous obtenu le jour même pour mon fils.','Sophie M. — patiente') +
+          reco('★★★★★','La téléconsultation m’a évité un déplacement inutile.','Marc L. — patient') +
+        '</div></section>' +
+        '<section class="reveal"><h2>Infos pratiques</h2><div class="infos">' +
+          '<div><h4>ADRESSE</h4><p>14 rue des Tilleuls, Annecy</p></div>' +
+          '<div><h4>HORAIRES</h4><p>Lun–Ven 8h–19h, Sam 9h–12h</p></div>' +
+          '<div><h4>TÉLÉPHONE</h4><p>04 00 00 00 00</p></div>' +
+        '</div></section>';
+    }
+
+    function pageEquipe(){
+      return '<section class="reveal" style="padding-top:clamp(40px,6vw,64px)"><h2>L’équipe</h2><div class="equipe">' +
+        EQUIPE.map(function(m,i){
+          return '<button data-membre="'+i+'"><img src="'+m.img+'" alt=""><div class="d"><h4>'+m.nom+'</h4><p>'+m.titre+'</p></div></button>';
+        }).join('') + '</div></section>';
+    }
+
+    function pageMembre(){
+      var m = EQUIPE[etat.membreIdx];
+      return '<section class="p-membre reveal" style="padding-top:clamp(40px,6vw,64px)">' +
+        '<button class="lien-retour" data-nav="equipe">← Retour à l’équipe</button>' +
+        '<div class="tete-membre"><img src="'+m.img+'" alt=""><div><h1>'+m.nom+'</h1>' +
+        '<p class="specialite">'+m.titre+'</p></div></div>' +
+        '<p class="bio">'+m.bio+'</p>' +
+        '<button class="cta-pleine" style="margin-top:22px" data-nav="contact">Prendre rendez-vous</button></section>';
+    }
+
+    function pageConsultations(){
+      return '<section class="reveal" style="padding-top:clamp(40px,6vw,64px)"><h2>Consultations</h2><div class="services">' +
+        service('Consultation de suivi','Renouvellement, bilan, suivi d’une pathologie chronique.') +
+        service('Certificat médical','Sport, voyage, aptitude — sur rendez-vous court.') +
+        service('Téléconsultation','Depuis chez vous, pour un avis ou un renouvellement simple.') +
+        service('Visite à domicile','Pour les patients qui ne peuvent pas se déplacer.') +
+      '</div></section>';
+    }
+
+    function pageContact(){
+      return '<section class="reveal" style="padding-top:clamp(40px,6vw,64px)"><h2>Prendre rendez-vous</h2>' +
+        formulaire('presentation') + '</section>';
+    }
+
+    function html(){
+      var corps = etat.page==='accueil' ? pageAccueil()
+        : etat.page==='equipe' ? pageEquipe()
+        : etat.page==='membre' ? pageMembre()
+        : etat.page==='consultations' ? pageConsultations()
+        : pageContact();
+      return '<div class="site-presentation" data-skin="'+etat.skin+'">' + navHtml() + corps +
+        '<footer>Cabinet des Tilleuls — site de démonstration</footer></div>';
+    }
+
+    function bind(root, repeindre){
+      root.querySelectorAll('[data-nav]').forEach(function(el){
+        el.addEventListener('click', function(){ etat.page = el.dataset.nav; repeindre(); });
+      });
+      root.querySelectorAll('[data-membre]').forEach(function(el){
+        el.addEventListener('click', function(){
+          etat.membreIdx = parseInt(el.dataset.membre,10); etat.page='membre'; repeindre();
+        });
+      });
+      brancherFormulaires(root);
+    }
+
+    function service(nom,desc){ return '<div><h4>'+nom+'</h4><p>'+desc+'</p></div>'; }
+    function reco(etoiles,texte,qui){
+      return '<div><span class="etoiles">'+etoiles+'</span><p>« '+texte+' »</p><small>'+qui+'</small></div>';
+    }
+
+    return {
+      skins:['sauge','clinique'], actif:function(){ return etat.skin; }, setSkin:function(s){ etat.skin=s; },
+      html:html, bind:bind
+    };
+  }
+
+  /* ===================== 4. PRESSE — accueil avec les derniers articles,
+     toutes les actualités, un article en entier avec ses commentaires
+     (qu'on peut compléter). Deux habillages. ===================== */
+  function creerPresse(){
+    var p = PH.batiment;
+    var ARTICLES = [
+      { date:'12 novembre 2026', titre:'Delaunay Rénovation certifiée RGE pour la troisième année', img:p[0],
+        extrait:'La certification atteste des compétences en rénovation énergétique.',
+        corps:['La certification RGE (Reconnu Garant de l’Environnement) est renouvelée pour la troisième année consécutive, après audit des chantiers livrés en 2025.',
+          'Elle conditionne l’accès aux aides publiques pour les particuliers qui font appel à l’entreprise, notamment MaPrimeRénov’ et l’éco-prêt à taux zéro.'],
+        commentaires:[{nom:'Marc T.',date:'13 nov.',texte:'Bonne nouvelle, ça rassure pour lancer nos travaux d’isolation.'}] },
+      { date:'3 septembre 2026', titre:'400e chantier livré en Haute-Savoie', img:p[1],
+        extrait:'Une rénovation complète livrée à Annecy, dix-sept ans après la création de l’entreprise.',
+        corps:['Fondée en 2009, l’entreprise a livré son 400e chantier cet été : une rénovation complète d’une maison des années 1970 à Annecy-le-Vieux, incluant isolation, toiture et extension.',
+          'Le chantier a duré quatre mois et mobilisé six compagnons de l’atelier.'],
+        commentaires:[] },
+      { date:'14 avril 2026', titre:'Un nouvel atelier de menuiserie à Seynod', img:p[2],
+        extrait:'L’entreprise internalise la fabrication de ses menuiseries sur mesure.',
+        corps:['Jusqu’ici sous-traitée, la fabrication des menuiseries sur mesure est désormais internalisée dans un atelier de 400 m² à Seynod, pour raccourcir les délais et garantir la finition.',
+          'Deux menuisiers ont été recrutés pour l’occasion.'],
+        commentaires:[{nom:'Sophie B.',date:'15 avril',texte:'Content de voir une entreprise locale qui investit chez nous.'}] },
+      { date:'2 février 2026', titre:'Isolation par l’extérieur : ce qui change en 2026', img:p[3],
+        extrait:'Les aides évoluent, et avec elles les travaux les plus demandés cet hiver.',
+        corps:['Les plafonds d’aide MaPrimeRénov’ ont été revus à la hausse pour l’isolation par l’extérieur, ce qui change le calcul de rentabilité pour beaucoup de propriétaires.',
+          'Delaunay Rénovation propose désormais un diagnostic gratuit pour évaluer l’éligibilité avant travaux.'],
+        commentaires:[] },
+      { date:'20 novembre 2025', titre:'Portrait : Nadia, conductrice de travaux depuis 2015', img:p[4],
+        extrait:'Onze ans sur les chantiers, et toujours la même question au client : « et vous, vous y vivez comment ? »',
+        corps:['Nadia a rejoint l’entreprise en 2015 après un BTS bâtiment. Elle suit aujourd’hui une quinzaine de chantiers par an.',
+          '« Le plus dur, ce n’est pas le technique, c’est de faire tenir un planning avec des gens qui vivent encore dans la maison. »'],
+        commentaires:[] },
+      { date:'5 septembre 2025', titre:'Visite de chantier : la rénovation de la ferme des Clefs', img:p[5],
+        extrait:'Une ancienne ferme du XIXe siècle, transformée sans trahir son caractère.',
+        corps:['La charpente d’origine a été conservée et simplement renforcée. L’isolation est passée par l’intérieur pour ne pas toucher à la façade en pierre.',
+          'Livraison prévue au printemps 2026.'],
+        commentaires:[] }
+    ];
+    var etat = { page:'accueil', skin:'editorial', articleIdx:0 };
+
+    function navHtml(){
+      return '<nav class="nav"><button class="marque" data-nav="accueil">Delaunay Rénovation</button>' +
+        onglet('accueil','Accueil') + onglet('actualites','Actualités') +
+        onglet('presse','Revue de presse') + onglet('contact','Contact presse') + '</nav>';
+      function onglet(id,nom){
+        return '<button data-nav="'+id+'" aria-pressed="'+(etat.page===id?'true':'false')+'">'+nom+'</button>';
+      }
+    }
+
+    function carteArticle(a,i){
+      return '<button class="carte-article" data-article="'+i+'"><img src="'+a.img+'" alt="">' +
+        '<span class="date">'+a.date+'</span><h3>'+a.titre+'</h3><p>'+a.extrait+'</p></button>';
+    }
+
+    function pageAccueil(){
+      return '<section class="panneau" style="padding-top:clamp(40px,6vw,64px)"><p class="masthead">DELAUNAY RÉNOVATION</p>' +
+        '<p class="souslignee">Actualités &amp; presse</p>' +
+        '<img class="intro-img" src="'+p[0]+'" alt="">' +
+        '<p class="intro">Delaunay Rénovation conçoit et réalise des rénovations complètes en Haute-Savoie depuis 2009 : isolation, toiture, extension, menuiserie sur mesure. Quatre cents chantiers livrés, une équipe de douze compagnons.</p>' +
+        '<h2 style="margin-top:40px;font-size:1.3rem">Dernières actualités</h2>' +
+        '<div class="liste-articles">' + ARTICLES.slice(0,3).map(carteArticle).join('') + '</div>' +
+        '<p class="lien-voir-tout"><button class="lien-tout" data-nav="actualites">Toutes les actualités →</button></p></section>';
+    }
+
+    function pageActualites(){
+      return '<section class="panneau"><h2 style="font-size:1.6rem">Toutes les actualités</h2>' +
+        '<div class="liste-articles">' + ARTICLES.map(carteArticle).join('') + '</div></section>';
+    }
+
+    function pageArticle(){
+      var a = ARTICLES[etat.articleIdx];
+      var coms = a.commentaires.map(function(c){
+        return '<div class="commentaire"><div class="avatar">'+c.nom.charAt(0)+'</div>' +
+          '<div class="corps-com"><b>'+c.nom+'</b><span>'+c.date+'</span><p>'+c.texte+'</p></div></div>';
+      }).join('') || '<p style="color:#8a8070;font-size:13.6px;margin-top:14px">Aucun commentaire pour le moment — soyez le premier à réagir.</p>';
+      return '<section class="panneau">' +
+        '<button class="lien-retour" data-nav="actualites">← Toutes les actualités</button>' +
+        '<div class="article-tete"><p class="date">'+a.date+'</p><h1>'+a.titre+'</h1></div>' +
+        '<img class="article-img" src="'+a.img+'" alt="">' +
+        '<div class="article-corps">' + a.corps.map(function(t){ return '<p>'+t+'</p>'; }).join('') + '</div>' +
+        '<div class="commentaires"><h3>Commentaires (<span data-nb-com>'+a.commentaires.length+'</span>)</h3>' +
+        '<div data-liste-commentaires>' + coms + '</div>' +
+        '<form class="form-commentaire" data-form-commentaire>' +
+          '<div class="form-champ"><label for="com-nom">Votre nom</label><input id="com-nom" required></div>' +
+          '<div class="form-champ"><label for="com-texte">Votre commentaire</label><textarea id="com-texte" rows="3" required></textarea></div>' +
+          '<button type="submit" class="cta-pleine" style="align-self:flex-start">Publier le commentaire</button>' +
+        '</form></div></section>';
+    }
+
+    function pagePresse(){
+      return '<section class="panneau"><h2>Revue de presse</h2><div class="mentions">' +
+        '<span>Le Dauphiné Libéré</span><span>Batiactu</span><span>France Bleu Pays de Savoie</span></div>' +
+        '<blockquote>« Une entreprise familiale qui a su grandir sans perdre la qualité de finition. »' +
+        '<footer>Le Dauphiné Libéré, 2025</footer></blockquote></section>';
+    }
+
+    function pageContact(){
+      return '<section class="panneau"><h2>Contact presse</h2><p class="coord">' +
+        '<b>RESPONSABLE COMMUNICATION</b>Lucie Vernay — presse@exemple.fr — 04 00 00 00 00</p>' +
+        '<p style="margin-top:16px;color:#4a4536">Dossier de presse complet (photos haute définition, chiffres clés, biographies) disponible sur demande.</p></section>';
+    }
+
+    function html(){
+      var corps = etat.page==='accueil' ? pageAccueil()
+        : etat.page==='actualites' ? pageActualites()
+        : etat.page==='article' ? pageArticle()
+        : etat.page==='presse' ? pagePresse()
+        : pageContact();
+      return '<div class="site-presse" data-skin="'+etat.skin+'">' + navHtml() + corps +
+        '<footer>Delaunay Rénovation — site de démonstration</footer></div>';
+    }
+
+    function bind(root, repeindre){
+      root.querySelectorAll('[data-nav]').forEach(function(el){
+        el.addEventListener('click', function(){ etat.page = el.dataset.nav; repeindre(); });
+      });
+      root.querySelectorAll('[data-article]').forEach(function(el){
+        el.addEventListener('click', function(){
+          etat.articleIdx = parseInt(el.dataset.article,10); etat.page='article'; repeindre();
+        });
+      });
+      var formCom = root.querySelector('[data-form-commentaire]');
+      if (formCom){
+        formCom.addEventListener('submit', function(ev){
+          ev.preventDefault();
+          var nom = root.querySelector('#com-nom').value.trim() || 'Anonyme';
+          var texte = root.querySelector('#com-texte').value.trim();
+          if (!texte) return;
+          var a = ARTICLES[etat.articleIdx];
+          a.commentaires.push({ nom:nom, date:'à l’instant', texte:texte });
+          repeindre();
+        });
+      }
+    }
+
+    return {
+      skins:['editorial','magazine'],
+      actif: function(){ return etat.skin; },
+      setSkin: function(s){ etat.skin = s; },
+      html: html,
+      bind: bind
+    };
+  }
+
+  /* ===================== 5. CONTACT ===================== */
+  /* ===================== 5. CONTACT — accueil, services, équipe, contact :
+     un petit site à quatre pages autour de la page qu'on juge en premier.
+     Deux habillages. ===================== */
+  function creerContact(){
+    var p = PH.conseil;
+    var SERVICES = [
+      { nom:'Diagnostic stratégique', d:'Un audit complet de votre activité sur deux semaines, restitué en comité de direction.' },
+      { nom:'Accompagnement au changement', d:'Suivi mensuel sur six à douze mois, pour transformer la stratégie en décisions concrètes.' },
+      { nom:'Due diligence', d:'Analyse indépendante avant une acquisition ou une levée de fonds.' }
+    ];
+    var EQUIPE = [
+      { img:p[1], nom:'Hélène Verger', titre:'Associée fondatrice' },
+      { img:p[2], nom:'Antoine Reys', titre:'Directeur de mission' },
+      { img:p[3], nom:'Léa Dumont', titre:'Consultante senior' }
+    ];
+    var etat = { page:'accueil', skin:'bleugris' };
+
+    function navHtml(){
+      return '<nav class="nav"><button class="marque" data-nav="accueil">Verger Conseil</button>' +
+        bouton('accueil','Accueil') + bouton('services','Services') + bouton('equipe','Équipe') +
+        bouton('contact','Contact') + '</nav>';
+      function bouton(id,nom){ return '<button data-nav="'+id+'">'+nom+'</button>'; }
+    }
+
+    function pageAccueil(){
+      return '<header class="hero reveal"><h1>Nous trouver.</h1>' +
+        '<p>Un cabinet de conseil en stratégie, au cœur de Lyon.</p></header>' +
+        '<section class="reveal"><div class="tuiles">' +
+          '<div><h4>ADRESSE</h4><p>22 rue de la République, Lyon</p></div>' +
+          '<div><h4>TÉLÉPHONE</h4><p>04 00 00 00 00</p></div>' +
+          '<div><h4>HORAIRES</h4><p>Lun–Ven, 9h–18h30</p></div>' +
+        '</div></section>';
+    }
+
+    function pageServices(){
+      return '<section class="reveal" style="padding-top:clamp(40px,6vw,64px)"><h2>Nos services</h2>' +
+        '<div class="services-grille">' + SERVICES.map(function(s){
+          return '<div><h4>'+s.nom+'</h4><p>'+s.d+'</p></div>';
+        }).join('') + '</div></section>';
+    }
+
+    function pageEquipe(){
+      return '<section class="reveal" style="padding-top:clamp(40px,6vw,64px)"><h2>L’équipe</h2>' +
+        '<div class="equipe-grille">' + EQUIPE.map(function(m){
+          return '<div><img src="'+m.img+'" alt=""><h4>'+m.nom+'</h4><p>'+m.titre+'</p></div>';
+        }).join('') + '</div></section>';
+    }
+
+    function pageContact(){
+      return '<section class="reveal" style="padding-top:clamp(40px,6vw,64px)"><div class="grille-form">' +
+        '<div><h2 style="font-size:1.4rem;margin-bottom:16px;text-align:left">Écrivez-nous</h2>' + formulaire('contact') + '</div>' +
+        '<div class="carte-ph"><img src="'+p[0]+'" alt=""><span>22 rue de la République</span></div>' +
+      '</div></section>';
+    }
+
+    function html(){
+      var corps = etat.page==='accueil' ? pageAccueil()
+        : etat.page==='services' ? pageServices()
+        : etat.page==='equipe' ? pageEquipe()
+        : pageContact();
+      return '<div class="site-contact" data-skin="'+etat.skin+'">' + navHtml() + corps +
+        '<footer>Verger Conseil — site de démonstration</footer></div>';
+    }
+
+    function bind(root, repeindre){
+      root.querySelectorAll('[data-nav]').forEach(function(el){
+        el.addEventListener('click', function(){ etat.page = el.dataset.nav; repeindre(); });
+      });
+      brancherFormulaires(root);
+    }
+
+    return {
+      skins:['bleugris','ivoire'], actif:function(){ return etat.skin; }, setSkin:function(s){ etat.skin=s; },
+      html:html, bind:bind
+    };
+  }
+
+  /* ===================== 6. VITRINE — accueil vivant (bandeau qui tourne,
+     photo en Ken Burns), menu filtrable par catégorie, galerie, réservation
+     avec confirmation. Deux habillages (de jour / nuit). ===================== */
+  function creerAccueil(){
+    var p = PH.restaurant;
+    var PLATS = [
+      { cat:'entrees', nom:'Velouté de courge, noisette', prix:'9 €', d:'Courge de saison, crème fraîche, huile de noisette.', img:p[1] },
+      { cat:'entrees', nom:'Terrine de campagne, pickles maison', prix:'8 €', d:'Terrine préparée sur place, pickles de légumes du marché.', img:p[2] },
+      { cat:'entrees', nom:'Salade de chèvre chaud, miel de printemps', prix:'10 €', d:'Chèvre fermier, miel local, salade de saison.', img:p[3] },
+      { cat:'plats', nom:'Poulet fermier rôti, légumes de saison', prix:'19 €', d:'Poulet fermier, légumes racines rôtis au four.', img:p[2] },
+      { cat:'plats', nom:'Risotto aux champignons de saison', prix:'17 €', d:'Champignons du marché, parmesan affiné 18 mois.', img:p[4] },
+      { cat:'plats', nom:'Filet de truite, beurre blanc', prix:'21 €', d:'Truite du lac d’Annecy, beurre blanc, légumes du jour.', img:p[1] },
+      { cat:'desserts', nom:'Tarte fine aux pommes', prix:'8 €', d:'Pommes du verger, pâte feuilletée maison.', img:p[3] },
+      { cat:'desserts', nom:'Mousse au chocolat, noisettes caramélisées', prix:'7 €', d:'Chocolat 70 %, noisettes torréfiées et caramélisées.', img:p[4] },
+      { cat:'desserts', nom:'Plateau de fromages affinés', prix:'12 €', d:'Sélection de fromages affinés par notre crémier.', img:p[5] || p[0] },
+      { cat:'boissons', nom:'Verre de vin de Savoie', prix:'6 €', d:'Sélection du moment, au verre ou à la bouteille.', img:p[0] },
+      { cat:'boissons', nom:'Limonade maison', prix:'4 €', d:'Citrons pressés, eau gazeuse, menthe fraîche.', img:p[1] },
+      { cat:'boissons', nom:'Café ou thé', prix:'3 €', d:'Torréfaction locale, sélection de thés en vrac.', img:p[2] }
+    ];
+    var CATS = [{id:'entrees',nom:'Entrées'},{id:'plats',nom:'Plats'},{id:'desserts',nom:'Desserts'},{id:'boissons',nom:'Boissons'}];
+    var etat = { page:'accueil', skin:'chaleureux', catMenu:'plats', places:3 };
+
+    function navHtml(){
+      return '<nav class="nav"><button class="marque" data-nav="accueil">La Table du Marché</button>' +
+        '<button data-nav="menu">Menu</button><button data-nav="galerie">Galerie</button>' +
+        '<button class="cta" data-nav="reserver">Réserver une table</button></nav>';
+    }
+
+    function pageAccueil(){
+      return '<header class="hero"><img src="'+p[0]+'" alt=""><div class="voile"></div>' +
+        '<div class="c"><h1>Une cuisine faite maison, au centre d’Annecy.</h1>' +
+        '<p>Produits locaux, menu qui change avec les saisons, terrasse ouverte l’été.</p>' +
+        '<button class="cta" data-nav="reserver">Réserver une table</button></div></header>' +
+        '<div class="ticker"><span class="puce-live"></span>' +
+        '<span class="defile">Ce soir : velouté de courge • poulet fermier rôti • tarte fine aux pommes &nbsp;·&nbsp; Ce soir : velouté de courge • poulet fermier rôti • tarte fine aux pommes</span>' +
+        '<span class="places">'+etat.places+' tables encore libres ce soir</span></div>' +
+        '<section class="reveal"><h2>Au menu en ce moment</h2><div class="menu">' +
+          PLATS.filter(function(x){return x.cat==='plats';}).slice(0,4).map(platMini).join('') +
+        '</div><p style="text-align:center;margin-top:20px"><button class="lien-tout" data-nav="menu">Voir tout le menu →</button></p></section>' +
+        '<section class="reveal"><h2>Ce qu’en disent nos clients</h2><div class="avis">' +
+          avisHtml('★★★★★','Une adresse qu’on garde pour soi… ou presque.','Léa F.') +
+          avisHtml('★★★★★','Le menu change vraiment chaque semaine, ça se sent.','Julien P.') +
+          avisHtml('★★★★★','Accueil chaleureux, service impeccable.','Nora K.') +
+        '</div></section>' +
+        '<section class="reveal"><h2>Infos pratiques</h2><div class="infos">' +
+          '<div><h4>ADRESSE</h4><p>4 place Sainte-Claire, Annecy</p></div>' +
+          '<div><h4>HORAIRES</h4><p>Mar–Sam, 12h–14h / 19h–22h</p></div>' +
+          '<div><h4>RÉSERVATION</h4><p>04 00 00 00 00</p></div>' +
+        '</div></section>';
+    }
+    function platMini(pl){
+      return '<div class="plat"><img src="'+pl.img+'" alt="" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;margin-bottom:10px">' +
+        '<h4>'+pl.nom+'</h4><p class="px">'+pl.prix+'</p></div>';
+    }
+
+    function pageMenu(){
+      var items = PLATS.filter(function(x){ return x.cat===etat.catMenu; });
+      return '<section class="reveal" style="padding-top:clamp(40px,6vw,64px)"><h2>Notre carte</h2>' +
+        '<div class="onglets-menu">' + CATS.map(function(c){
+          return '<button data-cat="'+c.id+'" aria-pressed="'+(etat.catMenu===c.id?'true':'false')+'">'+c.nom+'</button>';
+        }).join('') + '</div>' +
+        '<div class="menu" data-liste-plats>' + items.map(function(pl){
+          return '<div class="plat"><h4>'+pl.nom+'</h4><p class="d">'+pl.d+'</p><p class="px">'+pl.prix+'</p></div>';
+        }).join('') + '</div></section>';
+    }
+
+    function pageGalerie(){
+      return '<section class="reveal" style="padding-top:clamp(40px,6vw,64px)"><h2>L’ambiance</h2>' +
+        '<div style="max-width:720px;margin:28px auto 0">' + carrouselHtml(
+          p.map(function(img){ return '<img src="'+img+'" alt="" class="galerie-grande">'; })
+        ) + '</div></section>';
+    }
+
+    function pageReserver(){
+      return '<section class="reservation reveal" id="accueil-reservation" style="padding:clamp(40px,6vw,64px) var(--marge)">' +
+        '<h2 style="text-align:left">Réserver une table</h2>' +
+        '<form data-form-reservation>' +
+          '<div class="ligne-3">' +
+            champ('r-date','Date','date') + champ('r-heure','Heure','time') + champ('r-couverts','Personnes','number') +
+          '</div>' + champ('r-nom','Nom') +
+          '<button type="submit" class="cta-pleine">Réserver</button>' +
+        '</form></section>';
+      function champ(id,label,type){
+        return '<div class="form-champ"><label for="'+id+'">'+label+'</label>' +
+          '<input id="'+id+'" type="'+(type||'text')+'" required></div>';
+      }
+    }
+
+    function html(){
+      var corps = etat.page==='accueil' ? pageAccueil()
+        : etat.page==='menu' ? pageMenu()
+        : etat.page==='galerie' ? pageGalerie()
+        : pageReserver();
+      return '<div class="site-accueil" data-skin="'+etat.skin+'">' + navHtml() + corps +
+        '<footer>La Table du Marché — site de démonstration</footer></div>';
+    }
+
+    function bind(root, repeindre){
+      root.querySelectorAll('[data-nav]').forEach(function(el){
+        el.addEventListener('click', function(){ etat.page = el.dataset.nav; repeindre(); });
+      });
+      root.querySelectorAll('[data-cat]').forEach(function(el){
+        el.addEventListener('click', function(){ etat.catMenu = el.dataset.cat; repeindre(); });
+      });
+      var formRes = root.querySelector('[data-form-reservation]');
+      if (formRes){
+        formRes.addEventListener('submit', function(ev){
+          ev.preventDefault();
+          var zone = root.querySelector('#accueil-reservation');
+          var couverts = root.querySelector('#r-couverts').value || '2';
+          var date = root.querySelector('#r-date').value, heure = root.querySelector('#r-heure').value;
+          zone.innerHTML = '<div class="confirmation-reservation reveal in"><h2>Table réservée !</h2>' +
+            '<p>'+couverts+' personnes, le '+(date||'[date]')+' à '+(heure||'[heure]')+'. ' +
+            'C’est une démonstration — rien n’a été envoyé.</p>' +
+            '<button class="cta-pleine" style="margin-top:20px" data-retour-accueil>Retour à l’accueil</button></div>';
+          zone.querySelector('[data-retour-accueil]').addEventListener('click', function(){
+            etat.page = 'accueil'; repeindre();
+          });
+        });
+      }
+    }
+
+    return {
+      skins:['chaleureux','nuit'],
+      actif: function(){ return etat.skin; },
+      setSkin: function(s){ etat.skin = s; },
+      html: html,
+      bind: bind
+    };
+  }
+
+  var CATEGORIES = [
+    { id:'vente', famille:'Vente', titre:'Le Comptoir du Centre', pages:5,
+      desc:'Accueil → catalogue → fiche produit → panier → commande. Trois styles différents.',
+      photo:PH.boutique[0], creer:creerVente },
+    { id:'portfolio', famille:'Portfolio', titre:'Studio Lumière', pages:6,
+      desc:'Accueil, galerie, chaque projet ouvert en entier, à propos, tarifs, contact. Deux styles.',
+      photo:PH.creatif[0], creer:creerPortfolio },
+    { id:'presentation', famille:'Présentation', titre:'Cabinet des Tilleuls', pages:5,
+      desc:'Équipe (chaque praticien a sa fiche), consultations, avis, prise de rendez-vous. Deux styles.',
+      photo:PH.sante[0], creer:creerPresentation },
+    { id:'presse', famille:'Presse', titre:'Delaunay Rénovation', pages:5,
+      desc:'Accueil avec les derniers articles, toutes les actualités, un article complet avec ses commentaires. Deux styles.',
+      photo:PH.batiment[0], creer:creerPresse },
+    { id:'contact', famille:'Contact', titre:'Verger Conseil', pages:4,
+      desc:'Accueil, services, équipe, contact — la page qu’on juge en premier a un site autour d’elle. Deux styles.',
+      photo:PH.conseil[0], creer:creerContact },
+    { id:'accueil', famille:'Vitrine', titre:'La Table du Marché', pages:4,
+      desc:'Accueil vivant (bandeau qui tourne), menu filtrable, galerie, réservation. Deux styles, dont un de nuit.',
+      photo:PH.restaurant[0], creer:creerAccueil }
+  ];
+
+  function peindreCartes(){
+    var hote = document.getElementById('cartes');
+    hote.innerHTML = '';
+    CATEGORIES.forEach(function(c){
+      var bouton = document.createElement('button');
+      bouton.className = 'carte-type';
+      bouton.innerHTML =
+        '<div class="vis"><img src="' + c.photo + '" alt="">' +
+          '<span class="badge-pages">' + c.pages + ' page' + (c.pages>1?'s':'') + '</span>' +
+        '</div>' +
+        '<div class="txt">' +
+          '<span class="eyebrow" style="padding:4px 10px;font-size:11px">' + c.famille + '</span>' +
+          '<h3>' + c.titre + '</h3>' +
+          '<p>' + c.desc + '</p>' +
+          '<span class="aller">Essayer cette démo →</span>' +
+        '</div>';
+      bouton.addEventListener('click', function(){ ouvrirDemo(c); });
+      hote.appendChild(bouton);
+    });
+  }
+
+  var NOMS_SKIN = {
+    vibrant:'Vibrant', minimal:'Minimal', chaleureux:'Chaleureux',
+    editorial:'Éditorial', magazine:'Magazine', nuit:'Nuit',
+    noir:'Noir', clair:'Clair', sauge:'Sauge', clinique:'Clinique',
+    bleugris:'Bleu-gris', ivoire:'Ivoire'
+  };
+
+  var observateur = null;
+  function brancherReveal(racine){
+    if (!('IntersectionObserver' in window)){
+      racine.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+      return;
+    }
+    if (observateur) observateur.disconnect();
+    observateur = new IntersectionObserver(function(entrees){
+      entrees.forEach(function(e){ if (e.isIntersecting) e.target.classList.add('in'); });
+    }, { threshold:.15 });
+    racine.querySelectorAll('.reveal').forEach(function(el){ observateur.observe(el); });
+  }
+
+  function brancherFormulaires(racine){
+    racine.querySelectorAll('form[data-form]').forEach(function(form){
+      form.addEventListener('submit', function(ev){
+        ev.preventDefault();
+        var ok = form.querySelector('[data-ok]');
+        if (ok) ok.classList.add('on');
+        form.reset();
+      });
+    });
+  }
+
+  function brancherOnglets(racine){
+    var boutons = racine.querySelectorAll('[data-onglet]');
+    if (!boutons.length) return;
+    function aller(id){
+      racine.querySelectorAll('[data-panneau]').forEach(function(p){ p.hidden = p.dataset.panneau !== id; });
+      boutons.forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.onglet === id ? 'true' : 'false'); });
+      racine.scrollTop = 0;
+      window.scrollTo(0,0);
+      brancherReveal(racine);
+    }
+    boutons.forEach(function(b){ b.addEventListener('click', function(){ aller(b.dataset.onglet); }); });
+    racine.querySelectorAll('[data-aller]').forEach(function(b){
+      b.addEventListener('click', function(){ aller(b.dataset.aller); });
+    });
+  }
+
+  function brancherCommuniques(racine){
+    racine.querySelectorAll('[data-communique]').forEach(function(art){
+      art.addEventListener('click', function(){ art.classList.toggle('ouvert'); });
+    });
+  }
+
+  function ouvrirDemo(c){
+    document.getElementById('vue-bibliotheque').hidden = true;
+    document.getElementById('vue-demo').hidden = false;
+    document.getElementById('demo-famille').textContent = c.titre;
+    document.getElementById('demo-badge').textContent = c.pages + ' page' + (c.pages>1?'s':'');
+
+    var ctrl = c.creer();
+    var corps = document.getElementById('demo-corps');
+
+    function repeindre(){
+      corps.innerHTML = ctrl.html();
+      ctrl.bind(corps, repeindre);
+      brancherReveal(corps);
+      brancherCarrousels(corps);
+    }
+    repeindre();
+    window.scrollTo(0,0);
+    peindreSkins(ctrl, repeindre);
+  }
+
+  function peindreSkins(ctrl, repeindre){
+    var hote = document.getElementById('demo-skins');
+    hote.innerHTML = '';
+    if (ctrl.skins.length < 2) return;
+    ctrl.skins.forEach(function(s){
+      var b = document.createElement('button');
+      b.textContent = NOMS_SKIN[s] || s;
+      b.setAttribute('aria-pressed', ctrl.actif()===s ? 'true' : 'false');
+      b.addEventListener('click', function(){
+        ctrl.setSkin(s);
+        repeindre();
+        hote.querySelectorAll('button').forEach(function(x){
+          x.setAttribute('aria-pressed', x===b ? 'true' : 'false');
+        });
+      });
+      hote.appendChild(b);
+    });
+  }
+
+  document.getElementById('retour').addEventListener('click', function(){
+    document.getElementById('vue-demo').hidden = true;
+    document.getElementById('vue-bibliotheque').hidden = false;
+    window.scrollTo(0,0);
+  });
+
+  peindreCartes();
+})();
+</script>
+
+</body>
+</html>

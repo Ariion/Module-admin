@@ -14,6 +14,7 @@
 const PAGES = [
   ['/', 'Présentation'],
   ['/modeles', 'Modèles'],
+  ['/exemples', 'Exemples'],
   ['/boutique', 'Démo boutique'],
   ['/tarifs', 'Tarifs'],
   ['/distribution/installation.html', 'Installation'],
@@ -40,6 +41,7 @@ pied.innerHTML = `<div class="pied__cols">
     <h3>01 — Le produit</h3>
     <ul>
       <li><a href="/modeles">Les modèles de page</a></li>
+      <li><a href="/exemples">Six sites, six métiers</a></li>
       <li><a href="/boutique">La démonstration boutique</a></li>
       <li><a href="/tarifs">Les formules</a></li>
     </ul>
