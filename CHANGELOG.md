@@ -18,6 +18,41 @@
 
 
 
+## 1.72.0 — /exemples : la barre du site, et trois accueils qui ne se ressemblent plus
+
+Retour après la mise en ligne de `/exemples` (1.71.0) : « où est le header ? »
+et « toutes les pages ont exactement le même schéma — titre, sous-titre,
+grille ». Les deux étaient fondés.
+
+La page vivait sans la barre et le pied communs à Atelier (`commun.css`/
+`commun.js`) — choix hérité de `/boutique` et `/vierge`, qui montrent ce que
+REÇOIT un client, pas une page de marketing d'Atelier. Mais `/exemples` EST
+une page d'Atelier (elle est reliée dans la navigation), donc sans elles, un
+visiteur qui clique dessus se retrouve sans moyen de revenir en arrière.
+Elles sont maintenant chargées, et masquées le temps d'une démo (pour garder
+l'immersion dans le site du client), restaurées au retour à la bibliothèque.
+
+Trois accueils (Cabinet des Tilleuls, La Table du Marché, Verger Conseil)
+répétaient la même formule — un titre centré, un sous-titre, une grille de
+trois cartes égales — recopiée section après section. Chacun a désormais sa
+propre composition : le cabinet associe un carrousel d'avis à un encart
+d'infos pratiques en aside ; le restaurant fusionne avis et infos pratiques
+dans une bande sombre asymétrique et fait défiler son menu du jour au lieu
+d'une grille figée ; le cabinet de conseil troque sa triple tuile pour un
+bandeau de secteurs défilant au-dessus d'une fiche adresse/contact.
+
+Au passage : le texte du grand titre du restaurant perdait en lisibilité sur
+les zones claires de la photo (voile insuffisant) — corrigé par un dégradé
+plus sombre et plus étendu. Et sur mobile, le bouton poussé à droite dans la
+barre de navigation (Panier, Prendre rendez-vous…) sortait du cadre sur
+quatre des six sites au lieu de passer à la ligne — correctif générique
+ajouté pour tous.
+
+Vérifié : chrome Atelier présent sur la bibliothèque et absent pendant une
+démo (puis restauré), aucun débordement horizontal, aucun bouton hors cadre
+à 375px sur les six sites, aucune erreur console, batterie de tests complète
+au vert.
+
 ## 1.71.0 — Une page /exemples avec six sites complets, cliquables de bout en bout
 
 Retour : au-delà du prix, ce qui retient quelqu'un qui n'y connaît rien,
