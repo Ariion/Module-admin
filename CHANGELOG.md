@@ -18,6 +18,48 @@
 
 
 
+## 1.67.0 — La nouvelle direction étendue au header et à l'intérieur de l'accueil
+
+Retour sur le prototype du hero (1.66.0) : « oui mieux, mais le header et
+l'intérieur font encore trop IA ». Le hero restait un îlot — tout ce qui
+l'entourait gardait les filets noirs tracés entre chaque section, hérités
+du système « Grille » déjà rejeté.
+
+Dans `commun.css`, partagé par toutes les pages : la barre de navigation
+devient une pilule de verre sombre flottante (`backdrop-filter`, coins
+arrondis, ombre portée) au lieu d'un bandeau blanc à bordure noire — elle
+fonctionne aussi bien posée sur le dégradé du hero que sur un fond blanc
+plus bas. Les boutons passent en pilules avec relief (deux nouveaux
+modificateurs, `.bouton--clair` et `.bouton--verre`, pour les fonds
+sombres). L'étiquette de section devient une puce colorée plutôt qu'une
+ligne mono en capitales. Le filet noir entre CHAQUE section disparaît :
+le rythme vient maintenant de l'espace, et par endroits d'un fond
+légèrement teinté (`.section--tint`) — jamais d'une ligne tracée. Le pied
+de page perd aussi son trait noir et ses séparateurs de colonnes au
+profit d'un fond légèrement teinté.
+
+Dans `accueil.html` : toute la grille à filets de l'intérieur (les trois
+gestes, les deux façons de commencer, les fonctionnalités, le résumé des
+tarifs) devient des cartes qui flottent — coins arrondis, ombre portée
+douce, légère élévation au survol — au lieu de colonnes séparées par des
+traits. La section « Ce qu'il y a dedans » prend un fond teinté pour
+casser le blanc uniforme. La clôture de page (section `.final`) devient
+un panneau sombre en dégradé, dans le même esprit que le hero, plutôt
+qu'une ligne suivie de texte nu. Les pilules locales du hero
+(`.pilule`/`.pilule--pleine`/`.pilule--contour`) sont retirées au profit
+du système `.bouton` partagé, pour ne garder qu'un seul vocabulaire de
+bouton sur toute la page.
+
+Au passage : « Détails → » dans le résumé des tarifs affichait deux
+flèches — le texte en portait une, et `.bouton::after` en ajoute
+désormais une automatiquement pour tous les boutons. Le texte manuel est
+retiré.
+
+Vérifié : aucune erreur console, aucun débordement horizontal (bureau et
+mobile), et `/tarifs` comme `/modeles` — qui partagent `commun.css` mais
+n'ont pas encore reçu cette direction — s'affichent toujours
+correctement avec la nouvelle barre de navigation.
+
 ## 1.66.0 — Prototype : nouvelle direction pour le hero (en attente de validation)
 
 Retour direct : le système « Grille » (noir/blanc/vermillon, grille à
