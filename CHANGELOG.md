@@ -18,6 +18,34 @@
 
 
 
+## 1.68.0 — Le modèle « Page de vente » devient une vraie fiche produit
+
+Retour : le modèle manquait ce qu'une page de vente a toujours — un
+en-tête, et une vraie fiche produit (galerie, prix, ce qui est inclus) —
+pour n'être qu'un entonnoir de promesses sans rien à regarder.
+
+Dans `admin/core/page-templates.js`, le modèle `vente` passe de 5 à 8
+sections : un en-tête (nom de la boutique, navigation), un bandeau
+d'intro (ville, accroche), une fiche produit complète (galerie photo,
+prix, description, ce qui est inclus, bouton d'achat), un récit de
+fabrication (photo, texte, citation de l'atelier), des chiffres de
+confiance, des avis clients, une foire aux questions (livraison,
+retours) et une clôture avec appel à l'action. Les contenus par défaut
+des blocs chiffres/avis/FAQ sont réécrits pour un contexte de vente
+plutôt que de bâtiment (les textes d'origine parlaient de « chantiers
+livrés »).
+
+Le mécanisme existant qui pose les mots du métier (premier titre, première
+phrase, première étiquette) continue de fonctionner sans changement :
+c'est maintenant l'en-tête qui porte le nom de l'enseigne, et le bandeau
+d'intro qui porte la ville et l'accroche — la fiche produit elle-même
+reste un texte à écrire, comme il se doit.
+
+Vérifié avec `essai-bibliotheque` et `essai-assistant` (l'invariante
+résumé ≤ construit ≤ aperçu tient toujours, à 3 ≤ 8 ≤ 4), puis par un
+rendu réel pour deux métiers et deux ambiances différentes : aucune
+erreur, aucun débordement horizontal, bureau comme mobile.
+
 ## 1.67.0 — La nouvelle direction étendue au header et à l'intérieur de l'accueil
 
 Retour sur le prototype du hero (1.66.0) : « oui mieux, mais le header et

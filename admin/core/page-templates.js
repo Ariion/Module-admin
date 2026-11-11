@@ -116,42 +116,88 @@ export const PAGE_TEMPLATES = [
   {
     id: 'vente',
     pour: ['vente'], resume: 3,
-    apercu: ['hero', { type: 'cartes', n: 3 }, 'bande', { type: 'duo', ratio: '1-2' }],
+    // Ce modèle manquait ce qu'une page de vente a toujours : un en-tête, et
+    // une vraie fiche produit (galerie, prix, ce qui est inclus) plutôt
+    // qu'un entonnoir de promesses sans rien à regarder.
+    apercu: ['texte', 'texte', { type: 'duo', ratio: '1-2', image: 'gauche' }, { type: 'cartes', n: 3 }],
     build: () => [
+      // L'en-tête : une page de vente qui en manque un ne ressemble à rien
+      // de publiable, aussi soignée soit la suite.
       section([
-        w('heading', { text: 'La promesse, en une phrase', level: 'h2', align: 'center' }),
-        w('text', { ...T('Précisez à qui vous vous adressez et le résultat obtenu.'), align: 'center' }),
-        w('spacer', { height: 20 }),
-        w('button', { text: 'Je me lance', href: '#offre', align: 'center' }),
-      ], { padding: 88 }),
-      section([
-        w('heading', { text: 'Trois bonnes raisons', level: 'h2', align: 'center' }),
-        w('spacer', { height: 24 }),
-        w('columns', { count: 3 }, [
-          [w('heading', { text: 'Gain de temps', level: 'h3' }), w('text', T('Expliquez le bénéfice concret.'))],
-          [w('heading', { text: 'Tranquillité', level: 'h3' }), w('text', T('Expliquez le bénéfice concret.'))],
-          [w('heading', { text: 'Résultat', level: 'h3' }), w('text', T('Expliquez le bénéfice concret.'))],
+        w('columns', { count: 2 }, [
+          [w('heading', { text: 'Le nom de votre boutique', level: 'h3' })],
+          [w('menu', {
+            liens: 'La boutique|index.html\nLivraison|#livraison\nAvis|#avis\nContact|contact.html',
+            align: 'right',
+          })],
         ]),
-      ]),
+      ], { padding: 20 }),
+
       section([
-        w('columns', { count: 2, gap: 40 }, [
+        w('etiquette', { text: 'Fabriqué ici', align: 'center' }),
+        w('text', { ...T('Précisez à qui vous vous adressez et le résultat obtenu.'), align: 'center' }),
+      ], { padding: 40 }),
+
+      // La fiche produit : la galerie et l'achat, côte à côte — ce qu'une
+      // vraie page produit montre, pas un paragraphe illustré d'une image.
+      section([
+        w('columns', { count: 2, gap: 48 }, [
+          [w('galerie', { images: '', hauteur: 360, largeurMini: 120, gap: 10 })],
+          [
+            w('heading', { text: 'Le nom de votre produit phare', level: 'h2' }),
+            w('text', { html: '<strong>24&nbsp;€</strong> — prix TTC, livraison incluse dès 50&nbsp;€ d’achat.' }),
+            w('text', T('Décrivez ici la matière, la fabrication, ce qui le distingue — c’est la fiche du produit, pas l’accroche de la boutique.')),
+            w('list', { items: 'Fait à la main, pièce par pièce\nMatériaux choisis avec soin\nExpédié sous 48 h\nRetour gratuit sous 14 jours' }),
+            w('spacer', { height: 8 }),
+            w('button', { text: 'Ajouter au panier', href: '#' }),
+          ],
+        ]),
+      ], { padding: 72 }),
+
+      // La fabrication, racontée : ce qui distingue un atelier d'un entrepôt,
+      // et justifie le prix sans avoir à l'écrire noir sur blanc.
+      section([
+        w('columns', { count: 2, gap: 40, ratio: '1-2' }, [
           [w('image', { alt: '' })],
           [
-            w('heading', { text: 'Comment ça se passe', level: 'h2' }),
-            w('list', { items: 'Premier temps : le point de départ\nDeuxième temps : la mise en place\nTroisième temps : le résultat' }),
+            w('heading', { text: 'Comment il est fabriqué', level: 'h2' }),
+            w('text', T('Racontez l’atelier, le geste, le temps que ça prend.')),
+            w('citation', { texte: 'On le fait comme on le ferait pour nous.', source: 'L’atelier' }),
           ],
         ]),
       ]),
+
+      section([w('chiffres', {
+        items: '4,8/5|note moyenne\n1 200+|commandes livrées\n48 h|délai de préparation',
+      })], { padding: 56 }),
+
       section([
-        w('text', { ...T('« Une phrase de client satisfait, courte et précise. »'), align: 'center' }),
-        w('text', { ...T('Prénom, ville'), align: 'center' }),
-      ]),
+        w('etiquette', { text: 'Ils l’ont déjà commandé', align: 'center' }),
+        w('heading', { text: 'Ce qu’en disent les clientes et clients', level: 'h2', align: 'center' }),
+        w('spacer', { height: 24 }),
+        w('temoignages', {
+          items: 'Reçu en trois jours, emballé avec soin. Exactement la photo.|Camille R.|Cliente\n'
+            + 'Le détail qui change tout : la qualité tient dans le temps.|Hugo B.|Client depuis 2023\n'
+            + 'Service après-vente réactif pour un échange de taille.|Inès T.|Cliente',
+        }),
+      ], { padding: 72 }),
+
       section([
-        w('heading', { text: 'Ce qui est compris', level: 'h2' }),
-        w('list', { items: 'Premier élément\nDeuxième élément\nTroisième élément\nQuatrième élément' }),
+        w('heading', { text: 'Livraison, retours, questions', level: 'h2', align: 'center' }),
         w('spacer', { height: 20 }),
-        w('button', { text: 'Commander', href: 'contact.html' }),
+        w('accordeon', {
+          items: 'Sous combien de temps je reçois ma commande ?|Entre 2 et 4 jours ouvrés, avec un suivi dès l’expédition.\n'
+            + 'Je peux retourner un article ?|Oui, sous 14 jours, remboursé dès réception.\n'
+            + 'La livraison est-elle payante ?|Offerte dès 50 € d’achat, sinon un forfait fixe indiqué au panier.',
+        }),
       ]),
+
+      section([
+        w('heading', { text: 'Prêt à commander ?', level: 'h2', align: 'center' }),
+        w('text', { ...T('Paiement sécurisé, préparation sous 48 h.'), align: 'center' }),
+        w('spacer', { height: 16 }),
+        w('button', { text: 'Commander', href: 'contact.html', align: 'center' }),
+      ], { padding: 72 }),
     ],
   },
 
