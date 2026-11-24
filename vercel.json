@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/", "destination": "/demo/index.html" }
+    { "source": "/", "destination": "/maquette-hero-socle.html" }
   ]
 }
