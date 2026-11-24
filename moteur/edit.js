@@ -18,9 +18,22 @@
 (function () {
   const PREFIXE = 'socle:';
 
+  /**
+   * Sans data-edit-id, la clé est le chemin complet depuis <body> (index de
+   * chaque ancêtre chez ses frères et sœurs). Un simple "tagName:index"
+   * locale au parent suffisait à faire se chevaucher deux éléments sans
+   * rapport placés au même endroit dans deux sections différentes.
+   */
   function cle(el) {
-    return el.getAttribute('data-edit-id')
-      || (el.tagName + ':' + Array.from(el.parentNode.children).indexOf(el));
+    const id = el.getAttribute('data-edit-id');
+    if (id) return id;
+    const chemin = [];
+    let n = el;
+    while (n && n !== document.body && n.parentNode) {
+      chemin.unshift(Array.from(n.parentNode.children).indexOf(n));
+      n = n.parentNode;
+    }
+    return 'chemin:' + chemin.join('.');
   }
 
   function restaurer() {
