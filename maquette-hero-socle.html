@@ -4,20 +4,23 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-  /* Plan : un panneau de chantier/plan d'architecte — bleu de calque, grille
-     fine, jaune de mètre-ruban comme seul accent. Un seul monde, assumé
-     (pas de bascule clair/sombre) : la mise en page elle-même est la preuve
-     du concept, pas un fond qui pourrait être n'importe quel produit. */
+  /* Plan : la même table à dessin, en plein jour — papier calque clair,
+     grille fine au crayon, jaune de mètre-ruban comme seul accent. Un seul
+     monde, assumé (pas de bascule clair/sombre) : la mise en page elle-même
+     est la preuve du concept, pas un fond qui pourrait être n'importe quel
+     produit. */
   :root{
-    --bg: #0E1B30;
-    --bg-raise: #16294A;
-    --fg: #EEF1F6;
-    --muted: #9FB0C9;
-    --accent: #F5C84C;
-    --accent-ink: #2A220A;
-    --line: rgba(238,241,246,.14);
-    --ok: #6FE3A6;
-    color-scheme: dark;
+    --bg: #F6F6F3;
+    --bg-raise: #FFFFFF;
+    --fg: #15171C;
+    --muted: #686F78;
+    --accent: #D98A12;
+    --accent-ink: #2A1C04;
+    --line: rgba(21,23,28,.09);
+    --ok: #1C8F5A;
+    --puce: #D7D9D3;
+    --puce-fond: #F0F1ED;
+    color-scheme: light;
 
     --display: 'Archivo', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
     --texte: 'Inter', system-ui, sans-serif;
@@ -69,7 +72,7 @@
   .oeillet{
     display:inline-flex; align-items:center; gap:9px;
     font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
-    color:var(--accent); background:rgba(245,200,76,.1); border:1px solid rgba(245,200,76,.3);
+    color:#8A5A0C; background:rgba(217,138,18,.1); border:1px solid rgba(217,138,18,.32);
     padding:8px 16px; border-radius:999px; margin-bottom:28px;
   }
   .oeillet::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
@@ -108,22 +111,22 @@
   }
   .fenetre{
     background:var(--bg-raise); border:1px solid var(--line); border-radius:16px; overflow:hidden;
-    box-shadow:0 30px 70px -30px rgba(0,0,0,.6);
+    box-shadow:0 26px 60px -28px rgba(21,23,28,.22);
   }
   .fenetre__barre{
     display:flex; align-items:center; gap:14px; padding:12px 16px; border-bottom:1px solid var(--line);
   }
   .ronds{display:flex; gap:6px}
-  .ronds span{width:9px;height:9px;border-radius:50%;background:rgba(238,241,246,.25)}
+  .ronds span{width:9px;height:9px;border-radius:50%;background:var(--puce)}
   .fenetre__adresse{
-    font-family:var(--mono); font-size:.76rem; color:var(--muted); background:rgba(238,241,246,.06);
+    font-family:var(--mono); font-size:.76rem; color:var(--muted); background:var(--puce-fond);
     padding:6px 14px; border-radius:999px; flex:1; max-width:260px; text-align:center;
   }
   .fenetre__corps{
     position:relative; padding:clamp(28px,6vw,54px) clamp(20px,5vw,40px); min-height:230px;
     display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
     background:
-      radial-gradient(520px 260px at 50% 0%, rgba(245,200,76,.08), transparent 70%);
+      radial-gradient(520px 260px at 50% 0%, rgba(217,138,18,.09), transparent 70%);
   }
   .demo-etiquette{
     font-family:var(--mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;
@@ -221,7 +224,7 @@
           <h3 class="demo-titre"><span class="demo-titre__texte" id="texte-demo">Le pain comme on l'aime.</span></h3>
           <p class="demo-soustitre">— et c'est déjà écrit. Rien d'autre à apprendre.</p>
           <div class="curseur" id="curseur" style="left:50%;top:40%">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M5 3l14 7.5-6 1.8-2 6.2L5 3z" fill="#F5C84C" stroke="#2A220A" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 3l14 7.5-6 1.8-2 6.2L5 3z" fill="#D98A12" stroke="#2A1C04" stroke-width="1.2" stroke-linejoin="round"/></svg>
           </div>
           <div class="anneau" id="anneau"></div>
         </div>
