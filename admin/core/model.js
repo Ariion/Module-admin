@@ -428,7 +428,7 @@ export class PageModel {
     // Changer le nombre de colonnes ajoute ou retire des colonnes, sans
     // perdre le contenu de celles qui restent.
     if (cible.noeud.type === 'columns' && patch.count != null) {
-      const voulu = Math.max(1, Math.min(4, Number(patch.count) || 2));
+      const voulu = Math.max(1, Math.min(6, Number(patch.count) || 2));
       const enfants = cible.noeud.children || [];
       while (enfants.length < voulu) enfants.push(createWidget('column'));
       while (enfants.length > voulu) enfants.pop();

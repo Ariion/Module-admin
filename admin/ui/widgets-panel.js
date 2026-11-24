@@ -14,7 +14,7 @@ import { TEMPLATES } from '../core/templates.js';
 export const DRAG_PREFIX = 'admin-widget:';
 
 export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, onDragEnd,
-  contenus = null, onNouveauContenu = null }) {
+  onLibrary = null, contenus = null, onNouveauContenu = null }) {
   let filtre = '';
   const replies = new Set();
 
@@ -25,7 +25,17 @@ export function createWidgetsPanel({ vue, t, onInsert, onTemplate, onDragStart, 
 
   const entete = h('div', { class: 'search' }, icon('search', 13), recherche);
   const corps = h('div', {});
-  vue.append(entete, corps);
+  vue.append(entete);
+  // Un raccourci vers la bibliothèque complète : la grille de modèles ici
+  // n'en montre qu'un aperçu replié, et chercher par nom y est plus rapide
+  // que de déplier chaque catégorie l'une après l'autre.
+  if (onLibrary) {
+    vue.append(h('button', {
+      class: 'btn btn--wide btn--sect', type: 'button', style: { margin: '10px 0' },
+      onclick: () => onLibrary(),
+    }, icon('template', 13), t('bibOuvrir')));
+  }
+  vue.append(corps);
 
   function widgetsDe(categorie) {
     return Object.entries(WIDGETS)

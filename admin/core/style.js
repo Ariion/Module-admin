@@ -69,7 +69,20 @@ export const STYLE_FIELDS = [
   { group: 'effets', key: 'clic', virtuel: true, type: 'select', label: 'effetClic', options: CATALOGUE.clic },
   { group: 'effets', key: 'entree', virtuel: true, type: 'select', label: 'effetEntree', options: CATALOGUE.entree },
   { group: 'effets', key: 'dureeEffet', virtuel: true, type: 'select', label: 'effetDuree', options: DUREES },
+
+  // Les quatre côtés indépendamment. Hors de `STYLE_GROUPS` à dessein : la
+  // boîte de marges du bandeau Section/Colonnes/Colonne s'en sert seule.
+  ...['Right', 'Left'].map((c) => boxField('margin' + c, -400)),
+  ...['Top', 'Right', 'Bottom', 'Left'].map((c) => boxField('padding' + c, 0)),
+
+  // Masquer selon le format : base pour l'ordinateur, surcharge d'écran
+  // (`core/ecrans.js`) pour la tablette et le mobile.
+  { group: 'visibility', key: 'display', css: 'display', type: 'select', label: 'displayLabel', options: ['', 'none'] },
 ];
+
+function boxField(cle, min) {
+  return { group: 'boxmodel', key: cle, css: cle, type: 'number', unit: 'px', label: cle, min, max: 400, step: 1 };
+}
 
 export const STYLE_GROUPS = ['colors', 'type', 'space', 'border', 'place', 'effets'];
 

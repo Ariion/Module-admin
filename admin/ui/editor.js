@@ -28,6 +28,8 @@ import { openLogin } from './login.js';
 import { openRevisions } from './revisions.js';
 import { openExport } from './export.js';
 import { openPageTemplates } from './page-templates-panel.js';
+import { openStructurePicker } from './structure-picker.js';
+import { openTemplateLibrary } from './template-library.js';
 import { typePourPage, cheminDepuisTitre } from '../core/types.js';
 import { poserCarte, attendrePage } from '../core/contenus.js';
 import { openWizard } from './wizard.js';
@@ -152,10 +154,16 @@ export async function startEditor(runtime) {
 
     bibliotheque = createWidgetsPanel({
       vue: hoteBibliotheque, t,
-      onInsert: (type) => insererWidget(type),
+      // Poser des colonnes commence par choisir leur structure — le reste
+      // des widgets se pose directement, une proportion n'ayant de sens que
+      // pour celui-là.
+      onInsert: (type) => (type === 'columns'
+        ? openStructurePicker({ root, t, onChoose: (s) => insererColonnes(s) })
+        : insererWidget(type)),
       onTemplate: (id) => ajouterModele(id),
       onDragStart: (type) => overlay.beginDrag(type),
       onDragEnd: () => overlay.endDrag(),
+      onLibrary: () => openTemplateLibrary({ root, t, onInsert: (id) => ajouterModele(id) }),
       contenus: () => typePourPage(runtime.config, urlCourante()),
       onNouveauContenu: (sousTypeId) => nouveauContenu(sousTypeId)
         .catch((err) => { console.error('[admin]', err); notify(err.message || String(err), true); }),
@@ -207,6 +215,10 @@ export async function startEditor(runtime) {
         widgetOp: (key, op, arg) => widgetOp(key, op, arg),
         widgetElement: (key) => model.doc.querySelector(`[data-admin-widget="${key}"]`),
         selectWidget: (key) => selectWidget(key),
+        // Change la structure d'un bloc de colonnes déjà posé : le même
+        // sélecteur visuel qu'à l'insertion, rouvert depuis le panneau.
+        restructureColumns: (key) => openStructurePicker({ root, t, onChoose: (s) => changerStructure(key, s) }),
+        openTemplateLibrary: () => openTemplateLibrary({ root, t, onInsert: (id) => ajouterModele(id) }),
         pageLiee: (href) => pageLiee(href),
         // safe() est synchrone : il laisserait passer le rejet d'une
         // promesse, et le bouton ne ferait rien sans rien dire.
@@ -379,6 +391,32 @@ export async function startEditor(runtime) {
     }
     const key = model.insertWidget(type, parent, -1);
     if (!key) return;
+    markDirty();
+    apresStructure(key);
+  }
+
+  /**
+   * Pose des colonnes dont le nombre et la proportion sont déjà choisis — le
+   * sélecteur de structure vient AVANT l'insertion, comme pour un modèle de
+   * section : décider la proportion après coup revient toujours à défaire
+   * la grille par défaut pour la refaire comme on la voulait au départ.
+   */
+  async function insererColonnes(structure) {
+    let parent = conteneurActif();
+    if (!parent) {
+      parent = await ajouterSectionVide(null, { silencieux: true });
+      if (!parent) return;
+    }
+    const key = model.insertWidget('columns', parent, -1);
+    if (!key) return;
+    if (!model.setWidgetProps(key, { count: structure.count, ratio: structure.ratio })) return;
+    markDirty();
+    apresStructure(key);
+  }
+
+  /** Rouvre le sélecteur pour changer la structure de colonnes déjà posées. */
+  function changerStructure(key, structure) {
+    if (!model.setWidgetProps(key, { count: structure.count, ratio: structure.ratio })) return;
     markDirty();
     apresStructure(key);
   }

@@ -40,10 +40,20 @@ const racine = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'admin');
  * et visible dans l'historique.
  */
 const BUDGET_FICHIERS = 30;
-const BUDGET_KIO = 375;
+const BUDGET_KIO = 385;
 
 /**
  * Historique des relèvements, et ce qu'on sait pouvoir rendre.
+ *
+ * 375 → 385 (1.73.0) : section, colonnes et colonne gagnent les réglages
+ * d'un bandeau « Mise en page / Style / Avancé » — étirer, hauteur minimum,
+ * position du contenu, forme de séparation, écart de colonnes par
+ * préréglage, identifiant et classes CSS, masquer par format d'écran. Une
+ * page publiée qui s'en sert doit savoir les rendre, donc leur place est bien
+ * ici — même chose que pour les blocs ci-dessous. Les données purement
+ * éditeur (la liste des structures proposées au moment de poser des
+ * colonnes) ont été sorties vers `ui/structure-picker.js`, qui ne part pas
+ * chez le visiteur.
  *
  * 350 → 375 (1.43.0) : les blocs horaires, articles, téléchargements et
  * agenda. Ils rendent du contenu que le VISITEUR doit voir — une page

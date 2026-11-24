@@ -37,10 +37,57 @@ const RATIOS = { '1-2': '1fr 2fr', '2-1': '2fr 1fr', '1-3': '1fr 3fr', '3-1': '3
 
 /** Les pistes d'une grille de colonnes, selon le nombre et la proportion. */
 function pistesColonnes(p) {
-  const nombre = Math.max(1, Math.min(4, p.count || 2));
+  const nombre = Math.max(1, Math.min(6, p.count || 2));
   // Une proportion ne veut rien dire au-delà de deux colonnes.
   if (nombre === 2 && RATIOS[p.ratio]) return RATIOS[p.ratio];
   return `repeat(${nombre}, minmax(0, 1fr))`;
+}
+
+/** Écart entre colonnes, par préréglage ; « personnalise » rend la main au nombre `gap`. */
+export const GAP_PRESETS = { aucun: 0, etroit: 12, defaut: 28, etendu: 40, large: 60 };
+
+function ecartColonnes(p) {
+  if (p.gapPreset === 'personnalise') return Math.max(0, Number(p.gap) || 0);
+  return GAP_PRESETS[p.gapPreset] ?? GAP_PRESETS.defaut;
+}
+
+/** Hauteur minimale d'une section, selon le réglage « Hauteur ». */
+const HAUTEURS_SECTION = { defaut: '', plein: '100vh' };
+
+function hauteurSection(p) {
+  if (p.hauteur === 'plein') return HAUTEURS_SECTION.plein;
+  if (p.hauteur === 'mini') return Math.max(0, Number(p.hauteurMin) || 0) + 'px';
+  return '';
+}
+
+/** `justify-content` selon le réglage « Position du contenu ». */
+const POSITIONS_CONTENU = { defaut: '', haut: 'flex-start', milieu: 'center', bas: 'flex-end' };
+
+/** Formes de séparation en haut/bas d'une section ; le haut retourne le même tracé (voir plus bas). */
+export const FORME_SEPARATEUR = {
+  vagues: 'M0,40 C150,90 350,0 500,40 C650,90 850,0 1000,40 C1100,65 1150,50 1200,40 L1200,120 L0,120 Z',
+  courbe: 'M0,10 C400,100 800,100 1200,10 L1200,120 L0,120 Z',
+  triangle: 'M0,120 L600,10 L1200,120 Z',
+  zigzag: 'M0,60 L200,20 L400,60 L600,20 L800,60 L1000,20 L1200,60 L1200,120 L0,120 Z',
+  inclinaison: 'M0,10 L1200,110 L1200,120 L0,120 Z',
+};
+
+/** Pose un séparateur SVG en haut ou en bas d'une section. */
+function poserSeparateur(el, doc, place, forme, couleur) {
+  const chemin = FORME_SEPARATEUR[forme];
+  if (!chemin) return;
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = doc.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 1200 120');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.cssText = 'position:absolute;left:0;width:100%;height:80px;display:block;pointer-events:none;'
+    + (place === 'haut' ? 'top:0;transform:scaleY(-1);' : 'bottom:0;');
+  const chemin2 = doc.createElementNS(ns, 'path');
+  chemin2.setAttribute('d', chemin);
+  chemin2.setAttribute('fill', /^#[0-9a-f]{3,8}$/i.test(String(couleur || '')) ? couleur : '#ffffff');
+  svg.appendChild(chemin2);
+  el.appendChild(svg);
 }
 
 /**
@@ -139,7 +186,12 @@ export const CATEGORIES = ['mise-en-page', 'structure', 'basique', 'media', 'bou
 export const WIDGETS = {
   section: {
     category: 'structure', icon: 'section', container: true, hidden: true,
-    defaults: () => ({ maxWidth: 1080, padding: 64, align: 'left' }),
+    defaults: () => ({
+      maxWidth: 1080, padding: 64, align: 'left',
+      stretch: false, contentWidth: 'boxed', hauteur: 'defaut', hauteurMin: 400,
+      contentPosition: 'defaut', sepHaut: 'aucune', sepBas: 'aucune', sepCouleur: '#ffffff',
+      cssId: '', cssClasses: '',
+    }),
     fields: [
       { key: 'maxWidth', type: 'number', label: 'widthLabel', min: 320, max: 2000, step: 20 },
       { key: 'padding', type: 'number', label: 'paddingLabel', min: 0, max: 200, step: 4 },
@@ -203,15 +255,18 @@ export const WIDGETS = {
 
   column: {
     category: 'structure', icon: 'columns', container: true, hidden: true,
-    defaults: () => ({}),
+    defaults: () => ({ contentPosition: 'defaut', cssId: '', cssClasses: '' }),
     fields: [],
   },
 
   columns: {
     category: 'structure', icon: 'columns', container: true, columns: true,
-    defaults: () => ({ count: 2, gap: 28, ratio: 'egal' }),
+    defaults: () => ({
+      count: 2, gap: 28, ratio: 'egal',
+      gapPreset: 'defaut', inverserMobile: false, cssId: '', cssClasses: '',
+    }),
     fields: [
-      { key: 'count', type: 'select', label: 'columnCount', options: [2, 3, 4] },
+      { key: 'count', type: 'select', label: 'columnCount', options: [2, 3, 4, 5, 6] },
       // Deux colonnes strictement égales sont ce qui donne l'air « gabarit ».
       // Un texte à côté d'une image veut presque toujours un déséquilibre.
       { key: 'ratio', type: 'select', label: 'columnRatio',
@@ -691,12 +746,37 @@ export function renderWidget(noeud, doc, contexte = {}) {
   switch (noeud.type) {
     case 'section': {
       el = doc.createElement('section');
+      el.style.position = 'relative';
+
+      // Sans hauteur à remplir, une position du contenu ne veut rien dire.
+      const hauteur = hauteurSection(p);
+      if (hauteur) {
+        el.style.display = 'flex';
+        el.style.flexDirection = 'column';
+        el.style.minHeight = hauteur;
+        el.style.justifyContent = POSITIONS_CONTENU[p.contentPosition] || '';
+      }
+
+      // Pleine largeur du cadre sans toucher à la feuille du site.
+      if (p.stretch) {
+        el.style.width = '100vw';
+        el.style.marginLeft = 'calc(50% - 50vw)';
+        el.style.marginRight = 'calc(50% - 50vw)';
+      }
+
       const interieur = doc.createElement('div');
-      interieur.style.maxWidth = (p.maxWidth || 1080) + 'px';
+      // Dans une section devenue flex (hauteur réglée), une marge automatique
+      // désactive l'étirement par défaut d'un enfant flexible : sans largeur
+      // explicite, le bloc reviendrait à la taille de son contenu — vide, 0.
+      if (hauteur) { interieur.style.width = '100%'; interieur.style.boxSizing = 'border-box'; }
+      interieur.style.maxWidth = p.contentWidth === 'plein' ? 'none' : (p.maxWidth || 1080) + 'px';
       interieur.style.margin = '0 auto';
       interieur.style.padding = (p.padding ?? 64) + 'px 24px';
       el.appendChild(interieur);
       rendreEnfants(noeud.children, interieur, doc, contexte);
+
+      poserSeparateur(el, doc, 'haut', p.sepHaut, p.sepCouleur);
+      poserSeparateur(el, doc, 'bas', p.sepBas, p.sepCouleur);
       break;
     }
 
@@ -839,6 +919,12 @@ export function renderWidget(noeud, doc, contexte = {}) {
     case 'column': {
       el = doc.createElement('div');
       el.style.minWidth = '0';
+      if (p.contentPosition && p.contentPosition !== 'defaut') {
+        el.style.display = 'flex';
+        el.style.flexDirection = 'column';
+        el.style.justifyContent = POSITIONS_CONTENU[p.contentPosition] || '';
+        el.style.height = '100%';
+      }
       rendreEnfants(noeud.children, el, doc, contexte);
       break;
     }
@@ -847,8 +933,16 @@ export function renderWidget(noeud, doc, contexte = {}) {
       el = doc.createElement('div');
       el.style.display = 'grid';
       el.style.gridTemplateColumns = pistesColonnes(p);
-      el.style.gap = (p.gap ?? 28) + 'px';
+      el.style.gap = ecartColonnes(p) + 'px';
       rendreEnfants(noeud.children, el, doc, contexte);
+
+      // Empilées par défaut sous 640px ; inversées, dans l'ordre contraire.
+      const classe = classeDe(noeud);
+      el.classList.add(classe);
+      const regles = p.inverserMobile
+        ? [`@media (max-width:640px){.${classe}{display:flex!important;flex-direction:column-reverse!important;gap:${ecartColonnes(p)}px!important}}`]
+        : [`@media (max-width:640px){.${classe}{grid-template-columns:1fr!important}}`];
+      el.appendChild(feuilleDe(doc, regles));
       break;
     }
 
@@ -1813,6 +1907,15 @@ export function renderWidget(noeud, doc, contexte = {}) {
     } else {
       applyStyleObject(el, p.style);
     }
+  }
+
+  // Posés tels quels sur la balise, pour qu'un CSS ou un script tiers s'y accroche.
+  if (p.cssId) {
+    const id = String(p.cssId).trim().split(/\s+/)[0];
+    if (id) el.id = id;
+  }
+  if (p.cssClasses) {
+    for (const c of String(p.cssClasses).trim().split(/\s+/).filter(Boolean)) el.classList.add(c);
   }
 
   el.setAttribute('data-admin-widget', noeud.key);

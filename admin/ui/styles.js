@@ -1347,6 +1347,101 @@ select.input { appearance: none; cursor: pointer; }
   /* Choisir un format d'écran n'a pas de sens sur un téléphone. */
   .devices { display: none; }
 }
+
+/* =========================================================================
+   Bandeau Section / Colonnes / Colonne — Mise en page / Style / Avancé.
+   Un habillage à part pour ces trois blocs : ce sont les plus reconnaissables
+   d'un constructeur de page, et les reconnaître du premier coup d'œil compte
+   plus ici qu'ailleurs dans le panneau.
+   ========================================================================= */
+.elbar {
+  display: flex; align-items: center; gap: 8px; padding: 11px 13px;
+  background: var(--sect); color: #fff; font-weight: 600; font-size: 13px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0; margin: -13px -13px 13px;
+}
+.elbar svg { flex: none; opacity: .9; }
+
+.eltabs {
+  display: flex; gap: 2px; margin: 0 0 13px; border-bottom: 1px solid var(--line);
+}
+.eltabs__btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 9px 4px 8px; background: none; border: 0; border-bottom: 2px solid transparent;
+  color: var(--muted); font-size: 10.5px; font-family: inherit; cursor: pointer;
+  transition: color .14s, border-color .14s;
+}
+.eltabs__btn:hover { color: var(--text); }
+.eltabs__btn[aria-pressed="true"] { color: var(--sect); border-bottom-color: var(--sect); }
+.elcorps { display: flex; flex-direction: column; }
+
+/* ---- commutateur (bascule un réglage entier, pas une case parmi d'autres) */
+.swtch {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-bottom: 13px;
+}
+.swtch__label { font-size: 12.5px; color: var(--text); }
+.swtch__piste {
+  flex: none; width: 34px; height: 19px; padding: 2px; border-radius: 999px;
+  background: var(--bg-high); border: 1px solid var(--line); cursor: pointer; position: relative;
+  transition: background .14s, border-color .14s;
+}
+.swtch__piste[aria-pressed="true"] { background: var(--sect); border-color: var(--sect); }
+.swtch__bille {
+  display: block; width: 13px; height: 13px; border-radius: 50%; background: #fff;
+  transition: transform .14s;
+}
+.swtch__piste[aria-pressed="true"] .swtch__bille { transform: translateX(15px); }
+
+/* ---- boîte de marges à quatre côtés, avec un lien pour les faire bouger
+   ensemble ---- */
+.elbox { display: flex; align-items: center; gap: 8px; }
+.elbox__grid { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.elbox__cell { position: relative; }
+.elbox__input { width: 100%; padding: 7px 6px 15px; font-size: 12px; text-align: center; }
+.elbox__tag {
+  position: absolute; bottom: 4px; left: 0; right: 0; text-align: center;
+  font-size: 8.5px; letter-spacing: .04em; color: var(--faint); pointer-events: none;
+}
+.elbox__lien {
+  flex: none; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  background: var(--bg-high); border: 1px solid var(--line); border-radius: var(--radius-xs);
+  color: var(--muted); cursor: pointer;
+}
+.elbox__lien--actif { background: var(--sect); border-color: var(--sect); color: #fff; }
+
+/* ---- sélecteur de structure (grille de proportions de colonnes) ---- */
+.structs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+@media (max-width: 460px) { .structs { grid-template-columns: repeat(3, 1fr); } }
+.struct {
+  padding: 12px 8px; background: var(--bg-soft); border: 1px solid var(--line-soft);
+  border-radius: var(--radius-xs); cursor: pointer; transition: border-color .14s, background .14s;
+}
+.struct:hover { border-color: rgba(169,122,232,.6); background: var(--bg-raise); }
+.struct__preview { display: flex; gap: 3px; height: 26px; }
+.struct__col { flex: 1; background: var(--line); border-radius: 2px; }
+.struct:hover .struct__col { background: var(--sect); opacity: .7; }
+
+/* ---- bibliothèque de modèles (fenêtre à deux onglets) ---- */
+.bibtabs { display: flex; gap: 6px; margin-bottom: 14px; }
+.bibtabs__btn {
+  padding: 7px 14px; background: var(--bg-soft); border: 1px solid var(--line-soft);
+  border-radius: 999px; color: var(--muted); font-size: 12.5px; font-family: inherit; cursor: pointer;
+}
+.bibtabs__btn[aria-pressed="true"] { background: var(--sect); border-color: var(--sect); color: #fff; }
+.tpls--biblio { grid-template-columns: repeat(3, 1fr); gap: 11px; }
+@media (max-width: 560px) { .tpls--biblio { grid-template-columns: repeat(2, 1fr); } }
+.tpl--biblio { flex-direction: column; align-items: stretch; text-align: center; }
+.tpl--biblio .tpl__preview { width: 100%; height: 56px; }
+
+.bibliste { display: flex; flex-direction: column; gap: 1px; }
+.bibligne {
+  display: flex; align-items: center; gap: 10px; padding: 9px 4px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.bibligne__icon { flex: none; color: var(--sect); }
+.bibligne__nom { flex: 1; min-width: 0; font-size: 12.5px; }
+.bibligne__type { flex: none; color: var(--faint); font-size: 11px; }
+.bibligne__actions { flex: none; display: flex; gap: 6px; }
 `;
 
 /**

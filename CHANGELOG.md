@@ -18,6 +18,58 @@
 
 
 
+## 1.73.0 — Section, colonnes et colonne passent au bandeau Mise en page / Style / Avancé
+
+Retour : « voilà ce que je veux parfaitement... sur la partie live » — un
+bandeau de réglages qui se comporte comme celui des constructeurs de page
+les plus répandus, pour ces trois blocs précisément, puisque ce sont les
+plus reconnaissables et les plus souvent posés.
+
+Chacun des trois ouvre maintenant un bandeau à trois onglets :
+- **Mise en page** — une section peut s'étirer en pleine largeur du cadre,
+  choisir une largeur encadrée ou pleine, une hauteur (par défaut, minimum
+  avec une valeur en px, ou plein écran) et une position du contenu dans
+  cette hauteur ; des colonnes affichent leur structure actuelle et rouvrent
+  le sélecteur visuel pour en changer, et choisissent un écart par
+  préréglage (aucun, étroit, par défaut, étendu, large, personnalisé).
+- **Style** — arrière-plan, bordure, ombre, typographie (le schéma
+  d'habillage déjà en place, réorganisé sous les mêmes intitulés) ; une
+  section gagne une forme de séparation en haut et en bas (vagues, courbe,
+  triangle, zigzag, inclinaison), une colonne gagne sa position de contenu.
+- **Avancé** — une boîte de marge et de marge interne à quatre côtés liables
+  d'un clic, l'animation d'accueil (déjà disponible ailleurs, posée ici),
+  un identifiant et des classes CSS posés sur la balise, un bloc Responsive
+  (inverser les colonnes, masquer sur ordinateur / tablette / mobile — ce
+  dernier via le mécanisme de surcharge d'écran déjà en place), et le CSS
+  personnalisé déjà existant.
+
+Poser des colonnes passe désormais par un sélecteur de structure (dix mises
+en page, choisies avant l'insertion plutôt qu'après) ; une « Bibliothèque »
+à deux onglets — modèles prédéfinis en grille, liste de modèles avec aperçu
+et insertion — reprend les modèles de section déjà existants dans une
+fenêtre dédiée plutôt que le seul panneau replié de la bibliothèque de
+widgets.
+
+Au passage, un vrai bug trouvé en vérifiant dans un navigateur : une section
+étirée en largeur CONTENU (content-box) débordait de 48px à cause d'un
+`width:100%` ajouté sans `box-sizing`, et une section devenue flexible
+(hauteur minimum réglée) voyait son contenu intérieur revenir à une largeur
+nulle — une marge automatique désactive l'étirement par défaut d'un enfant
+flexible. Les deux sont corrigés.
+
+Les données purement éditeur (la liste des structures proposées) vivent
+dans `ui/structure-picker.js`, qui ne part pas chez le visiteur — budget de
+poids du visiteur relevé de 375 à 385 Kio pour le reste, légitimement
+nouveau et nécessaire au rendu d'une page publiée (voir `tools/essai-poids.mjs`).
+
+Vérifié dans un vrai navigateur (pas seulement en test automatisé) : le
+bandeau s'ouvre pour les trois blocs avec le bon titre, les trois onglets
+fonctionnent, les réglages qui en révèlent d'autres le font (hauteur →
+hauteur minimum, largeur → encadré), un commutateur Responsive s'active
+visiblement, le sélecteur de structure pose le bon nombre de colonnes, la
+Bibliothèque ouvre ses deux onglets et insère. Batterie de tests complète
+au vert, budget de poids du visiteur revérifié.
+
 ## 1.72.0 — /exemples : la barre du site, et trois accueils qui ne se ressemblent plus
 
 Retour après la mise en ligne de `/exemples` (1.71.0) : « où est le header ? »

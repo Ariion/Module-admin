@@ -9,7 +9,7 @@
  */
 import { h, icon, clear, rendreSansSauter } from './el.js';
 import { safeImageUrl } from '../core/sanitize.js';
-import { WIDGETS } from '../core/widgets.js';
+import { WIDGETS, GAP_PRESETS, FORME_SEPARATEUR } from '../core/widgets.js';
 import { TYPES_ACTION, MODELES_ACTION, normaliserAction, actionActive } from '../core/actions.js';
 import { STYLE_FIELDS, STYLE_GROUPS, readStyleValues } from '../core/style.js';
 import { ECRANS, ECRAN_BASE, surchargesDe, fusionnerEcrans } from '../core/ecrans.js';
@@ -23,6 +23,12 @@ export function createInspector({ vue, t, actions }) {
   let selection = null;
   // Groupes ouverts ou repliés, retenus pour toute la session d'édition.
   const plis = new Map();
+  // Le bandeau Section / Colonnes / Colonne : l'onglet ouvert par bloc, et
+  // quels côtés de marge sont liés dans la boîte de marges — l'un et l'autre
+  // par CLÉ de bloc, pour que modifier une section ne déplie pas le même
+  // onglet sur toutes les autres.
+  const ongletsStructure = new Map();
+  const liaisonsBoite = new Map();
 
   /**
    * Deux sélections désignent-elles la même chose ? L'éditeur reconstruit un
@@ -142,6 +148,17 @@ export function createInspector({ vue, t, actions }) {
     const def = WIDGETS[noeud.type];
     if (!def) { vue.appendChild(h('p', { class: 'empty' }, t('selectHint'))); return; }
 
+    // Section, colonnes et colonne sont les trois blocs de STRUCTURE — ceux
+    // qu'on retrouve, sous un nom ou un autre, dans tout constructeur de
+    // page. Ils ont droit à leur propre bandeau (Mise en page / Style /
+    // Avancé) plutôt qu'au panneau générique des autres widgets : c'est là
+    // que « large public » et « simple à comprendre » comptent le plus,
+    // puisque c'est le bloc qu'on pose et repose en premier.
+    if (noeud.type === 'section' || noeud.type === 'columns' || noeud.type === 'column') {
+      renderStructureFields(noeud, def);
+      return;
+    }
+
     vue.appendChild(h('div', { class: 'sel' },
       h('span', { class: 'sel__icon' }, icon(def.icon, 15)),
       h('div', { class: 'sel__main' },
@@ -171,6 +188,291 @@ export function createInspector({ vue, t, actions }) {
       h('button', {
         class: 'btn', type: 'button',
         onclick: () => actions.widgetOp(noeud.key, 'move', 1),
+      }, icon('down', 13), t('moveDown')),
+    ));
+    vue.appendChild(h('button', {
+      class: 'btn btn--wide btn--danger', type: 'button', style: { marginTop: '7px' },
+      onclick: () => actions.widgetOp(noeud.key, 'remove'),
+    }, icon('trash', 13), t('remove')));
+  }
+
+  // ---------------------------------------------- section / colonnes / colonne
+  const ONGLETS_STRUCTURE = ['layout', 'style', 'avance'];
+  const ICONE_ONGLET = { layout: 'columns', style: 'palette', avance: 'sliders' };
+  const TITRE_PAR_TYPE = { section: 'elTitreSection', columns: 'elTitreColonnes', column: 'elTitreColonne' };
+  const POSITIONS = [
+    ['defaut', 'elPositionDefaut'], ['haut', 'elPositionHaut'],
+    ['milieu', 'elPositionMilieu'], ['bas', 'elPositionBas'],
+  ];
+
+  /** Écrit une propriété de STRUCTURE (pas un réglage d'habillage). */
+  function ecrireProps(noeud, patch, { revele = false } = {}) {
+    actions.setWidgetProps(noeud.key, patch, { garderPanneau: true });
+    if (revele) render(selection);
+  }
+
+  /** Écrit dans `props.style` — même mécanisme que pour tout widget. */
+  function ecrireStyle(noeud, patch) {
+    actions.setWidgetProps(noeud.key, { style: patch });
+  }
+
+  function champSelect(libelle, valeur, paires, onChange) {
+    return champ(libelle, h('select', {
+      class: 'input', onchange: (e) => onChange(e.target.value),
+    }, paires.map(([v, label]) => h('option', {
+      value: v, selected: String(v) === String(valeur ?? ''),
+    }, label))));
+  }
+
+  function champNombre(libelle, valeur, min, max, step, onChange) {
+    return champ(libelle, h('input', {
+      class: 'input', type: 'number', value: valeur ?? '', min, max, step,
+      oninput: (e) => onChange(Number(e.target.value)),
+    }));
+  }
+
+  /** Un commutateur : plus proche de ce qu'on trouve dans un constructeur de
+   * page qu'une case à cocher, pour un réglage qui bascule un comportement
+   * entier plutôt qu'il ne coche une option parmi d'autres. */
+  function commutateur(libelle, actif, onChange) {
+    return h('div', { class: 'swtch' },
+      h('span', { class: 'swtch__label' }, libelle),
+      h('button', {
+        class: 'swtch__piste', type: 'button', 'aria-pressed': actif ? 'true' : 'false',
+        onclick: () => onChange(!actif),
+      }, h('span', { class: 'swtch__bille' })),
+    );
+  }
+
+  /** Les définitions du schéma d'habillage partagé, dans l'ordre demandé. */
+  function champsParCles(cles) {
+    return cles.map((cle) => STYLE_FIELDS.find((f) => f.key === cle)).filter(Boolean);
+  }
+
+  /**
+   * La boîte de marges à quatre côtés, comme on en trouve dans tout
+   * constructeur de page : quatre nombres, et un lien qui les fait bouger
+   * ensemble quand on en règle un seul. Les côtés sont des réglages
+   * d'HABILLAGE (`props.style`) : ils suivent donc le même mécanisme que la
+   * couleur ou la bordure, la boîte n'étant qu'une présentation groupée de
+   * quatre champs qui existeraient de toute façon séparément.
+   */
+  function boiteCotes(cleBoite, titre, cles, valeurs, ecrire) {
+    const liees = liaisonsBoite.get(cleBoite) ?? false;
+    const etiquettes = [t('coteHaut'), t('coteDroite'), t('coteBas'), t('coteGauche')];
+    const entrees = cles.map((cle, i) => h('div', { class: 'elbox__cell' },
+      h('input', {
+        class: 'input elbox__input', type: 'number', value: valeurs[cle] ?? '',
+        onchange: (e) => {
+          const brut = e.target.value;
+          const v = brut === '' ? '' : Number(brut);
+          if (liees) ecrire(Object.fromEntries(cles.map((c) => [c, v])));
+          else ecrire({ [cle]: v });
+        },
+      }),
+      h('span', { class: 'elbox__tag' }, etiquettes[i]),
+    ));
+    return h('div', { class: 'field' },
+      h('div', { class: 'field__label' }, titre),
+      h('div', { class: 'elbox' },
+        h('div', { class: 'elbox__grid' }, entrees),
+        h('button', {
+          class: 'elbox__lien' + (liees ? ' elbox__lien--actif' : ''), type: 'button', title: t('elLier'),
+          onclick: () => { liaisonsBoite.set(cleBoite, !liees); render(selection); },
+        }, icon('link', 12)),
+      ),
+    );
+  }
+
+  function formeOptions() {
+    return [['aucune', t('elSepAucune')], ...Object.keys(FORME_SEPARATEUR).map((id) => [id, t('elSep_' + id)])];
+  }
+
+  // ---- Mise en page ----------------------------------------------------
+  function miseEnPageSection(noeud) {
+    const p = noeud.props;
+    const blocs = [
+      commutateur(t('elEtirer'), !!p.stretch, (v) => ecrireProps(noeud, { stretch: v })),
+      h('p', { class: 'hint', style: { margin: '-6px 0 2px' } }, t('elEtirerHint')),
+      champSelect(t('elLargeurContenu'), p.contentWidth,
+        [['boxed', t('elEncadre')], ['plein', t('elPleineLargeur')]],
+        (v) => ecrireProps(noeud, { contentWidth: v }, { revele: true })),
+    ];
+    if (p.contentWidth !== 'plein') {
+      blocs.push(champNombre(t('widthLabel'), p.maxWidth, 320, 2000, 20, (v) => ecrireProps(noeud, { maxWidth: v })));
+    }
+    blocs.push(
+      champNombre(t('paddingLabel'), p.padding, 0, 200, 4, (v) => ecrireProps(noeud, { padding: v })),
+      champSelect(t('elHauteur'), p.hauteur,
+        [['defaut', t('elHauteurDefaut')], ['mini', t('elHauteurMini')], ['plein', t('elHauteurPlein')]],
+        (v) => ecrireProps(noeud, { hauteur: v }, { revele: true })),
+    );
+    if (p.hauteur === 'mini') {
+      blocs.push(champNombre(t('elHauteurMiniValeur'), p.hauteurMin, 0, 2000, 10, (v) => ecrireProps(noeud, { hauteurMin: v })));
+    }
+    blocs.push(champSelect(t('elPositionContenu'), p.contentPosition,
+      POSITIONS.map(([v, cle]) => [v, t(cle)]), (v) => ecrireProps(noeud, { contentPosition: v })));
+    return blocs;
+  }
+
+  function miseEnPageColonnes(noeud) {
+    const p = noeud.props;
+    const blocs = [
+      h('div', { class: 'field' },
+        h('div', { class: 'field__label' }, t('elStructure')),
+        h('p', { class: 'hint', style: { marginTop: '0' } }, t('elStructureActuelle', p.count)),
+        h('button', {
+          class: 'btn btn--wide', type: 'button',
+          onclick: () => actions.restructureColumns(noeud.key),
+        }, icon('columns', 13), t('elChangerStructure')),
+      ),
+      champSelect(t('elEcartColonnes'), p.gapPreset, [
+        ['aucun', t('elEcart_aucun')], ['etroit', t('elEcart_etroit')], ['defaut', t('elEcart_defaut')],
+        ['etendu', t('elEcart_etendu')], ['large', t('elEcart_large')], ['personnalise', t('elEcart_personnalise')],
+      ], (v) => ecrireProps(noeud, { gapPreset: v }, { revele: true })),
+    ];
+    if (p.gapPreset === 'personnalise') {
+      blocs.push(champNombre(t('gapLabel'), p.gap, 0, 200, 2, (v) => ecrireProps(noeud, { gap: v })));
+    }
+    return blocs;
+  }
+
+  function miseEnPageDe(noeud) {
+    if (noeud.type === 'section') return miseEnPageSection(noeud);
+    if (noeud.type === 'columns') return miseEnPageColonnes(noeud);
+    // Une colonne seule n'a pas de mise en page à elle : sa position dans la
+    // grille vient du bloc de colonnes qui la contient. Son seul réglage
+    // propre — la position de son contenu — vit dans l'onglet Style, comme
+    // dans la plupart des constructeurs de page.
+    return [h('p', { class: 'hint', style: { marginTop: '0' } }, t('elColonneHint'))];
+  }
+
+  // ---- Style -------------------------------------------------------------
+  function styleDe(noeud) {
+    const p = noeud.props;
+    const valeurs = p.style || {};
+    const ecrire = (patch) => ecrireStyle(noeud, patch);
+    const blocs = [];
+
+    blocs.push(groupe('elstyle:fond', t('elArrierePlanBordure'), 'palette', () => champsParCles([
+      'background', 'backgroundImage', 'borderWidth', 'borderColor',
+      'borderStyle', 'borderRadius', 'boxShadow', 'opacity',
+    ]).map((f) => champStyle(f, valeurs[f.key], ecrire)), true));
+
+    if (noeud.type === 'section') {
+      blocs.push(groupe('elstyle:sep', t('elFormeSeparation'), 'section', () => {
+        const champs = [
+          champSelect(t('elSepHaut'), p.sepHaut, formeOptions(), (v) => ecrireProps(noeud, { sepHaut: v }, { revele: true })),
+          champSelect(t('elSepBas'), p.sepBas, formeOptions(), (v) => ecrireProps(noeud, { sepBas: v }, { revele: true })),
+        ];
+        if (p.sepHaut !== 'aucune' || p.sepBas !== 'aucune') {
+          champs.push(champ(t('elSepCouleur'), couleur(p.sepCouleur, (v) => ecrireProps(noeud, { sepCouleur: v }))));
+        }
+        return champs;
+      }, false));
+    }
+
+    if (noeud.type === 'column') {
+      blocs.push(groupe('elstyle:layout', t('elMiseEnPage'), 'columns', () => [
+        champSelect(t('elPositionContenu'), p.contentPosition,
+          POSITIONS.map(([v, cle]) => [v, t(cle)]), (v) => ecrireProps(noeud, { contentPosition: v })),
+      ], false));
+    }
+
+    blocs.push(groupe('elstyle:type', t('grp_type'), 'heading', () => champsParCles([
+      'fontFamily', 'fontSize', 'fontWeight', 'lineHeight',
+      'letterSpacing', 'textTransform', 'fontStyle', 'textDecoration', 'textAlign',
+    ]).map((f) => champStyle(f, valeurs[f.key], ecrire)), false));
+
+    return blocs;
+  }
+
+  // ---- Avancé (commun aux trois) -----------------------------------------
+  function avanceDe(noeud) {
+    const p = noeud.props;
+    const style = p.style || {};
+    const blocs = [];
+
+    blocs.push(groupe('elavance:marge', t('elMarge'), 'spacer', () => [
+      boiteCotes(noeud.key + ':marge', t('elMarge'),
+        ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'], style, (patch) => ecrireStyle(noeud, patch)),
+    ], true));
+
+    blocs.push(groupe('elavance:interieure', t('elMargeInterieure'), 'spacer', () => [
+      boiteCotes(noeud.key + ':interieure', t('elMargeInterieure'),
+        ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'], style, (patch) => ecrireStyle(noeud, patch)),
+    ], false));
+
+    blocs.push(groupe('elavance:anim', t('elAnimationAccueil'), 'eye', () => {
+      const f = STYLE_FIELDS.find((x) => x.key === 'entree');
+      return [champStyle(f, style.entree, (patch) => ecrireStyle(noeud, patch))];
+    }, false));
+
+    blocs.push(groupe('elavance:css', t('elIdentifiants'), 'code', () => [
+      champ(t('elCssId'), h('input', {
+        class: 'input', type: 'text', value: p.cssId || '',
+        onchange: (e) => ecrireProps(noeud, { cssId: e.target.value }),
+      })),
+      champ(t('elCssClasses'), h('input', {
+        class: 'input', type: 'text', value: p.cssClasses || '',
+        onchange: (e) => ecrireProps(noeud, { cssClasses: e.target.value }),
+      })),
+    ], false));
+
+    blocs.push(groupe('elavance:responsive', t('elResponsive'), 'drag', () => {
+      const champs = [];
+      if (noeud.type === 'columns') {
+        champs.push(commutateur(t('elInverserColonnes'), !!p.inverserMobile,
+          (v) => ecrireProps(noeud, { inverserMobile: v }, { revele: true })));
+      }
+      champs.push(h('p', { class: 'hint', style: { margin: '10px 0 6px' } }, t('elVisibiliteHint')));
+      champs.push(commutateur(t('elMasquerOrdinateur'), style.display === 'none',
+        (v) => ecrireStyle(noeud, { display: v ? 'none' : '' })));
+      champs.push(commutateur(t('elMasquerTablette'), style.ecrans?.tablet?.display === 'none',
+        (v) => ecrireStyle(noeud, { ecrans: fusionnerEcrans(style.ecrans, 'tablet', { display: v ? 'none' : '' }) })));
+      champs.push(commutateur(t('elMasquerMobile'), style.ecrans?.mobile?.display === 'none',
+        (v) => ecrireStyle(noeud, { ecrans: fusionnerEcrans(style.ecrans, 'mobile', { display: v ? 'none' : '' }) })));
+      return champs;
+    }, false));
+
+    blocs.push(groupe('elavance:customcss', t('grp_css'), 'code', () => [
+      h('textarea', {
+        class: 'textarea code', spellcheck: 'false', value: style.customCss || '',
+        placeholder: 'selector { border-radius: 12px; }',
+        onchange: (e) => ecrireStyle(noeud, { customCss: e.target.value }),
+      }),
+      h('p', { class: 'hint' }, t('cssHint')),
+    ], false));
+
+    return blocs;
+  }
+
+  /**
+   * Le bandeau Section / Colonnes / Colonne : un titre qui dit ce qui est
+   * sélectionné, trois onglets, et le contenu de l'onglet ouvert.
+   */
+  function renderStructureFields(noeud, def) {
+    const actif = ongletsStructure.get(noeud.key) || 'layout';
+
+    vue.appendChild(h('div', { class: 'elbar' }, icon(def.icon, 14), h('span', {}, t(TITRE_PAR_TYPE[noeud.type]))));
+
+    vue.appendChild(h('div', { class: 'eltabs' }, ONGLETS_STRUCTURE.map((id) => h('button', {
+      class: 'eltabs__btn', type: 'button', 'aria-pressed': id === actif ? 'true' : 'false',
+      onclick: () => { ongletsStructure.set(noeud.key, id); render(selection); },
+    }, icon(ICONE_ONGLET[id], 13), h('span', {}, t('elOnglet_' + id))))));
+
+    const corps = h('div', { class: 'elcorps' });
+    if (actif === 'layout') corps.append(...miseEnPageDe(noeud));
+    else if (actif === 'style') corps.append(...styleDe(noeud));
+    else corps.append(...avanceDe(noeud));
+    vue.appendChild(corps);
+
+    vue.appendChild(h('div', { class: 'row', style: { marginTop: '14px' } },
+      h('button', {
+        class: 'btn', type: 'button', onclick: () => actions.widgetOp(noeud.key, 'move', -1),
+      }, icon('up', 13), t('moveUp')),
+      h('button', {
+        class: 'btn', type: 'button', onclick: () => actions.widgetOp(noeud.key, 'move', 1),
       }, icon('down', 13), t('moveDown')),
     ));
     vue.appendChild(h('button', {
