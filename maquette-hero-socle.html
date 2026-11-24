@@ -167,7 +167,73 @@
   .mentions span{display:flex; align-items:center; gap:8px}
   .mentions .coche{ color:var(--ok); font-weight:800 }
 
-  footer.pied{ text-align:center; padding-block:30px 50px; color:var(--muted); font-size:.78rem; font-family:var(--mono) }
+  /* -------------------------------------------------- comment ça marche */
+  .etapes{ padding-block: clamp(50px,8vw,90px); }
+  .etapes__entete{ text-align:center; max-width:50ch; margin:0 auto 46px; }
+  .etapes__oeillet{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+  }
+  .etapes__titre{
+    font-family:var(--display); font-weight:800; font-size:clamp(1.5rem,3vw,2.1rem); margin:10px 0 0; letter-spacing:-.02em;
+  }
+  .etapes__grille{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:22px;
+  }
+  @media (max-width:820px){ .etapes__grille{ grid-template-columns:1fr } }
+  .etape{
+    background:var(--bg-raise); border:1px solid var(--line); border-radius:16px; padding:28px 26px;
+  }
+  .etape__num{
+    font-family:var(--mono); font-size:.78rem; color:var(--accent); font-weight:700;
+  }
+  .etape h3{
+    font-family:var(--display); font-weight:700; font-size:1.12rem; margin:14px 0 8px; letter-spacing:-.01em;
+  }
+  .etape p{ color:var(--muted); font-size:.93rem; line-height:1.55; margin:0 }
+
+  /* -------------------------------------------------- tarif */
+  .tarif{ padding-block: clamp(50px,8vw,90px); }
+  .tarif__carte{
+    max-width:640px; margin:0 auto; background:var(--fg); color:var(--bg);
+    border-radius:20px; padding:clamp(32px,6vw,52px); text-align:center;
+  }
+  .tarif__oeillet{ font-family:var(--mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent) }
+  .tarif__titre{
+    font-family:var(--display); font-weight:800; font-size:clamp(1.6rem,3.4vw,2.3rem); margin:14px 0 0; letter-spacing:-.02em;
+  }
+  .tarif__prix{
+    font-family:var(--display); font-weight:900; font-size:clamp(2.6rem,6vw,3.6rem); margin:18px 0 0; letter-spacing:-.03em;
+  }
+  .tarif__prix small{ font-size:.38em; font-weight:600; color:#9CA3AF; margin-left:6px }
+  .tarif__liste{
+    list-style:none; padding:0; margin:28px 0 0; display:grid; gap:12px; text-align:left; max-width:380px; margin-inline:auto;
+  }
+  .tarif__liste li{ display:flex; gap:10px; font-size:.94rem; color:#D8DAE0 }
+  .tarif__liste .coche{ color:var(--accent); font-weight:800 }
+  .tarif .bouton--plein{ margin-top:30px }
+
+  /* -------------------------------------------------- pour qui */
+  .public{ padding-block: clamp(40px,8vw,80px); }
+  .public__grille{ display:grid; grid-template-columns:1fr 1fr; gap:22px }
+  @media (max-width:760px){ .public__grille{ grid-template-columns:1fr } }
+  .public__carte{
+    border:1px solid var(--line); border-radius:16px; padding:28px 26px; background:var(--bg-raise);
+  }
+  .public__carte .etiquette{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent);
+  }
+  .public__carte h3{ font-family:var(--display); font-weight:700; font-size:1.2rem; margin:10px 0 8px }
+  .public__carte p{ color:var(--muted); font-size:.93rem; line-height:1.55; margin:0 }
+
+  footer.pied{
+    border-top:1px solid var(--line); margin-top:10px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;
+    padding-block:26px 48px; color:var(--muted); font-size:.82rem;
+  }
+  footer.pied .marque{ font-size:.92rem }
+  footer.pied nav{ display:flex; gap:20px }
+  footer.pied nav a{ color:var(--muted); text-decoration:none }
+  footer.pied nav a:hover{ color:var(--fg) }
 
   @media (max-width:640px){
     .barre nav{display:none}
@@ -237,9 +303,73 @@
       <span><span class="coche">✓</span> Pour un commerçant comme pour une agence</span>
     </div>
   </section>
+
+  <section class="etapes">
+    <div class="etapes__entete">
+      <div class="etapes__oeillet">Trois gestes, pas un de plus</div>
+      <h2 class="etapes__titre">Comment ça marche</h2>
+    </div>
+    <div class="etapes__grille">
+      <div class="etape">
+        <div class="etape__num">01</div>
+        <h3>Vous cliquez</h3>
+        <p>Sur le texte, l'image ou le lien que vous voulez changer. Directement sur votre site, tel qu'il apparaît à vos visiteurs.</p>
+      </div>
+      <div class="etape">
+        <div class="etape__num">02</div>
+        <h3>Vous tapez</h3>
+        <p>Pas de panneau, pas d'onglets, pas de mise en page à régler. La mise en page reste celle que votre développeur a écrite.</p>
+      </div>
+      <div class="etape">
+        <div class="etape__num">03</div>
+        <h3>C'est enregistré</h3>
+        <p>Tout seul, tout de suite. Vous pouvez publier, revenir en arrière, et garder votre site pour de bon.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="tarif">
+    <div class="tarif__carte">
+      <div class="tarif__oeillet">Un seul prix, pour toujours</div>
+      <h2 class="tarif__titre">Pas d'abonnement.<br>Jamais.</h2>
+      <div class="tarif__prix">349&nbsp;€ <small>une seule fois</small></div>
+      <ul class="tarif__liste">
+        <li><span class="coche">✓</span> Votre site, livré et éditable dès le premier jour</li>
+        <li><span class="coche">✓</span> Textes, images et liens modifiables par n'importe qui</li>
+        <li><span class="coche">✓</span> Historique des publications, pour revenir en arrière</li>
+        <li><span class="coche">✓</span> Aucune dépendance à un éditeur ou une plateforme</li>
+      </ul>
+      <a class="bouton bouton--plein" href="#">Essayer sur un vrai site →</a>
+    </div>
+  </section>
+
+  <section class="public">
+    <div class="public__grille">
+      <div class="public__carte">
+        <div class="etiquette">Pour les commerçants</div>
+        <h3>Votre site, sans dépendre de personne</h3>
+        <p>Boulangerie, salon, artisan : vous changez vos horaires, vos photos, vos prix vous-même, le jour même, sans appeler qui que ce soit.</p>
+      </div>
+      <div class="public__carte">
+        <div class="etiquette">Pour les agences et développeurs</div>
+        <h3>Vous gardez la main sur le code</h3>
+        <p>Vous écrivez la mise en page une fois, vous marquez ce qui est éditable, et votre client ne peut jamais rien casser.</p>
+      </div>
+    </div>
+  </section>
 </div>
 
-<footer class="pied">SOCLE — MAQUETTE DE HERO, À AJUSTER</footer>
+<div class="enveloppe">
+  <footer class="pied">
+    <div class="marque"><span class="marque__plot">S</span> Socle</div>
+    <nav>
+      <a href="#">Comment ça marche</a>
+      <a href="#">Tarif</a>
+      <a href="#">Pour les agences</a>
+    </nav>
+    <span>© 2026 Socle — un site écrit à la main, que n'importe qui édite en cliquant dessus.</span>
+  </footer>
+</div>
 
 <script>
 (function(){
