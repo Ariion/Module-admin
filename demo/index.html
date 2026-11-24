@@ -3,100 +3,91 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hôtel des Pins — démonstration du module d'administration</title>
-<link rel="stylesheet" href="styles.css">
+<title>Le Fournil de Claire — démonstration Socle</title>
+<style>
+  :root{
+    --encre:#1b1b18; --doux:#6b665c; --fond:#fdfbf7; --accent:#b5541f; --trait:#e7e1d4;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fond);color:var(--encre);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;max-width:1040px;margin:0 auto}
+  .marque{font-weight:700;font-size:1.2rem}
+  nav a{color:var(--doux);text-decoration:none;margin-left:22px;font-size:.92rem}
+  .hero{position:relative;max-width:1040px;margin:10px auto 0;padding:0 28px}
+  .hero__photo{width:100%;aspect-ratio:16/8;object-fit:cover;border-radius:18px;display:block}
+  .hero__texte{max-width:640px;margin:34px auto 0;text-align:center;padding:0 20px}
+  h1{font-size:clamp(1.8rem,4vw,2.6rem);margin:0 0 14px;line-height:1.15}
+  .hero__texte p{color:var(--doux);margin:0 0 22px}
+  .bouton{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:13px 26px;border-radius:999px;font-weight:600;font-size:.94rem}
+  section{max-width:1040px;margin:64px auto;padding:0 28px}
+  .section__titre{font-size:1.5rem;margin:0 0 8px}
+  .section__soustitre{color:var(--doux);margin:0 0 30px}
+  .grille{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  @media (max-width:760px){.grille{grid-template-columns:1fr}}
+  .carte{border:1px solid var(--trait);border-radius:14px;overflow:hidden;background:#fff}
+  .carte img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+  .carte__corps{padding:16px 18px}
+  .carte h3{margin:0 0 6px;font-size:1.02rem}
+  .carte p{margin:0;color:var(--doux);font-size:.9rem}
+  footer{border-top:1px solid var(--trait);margin-top:60px;padding:26px 28px;text-align:center;color:var(--doux);font-size:.85rem}
+</style>
 </head>
 <body>
 
-<header class="site-header">
-  <a class="logo" href="index.html">Hôtel des Pins</a>
-  <nav class="site-nav">
-    <ul>
-      <li><a href="index.html">Accueil</a></li>
-      <li><a href="#chambres">Chambres</a></li>
-      <li><a href="#avis">Avis</a></li>
-      <li><a href="contact.html">Contact</a></li>
-    </ul>
+<header>
+  <span class="marque" data-edit="text">Le Fournil de Claire</span>
+  <nav>
+    <a href="#pains">Nos pains</a>
+    <a href="#contact">Contact</a>
   </nav>
 </header>
 
 <div class="hero">
-  <div class="hero__inner">
-    <h1>Une parenthèse au bord de la forêt</h1>
-    <p>Douze chambres, une table du marché et le silence des pins, à vingt minutes de la mer.</p>
-    <a class="button" href="contact.html">Réserver un séjour</a>
+  <img class="hero__photo" data-edit="image"
+    src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1200&q=80"
+    alt="Four à pain traditionnel">
+  <div class="hero__texte">
+    <h1 data-edit="text">Du pain comme on n'en fait plus.</h1>
+    <p data-edit="text">Farines locales, levain naturel, cuisson au feu de bois. Ouvert du mardi au dimanche, dès 7h.</p>
+    <a class="bouton" data-edit="link" href="#contact">Nous trouver →</a>
   </div>
 </div>
 
-<section id="chambres" class="wrap">
-  <h2>Nos chambres</h2>
-  <p class="lead">Chaque chambre a été pensée comme une maison de famille : du bois, du lin, et de vraies fenêtres qui s'ouvrent.</p>
-
-  <div class="rooms">
-    <article class="room">
-      <img src="images/chambre-1.jpg" alt="Chambre Cabane, lit double, poutres apparentes et fenêtre ouverte sur les pins" loading="lazy">
-      <div class="room__body">
-        <h3>Chambre Cabane</h3>
-        <p>18 m², lit double, vue sur la clairière. Idéale pour une première nuit sur place.</p>
-        <span class="price">À partir de 120 € la nuit</span>
-        <a href="contact.html">Demander cette chambre</a>
+<section id="pains">
+  <h2 class="section__titre" data-edit="text">Nos pains du jour</h2>
+  <p class="section__soustitre" data-edit="text">Trois fournées, tous les matins, jamais les mêmes d'un jour à l'autre.</p>
+  <div class="grille">
+    <article class="carte">
+      <img data-edit="image" src="https://images.unsplash.com/photo-1549931319-a545319b2e58?w=600&q=80" alt="Pain de campagne">
+      <div class="carte__corps">
+        <h3 data-edit="text">Pain de campagne</h3>
+        <p data-edit="text">Levain naturel, 24h de fermentation. 4,20 €</p>
       </div>
     </article>
-    <article class="room">
-      <img src="images/chambre-2.jpg" alt="Chambre Source, tons vert d'eau et terrasse face à la mer" loading="lazy">
-      <div class="room__body">
-        <h3>Chambre Source</h3>
-        <p>24 m², salle d'eau en pierre, terrasse privative orientée à l'est.</p>
-        <span class="price">À partir de 155 € la nuit</span>
-        <a href="contact.html">Demander cette chambre</a>
+    <article class="carte">
+      <img data-edit="image" src="https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=600&q=80" alt="Baguette tradition">
+      <div class="carte__corps">
+        <h3 data-edit="text">Baguette tradition</h3>
+        <p data-edit="text">Croustillante dehors, alvéolée dedans. 1,30 €</p>
       </div>
     </article>
-    <article class="room">
-      <img src="images/chambre-3.jpg" alt="Suite Bruyère, deux lits et coin salon aux tons prune" loading="lazy">
-      <div class="room__body">
-        <h3>Suite Bruyère</h3>
-        <p>32 m², coin salon, baignoire îlot et cheminée pour les soirs d'hiver.</p>
-        <span class="price">À partir de 210 € la nuit</span>
-        <a href="contact.html">Demander cette chambre</a>
+    <article class="carte">
+      <img data-edit="image" src="https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=601&q=80" alt="Pain aux céréales">
+      <div class="carte__corps">
+        <h3 data-edit="text">Pain aux céréales</h3>
+        <p data-edit="text">Graines de tournesol, lin et sésame. 4,80 €</p>
       </div>
     </article>
   </div>
 </section>
 
-<section id="avis" class="reviews">
-  <div class="wrap">
-    <h2>Ce qu'en disent nos hôtes</h2>
-    <p class="lead">Quelques mots laissés dans le livre d'or de l'entrée.</p>
-    <ul>
-      <li class="review">
-        <blockquote>Le petit-déjeuner sous les arbres vaut à lui seul le détour.</blockquote>
-        <cite>Claire et Julien, mai</cite>
-      </li>
-      <li class="review">
-        <blockquote>On est arrivés fatigués, on est repartis reposés. C'est exactement ce qu'on cherchait.</blockquote>
-        <cite>Farid, août</cite>
-      </li>
-      <li class="review">
-        <blockquote>Accueil impeccable, chambre impeccable, silence total. Nous reviendrons.</blockquote>
-        <cite>Marta, octobre</cite>
-      </li>
-    </ul>
-  </div>
+<section id="contact">
+  <h2 class="section__titre" data-edit="text">Nous trouver</h2>
+  <p data-edit="text">12 rue du Four, 40200 Mimizan — ouvert du mardi au dimanche, 7h-13h30.</p>
 </section>
 
-<footer class="site-footer">
-  <div class="wrap">
-    <p>Hôtel des Pins — 14 route de la Forêt, 40160 Parentis</p>
-    <p><a href="tel:+33500000000">05 00 00 00 00</a> · <a href="mailto:bonjour@hoteldespins.fr">bonjour@hoteldespins.fr</a></p>
-  </div>
-</footer>
+<footer data-edit="text">Le Fournil de Claire — fait à la main, tous les jours.</footer>
 
-<!-- ------------------------------------------------------------------
-     Module d'administration : deux lignes, toujours en fin de <body>.
-     Retirez-les et le site fonctionne exactement comme avant.
-     ------------------------------------------------------------------ -->
-<script src="admin-config.js"></script>
-<script type="module" src="../admin/runtime.js"></script>
-
+<script src="/moteur/edit.js"></script>
 </body>
 </html>

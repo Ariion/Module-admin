@@ -1,62 +1,9 @@
 {
-  "name": "atelier",
-  "version": "1.73.0",
-  "description": "Interface d'édition visuelle pour sites statiques codés à la main. Firebase, aucun serveur, aucun build.",
-  "type": "module",
+  "name": "socle",
+  "version": "0.1.0",
   "private": true,
+  "description": "Socle — un site écrit à la main, que n'importe qui édite en cliquant dessus.",
   "scripts": {
-    "test": "node tools/essais.mjs",
-    "start": "http-server -p 8080 -c-1 .",
-    "demo": "http-server -p 8080 -c-1 . -o /demo/index.html",
-    "boutique-demo": "node tools/boutique-demo.mjs",
-    "lint": "eslint admin",
-    "photos": "node tools/photos.mjs",
-    "moissonner": "node tools/moissonner.mjs",
-    "sync": "node tools/sync.mjs",
-    "essai-local": "node tools/essai-local.mjs",
-    "essai-ecrans": "node tools/essai-ecrans.mjs",
-    "essai-marque": "node tools/essai-marque.mjs",
-    "essai-portee": "node tools/essai-portee.mjs",
-    "essai-elements": "node tools/essai-elements.mjs",
-    "essai-blocs": "node tools/essai-blocs.mjs",
-    "essai-images": "node tools/essai-images.mjs",
-    "essai-mise-en-forme": "node tools/essai-mise-en-forme.mjs",
-    "essai-assainissement": "node tools/essai-assainissement.mjs",
-    "essai-clavier": "node tools/essai-clavier.mjs",
-    "essai-formulaire": "node tools/essai-formulaire.mjs",
-    "essai-debit": "node tools/essai-debit.mjs",
-    "essai-poids": "node tools/essai-poids.mjs",
-    "essai-snipcart": "node tools/essai-snipcart.mjs",
-    "essai-panier": "node tools/essai-panier.mjs",
-    "essai-paiement": "node tools/essai-paiement.mjs",
-    "essai-achat-atelier": "node tools/essai-achat-atelier.mjs",
-    "essai-regles": "node tools/essai-regles.mjs",
-    "essai-endpoint": "node tools/essai-endpoint.mjs",
-    "essai-audit": "node tools/essai-audit.mjs",
-    "essai-bibliotheque": "node tools/essai-bibliotheque.mjs",
-    "essai-redacteur": "node tools/essai-redacteur.mjs",
-    "essai-assistant": "node tools/essai-assistant.mjs",
-    "paquet": "node tools/paquet.mjs",
-    "livraison": "node tools/livraison.mjs",
-    "essai-illustrations": "node tools/essai-illustrations.mjs",
-    "installer": "node tools/installer.mjs",
-    "essai-installeur": "node tools/essai-installeur.mjs"
-  },
-  "keywords": [
-    "cms",
-    "static-site",
-    "firebase",
-    "inline-editing",
-    "no-build"
-  ],
-  "devDependencies": {
-    "eslint": "^10.0.0",
-    "http-server": "^14.1.1"
-  },
-  "files": [
-    "admin",
-    "firebase",
-    "tools",
-    "docs"
-  ]
+    "start": "npx http-server -p 8080 -c-1 ."
+  }
 }
