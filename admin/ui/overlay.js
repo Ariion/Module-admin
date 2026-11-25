@@ -38,6 +38,18 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
 
   // --- Widgets : sélection et dépôt ------------------------------------
   const cadreWidget = h('div', { class: 'wsel' });
+  // Poignées de position libre : un coin resserre ou élargit le bloc
+  // (sa largeur, en pourcentage — la seule dimension que le style connaisse),
+  // un bord le déplace librement (même geste que la poignée dédiée du
+  // bandeau, juste accessible directement sur le cadre de sélection).
+  const POIGNEES_COIN = ['nw', 'ne', 'se', 'sw'];
+  const POIGNEES_BORD = ['n', 'e', 's', 'w'];
+  for (const cle of POIGNEES_COIN) {
+    cadreWidget.appendChild(h('div', { class: `poignee poignee--coin poignee--${cle}`, 'data-poignee': cle }));
+  }
+  for (const cle of POIGNEES_BORD) {
+    cadreWidget.appendChild(h('div', { class: `poignee poignee--bord poignee--${cle}`, 'data-poignee': cle }));
+  }
   const outilsWidget = h('div', { class: 'wtools' });
   const ligneDepot = h('div', { class: 'dropline' });
   const zonesVides = [];
@@ -317,21 +329,24 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
    * de l'aperçu : régénérer la section à chaque pixel serait saccadé. Le
    * modèle n'est mis à jour qu'au relâchement.
    */
-  function poigneeDeplacement(key, el) {
-    const poignee = h('button', {
-      class: 'btn btn--sm btn--icon wtools__grab', type: 'button',
-      title: t('dragMove'), 'aria-label': t('dragMove'),
-    }, icon('drag', 13));
-
+  /**
+   * Cœur du glissement libre, partagé par la poignée dédiée du bandeau et les
+   * poignées de bord posées directement sur le cadre de sélection — même
+   * geste, juste deux endroits où l'attraper. `obtenirCible` est relu à
+   * chaque pointerdown : les poignées du cadre sont permanentes, ce n'est
+   * qu'au moment du geste qu'on sait sur quel widget on se trouve.
+   */
+  function brancherDeplacement(poignee, obtenirCible) {
     let geste = null;
-
-    const styleDe = () => ({ ...(widgetStyle?.(key) || {}) });
     const borne = (v) => Math.max(-400, Math.min(400, Math.round(v)));
 
     poignee.addEventListener('pointerdown', (event) => {
+      const cible = obtenirCible();
+      if (!cible) return;
+      const { key, el } = cible;
       event.preventDefault();
       event.stopPropagation();
-      const base = styleDe();
+      const base = { ...(widgetStyle?.(key) || {}) };
 
       // Les voisins et la section ne bougent pas pendant le geste : on les
       // mesure une fois. Lire la mise en page à chaque pixel serait le seul
@@ -345,6 +360,7 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
       }
 
       geste = {
+        key, el,
         x: event.clientX, y: event.clientY,
         dx: Number(base.decalageX) || 0,
         dy: Number(base.decalageY) || 0,
@@ -361,6 +377,7 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
 
     poignee.addEventListener('pointermove', (event) => {
       if (!geste) return;
+      const { el } = geste;
       // Maj enfoncée : on ne bouge que sur un axe, comme partout ailleurs.
       const brutX = geste.dx + (event.clientX - geste.x);
       const brutY = geste.dy + (event.clientY - geste.y);
@@ -393,19 +410,97 @@ export function createOverlay({ layer, origin, t, onSelect, onCollectionOp, onSe
 
     const finir = (event) => {
       if (!geste) return;
-      const fini = geste.dernier;
+      const { key, dernier } = geste;
       geste = null;
       poignee.classList.remove('wtools__grab--on');
       cacher(mesure);
       effacerReperes();
       try { poignee.releasePointerCapture(event.pointerId); } catch { /* déjà relâché */ }
       // Rien n'a bougé : on ne salit pas l'historique pour un simple clic.
-      if (fini) onWidgetMove?.(key, fini);
+      if (dernier) onWidgetMove?.(key, dernier);
       reposition();
     };
     poignee.addEventListener('pointerup', finir);
     poignee.addEventListener('pointercancel', finir);
+  }
 
+  /**
+   * Poignée de coin : resserre ou élargit le bloc (sa largeur, en %, seule
+   * dimension que le style connaisse pour un widget en flux). Un coin « est »
+   * (ne/se) élargit quand on tire vers la droite, un coin « ouest » (nw/sw)
+   * quand on tire vers la gauche.
+   */
+  function brancherRedimensionnement(poignee, cle, obtenirCible) {
+    let geste = null;
+    const signe = cle.includes('e') ? 1 : -1;
+
+    poignee.addEventListener('pointerdown', (event) => {
+      const cible = obtenirCible();
+      if (!cible) return;
+      const { key, el } = cible;
+      event.preventDefault();
+      event.stopPropagation();
+      const rectEl = el.getBoundingClientRect();
+      const rectParent = el.parentElement?.getBoundingClientRect();
+      const base = { ...(widgetStyle?.(key) || {}) };
+      const largeurParent = rectParent?.width || rectEl.width || 1;
+      geste = {
+        key, el, largeurParent,
+        x: event.clientX,
+        largeurInitiale: Number(base.largeur) || Math.round((rectEl.width / largeurParent) * 100),
+        base,
+      };
+      poignee.setPointerCapture(event.pointerId);
+      montrer(mesure);
+    });
+
+    poignee.addEventListener('pointermove', (event) => {
+      if (!geste) return;
+      const dx = (event.clientX - geste.x) * signe;
+      const largeur = Math.max(10, Math.min(100, Math.round(geste.largeurInitiale + (dx / geste.largeurParent) * 100)));
+      geste.dernier = { largeur };
+      applyStyleObject(geste.el, { ...geste.base, largeur });
+
+      const decalage = origin();
+      const rect = geste.el.getBoundingClientRect();
+      mesure.textContent = `${largeur}%`;
+      mesure.style.left = (decalage.x + rect.left) + 'px';
+      mesure.style.top = (decalage.y + rect.top - 26) + 'px';
+      placer(cadreWidget, geste.el);
+    });
+
+    const finir = (event) => {
+      if (!geste) return;
+      const { key, dernier } = geste;
+      geste = null;
+      cacher(mesure);
+      try { poignee.releasePointerCapture(event.pointerId); } catch { /* déjà relâché */ }
+      if (dernier) onWidgetMove?.(key, dernier);
+      reposition();
+    };
+    poignee.addEventListener('pointerup', finir);
+    poignee.addEventListener('pointercancel', finir);
+  }
+
+  // Les poignées du cadre sont permanentes (posées une fois à la création) :
+  // elles relisent `widgetSurvole` à chaque geste plutôt que de capturer un
+  // widget précis, puisque c'est le survol qui dit lequel est visé.
+  const cibleSurvolee = () => (widgetSurvole
+    ? { key: widgetSurvole.getAttribute('data-admin-widget'), el: widgetSurvole }
+    : null);
+  for (const noeud of cadreWidget.querySelectorAll('.poignee--bord')) {
+    brancherDeplacement(noeud, cibleSurvolee);
+  }
+  for (const noeud of cadreWidget.querySelectorAll('.poignee--coin')) {
+    brancherRedimensionnement(noeud, noeud.dataset.poignee, cibleSurvolee);
+  }
+
+  function poigneeDeplacement(key, el) {
+    const poignee = h('button', {
+      class: 'btn btn--sm btn--icon wtools__grab', type: 'button',
+      title: t('dragMove'), 'aria-label': t('dragMove'),
+    }, icon('drag', 13));
+    brancherDeplacement(poignee, () => ({ key, el }));
     return poignee;
   }
 

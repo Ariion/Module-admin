@@ -696,6 +696,22 @@ select.input { appearance: none; cursor: pointer; }
 
 /* ---- Widget sélectionné dans l'aperçu ---- */
 .wsel { position: absolute; pointer-events: none; border: 1px solid var(--accent); border-radius: 3px; }
+/* Poignées de bord (déplacement libre) et de coin (largeur) sur le bloc
+   sélectionné — un geste direct, en plus de la poignée dédiée du bandeau. */
+.poignee {
+  position: absolute; pointer-events: auto; width: 10px; height: 10px;
+  background: var(--accent); border: 2px solid #fff; border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.4); z-index: 2;
+}
+.poignee--coin.poignee--nw { left: -6px; top: -6px; cursor: nwse-resize; }
+.poignee--coin.poignee--ne { right: -6px; top: -6px; cursor: nesw-resize; }
+.poignee--coin.poignee--sw { left: -6px; bottom: -6px; cursor: nesw-resize; }
+.poignee--coin.poignee--se { right: -6px; bottom: -6px; cursor: nwse-resize; }
+.poignee--bord { background: var(--ok); }
+.poignee--bord.poignee--n { left: 50%; top: -6px; margin-left: -5px; cursor: move; }
+.poignee--bord.poignee--s { left: 50%; bottom: -6px; margin-left: -5px; cursor: move; }
+.poignee--bord.poignee--e { right: -6px; top: 50%; margin-top: -5px; cursor: move; }
+.poignee--bord.poignee--w { left: -6px; top: 50%; margin-top: -5px; cursor: move; }
 .wtools {
   position: absolute; display: flex; align-items: center; gap: 2px; padding: 3px;
   pointer-events: auto; background: var(--accent); border-radius: 7px 7px 0 0;
