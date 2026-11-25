@@ -133,8 +133,15 @@ body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-s
 .barre-haute__mode.actif{ background:var(--accent); color:#fff; border-color:var(--accent); }
 
 .toile-enveloppe{ flex:1; overflow:auto; padding:32px; }
-.toile-conteneur{ position:relative; max-width:1000px; margin:0 auto; background:var(--page-fond); min-height:400px; box-shadow:0 0 0 1px #d7d9dc, 0 10px 30px rgba(0,0,0,.06); }
-.toile{ position:relative; }
+.toile-conteneur{ position:relative; max-width:1300px; width:100%; margin:0 auto; background:var(--page-fond); min-height:calc(100vh - 160px); box-shadow:0 0 0 1px #d7d9dc, 0 10px 30px rgba(0,0,0,.06); }
+.toile{ position:relative; min-height:inherit; display:flex; flex-direction:column; }
+
+.toile__ajouter-apres{
+  display:block; width:100%; margin-top:auto; padding:18px; border:none; border-top:1px dashed #d7d9dc;
+  background:#fafafa; color:#878a8f; font:inherit; font-size:.86rem; cursor:pointer; text-align:center;
+}
+.toile__ajouter-apres:hover{ background:#f3eaee; color:var(--accent); border-top-color:var(--accent); }
+.toile-conteneur.mode-apercu .toile__ajouter-apres{ display:none; }
 
 /* -------------------------------------------------- blocs génériques (section/colonne/widget) */
 .bloc{ position:relative; }

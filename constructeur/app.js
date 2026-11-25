@@ -687,7 +687,7 @@
     texte.contenu.html = "Faites glisser des éléments depuis la bibliothèque à gauche. Cliquez sur un bloc pour le modifier, ou agrippez un de ses coins (redimensionner) ou un de ses bords (déplacer librement).";
     const bouton = creerWidget('bouton');
     colonne.widgets.push(titre, texte, bouton);
-    return { sections: [section] };
+    return { sections: [section, modeleTroisIconBox(), modeleImageTexte(), modeleTemoignage(), modeleCompteurs()] };
   }
 
   const PERSISTANCE_CLE = 'constructeur:page';
@@ -1070,6 +1070,12 @@
     const toile = document.getElementById('toile');
     toile.innerHTML = '';
     state.page.sections.forEach((s) => toile.appendChild(rendreSection(s)));
+    if (state.mode === 'edition') {
+      toile.appendChild(el('button', {
+        class: 'toile__ajouter-apres',
+        onclick: (e) => { e.stopPropagation(); ouvrirModaleStructure(); },
+      }, '+ Ajouter une section'));
+    }
     rafraichirPoignees();
     rafraichirNavigateur();
     sauvegarderPage();
@@ -1380,7 +1386,7 @@
     const entete = el('div', { class: 'panneau-proprietes__entete' },
       el('button', { class: 'panneau-proprietes__icone-bouton', title: 'Retour', onclick: deselectionner }, '☰'),
       el('span', { class: 'panneau-proprietes__titre' }, 'Modifier ' + label),
-      el('button', { class: 'panneau-proprietes__icone-bouton', title: 'Bibliothèque', onclick: deselectionner }, '⊞'));
+      el('button', { class: 'panneau-proprietes__icone-bouton', title: 'Bibliothèque', onclick: () => ouvrirModaleBibliotheque() }, '⊞'));
 
     const onglets = ongletsPourType(type);
     if (!onglets.some(([cle]) => cle === state.ongletActif)) state.ongletActif = onglets[0][0];
