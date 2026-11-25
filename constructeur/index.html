@@ -13,18 +13,31 @@
   <aside id="panneau" class="panneau"></aside>
   <main class="zone-travail">
     <div class="barre-haute">
-      <span class="barre-haute__titre">Constructeur — page de démonstration</span>
+      <div class="barre-haute__gauche">
+        <button class="barre-haute__icone" id="bouton-hamburger" title="Menu">☰</button>
+        <span class="barre-haute__titre">Constructeur — page de démonstration</span>
+      </div>
+      <div class="barre-haute__centre barre-haute__appareil">
+        <button data-appareil="bureau" class="actif" title="Bureau">🖥</button>
+        <button data-appareil="tablette" title="Tablette">▤</button>
+        <button data-appareil="mobile" title="Mobile">▯</button>
+      </div>
       <div class="barre-haute__droite">
+        <button class="barre-haute__icone" id="bouton-annuler" title="Annuler (Ctrl+Z)" disabled>↶</button>
+        <button class="barre-haute__icone" id="bouton-retablir" title="Rétablir (Ctrl+Y)" disabled>↷</button>
+        <button class="barre-haute__bouton" id="bouton-navigateur">🗂 Navigateur</button>
         <button class="barre-haute__bouton" id="bouton-ajouter-section">+ Ajouter une section</button>
         <button class="barre-haute__bouton barre-haute__mode" id="bouton-mode">👁 Aperçu</button>
+        <button class="barre-haute__bouton barre-haute__publier" id="bouton-publier">Publier</button>
       </div>
     </div>
     <div class="toile-enveloppe">
-      <div class="toile-conteneur" id="toile-conteneur">
+      <div class="toile-conteneur appareil-bureau" id="toile-conteneur">
         <div id="toile" class="toile"></div>
         <div id="poignees" class="poignees"></div>
       </div>
     </div>
+    <div id="navigateur-conteneur" class="navigateur-conteneur"></div>
   </main>
 </div>
 
