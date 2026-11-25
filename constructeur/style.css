@@ -15,8 +15,11 @@
 *{ box-sizing:border-box }
 body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--page-encre); }
 
-.atelier{ display:flex; height:100vh; overflow:hidden; }
+.atelier{ display:flex; height:100vh; overflow:hidden; position:relative; }
 .atelier.mode-apercu .panneau{ display:none; }
+
+.panneau-scrim{ display:none; }
+.barre-haute__bascule-panneau{ display:none; }
 
 /* -------------------------------------------------- panneau gauche : bibliothèque */
 .panneau{
@@ -211,7 +214,7 @@ body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-s
 .ce-affordance__pastille:hover .ce-infobulle{ opacity:1; }
 
 /* -------------------------------------------------- modales (structure / bibliothèque) */
-.modale-fond{ position:fixed; inset:0; background:rgba(20,21,24,.55); z-index:200; display:flex; align-items:center; justify-content:center; padding:30px; }
+.modale-fond{ position:fixed; inset:0; background:rgba(20,21,24,.55); z-index:600; display:flex; align-items:center; justify-content:center; padding:30px; }
 
 .modale-structure{ background:#fff; border:2px dashed #c6c9cd; border-radius:4px; padding:50px 40px; position:relative; max-width:780px; width:100%; }
 .modale-structure__fermer{ position:absolute; top:14px; right:16px; background:none; border:0; font-size:1.2rem; color:#9299a3; cursor:pointer; line-height:1; }
@@ -396,3 +399,40 @@ body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-s
 .toolbar-inline button{ background:none; border:0; color:#fff; width:28px; height:28px; border-radius:4px; cursor:pointer; font-size:.82rem; font-weight:700; }
 .toolbar-inline button:hover{ background:rgba(255,255,255,.16); }
 [contenteditable="true"]{ outline:1px dashed var(--accent); cursor:text; border-radius:2px; }
+
+/* -------------------------------------------------- responsive : le constructeur lui-même */
+@media (max-width: 900px){
+  .barre-haute__bascule-panneau{ display:flex; align-items:center; justify-content:center; }
+
+  .panneau{
+    position:fixed; top:0; left:0; bottom:0; z-index:520; width:300px; max-width:85vw;
+    transform:translateX(-100%); transition:transform .22s ease; box-shadow:0 0 36px rgba(0,0,0,.35);
+  }
+  .atelier.panneau-ouvert .panneau{ transform:translateX(0); }
+  .atelier.panneau-ouvert .panneau-scrim{
+    display:block; position:fixed; inset:0; background:rgba(15,16,18,.45); z-index:510;
+  }
+
+  .barre-haute{ flex-wrap:wrap; row-gap:8px; padding:8px 10px; }
+  .barre-haute__titre{ display:none; }
+  .barre-haute__centre.barre-haute__appareil{ order:3; width:100%; justify-content:center; display:flex; }
+  .barre-haute__droite{ flex-wrap:wrap; justify-content:flex-end; row-gap:6px; }
+  .barre-haute__bouton{ padding:6px 10px; font-size:.74rem; }
+
+  .toile-enveloppe{ padding:14px; }
+  .toile-conteneur{ max-width:100%; min-height:calc(100vh - 220px); }
+  .section__colonnes{ padding:16px; gap:12px; }
+
+  .modale-structure, .modale-bibliotheque{ width:94vw; max-width:94vw; }
+  .modale-bibliotheque{ max-height:88vh; }
+  .grille-modeles{ grid-template-columns:repeat(2,1fr); }
+}
+
+@media (max-width: 480px){
+  .barre-haute__bouton#bouton-navigateur span{ display:none; }
+  .barre-haute__bouton#bouton-navigateur::after{ content:"🗂"; }
+  .barre-haute__bouton#bouton-ajouter-section{ font-size:0; padding:6px 10px; }
+  .barre-haute__bouton#bouton-ajouter-section::after{ content:"+"; font-size:1rem; }
+  .grille-widgets{ grid-template-columns:repeat(2,1fr); }
+  .grille-modeles{ grid-template-columns:1fr; }
+}

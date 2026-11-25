@@ -823,9 +823,17 @@
     state.ongletActif = ongletsPourType(type)[0][0];
     rafraichirPanneau();
     rendrePage();
+    if (window.innerWidth <= 900) basculerPanneau(true);
   }
+  function basculerPanneau(forcer) {
+    const atelier = document.querySelector('.atelier');
+    const ouvrir = forcer !== undefined ? forcer : !atelier.classList.contains('panneau-ouvert');
+    atelier.classList.toggle('panneau-ouvert', ouvrir);
+  }
+
   function deselectionner() {
     state.selection = null;
+    if (window.innerWidth <= 900) basculerPanneau(false);
     rafraichirPanneau();
     rendrePage();
   }
@@ -1741,6 +1749,8 @@
   document.getElementById('toile-conteneur').addEventListener('click', deselectionner);
   document.getElementById('bouton-mode').addEventListener('click', basculerMode);
   document.getElementById('bouton-hamburger').addEventListener('click', basculerMenu);
+  document.getElementById('bouton-bascule-panneau').addEventListener('click', () => basculerPanneau());
+  document.getElementById('panneau-scrim').addEventListener('click', () => basculerPanneau(false));
   document.getElementById('bouton-annuler').addEventListener('click', annuler);
   document.getElementById('bouton-retablir').addEventListener('click', retablir);
   document.getElementById('bouton-navigateur').addEventListener('click', basculerNavigateur);
