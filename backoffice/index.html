@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Administration — Socle</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="admin">
+  <header class="barre-haute">
+    <div class="barre-haute__gauche">
+      <button class="barre-haute__icone" id="bouton-bascule-nav" title="Menu">☰</button>
+      <span class="barre-haute__site">🏠 <span id="nom-site-barre">Mon site</span></span>
+    </div>
+    <div class="barre-haute__droite">
+      <a class="bouton-voir-site" id="lien-voir-site" href="/" target="_blank" rel="noopener">↗ Voir le site</a>
+      <span class="etat-sauvegarde" id="etat-sauvegarde">Enregistré</span>
+      <button class="bouton-enregistrer" id="bouton-enregistrer">💾 Enregistrer</button>
+    </div>
+  </header>
+
+  <div class="admin__corps">
+    <nav class="nav-laterale" id="nav-laterale">
+      <button class="nav-laterale__item" data-vue="tableau-de-bord"><span class="nav-laterale__icone">📊</span> Tableau de bord</button>
+      <button class="nav-laterale__item" data-vue="pages"><span class="nav-laterale__icone">📄</span> Pages</button>
+      <button class="nav-laterale__item" data-vue="articles"><span class="nav-laterale__icone">📰</span> Articles</button>
+      <button class="nav-laterale__item" data-vue="produits"><span class="nav-laterale__icone">🛒</span> Produits</button>
+      <button class="nav-laterale__item" data-vue="apparence"><span class="nav-laterale__icone">🎨</span> Apparence</button>
+      <button class="nav-laterale__item" data-vue="reglages"><span class="nav-laterale__icone">⚙️</span> Réglages</button>
+      <div class="nav-laterale__pied">
+        <a href="/constructeur/index.html" target="_blank" rel="noopener">🧱 Constructeur</a>
+      </div>
+    </nav>
+
+    <main class="contenu" id="contenu"></main>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
