@@ -154,10 +154,9 @@ body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-s
 .toile{ position:relative; }
 
 .toile__ajouter-apres{
-  display:block; width:100%; margin-top:auto; padding:18px; border:none; border-top:1px dashed #d7d9dc;
-  background:#fafafa; color:#878a8f; font:inherit; font-size:.86rem; cursor:pointer; text-align:center;
+  display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+  width:100%; margin-top:auto; padding:18px; border-top:1px dashed #d7d9dc; background:#fafafa;
 }
-.toile__ajouter-apres:hover{ background:#f3eaee; color:var(--accent); border-top-color:var(--accent); }
 .toile-conteneur.mode-apercu .toile__ajouter-apres{ display:none; }
 
 /* -------------------------------------------------- blocs génériques (section/colonne/widget) */

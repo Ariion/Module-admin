@@ -1220,11 +1220,15 @@
     const ancienneBande = document.getElementById('toile-ajouter-apres');
     if (ancienneBande) ancienneBande.remove();
     if (state.mode === 'edition') {
-      conteneur.appendChild(el('button', {
-        id: 'toile-ajouter-apres',
-        class: 'toile__ajouter-apres',
-        onclick: (e) => { e.stopPropagation(); ouvrirModaleStructure(null, e.currentTarget); },
-      }, '+ Ajouter une section'));
+      conteneur.appendChild(el('div', { id: 'toile-ajouter-apres', class: 'toile__ajouter-apres' },
+        el('button', {
+          class: 'placeholder-vide__ajouter-section',
+          onclick: (e) => { e.stopPropagation(); ouvrirModaleStructure(null, e.currentTarget.closest('.toile__ajouter-apres')); },
+        }, 'AJOUTER UNE NOUVELLE SECTION'),
+        el('button', {
+          class: 'placeholder-vide__ajouter-modele',
+          onclick: (e) => { e.stopPropagation(); ouvrirModaleBibliotheque(); },
+        }, 'AJOUTER UN MODÈLE')));
     }
     rafraichirPoignees();
     rafraichirNavigateur();
