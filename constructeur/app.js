@@ -746,16 +746,44 @@
     });
     return s;
   }
+  function modeleContact() {
+    const s = creerSection([1, 1]);
+    const titre = creerWidget('titre'); titre.contenu.texte = 'Parlons de votre projet';
+    const texte = creerWidget('texte'); texte.contenu.html = 'Une question, un devis, une envie de nous rencontrer ? Écrivez-nous, on vous répond sous 24h.';
+    const bouton = creerWidget('bouton'); bouton.contenu.texte = 'Nous écrire';
+    s.colonnes[0].widgets.push(titre, texte, bouton);
+    s.colonnes[1].widgets.push(creerWidget('google_maps'));
+    return s;
+  }
+  function modeleAPropos() {
+    const s = creerSection([1, 1]);
+    const img = creerWidget('image'); img.contenu.src = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=700&q=80';
+    const titre = creerWidget('titre'); titre.contenu.texte = 'Notre histoire';
+    const texte = creerWidget('texte'); texte.contenu.html = 'Fondée par une poignée de passionnés, notre entreprise grandit chaque jour grâce à vous et à votre confiance.';
+    s.colonnes[0].widgets.push(img);
+    s.colonnes[1].widgets.push(titre, texte);
+    return s;
+  }
+  function modeleBanniere() {
+    const s = creerSection([1]);
+    const cta = creerWidget('appel_action');
+    cta.contenu.survol = 'Offre limitée';
+    cta.contenu.titre = 'Jusqu’à -30 % ce week-end seulement';
+    cta.contenu.texte = 'Profitez-en avant qu’il ne soit trop tard — offre valable sur tout le catalogue.';
+    cta.contenu.boutonTexte = 'J’en profite';
+    s.colonnes[0].widgets.push(cta);
+    return s;
+  }
 
   const TEMPLATES = [
-    { id: 'tpl1', nom: 'Titre + texte + bouton', type: 'Section', icone: '🧱', fabrique: modeleTitreTexteBouton },
-    { id: 'tpl2', nom: 'Trois atouts', type: 'Section', icone: '⭐', fabrique: modeleTroisIconBox },
-    { id: 'tpl3', nom: 'Témoignage client', type: 'Section', icone: '💬', fabrique: modeleTemoignage },
-    { id: 'tpl4', nom: 'Image et texte', type: 'Section', icone: '🖼️', fabrique: modeleImageTexte },
-    { id: 'tpl5', nom: 'Chiffres clés', type: 'Section', icone: '🔢', fabrique: modeleCompteurs },
-    { id: 'tpl6', nom: 'Page — Contact', type: 'Page', icone: '✉️', fabrique: modeleTitreTexteBouton },
-    { id: 'tpl7', nom: 'Page — À propos', type: 'Page', icone: '📄', fabrique: modeleImageTexte },
-    { id: 'tpl8', nom: 'Bannière promo', type: 'Section', icone: '🏷️', fabrique: modeleTitreTexteBouton },
+    { id: 'tpl1', nom: 'Titre + texte + bouton', type: 'Section', image: 'miniatures/tpl1.png', fabrique: modeleTitreTexteBouton },
+    { id: 'tpl2', nom: 'Trois atouts', type: 'Section', image: 'miniatures/tpl2.png', fabrique: modeleTroisIconBox },
+    { id: 'tpl3', nom: 'Témoignage client', type: 'Section', image: 'miniatures/tpl3.png', fabrique: modeleTemoignage },
+    { id: 'tpl4', nom: 'Image et texte', type: 'Section', image: 'miniatures/tpl4.png', fabrique: modeleImageTexte },
+    { id: 'tpl5', nom: 'Chiffres clés', type: 'Section', image: 'miniatures/tpl5.png', fabrique: modeleCompteurs },
+    { id: 'tpl6', nom: 'Page — Contact', type: 'Page', image: 'miniatures/tpl6.png', fabrique: modeleContact },
+    { id: 'tpl7', nom: 'Page — À propos', type: 'Page', image: 'miniatures/tpl7.png', fabrique: modeleAPropos },
+    { id: 'tpl8', nom: 'Bannière promo', type: 'Section', image: 'miniatures/tpl8.png', fabrique: modeleBanniere },
   ];
 
   function pageInitiale() {
@@ -1667,7 +1695,7 @@
       const grille = el('div', { class: 'grille-modeles' });
       TEMPLATES.forEach((t) => {
         grille.appendChild(el('div', { class: 'carte-modele', onclick: () => insererModele(t, mb.cible) },
-          el('div', { class: 'carte-modele__vignette' }, t.icone),
+          el('div', { class: 'carte-modele__vignette', style: { backgroundImage: `url('${t.image}')` } }),
           el('div', { class: 'carte-modele__legende' }, t.nom)));
       });
       corpsEnfant = grille;

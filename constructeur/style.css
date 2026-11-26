@@ -256,7 +256,10 @@ body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-s
 
 .grille-modeles{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
 .carte-modele{ cursor:pointer; }
-.carte-modele__vignette{ aspect-ratio:4/3; border-radius:4px; border:1px solid #e3e4e6; display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin-bottom:8px; background:#f7f7f8; }
+.carte-modele__vignette{
+  aspect-ratio:4/3; border-radius:4px; border:1px solid #e3e4e6; margin-bottom:8px; background-color:#f7f7f8;
+  background-size:cover; background-position:top center; background-repeat:no-repeat;
+}
 .carte-modele:hover .carte-modele__vignette{ border-color:var(--accent); }
 .carte-modele__legende{ font-size:.82rem; color:#55585d; text-align:center; }
 
