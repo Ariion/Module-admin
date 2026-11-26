@@ -119,12 +119,20 @@ table.table-liste tr:hover td{ background:#f6f7f7; }
 .table-liste .actions-ligne a, .table-liste .actions-ligne button{ background:none; border:0; padding:0; color:var(--accent); cursor:pointer; text-decoration:none; font:inherit; font-size:inherit; }
 .table-liste .actions-ligne .suppr{ color:var(--danger); }
 .vide-liste{ padding:40px; text-align:center; color:var(--texte-discret); }
+.table-liste select, .table-liste input[type="number"]{ width:100%; padding:6px 8px; border:1px solid var(--trait); border-radius:4px; font:inherit; font-size:.84rem; background:#fff; }
+.total-commande{ text-align:right; font-weight:700; font-size:1rem; padding:14px 4px; }
 
 .badge{ display:inline-block; padding:2px 9px; border-radius:99px; font-size:.74rem; font-weight:600; }
 .badge.publie{ background:#edfaef; color:var(--succes); }
 .badge.brouillon{ background:#fcf0e2; color:var(--alerte); }
 .badge.inactif{ background:#fbeaea; color:var(--danger); }
 .badge.type-vente{ background:#eef4fb; color:var(--accent); }
+.badge.attente-paiement{ background:#fcf0e2; color:var(--alerte); }
+.badge.paiement-accepte{ background:#eef4fb; color:var(--accent); }
+.badge.en-preparation{ background:#f3eafc; color:#8c35c9; }
+.badge.expediee{ background:#e6f7f5; color:#0f9488; }
+.badge.livree{ background:#edfaef; color:var(--succes); }
+.badge.annulee{ background:#fbeaea; color:var(--danger); }
 
 .pagination{ display:flex; gap:6px; justify-content:flex-end; padding:12px 14px; }
 .pagination button{ background:#fff; border:1px solid var(--trait); border-radius:4px; width:30px; height:30px; cursor:pointer; }

@@ -54,6 +54,16 @@
     return el('div', { class: 'champ-toggle' }, el('span', {}, label), sw);
   }
   function champAide(texte) { return el('div', { class: 'champ-aide-texte' }, texte); }
+  function selectBrut(options, valeur, onChange) {
+    const select = el('select', {});
+    options.forEach((o) => {
+      const lib = typeof o === 'object' ? o.label : o;
+      const val = typeof o === 'object' ? o.valeur : o;
+      select.appendChild(el('option', { value: val, selected: val === valeur ? 'selected' : undefined }, lib));
+    });
+    select.addEventListener('change', () => onChange(select.value));
+    return select;
+  }
 
   function deplacer(tableau, index, delta) {
     const cible = index + delta;
@@ -108,6 +118,12 @@
     const idCatArticleConseils = uid();
     const idCatProduitBois = uid();
     const idCatProduitCuir = uid();
+    const idProduitPain = uid();
+    const idProduitCroissant = uid();
+    const idClientSophie = uid();
+    const idClientMarc = uid();
+    const idClientJulie = uid();
+    const idClientThomas = uid();
 
     return {
       reglages: {
@@ -154,7 +170,7 @@
       ],
       produits: [
         {
-          id: uid(), nom: 'Pain de campagne', sku: 'PAIN-CAMP-500', prix: 4.2, prixBarre: '',
+          id: idProduitPain, nom: 'Pain de campagne', sku: 'PAIN-CAMP-500', prix: 4.2, prixBarre: '',
           descriptionCourte: 'Levain naturel, 24h de fermentation.', descriptionLongue: 'Notre pain de campagne est pétri à la main et cuit au feu de bois, pour une croûte croustillante et une mie alvéolée.',
           images: ['https://images.unsplash.com/photo-1549931319-a545319b2e58?w=400&q=80'],
           stock: 24, statut: 'actif', categorieId: idCatProduitBois,
@@ -162,12 +178,66 @@
           dateModif: Date.now() - 50000,
         },
         {
-          id: uid(), nom: 'Croissant pur beurre', sku: 'VIEN-CROIS', prix: 1.3, prixBarre: '',
+          id: idProduitCroissant, nom: 'Croissant pur beurre', sku: 'VIEN-CROIS', prix: 1.3, prixBarre: '',
           descriptionCourte: 'Croustillant et feuilleté, pur beurre AOP.', descriptionLongue: 'Préparé chaque matin selon une recette traditionnelle, notre croissant pur beurre est feuilleté à la main.',
           images: ['https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&q=80'],
           stock: 40, statut: 'actif', categorieId: idCatProduitCuir,
           declinaisons: [],
           dateModif: Date.now() - 20000,
+        },
+      ],
+      clients: [
+        {
+          id: idClientSophie, prenom: 'Sophie', nom: 'Lambert', email: 'sophie.lambert@email.fr', telephone: '06 12 34 56 78',
+          adresse: { rue: '12 rue des Lilas', ville: 'Lyon', codePostal: '69000', pays: 'France' },
+          notes: 'Cliente fidèle, commande tous les samedis.', dateInscription: '2026-08-02',
+        },
+        {
+          id: idClientMarc, prenom: 'Marc', nom: 'Perrin', email: 'marc.perrin@email.fr', telephone: '06 98 76 54 32',
+          adresse: { rue: '5 avenue Victor Hugo', ville: 'Lyon', codePostal: '69006', pays: 'France' },
+          notes: '', dateInscription: '2026-09-15',
+        },
+        {
+          id: idClientJulie, prenom: 'Julie', nom: 'Moreau', email: 'julie.moreau@email.fr', telephone: '07 11 22 33 44',
+          adresse: { rue: '8 rue de la République', ville: 'Villeurbanne', codePostal: '69100', pays: 'France' },
+          notes: 'Allergique aux fruits à coque — à signaler en cuisine.', dateInscription: '2026-10-05',
+        },
+        {
+          id: idClientThomas, prenom: 'Thomas', nom: 'Girard', email: 'thomas.girard@email.fr', telephone: '06 55 44 33 22',
+          adresse: { rue: '3 place Bellecour', ville: 'Lyon', codePostal: '69002', pays: 'France' },
+          notes: '', dateInscription: '2026-11-01',
+        },
+      ],
+      commandes: [
+        {
+          id: uid(), numero: 'CMD-2026-0001', clientId: idClientSophie, date: '2026-11-18',
+          lignes: [{ produitId: idProduitPain, nom: 'Pain de campagne', prixUnitaire: 4.2, quantite: 2 }, { produitId: idProduitCroissant, nom: 'Croissant pur beurre', prixUnitaire: 1.3, quantite: 4 }],
+          statut: 'livree', notesInternes: '',
+        },
+        {
+          id: uid(), numero: 'CMD-2026-0002', clientId: idClientMarc, date: '2026-11-20',
+          lignes: [{ produitId: idProduitCroissant, nom: 'Croissant pur beurre', prixUnitaire: 1.3, quantite: 6 }],
+          statut: 'expediee', notesInternes: '',
+        },
+        {
+          id: uid(), numero: 'CMD-2026-0003', clientId: idClientJulie, date: '2026-11-22',
+          lignes: [{ produitId: idProduitPain, nom: 'Pain de campagne', prixUnitaire: 4.2, quantite: 1 }],
+          statut: 'en-preparation', notesInternes: 'Sans fruits à coque, cf. fiche client.',
+        },
+        {
+          id: uid(), numero: 'CMD-2026-0004', clientId: idClientSophie, date: '2026-11-24',
+          lignes: [{ produitId: idProduitPain, nom: 'Pain de campagne', prixUnitaire: 4.2, quantite: 3 }, { produitId: idProduitCroissant, nom: 'Croissant pur beurre', prixUnitaire: 1.3, quantite: 2 }],
+          statut: 'paiement-accepte', notesInternes: '',
+        },
+        {
+          id: uid(), numero: 'CMD-2026-0005', clientId: idClientThomas, date: '2026-11-25',
+          lignes: [{ produitId: idProduitCroissant, nom: 'Croissant pur beurre', prixUnitaire: 1.3, quantite: 12 }],
+          statut: 'attente-paiement', notesInternes: 'Commande pour un petit-déjeuner d’équipe.',
+        },
+        {
+          id: uid(), numero: 'CMD-2026-0006', clientId: idClientMarc, date: '2026-11-10',
+          lignes: [{ produitId: idProduitPain, nom: 'Pain de campagne', prixUnitaire: 4.2, quantite: 2 }],
+          statut: 'annulee', notesInternes: 'Client annulé avant préparation.',
         },
       ],
       apparence: {
@@ -228,6 +298,10 @@
       'articles-edition': rendreEditionArticle,
       produits: rendreListeProduits,
       'produits-edition': rendreEditionProduit,
+      commandes: rendreListeCommandes,
+      'commandes-edition': rendreEditionCommande,
+      clients: rendreListeClients,
+      'clients-edition': rendreEditionClient,
       apparence: rendreApparence,
       reglages: rendreReglages,
     };
@@ -248,7 +322,10 @@
       carteStat(state.pages.length, 'Pages'),
       carteStat(state.articles.length, 'Articles'),
       carteStat(state.produits.length, 'Produits'),
-      carteStat(state.produits.reduce((s, p) => s + (p.stock || 0), 0), 'Unités en stock')));
+      carteStat(state.produits.reduce((s, p) => s + (p.stock || 0), 0), 'Unités en stock'),
+      carteStat(state.commandes.length, 'Commandes'),
+      carteStat(state.clients.length, 'Clients'),
+      carteStat(state.commandes.filter((cmd) => cmd.statut !== 'annulee').reduce((s, cmd) => s + montantCommande(cmd), 0).toFixed(2) + ' €', 'Chiffre d’affaires')));
 
     const recents = [
       ...state.pages.map((p) => ({ titre: p.titre, type: 'Page', date: p.dateModif, vue: 'pages-edition', id: p.id })),
@@ -282,7 +359,7 @@
 
   // -------------------------------------------------- PAGES
 
-  let rechercheStock = { pages: '', articles: '', produits: '' };
+  let rechercheStock = { pages: '', articles: '', produits: '', commandes: '', clients: '' };
 
   function rendreListePages(c) {
     c.appendChild(el('div', { class: 'entete-vue' },
@@ -607,6 +684,247 @@
     ajouter.addEventListener('click', () => { produit.declinaisons.push({ id: uid(), nom: '', valeurs: '' }); maj(); rafraichirContenu(); });
     conteneur.appendChild(ajouter);
     return conteneur;
+  }
+
+  // -------------------------------------------------- COMMANDES
+
+  const STATUTS_COMMANDE = [
+    { valeur: 'attente-paiement', label: 'En attente de paiement' },
+    { valeur: 'paiement-accepte', label: 'Paiement accepté' },
+    { valeur: 'en-preparation', label: 'En préparation' },
+    { valeur: 'expediee', label: 'Expédiée' },
+    { valeur: 'livree', label: 'Livrée' },
+    { valeur: 'annulee', label: 'Annulée' },
+  ];
+  function libelleStatutCommande(v) { const s = STATUTS_COMMANDE.find((s) => s.valeur === v); return s ? s.label : v; }
+  function montantCommande(cmd) { return cmd.lignes.reduce((s, l) => s + l.prixUnitaire * l.quantite, 0); }
+  function commandesDuClient(clientId) { return state.commandes.filter((cmd) => cmd.clientId === clientId); }
+  function totalDepenseClient(clientId) { return commandesDuClient(clientId).reduce((s, cmd) => s + montantCommande(cmd), 0); }
+  function nomClient(client) { return client ? (client.prenom + ' ' + client.nom).trim() : 'Client supprimé'; }
+
+  function rendreListeCommandes(c) {
+    c.appendChild(el('div', { class: 'entete-vue' },
+      el('h1', {}, 'Commandes'),
+      el('button', { class: 'bouton-principal', onclick: () => creerCommande() }, '+ Ajouter une commande')));
+
+    rendreBarreOutils(c, { recherche: rechercheStock.commandes, onRecherche: (v) => { rechercheStock.commandes = v; rafraichirContenu(); } });
+
+    const q = rechercheStock.commandes.toLowerCase();
+    const items = state.commandes.filter((cmd) => {
+      if (!q) return true;
+      const client = state.clients.find((cl) => cl.id === cmd.clientId);
+      return cmd.numero.toLowerCase().includes(q) || (client && nomClient(client).toLowerCase().includes(q));
+    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const tableCarte = el('div', { class: 'table-carte' });
+    if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucune commande pour le moment.')); c.appendChild(tableCarte); return; }
+    const table = el('table', { class: 'table-liste' },
+      el('thead', {}, el('tr', {}, el('th', {}, 'Numéro'), el('th', {}, 'Client'), el('th', {}, 'Date'), el('th', {}, 'Montant'), el('th', {}, 'Statut'), el('th', {}, 'Actions'))));
+    const corps = el('tbody', {});
+    items.forEach((cmd) => {
+      const client = state.clients.find((cl) => cl.id === cmd.clientId);
+      corps.appendChild(el('tr', {},
+        el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('commandes-edition', { id: cmd.id }); } }, cmd.numero)),
+        el('td', {}, client ? el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('clients-edition', { id: client.id }); } }, nomClient(client)) : 'Client supprimé'),
+        el('td', {}, formaterDate(new Date(cmd.date).getTime())),
+        el('td', {}, montantCommande(cmd).toFixed(2) + ' €'),
+        el('td', {}, el('span', { class: 'badge ' + cmd.statut }, libelleStatutCommande(cmd.statut))),
+        el('td', {}, el('div', { class: 'actions-ligne' },
+          el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('commandes-edition', { id: cmd.id }); } }, 'Modifier'),
+          el('button', { class: 'suppr', onclick: () => supprimerCommande(cmd.id) }, 'Supprimer')))));
+    });
+    table.appendChild(corps);
+    tableCarte.appendChild(table);
+    c.appendChild(tableCarte);
+  }
+
+  function creerCommande() {
+    const numero = 'CMD-' + new Date().getFullYear() + '-' + String(state.commandes.length + 1).padStart(4, '0');
+    const commande = { id: uid(), numero, clientId: state.clients[0] ? state.clients[0].id : null, date: new Date().toISOString().slice(0, 10), lignes: [], statut: 'attente-paiement', notesInternes: '' };
+    state.commandes.push(commande);
+    marquerModifie();
+    allerA('commandes-edition', { id: commande.id });
+  }
+  function supprimerCommande(id) {
+    if (!window.confirm('Supprimer cette commande ?')) return;
+    state.commandes = state.commandes.filter((cmd) => cmd.id !== id);
+    marquerModifie();
+    rafraichirContenu();
+  }
+
+  function rendreEditionCommande(c) {
+    const commande = state.commandes.find((cmd) => cmd.id === state.edition.id);
+    if (!commande) { allerA('commandes'); return; }
+    const maj = () => marquerModifie();
+    const client = state.clients.find((cl) => cl.id === commande.clientId);
+
+    c.appendChild(el('div', { class: 'fil-ariane' }, el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('commandes'); } }, 'Commandes'), ' / ' + commande.numero));
+    c.appendChild(el('div', { class: 'entete-vue' },
+      el('h1', {}, commande.numero),
+      el('button', { class: 'bouton-principal', onclick: () => { flusherSauvegarde(); toast('✓ Commande enregistrée'); } }, 'Enregistrer')));
+
+    const mise = el('div', { class: 'mise-en-page-edition' });
+    const panneau = el('div', { class: 'panneau-form' });
+    panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Articles commandés'), rendreLignesCommande(commande, maj)));
+    panneau.appendChild(champTextarea('Notes internes', commande.notesInternes, (v) => { commande.notesInternes = v; maj(); }, true));
+    mise.appendChild(el('div', {}, el('div', { class: 'onglets-form' }, el('button', { class: 'actif' }, 'Détail de la commande')), panneau));
+
+    const lateral = el('div', {});
+    lateral.appendChild(el('div', { class: 'widget-lateral' },
+      el('h3', {}, 'Statut de la commande'),
+      champSelect('', STATUTS_COMMANDE, commande.statut, (v) => { commande.statut = v; maj(); rafraichirContenu(); })));
+
+    const widgetClient = el('div', { class: 'widget-lateral' }, el('h3', {}, 'Client'));
+    widgetClient.appendChild(champSelect('', state.clients.map((cl) => ({ valeur: cl.id, label: nomClient(cl) })), commande.clientId, (v) => { commande.clientId = v; maj(); rafraichirContenu(); }));
+    if (client) {
+      widgetClient.appendChild(el('div', { class: 'champ-aide-texte' }, client.email));
+      widgetClient.appendChild(el('a', { href: '#', style: { fontSize: '.84rem' }, onclick: (e) => { e.preventDefault(); allerA('clients-edition', { id: client.id }); } }, 'Voir la fiche client →'));
+    }
+    lateral.appendChild(widgetClient);
+
+    lateral.appendChild(el('div', { class: 'widget-lateral' }, el('h3', {}, 'Informations'),
+      champTexte('Date de la commande', commande.date, (v) => { commande.date = v; maj(); }, 'date')));
+
+    mise.appendChild(lateral);
+    c.appendChild(mise);
+  }
+
+  function rendreLignesCommande(cmd, maj) {
+    const conteneur = el('div', {});
+    const tableCarte = el('div', { class: 'table-carte' });
+    if (!cmd.lignes.length) {
+      tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucun article dans cette commande.'));
+    } else {
+      const table = el('table', { class: 'table-liste' },
+        el('thead', {}, el('tr', {}, el('th', {}, 'Produit'), el('th', {}, 'Prix unitaire'), el('th', {}, 'Quantité'), el('th', {}, 'Sous-total'), el('th', {}, ''))));
+      const corps = el('tbody', {});
+      cmd.lignes.forEach((ligne, i) => {
+        const optionsProduits = state.produits.map((p) => ({ valeur: p.id, label: p.nom }));
+        const selectProduit = selectBrut(optionsProduits, ligne.produitId, (v) => {
+          const p = state.produits.find((pp) => pp.id === v);
+          ligne.produitId = v;
+          if (p) { ligne.nom = p.nom; ligne.prixUnitaire = p.prix; }
+          maj(); rafraichirContenu();
+        });
+        const qte = el('input', { type: 'number', value: ligne.quantite, min: '1' });
+        qte.addEventListener('input', () => { ligne.quantite = Math.max(1, Number(qte.value) || 1); maj(); rafraichirContenu(); });
+        const retirer = el('button', { class: 'suppr' }, 'Retirer');
+        retirer.addEventListener('click', () => { cmd.lignes.splice(i, 1); maj(); rafraichirContenu(); });
+        corps.appendChild(el('tr', {},
+          el('td', {}, selectProduit),
+          el('td', {}, Number(ligne.prixUnitaire).toFixed(2) + ' €'),
+          el('td', {}, qte),
+          el('td', {}, (ligne.prixUnitaire * ligne.quantite).toFixed(2) + ' €'),
+          el('td', {}, retirer)));
+      });
+      table.appendChild(corps);
+      tableCarte.appendChild(table);
+    }
+    conteneur.appendChild(tableCarte);
+    const ajouter = el('button', { class: 'lien-ajouter', style: { marginTop: '10px' } }, '+ Ajouter une ligne');
+    ajouter.addEventListener('click', () => {
+      const premier = state.produits[0];
+      if (!premier) return;
+      cmd.lignes.push({ produitId: premier.id, nom: premier.nom, prixUnitaire: premier.prix, quantite: 1 });
+      maj(); rafraichirContenu();
+    });
+    conteneur.appendChild(ajouter);
+    conteneur.appendChild(el('div', { class: 'total-commande' }, 'Total : ' + montantCommande(cmd).toFixed(2) + ' €'));
+    return conteneur;
+  }
+
+  // -------------------------------------------------- CLIENTS
+
+  function rendreListeClients(c) {
+    c.appendChild(el('div', { class: 'entete-vue' },
+      el('h1', {}, 'Clients'),
+      el('button', { class: 'bouton-principal', onclick: () => creerClient() }, '+ Ajouter un client')));
+
+    rendreBarreOutils(c, { recherche: rechercheStock.clients, onRecherche: (v) => { rechercheStock.clients = v; rafraichirContenu(); } });
+
+    const q = rechercheStock.clients.toLowerCase();
+    const items = state.clients.filter((cl) => !q || nomClient(cl).toLowerCase().includes(q) || cl.email.toLowerCase().includes(q));
+
+    const tableCarte = el('div', { class: 'table-carte' });
+    if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucun client pour le moment.')); c.appendChild(tableCarte); return; }
+    const table = el('table', { class: 'table-liste' },
+      el('thead', {}, el('tr', {}, el('th', {}, 'Nom'), el('th', {}, 'Email'), el('th', {}, 'Commandes'), el('th', {}, 'Total dépensé'), el('th', {}, 'Inscrit le'), el('th', {}, 'Actions'))));
+    const corps = el('tbody', {});
+    items.forEach((cl) => {
+      corps.appendChild(el('tr', {},
+        el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('clients-edition', { id: cl.id }); } }, nomClient(cl))),
+        el('td', {}, cl.email),
+        el('td', {}, String(commandesDuClient(cl.id).length)),
+        el('td', {}, totalDepenseClient(cl.id).toFixed(2) + ' €'),
+        el('td', {}, formaterDate(new Date(cl.dateInscription).getTime())),
+        el('td', {}, el('div', { class: 'actions-ligne' },
+          el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('clients-edition', { id: cl.id }); } }, 'Modifier'),
+          el('button', { class: 'suppr', onclick: () => supprimerClient(cl.id) }, 'Supprimer')))));
+    });
+    table.appendChild(corps);
+    tableCarte.appendChild(table);
+    c.appendChild(tableCarte);
+  }
+
+  function creerClient() {
+    const client = { id: uid(), prenom: '', nom: 'Nouveau client', email: '', telephone: '', adresse: { rue: '', ville: '', codePostal: '', pays: 'France' }, notes: '', dateInscription: new Date().toISOString().slice(0, 10) };
+    state.clients.push(client);
+    marquerModifie();
+    allerA('clients-edition', { id: client.id });
+  }
+  function supprimerClient(id) {
+    if (!window.confirm('Supprimer ce client ? Les commandes déjà passées resteront enregistrées.')) return;
+    state.clients = state.clients.filter((cl) => cl.id !== id);
+    marquerModifie();
+    rafraichirContenu();
+  }
+
+  function rendreEditionClient(c) {
+    const client = state.clients.find((cl) => cl.id === state.edition.id);
+    if (!client) { allerA('clients'); return; }
+    const maj = () => marquerModifie();
+
+    c.appendChild(el('div', { class: 'fil-ariane' }, el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('clients'); } }, 'Clients'), ' / ' + nomClient(client)));
+    c.appendChild(el('div', { class: 'entete-vue' },
+      el('h1', {}, nomClient(client) || 'Sans nom'),
+      el('button', { class: 'bouton-principal', onclick: () => { flusherSauvegarde(); toast('✓ Client enregistré'); } }, 'Enregistrer')));
+
+    const mise = el('div', { class: 'mise-en-page-edition' });
+    const panneau = el('div', { class: 'panneau-form' });
+    panneau.appendChild(el('div', { class: 'champ-inline' },
+      champTexte('Prénom', client.prenom, (v) => { client.prenom = v; maj(); rafraichirContenu(); }),
+      champTexte('Nom', client.nom, (v) => { client.nom = v; maj(); rafraichirContenu(); })));
+    panneau.appendChild(el('div', { class: 'champ-inline' },
+      champTexte('Email', client.email, (v) => { client.email = v; maj(); }),
+      champTexte('Téléphone', client.telephone, (v) => { client.telephone = v; maj(); })));
+    panneau.appendChild(champTexte('Adresse', client.adresse.rue, (v) => { client.adresse.rue = v; maj(); }));
+    panneau.appendChild(el('div', { class: 'champ-inline' },
+      champTexte('Ville', client.adresse.ville, (v) => { client.adresse.ville = v; maj(); }),
+      champTexte('Code postal', client.adresse.codePostal, (v) => { client.adresse.codePostal = v; maj(); })));
+    panneau.appendChild(champTexte('Pays', client.adresse.pays, (v) => { client.adresse.pays = v; maj(); }));
+    panneau.appendChild(champTextarea('Notes internes', client.notes, (v) => { client.notes = v; maj(); }, true));
+    mise.appendChild(el('div', {}, el('div', { class: 'onglets-form' }, el('button', { class: 'actif' }, 'Informations client')), panneau));
+
+    const lateral = el('div', {});
+    lateral.appendChild(el('div', { class: 'widget-lateral' }, el('h3', {}, 'Client depuis'),
+      champTexte("Date d'inscription", client.dateInscription, (v) => { client.dateInscription = v; maj(); }, 'date')));
+
+    const historique = commandesDuClient(client.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+    const widgetHisto = el('div', { class: 'widget-lateral' }, el('h3', {}, 'Historique des commandes'));
+    if (!historique.length) {
+      widgetHisto.appendChild(el('div', { class: 'champ-aide-texte' }, 'Aucune commande pour ce client.'));
+    } else {
+      const liste = el('ul', { class: 'liste-recents' });
+      historique.forEach((cmd) => {
+        liste.appendChild(el('li', {},
+          el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('commandes-edition', { id: cmd.id }); } }, cmd.numero),
+          el('span', { class: 'type' }, formaterDate(new Date(cmd.date).getTime()) + ' · ' + montantCommande(cmd).toFixed(2) + ' € · ' + libelleStatutCommande(cmd.statut))));
+      });
+      widgetHisto.appendChild(liste);
+    }
+    lateral.appendChild(widgetHisto);
+    mise.appendChild(lateral);
+    c.appendChild(mise);
   }
 
   // -------------------------------------------------- APPARENCE (header / footer / menus)
