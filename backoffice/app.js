@@ -615,7 +615,7 @@
 
     const mise = el('div', { class: 'mise-en-page-edition' });
     const panneau = el('div', { class: 'panneau-form' });
-    panneau.appendChild(champTexte('Nom du produit', produit.nom, (v) => { produit.nom = v; maj(); rafraichirContenu(); }));
+    panneau.appendChild(champTexte('Nom du produit', produit.nom, (v) => { produit.nom = v; maj(); }));
     panneau.appendChild(el('div', { class: 'champ-inline' },
       champTexte('Référence (SKU)', produit.sku, (v) => { produit.sku = v; maj(); }),
       champNombre('Stock', produit.stock, (v) => { produit.stock = v; maj(); })));
