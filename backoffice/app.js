@@ -494,7 +494,7 @@
   let filtreCategorieArticle = '';
 
   function creerArticle() {
-    const article = { id: uid(), titre: 'Nouvel article', categorieId: state.categoriesArticles[0] ? state.categoriesArticles[0].id : null, auteur: '', contenu: '', extrait: '', imageUrl: '', statut: 'brouillon', datePublication: '', dateModif: Date.now() };
+    const article = { id: uid(), titre: 'Nouvel article', categorieId: state.categoriesArticles[0] ? state.categoriesArticles[0].id : null, auteur: '', contenu: '', extrait: '', imageUrl: '', statut: 'brouillon', datePublication: '', metaTitre: '', metaDescription: '', dateModif: Date.now() };
     state.articles.push(article);
     marquerModifie();
     allerA('articles-edition', { id: article.id });
@@ -505,6 +505,8 @@
     marquerModifie();
     rafraichirContenu();
   }
+
+  let ongletArticleActif = 'contenu';
 
   function rendreEditionArticle(c) {
     const article = state.articles.find((a) => a.id === state.edition.id);
@@ -517,12 +519,23 @@
       el('button', { class: 'bouton-principal', onclick: () => { flusherSauvegarde(); toast('✓ Article enregistré'); } }, 'Enregistrer')));
 
     const mise = el('div', { class: 'mise-en-page-edition' });
-    const panneau = el('div', { class: 'panneau-form' },
-      champTexte('Titre', article.titre, (v) => { article.titre = v; maj(); }),
-      champTexte('Résumé / extrait', article.extrait, (v) => { article.extrait = v; maj(); }),
-      champTextarea('Contenu', article.contenu, (v) => { article.contenu = v; maj(); }, true),
-      champTexte("Adresse de l'image à la une", article.imageUrl, (v) => { article.imageUrl = v; maj(); }));
-    mise.appendChild(el('div', {}, el('div', { class: 'onglets-form' }, el('button', { class: 'actif' }, 'Contenu')), panneau));
+    const onglets = ['contenu', 'seo'];
+    const libellesOnglets = { contenu: 'Contenu', seo: 'Référencement (SEO)' };
+    const ongletsDiv = el('div', { class: 'onglets-form' });
+    onglets.forEach((o) => ongletsDiv.appendChild(el('button', { class: ongletArticleActif === o ? 'actif' : '', onclick: () => { ongletArticleActif = o; rafraichirContenu(); } }, libellesOnglets[o])));
+
+    const panneau = el('div', { class: 'panneau-form' });
+    if (ongletArticleActif === 'contenu') {
+      panneau.appendChild(champTexte('Titre', article.titre, (v) => { article.titre = v; maj(); }));
+      panneau.appendChild(champTexte('Résumé / extrait', article.extrait, (v) => { article.extrait = v; maj(); }));
+      panneau.appendChild(champTextarea('Contenu', article.contenu, (v) => { article.contenu = v; maj(); }, true));
+      panneau.appendChild(champTexte("Adresse de l'image à la une", article.imageUrl, (v) => { article.imageUrl = v; maj(); }));
+    } else {
+      panneau.appendChild(champTexte('Méta-titre', article.metaTitre, (v) => { article.metaTitre = v; maj(); }));
+      panneau.appendChild(champTextarea('Méta-description', article.metaDescription, (v) => { article.metaDescription = v; maj(); }));
+      panneau.appendChild(champAide('Affichés dans les résultats des moteurs de recherche.'));
+    }
+    mise.appendChild(el('div', {}, ongletsDiv, panneau));
 
     const lateral = el('div', {});
     lateral.appendChild(el('div', { class: 'widget-lateral' },
