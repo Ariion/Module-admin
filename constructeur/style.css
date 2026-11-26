@@ -28,8 +28,38 @@ body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-s
 /* -------------------------------------------------- panneau gauche : bibliothèque */
 .panneau{
   width:300px; flex:0 0 300px; background:var(--panneau-fond); color:var(--panneau-texte);
-  display:flex; flex-direction:column; overflow-y:auto; border-right:1px solid var(--panneau-trait);
+  display:flex; flex-direction:column; overflow:hidden; border-right:1px solid var(--panneau-trait);
 }
+.panneau__contenu-scroll{ flex:1; overflow-y:auto; display:flex; flex-direction:column; min-height:0; }
+
+/* -------------------------------------------------- pied du panneau : dossier de modèles, enregistrer */
+.panneau-pied{
+  position:relative; flex-shrink:0; display:flex; align-items:center; gap:4px;
+  padding:8px 10px; border-top:1px solid var(--panneau-trait); background:var(--panneau-fond);
+}
+.panneau-pied__icone{
+  background:none; border:0; color:var(--panneau-texte-discret); width:30px; height:30px; border-radius:5px;
+  font-size:.95rem; cursor:pointer; flex-shrink:0;
+}
+.panneau-pied__icone:hover{ background:var(--panneau-fond-leger); color:var(--panneau-texte); }
+.panneau-pied__icone.actif{ background:var(--panneau-fond-leger); color:var(--accent-clair); }
+.panneau-pied__enregistrer{
+  margin-left:auto; background:var(--accent); color:#fff; border:0; padding:7px 16px; border-radius:5px;
+  font:inherit; font-size:.82rem; font-weight:600; cursor:pointer;
+}
+.panneau-pied__enregistrer:hover{ background:var(--accent-fonce); }
+
+.panneau-pied__menu{
+  position:absolute; left:10px; bottom:calc(100% + 8px); width:230px; background:#3a3c41; border-radius:8px;
+  box-shadow:0 14px 32px rgba(0,0,0,.35); overflow:hidden; display:flex; flex-direction:column;
+}
+.panneau-pied__menu[hidden]{ display:none; }
+.panneau-pied__menu button{
+  background:none; border:0; color:var(--panneau-texte); text-align:left; padding:12px 16px; font:inherit;
+  font-size:.86rem; cursor:pointer; display:flex; align-items:center; gap:10px;
+}
+.panneau-pied__menu button:hover{ background:rgba(255,255,255,.08); }
+.panneau-pied__menu button + button{ border-top:1px solid rgba(255,255,255,.08); }
 .panneau__entete{ padding:16px 18px; border-bottom:1px solid var(--panneau-trait); display:flex; align-items:center; gap:10px; }
 .panneau__recherche{
   width:100%; background:var(--panneau-fond-leger); border:1px solid var(--panneau-trait); color:var(--panneau-texte);
@@ -259,7 +289,9 @@ body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-s
 .carte-modele__vignette{
   aspect-ratio:4/3; border-radius:4px; border:1px solid #e3e4e6; margin-bottom:8px; background-color:#f7f7f8;
   background-size:cover; background-position:top center; background-repeat:no-repeat;
+  display:flex; align-items:center; justify-content:center;
 }
+.carte-modele__vignette-repli{ font-size:1.8rem; opacity:.5; }
 .carte-modele:hover .carte-modele__vignette{ border-color:var(--accent); }
 .carte-modele__legende{ font-size:.82rem; color:#55585d; text-align:center; }
 

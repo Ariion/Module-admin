@@ -746,7 +746,18 @@
     });
     return s;
   }
-  function modeleContact() {
+  function sectionHero(titre, texte, texteBouton) {
+    const s = creerSection([1]);
+    const t = creerWidget('titre'); t.contenu.texte = titre; t.contenu.alignement = 'centre';
+    const tx = creerWidget('texte'); tx.contenu.html = texte;
+    s.colonnes[0].widgets.push(t, tx);
+    if (texteBouton) {
+      const b = creerWidget('bouton'); b.contenu.texte = texteBouton;
+      s.colonnes[0].widgets.push(b);
+    }
+    return s;
+  }
+  function sectionContactFormulaire() {
     const s = creerSection([1, 1]);
     const titre = creerWidget('titre'); titre.contenu.texte = 'Parlons de votre projet';
     const texte = creerWidget('texte'); texte.contenu.html = 'Une question, un devis, une envie de nous rencontrer ? Écrivez-nous, on vous répond sous 24h.';
@@ -755,7 +766,24 @@
     s.colonnes[1].widgets.push(creerWidget('google_maps'));
     return s;
   }
-  function modeleAPropos() {
+  function sectionInfosPratiques() {
+    const s = creerSection([1, 1, 1]);
+    const infos = [['🕑', 'Horaires', 'Du lundi au vendredi, 9h – 18h.'], ['📍', 'Adresse', '12 rue de la Paix, 75002 Paris.'], ['📞', 'Téléphone', '01 23 45 67 89']];
+    s.colonnes.forEach((c, i) => {
+      const ib = creerWidget('icone_bloc');
+      ib.contenu.icone = infos[i][0]; ib.contenu.titre = infos[i][1]; ib.contenu.texte = infos[i][2];
+      c.widgets.push(ib);
+    });
+    return s;
+  }
+  function modeleContact() {
+    return [
+      sectionHero('Contactez-nous', 'Une équipe à votre écoute, prête à répondre à toutes vos questions.'),
+      sectionContactFormulaire(),
+      sectionInfosPratiques(),
+    ];
+  }
+  function sectionHistoire() {
     const s = creerSection([1, 1]);
     const img = creerWidget('image'); img.contenu.src = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=700&q=80';
     const titre = creerWidget('titre'); titre.contenu.texte = 'Notre histoire';
@@ -763,6 +791,24 @@
     s.colonnes[0].widgets.push(img);
     s.colonnes[1].widgets.push(titre, texte);
     return s;
+  }
+  function sectionValeurs() {
+    const s = creerSection([1, 1, 1]);
+    const vals = [['🌱', 'Engagés', 'Des choix responsables à chaque étape.'], ['🤝', 'À l’écoute', 'Votre satisfaction avant tout.'], ['✨', 'Exigeants', 'Un travail soigné, jusque dans le détail.']];
+    s.colonnes.forEach((c, i) => {
+      const ib = creerWidget('icone_bloc');
+      ib.contenu.icone = vals[i][0]; ib.contenu.titre = vals[i][1]; ib.contenu.texte = vals[i][2];
+      c.widgets.push(ib);
+    });
+    return s;
+  }
+  function modeleAPropos() {
+    return [
+      sectionHero('Qui sommes-nous ?', 'Une équipe passionnée, au service de votre projet depuis le premier jour.'),
+      sectionHistoire(),
+      sectionValeurs(),
+      modeleTemoignage(),
+    ];
   }
   function modeleBanniere() {
     const s = creerSection([1]);
@@ -774,6 +820,16 @@
     s.colonnes[0].widgets.push(cta);
     return s;
   }
+  function modeleAccueil() {
+    return [
+      sectionHero('Et si on travaillait ensemble ?', 'Découvrez ce qui nous rend différents, et pourquoi nos clients nous font confiance.', 'Essayer gratuitement'),
+      modeleTroisIconBox(),
+      modeleImageTexte(),
+      modeleTemoignage(),
+      modeleCompteurs(),
+      modeleBanniere(),
+    ];
+  }
 
   const TEMPLATES = [
     { id: 'tpl1', nom: 'Titre + texte + bouton', type: 'Section', image: 'miniatures/tpl1.png', fabrique: modeleTitreTexteBouton },
@@ -784,6 +840,7 @@
     { id: 'tpl6', nom: 'Page — Contact', type: 'Page', image: 'miniatures/tpl6.png', fabrique: modeleContact },
     { id: 'tpl7', nom: 'Page — À propos', type: 'Page', image: 'miniatures/tpl7.png', fabrique: modeleAPropos },
     { id: 'tpl8', nom: 'Bannière promo', type: 'Section', image: 'miniatures/tpl8.png', fabrique: modeleBanniere },
+    { id: 'tpl9', nom: 'Page — Accueil', type: 'Page', image: 'miniatures/tpl9.png', fabrique: modeleAccueil },
   ];
 
   function pageInitiale() {
@@ -800,6 +857,17 @@
 
   const PERSISTANCE_CLE = 'constructeur:page';
   const PERSISTANCE_CLE_REGLAGES = 'constructeur:reglages-site';
+  const PERSISTANCE_CLE_MODELES = 'constructeur:modeles-perso';
+
+  function chargerModelesPersoSauvegardes() {
+    try {
+      const brut = localStorage.getItem(PERSISTANCE_CLE_MODELES);
+      return brut ? JSON.parse(brut) : [];
+    } catch (e) { return []; }
+  }
+  function sauvegarderModelesPerso() {
+    try { localStorage.setItem(PERSISTANCE_CLE_MODELES, JSON.stringify(state.modelesPersonnalises)); } catch (e) { /* tant pis */ }
+  }
 
   function reglagesSiteParDefaut() {
     return { couleurPrimaire: '#93003f', couleurTexte: '#1b1d21', couleurFond: '#ffffff', police: 'Inter' };
@@ -832,6 +900,7 @@
     modaleBibliotheque: null, // { cible: colonne|null, onglet: 'predefinis'|'liste' }
     reglagesSite: chargerReglagesSiteSauvegardes() || reglagesSiteParDefaut(),
     panneauIdle: 'reglages', // 'reglages' | 'elements' — vue par défaut du panneau quand rien n'est sélectionné
+    modelesPersonnalises: chargerModelesPersoSauvegardes(), // [{ id, nom, type:'Section'|'Page', donnees, image:null }]
   };
 
   function chargerPageSauvegardee() {
@@ -916,15 +985,51 @@
     snapshot();
     reveler('section', section.id);
   }
-  function insererModele(template, cible) {
-    const section = template.fabrique();
-    if (cible && cible.sectionCible) {
-      const { noeud } = trouver('section', cible.sectionCible);
-      if (noeud) { noeud.colonnes = section.colonnes; rendrePage(); fermerModaleBibliotheque(); snapshot(); reveler('section', noeud.id); return; }
+  // un modèle "prédéfini" fabrique ses sections via une fonction JS ; un modèle "personnalisé"
+  // (enregistré par l'utilisateur) les garde telles quelles en JSON — on reclone avec des id
+  // neufs dans les deux cas pour ne jamais faire cohabiter deux fois le même id dans la page.
+  function obtenirSectionsModele(t) {
+    if (t.fabrique) {
+      const r = t.fabrique();
+      return Array.isArray(r) ? r : [r];
     }
-    if (cible && cible.colonneCible) {
+    const d = t.donnees;
+    return (Array.isArray(d) ? d : [d]).map(cloner);
+  }
+
+  function tousLesModeles() {
+    return [...TEMPLATES, ...state.modelesPersonnalises];
+  }
+
+  function sauvegarderModeleActuel() {
+    let type; let donnees; let defaut;
+    const sel = state.selection && state.selection.type === 'section' ? trouver('section', state.selection.id).noeud : null;
+    if (sel) { type = 'Section'; donnees = sel; defaut = 'Ma section'; }
+    else { type = 'Page'; donnees = state.page.sections; defaut = 'Ma page'; }
+    const nom = window.prompt('Nom du modèle à enregistrer :', defaut);
+    if (!nom) return;
+    state.modelesPersonnalises.push({ id: 'perso-' + uid(), nom, type, donnees: JSON.parse(JSON.stringify(donnees)), image: null });
+    sauvegarderModelesPerso();
+    toast('✓ Modèle enregistré');
+  }
+
+  function supprimerModelePerso(id) {
+    state.modelesPersonnalises = state.modelesPersonnalises.filter((m) => m.id !== id);
+    sauvegarderModelesPerso();
+    rendreOverlay();
+  }
+
+  function insererModele(template, cible) {
+    const sections = obtenirSectionsModele(template);
+    const estPage = sections.length > 1;
+
+    if (!estPage && cible && cible.sectionCible) {
+      const { noeud } = trouver('section', cible.sectionCible);
+      if (noeud) { noeud.colonnes = sections[0].colonnes; rendrePage(); fermerModaleBibliotheque(); snapshot(); reveler('section', noeud.id); return; }
+    }
+    if (!estPage && cible && cible.colonneCible) {
       const { noeud } = trouver('colonne', cible.colonneCible);
-      const widgetsAInserer = section.colonnes.flatMap((c) => c.widgets);
+      const widgetsAInserer = sections[0].colonnes.flatMap((c) => c.widgets);
       if (noeud && widgetsAInserer.length) {
         noeud.widgets.push(...widgetsAInserer);
         rendrePage(); fermerModaleBibliotheque(); snapshot();
@@ -932,11 +1037,13 @@
         return;
       }
     }
-    state.page.sections.push(section);
+    // un modèle de page complète s'ajoute toujours à la fin de la page, jamais à la place
+    // d'une section ou dans une colonne précise — ça n'aurait pas de sens pour plusieurs sections.
+    state.page.sections.push(...sections);
     fermerModaleBibliotheque();
     rendrePage();
     snapshot();
-    reveler('section', section.id);
+    reveler('section', sections[0].id);
   }
   function ajouterColonne(section) {
     section.colonnes.push(creerColonne());
@@ -1586,7 +1693,7 @@
   }
 
   function rafraichirPanneau() {
-    const panneau = document.getElementById('panneau');
+    const panneau = document.getElementById('panneau-contenu');
     panneau.innerHTML = '';
     if (!state.selection) {
       panneau.appendChild(state.panneauIdle === 'elements' ? rendreBibliotheque(true) : rendreReglagesSite());
@@ -1687,28 +1794,35 @@
     const entete = el('div', { class: 'modale-bibliotheque__entete' },
       el('div', { class: 'modale-bibliotheque__titre' }, '📑', 'BIBLIOTHÈQUE'),
       onglets,
-      el('button', { class: 'modale-bibliotheque__action', title: 'Enregistrer' }, '💾'),
+      el('button', { class: 'modale-bibliotheque__action', title: 'Enregistrer le modèle actuel', onclick: () => { sauvegarderModeleActuel(); rendreOverlay(); } }, '💾'),
       el('button', { class: 'modale-bibliotheque__action', title: 'Fermer', onclick: fermerModaleBibliotheque }, '✕'));
 
+    const modeles = tousLesModeles();
     let corpsEnfant;
     if (mb.onglet === 'predefinis') {
       const grille = el('div', { class: 'grille-modeles' });
-      TEMPLATES.forEach((t) => {
+      modeles.forEach((t) => {
+        const vignette = el('div', { class: 'carte-modele__vignette' });
+        if (t.image) vignette.style.backgroundImage = `url('${t.image}')`;
+        else vignette.appendChild(el('span', { class: 'carte-modele__vignette-repli' }, t.type === 'Page' ? '📄' : '🧱'));
         grille.appendChild(el('div', { class: 'carte-modele', onclick: () => insererModele(t, mb.cible) },
-          el('div', { class: 'carte-modele__vignette', style: { backgroundImage: `url('${t.image}')` } }),
-          el('div', { class: 'carte-modele__legende' }, t.nom)));
+          vignette, el('div', { class: 'carte-modele__legende' }, t.nom)));
       });
       corpsEnfant = grille;
     } else {
       const liste = el('div', {});
-      TEMPLATES.forEach((t) => {
+      modeles.forEach((t) => {
+        const estPerso = t.id.startsWith('perso-');
+        const actions = [el('a', { href: '#', onclick: (e) => { e.preventDefault(); insererModele(t, mb.cible); } }, 'Aperçu'), ' · '];
+        if (estPerso) {
+          actions.push(el('a', { href: '#', onclick: (e) => { e.preventDefault(); if (window.confirm('Supprimer le modèle « ' + t.nom + ' » ?')) supprimerModelePerso(t.id); } }, 'Effacer'), ' · ');
+        }
+        actions.push(el('button', { class: 'bouton-insertion', onclick: () => insererModele(t, mb.cible) }, 'Insertion'));
         liste.appendChild(el('div', { class: 'liste-modeles__ligne' },
           el('span', { class: 'liste-modeles__icone' }, t.type === 'Page' ? '📄' : '🧱'),
-          el('span', { class: 'liste-modeles__nom' }, t.nom),
+          el('span', { class: 'liste-modeles__nom' }, t.nom + (estPerso ? ' (personnel)' : '')),
           el('span', { class: 'liste-modeles__type' }, t.type),
-          el('div', { class: 'liste-modeles__actions' },
-            el('a', {}, 'Aperçu'), ' · ', el('a', {}, 'Effacer'), ' · ', el('a', {}, 'Exporter'),
-            el('button', { class: 'bouton-insertion', onclick: () => insererModele(t, mb.cible) }, 'Insertion'))));
+          el('div', { class: 'liste-modeles__actions' }, ...actions)));
       });
       corpsEnfant = liste;
     }
@@ -1988,6 +2102,30 @@
   document.getElementById('bouton-publier').addEventListener('click', () => toast('✓ Enregistré'));
   document.querySelectorAll('.barre-haute__appareil button').forEach((b) => b.addEventListener('click', () => { state.appareil = b.dataset.appareil; appliquerAppareil(); }));
   window.addEventListener('resize', rafraichirPoignees);
+
+  // -------- pied du panneau (dossier de modèles, enregistrer)
+  const piedMenu = document.getElementById('panneau-pied-menu');
+  document.getElementById('bouton-pied-dossier').addEventListener('click', (e) => {
+    e.stopPropagation();
+    piedMenu.hidden = !piedMenu.hidden;
+    document.getElementById('bouton-pied-dossier').classList.toggle('actif', !piedMenu.hidden);
+  });
+  document.addEventListener('click', (e) => {
+    if (!piedMenu.hidden && !piedMenu.contains(e.target) && e.target.id !== 'bouton-pied-dossier') {
+      piedMenu.hidden = true;
+      document.getElementById('bouton-pied-dossier').classList.remove('actif');
+    }
+  });
+  document.getElementById('bouton-bibliotheque-modeles').addEventListener('click', () => { piedMenu.hidden = true; ouvrirModaleBibliotheque(); });
+  document.getElementById('bouton-enregistrer-modele').addEventListener('click', () => { piedMenu.hidden = true; sauvegarderModeleActuel(); });
+  document.getElementById('bouton-pied-enregistrer').addEventListener('click', () => toast('✓ Enregistré'));
+  document.getElementById('bouton-pied-responsive').addEventListener('click', () => {
+    const ordre = ['bureau', 'tablette', 'mobile'];
+    state.appareil = ordre[(ordre.indexOf(state.appareil) + 1) % ordre.length];
+    appliquerAppareil();
+  });
+  document.getElementById('bouton-pied-aide').addEventListener('click', () => toast('Aide — bientôt disponible'));
+  document.getElementById('bouton-pied-fermer').addEventListener('click', () => toast('Fermeture indisponible dans cette démonstration'));
 
   appliquerReglagesSite();
   snapshot();

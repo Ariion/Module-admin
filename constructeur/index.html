@@ -10,7 +10,20 @@
 <body>
 
 <div class="atelier">
-  <aside id="panneau" class="panneau"></aside>
+  <aside id="panneau" class="panneau">
+    <div id="panneau-contenu" class="panneau__contenu-scroll"></div>
+    <div id="panneau-pied" class="panneau-pied">
+      <div id="panneau-pied-menu" class="panneau-pied__menu" hidden>
+        <button id="bouton-bibliotheque-modeles">📁 Bibliothèque de modèles</button>
+        <button id="bouton-enregistrer-modele">💾 Enregistrer le modèle</button>
+      </div>
+      <button class="panneau-pied__icone" id="bouton-pied-fermer" title="Fermer">✕</button>
+      <button class="panneau-pied__icone" id="bouton-pied-responsive" title="Aperçu responsive">🖥</button>
+      <button class="panneau-pied__icone" id="bouton-pied-aide" title="Aide">❓</button>
+      <button class="panneau-pied__icone" id="bouton-pied-dossier" title="Modèles">📁</button>
+      <button class="panneau-pied__enregistrer" id="bouton-pied-enregistrer">Enregistrer</button>
+    </div>
+  </aside>
   <div id="panneau-scrim" class="panneau-scrim"></div>
   <main class="zone-travail">
     <div class="barre-haute">
