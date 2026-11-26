@@ -892,8 +892,8 @@
     const mise = el('div', { class: 'mise-en-page-edition' });
     const panneau = el('div', { class: 'panneau-form' });
     panneau.appendChild(el('div', { class: 'champ-inline' },
-      champTexte('Prénom', client.prenom, (v) => { client.prenom = v; maj(); rafraichirContenu(); }),
-      champTexte('Nom', client.nom, (v) => { client.nom = v; maj(); rafraichirContenu(); })));
+      champTexte('Prénom', client.prenom, (v) => { client.prenom = v; maj(); }),
+      champTexte('Nom', client.nom, (v) => { client.nom = v; maj(); })));
     panneau.appendChild(el('div', { class: 'champ-inline' },
       champTexte('Email', client.email, (v) => { client.email = v; maj(); }),
       champTexte('Téléphone', client.telephone, (v) => { client.telephone = v; maj(); })));
