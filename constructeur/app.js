@@ -814,6 +814,16 @@
       const { noeud } = trouver('section', cible.sectionCible);
       if (noeud) { noeud.colonnes = section.colonnes; rendrePage(); fermerModaleBibliotheque(); snapshot(); reveler('section', noeud.id); return; }
     }
+    if (cible && cible.colonneCible) {
+      const { noeud } = trouver('colonne', cible.colonneCible);
+      const widgetsAInserer = section.colonnes.flatMap((c) => c.widgets);
+      if (noeud && widgetsAInserer.length) {
+        noeud.widgets.push(...widgetsAInserer);
+        rendrePage(); fermerModaleBibliotheque(); snapshot();
+        reveler('widget', widgetsAInserer[0].id);
+        return;
+      }
+    }
     state.page.sections.push(section);
     fermerModaleBibliotheque();
     rendrePage();
@@ -1072,7 +1082,7 @@
       brancherDepot(widgets, colonne);
       widgets.appendChild(el('div', { class: 'placeholder-vide' },
         el('div', { class: 'placeholder-vide__boutons' },
-          el('button', { class: 'placeholder-vide__ajouter-section', onclick: (e) => { e.stopPropagation(); ouvrirModaleStructure(sectionId); } }, 'AJOUTER UNE NOUVELLE SECTION'),
+          el('button', { class: 'placeholder-vide__ajouter-section', onclick: (e) => { e.stopPropagation(); ouvrirModaleStructure(sectionId, e.currentTarget.closest('.placeholder-vide')); } }, 'AJOUTER UNE NOUVELLE SECTION'),
           el('button', { class: 'placeholder-vide__ajouter-modele', onclick: (e) => { e.stopPropagation(); ouvrirModaleBibliotheque({ sectionCible: sectionId }); } }, 'AJOUTER UN MODÈLE')),
         el('div', { class: 'placeholder-vide__ou' }, 'Ou glissez un widget ici')));
       div.appendChild(widgets);
@@ -1081,6 +1091,12 @@
 
     const widgets = el('div', { class: 'colonne__widgets' });
     colonne.widgets.forEach((item) => widgets.appendChild(item.type === 'section' ? rendreSection(item) : rendreWidget(item, colonne.id, sectionId)));
+    if (colonne.widgets.length === 0 && state.mode === 'edition') {
+      widgets.appendChild(el('button', {
+        class: 'colonne__ajouter',
+        onclick: (e) => { e.stopPropagation(); ouvrirModaleBibliotheque({ colonneCible: colonne.id }); },
+      }, '+'));
+    }
     brancherDepot(widgets, colonne);
     div.appendChild(widgets);
     return div;
@@ -1119,7 +1135,7 @@
     if (state.mode === 'edition') {
       toile.appendChild(el('button', {
         class: 'toile__ajouter-apres',
-        onclick: (e) => { e.stopPropagation(); ouvrirModaleStructure(); },
+        onclick: (e) => { e.stopPropagation(); ouvrirModaleStructure(null, e.currentTarget); },
       }, '+ Ajouter une section'));
     }
     rafraichirPoignees();
@@ -1491,8 +1507,9 @@
 
   // -------------------------------------------------- modale "Sélectionnez votre structure"
 
-  function ouvrirModaleStructure(sectionCible) {
-    state.modaleStructure = { sectionCible: sectionCible || null };
+  function ouvrirModaleStructure(sectionCible, ancreEl) {
+    const rect = ancreEl ? ancreEl.getBoundingClientRect() : null;
+    state.modaleStructure = { sectionCible: sectionCible || null, rect };
     rendreOverlay();
   }
   function fermerModaleStructure() { state.modaleStructure = null; rendreOverlay(); }
@@ -1505,11 +1522,32 @@
       icone.addEventListener('click', () => { creerSectionDepuisStructure(poids, state.modaleStructure.sectionCible); fermerModaleStructure(); });
       grille.appendChild(icone);
     });
-    return el('div', { class: 'modale-fond', onclick: (e) => { if (e.target.classList.contains('modale-fond')) fermerModaleStructure(); } },
-      el('div', { class: 'modale-structure' },
-        el('button', { class: 'modale-structure__fermer', onclick: fermerModaleStructure }, '✕'),
-        el('div', { class: 'modale-structure__titre' }, 'Sélectionnez votre structure'),
-        grille));
+    const carte = el('div', { class: 'modale-structure' },
+      el('button', { class: 'modale-structure__fermer', onclick: fermerModaleStructure }, '✕'),
+      el('div', { class: 'modale-structure__titre' }, 'Sélectionnez votre structure'),
+      grille);
+
+    const rect = state.modaleStructure.rect;
+    if (rect) {
+      // en place, à l'endroit même du "+" qui l'a ouverte — pas de fond assombri, comme dans Creative Elements.
+      carte.style.position = 'fixed';
+      carte.style.top = rect.top + 'px';
+      carte.style.left = rect.left + 'px';
+      carte.style.width = rect.width + 'px';
+      carte.style.maxWidth = 'none';
+      // si la carte déborde en bas de l'écran (le "+" était tout en bas de la page), on la remonte.
+      requestAnimationFrame(() => {
+        const marge = 12;
+        const h = carte.getBoundingClientRect().height;
+        let top = rect.top;
+        if (top + h > window.innerHeight - marge) top = Math.max(marge, window.innerHeight - marge - h);
+        carte.style.top = top + 'px';
+      });
+      carte.style.margin = '0';
+      carte.style.zIndex = '600';
+      return el('div', { class: 'modale-structure__attrape', onclick: (e) => { if (e.target === e.currentTarget) fermerModaleStructure(); } }, carte);
+    }
+    return el('div', { class: 'modale-fond', onclick: (e) => { if (e.target.classList.contains('modale-fond')) fermerModaleStructure(); } }, carte);
   }
 
   // -------------------------------------------------- modale "BIBLIOTHÈQUE"
