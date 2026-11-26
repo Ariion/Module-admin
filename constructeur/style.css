@@ -142,8 +142,16 @@ body{ margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-s
 .barre-haute__mode.actif{ background:var(--accent); color:#fff; border-color:var(--accent); }
 
 .toile-enveloppe{ flex:1; overflow:auto; padding:32px; }
-.toile-conteneur{ position:relative; max-width:1300px; width:100%; margin:0 auto; background:var(--page-fond); color:var(--page-encre); font-family:var(--site-police); min-height:calc(100vh - 160px); box-shadow:0 0 0 1px #d7d9dc, 0 10px 30px rgba(0,0,0,.06); }
-.toile{ position:relative; min-height:inherit; display:flex; flex-direction:column; }
+.toile-conteneur{
+  position:relative; max-width:1300px; width:100%; margin:0 auto; background:var(--page-fond); color:var(--page-encre);
+  font-family:var(--site-police); min-height:calc(100vh - 160px); box-shadow:0 0 0 1px #d7d9dc, 0 10px 30px rgba(0,0,0,.06);
+  display:flex; flex-direction:column;
+}
+/* #toile reste en display:block normal : une section à l'intérieur doit s'étirer sur toute la largeur
+   par les règles habituelles de la mise en bloc. Si #toile devient lui-même flex, ses enfants
+   (les sections) deviennent des items flex et se mettent à épouser leur contenu au lieu de s'étirer —
+   visible dès qu'une section contient plusieurs colonnes vides (elles se tassent à leur largeur minimale). */
+.toile{ position:relative; }
 
 .toile__ajouter-apres{
   display:block; width:100%; margin-top:auto; padding:18px; border:none; border-top:1px dashed #d7d9dc;

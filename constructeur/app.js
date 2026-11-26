@@ -1132,8 +1132,16 @@
     const toile = document.getElementById('toile');
     toile.innerHTML = '';
     state.page.sections.forEach((s) => toile.appendChild(rendreSection(s)));
+
+    // La bande "+ Ajouter une section" vit en dehors de #toile, comme sœur dans #toile-conteneur
+    // (qui porte le flex-column) : #toile doit rester en display:block normal pour que les
+    // sections à l'intérieur s'étirent correctement sur toute sa largeur (voir note CSS sur .toile).
+    const conteneur = document.getElementById('toile-conteneur');
+    const ancienneBande = document.getElementById('toile-ajouter-apres');
+    if (ancienneBande) ancienneBande.remove();
     if (state.mode === 'edition') {
-      toile.appendChild(el('button', {
+      conteneur.appendChild(el('button', {
+        id: 'toile-ajouter-apres',
         class: 'toile__ajouter-apres',
         onclick: (e) => { e.stopPropagation(); ouvrirModaleStructure(null, e.currentTarget); },
       }, '+ Ajouter une section'));
