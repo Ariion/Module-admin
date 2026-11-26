@@ -691,12 +691,39 @@
   }
 
   const PERSISTANCE_CLE = 'constructeur:page';
+  const PERSISTANCE_CLE_REGLAGES = 'constructeur:reglages-site';
+
+  function reglagesSiteParDefaut() {
+    return { couleurPrimaire: '#93003f', couleurTexte: '#1b1d21', couleurFond: '#ffffff', police: 'Inter' };
+  }
+  function chargerReglagesSiteSauvegardes() {
+    try {
+      const brut = localStorage.getItem(PERSISTANCE_CLE_REGLAGES);
+      return brut ? Object.assign(reglagesSiteParDefaut(), JSON.parse(brut)) : null;
+    } catch (e) { return null; }
+  }
+  function appliquerReglagesSite() {
+    const r = state.reglagesSite;
+    document.documentElement.style.setProperty('--site-couleur-primaire', r.couleurPrimaire);
+    document.documentElement.style.setProperty('--page-encre', r.couleurTexte);
+    document.documentElement.style.setProperty('--page-fond', r.couleurFond);
+    document.documentElement.style.setProperty('--site-police', POLICES_SITE[r.police] || POLICES_SITE.Inter);
+    try { localStorage.setItem(PERSISTANCE_CLE_REGLAGES, JSON.stringify(r)); } catch (e) { /* tant pis */ }
+  }
+  const POLICES_SITE = {
+    Inter: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    Georgia: "Georgia, 'Times New Roman', serif",
+    'Courier New': "'Courier New', ui-monospace, monospace",
+    Verdana: "Verdana, Geneva, sans-serif",
+  };
 
   const state = {
     page: chargerPageSauvegardee() || pageInitiale(), selection: null, ongletActif: null, mode: 'edition',
     appareil: 'bureau', navigateurOuvert: false,
     modaleStructure: null, // { sectionCible: id|null }
     modaleBibliotheque: null, // { cible: colonne|null, onglet: 'predefinis'|'liste' }
+    reglagesSite: chargerReglagesSiteSauvegardes() || reglagesSiteParDefaut(),
+    panneauIdle: 'reglages', // 'reglages' | 'elements' — vue par défaut du panneau quand rien n'est sélectionné
   };
 
   function chargerPageSauvegardee() {
@@ -762,25 +789,36 @@
   // NB historique : snapshot() se prend TOUJOURS après la mutation (jamais avant), de sorte que
   // historique.pile[historique.index] représente en permanence l'état courant de state.page —
   // c'est cet invariant que annuler()/retablir() supposent.
+  function reveler(type, id) {
+    selectionner(type, id);
+    requestAnimationFrame(() => {
+      const el = document.querySelector('[data-type="' + type + '"][data-id="' + id + '"]');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
   function creerSectionDepuisStructure(poids, sectionCible) {
     if (sectionCible) {
       const { noeud } = trouver('section', sectionCible);
-      if (noeud) { noeud.colonnes = poids.map((p) => creerColonne(p)); rendrePage(); snapshot(); return; }
+      if (noeud) { noeud.colonnes = poids.map((p) => creerColonne(p)); rendrePage(); snapshot(); reveler('section', noeud.id); return; }
     }
-    state.page.sections.push(creerSection(poids));
+    const section = creerSection(poids);
+    state.page.sections.push(section);
     rendrePage();
     snapshot();
+    reveler('section', section.id);
   }
   function insererModele(template, cible) {
     const section = template.fabrique();
     if (cible && cible.sectionCible) {
       const { noeud } = trouver('section', cible.sectionCible);
-      if (noeud) { noeud.colonnes = section.colonnes; rendrePage(); fermerModaleBibliotheque(); snapshot(); return; }
+      if (noeud) { noeud.colonnes = section.colonnes; rendrePage(); fermerModaleBibliotheque(); snapshot(); reveler('section', noeud.id); return; }
     }
     state.page.sections.push(section);
     fermerModaleBibliotheque();
     rendrePage();
     snapshot();
+    reveler('section', section.id);
   }
   function ajouterColonne(section) {
     section.colonnes.push(creerColonne());
@@ -1233,9 +1271,34 @@
     rendu.addEventListener('blur', fin);
   }
 
+  // -------------------------------------------------- panneau gauche : réglages du site (vue par défaut)
+
+  function rendreReglagesSite() {
+    const r = state.reglagesSite;
+    const maj = (cle, valeur) => { r[cle] = valeur; appliquerReglagesSite(); };
+
+    const entete = el('div', { class: 'panneau-proprietes__entete' },
+      el('span', { class: 'panneau-proprietes__titre' }, '⚙ Réglages du site'));
+
+    const onglets = el('div', { class: 'onglets-panneau' },
+      el('button', { class: state.panneauIdle === 'reglages' ? 'actif' : '', onclick: () => { state.panneauIdle = 'reglages'; rafraichirPanneau(); } }, 'Réglages du site'),
+      el('button', { class: state.panneauIdle === 'elements' ? 'actif' : '', onclick: () => { state.panneauIdle = 'elements'; rafraichirPanneau(); } }, 'Éléments'));
+
+    const champs = el('div', { class: 'champs' },
+      el('div', { class: 'champs-titre' }, 'Typographie'),
+      champSelect('Police du site', Object.keys(POLICES_SITE), r.police, (v) => maj('police', v)),
+      el('div', { class: 'champs-titre' }, 'Couleurs'),
+      champCouleur('Couleur primaire', r.couleurPrimaire, (v) => maj('couleurPrimaire', v)),
+      champCouleur('Couleur du texte', r.couleurTexte, (v) => maj('couleurTexte', v)),
+      champCouleur('Couleur de fond', r.couleurFond, (v) => maj('couleurFond', v)),
+      champAide('La couleur primaire s’applique aux boutons, compteurs, barres de progression… du contenu publié — pas au constructeur lui-même.'));
+
+    return el('div', {}, entete, onglets, champs);
+  }
+
   // -------------------------------------------------- panneau gauche : bibliothèque ou propriétés
 
-  function rendreBibliotheque() {
+  function rendreBibliotheque(avecOngletsIdle) {
     const categories = {};
     Object.keys(WIDGETS).forEach((type) => {
       const def = WIDGETS[type];
@@ -1270,7 +1333,11 @@
       });
     });
 
-    return el('div', {}, el('div', { class: 'panneau__entete' }, recherche), corps);
+    const onglets = avecOngletsIdle ? el('div', { class: 'onglets-panneau' },
+      el('button', { onclick: () => { state.panneauIdle = 'reglages'; rafraichirPanneau(); } }, 'Réglages du site'),
+      el('button', { class: 'actif' }, 'Éléments')) : null;
+
+    return el('div', {}, onglets, el('div', { class: 'panneau__entete' }, recherche), corps);
   }
 
   // ---- onglet "Contenu" (widgets) / "Mise en page" (section seulement)
@@ -1385,9 +1452,15 @@
   function rafraichirPanneau() {
     const panneau = document.getElementById('panneau');
     panneau.innerHTML = '';
-    if (!state.selection) { panneau.appendChild(rendreBibliotheque()); return; }
+    if (!state.selection) {
+      panneau.appendChild(state.panneauIdle === 'elements' ? rendreBibliotheque(true) : rendreReglagesSite());
+      return;
+    }
     const { noeud, parent } = trouver(state.selection.type, state.selection.id);
-    if (!noeud) { panneau.appendChild(rendreBibliotheque()); return; }
+    if (!noeud) {
+      panneau.appendChild(state.panneauIdle === 'elements' ? rendreBibliotheque(true) : rendreReglagesSite());
+      return;
+    }
     const type = state.selection.type;
     const label = type === 'widget' ? WIDGETS[noeud.type].label : type === 'colonne' ? 'Colonne' : 'Section';
 
@@ -1758,6 +1831,7 @@
   document.querySelectorAll('.barre-haute__appareil button').forEach((b) => b.addEventListener('click', () => { state.appareil = b.dataset.appareil; appliquerAppareil(); }));
   window.addEventListener('resize', rafraichirPoignees);
 
+  appliquerReglagesSite();
   snapshot();
   rafraichirPanneau();
   rendrePage();
