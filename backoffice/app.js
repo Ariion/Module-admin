@@ -604,7 +604,7 @@
   }
 
   function creerProduit() {
-    const produit = { id: uid(), nom: 'Nouveau produit', sku: '', prix: 0, prixBarre: '', descriptionCourte: '', descriptionLongue: '', images: [], stock: 0, statut: 'inactif', categorieId: state.categoriesProduits[0] ? state.categoriesProduits[0].id : null, declinaisons: [], dateModif: Date.now() };
+    const produit = { id: uid(), nom: 'Nouveau produit', sku: '', prix: 0, prixBarre: '', descriptionCourte: '', descriptionLongue: '', images: [], stock: 0, statut: 'inactif', categorieId: state.categoriesProduits[0] ? state.categoriesProduits[0].id : null, declinaisons: [], metaTitre: '', metaDescription: '', dateModif: Date.now() };
     state.produits.push(produit);
     marquerModifie();
     allerA('produits-edition', { id: produit.id });
@@ -615,6 +615,8 @@
     marquerModifie();
     rafraichirContenu();
   }
+
+  let ongletProduitActif = 'fiche';
 
   function rendreEditionProduit(c) {
     const produit = state.produits.find((p) => p.id === state.edition.id);
@@ -627,21 +629,32 @@
       el('button', { class: 'bouton-principal', onclick: () => { flusherSauvegarde(); toast('✓ Produit enregistré'); } }, 'Enregistrer')));
 
     const mise = el('div', { class: 'mise-en-page-edition' });
+    const onglets = ['fiche', 'seo'];
+    const libellesOnglets = { fiche: 'Fiche produit', seo: 'Référencement (SEO)' };
+    const ongletsDiv = el('div', { class: 'onglets-form' });
+    onglets.forEach((o) => ongletsDiv.appendChild(el('button', { class: ongletProduitActif === o ? 'actif' : '', onclick: () => { ongletProduitActif = o; rafraichirContenu(); } }, libellesOnglets[o])));
+
     const panneau = el('div', { class: 'panneau-form' });
-    panneau.appendChild(champTexte('Nom du produit', produit.nom, (v) => { produit.nom = v; maj(); }));
-    panneau.appendChild(el('div', { class: 'champ-inline' },
-      champTexte('Référence (SKU)', produit.sku, (v) => { produit.sku = v; maj(); }),
-      champNombre('Stock', produit.stock, (v) => { produit.stock = v; maj(); })));
-    panneau.appendChild(el('div', { class: 'champ-inline' },
-      champNombre('Prix (€)', produit.prix, (v) => { produit.prix = v; maj(); }),
-      champNombre('Prix barré (€, optionnel)', produit.prixBarre, (v) => { produit.prixBarre = v; maj(); })));
-    panneau.appendChild(champTextarea('Description courte', produit.descriptionCourte, (v) => { produit.descriptionCourte = v; maj(); }));
-    panneau.appendChild(champTextarea('Description longue', produit.descriptionLongue, (v) => { produit.descriptionLongue = v; maj(); }, true));
+    if (ongletProduitActif === 'fiche') {
+      panneau.appendChild(champTexte('Nom du produit', produit.nom, (v) => { produit.nom = v; maj(); }));
+      panneau.appendChild(el('div', { class: 'champ-inline' },
+        champTexte('Référence (SKU)', produit.sku, (v) => { produit.sku = v; maj(); }),
+        champNombre('Stock', produit.stock, (v) => { produit.stock = v; maj(); })));
+      panneau.appendChild(el('div', { class: 'champ-inline' },
+        champNombre('Prix (€)', produit.prix, (v) => { produit.prix = v; maj(); }),
+        champNombre('Prix barré (€, optionnel)', produit.prixBarre, (v) => { produit.prixBarre = v; maj(); })));
+      panneau.appendChild(champTextarea('Description courte', produit.descriptionCourte, (v) => { produit.descriptionCourte = v; maj(); }));
+      panneau.appendChild(champTextarea('Description longue', produit.descriptionLongue, (v) => { produit.descriptionLongue = v; maj(); }, true));
 
-    panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Images'), rendreBlocImagesProduit(produit, maj)));
-    panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Déclinaisons'), rendreBlocDeclinaisons(produit, maj)));
+      panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Images'), rendreBlocImagesProduit(produit, maj)));
+      panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Déclinaisons'), rendreBlocDeclinaisons(produit, maj)));
+    } else {
+      panneau.appendChild(champTexte('Méta-titre', produit.metaTitre, (v) => { produit.metaTitre = v; maj(); }));
+      panneau.appendChild(champTextarea('Méta-description', produit.metaDescription, (v) => { produit.metaDescription = v; maj(); }));
+      panneau.appendChild(champAide('Affichés dans les résultats des moteurs de recherche.'));
+    }
 
-    mise.appendChild(el('div', {}, el('div', { class: 'onglets-form' }, el('button', { class: 'actif' }, 'Fiche produit')), panneau));
+    mise.appendChild(el('div', {}, ongletsDiv, panneau));
 
     const lateral = el('div', {});
     lateral.appendChild(el('div', { class: 'widget-lateral' },
