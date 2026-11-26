@@ -420,6 +420,86 @@
         return [champTexte('Titre', w.contenu.titre, (v) => { w.contenu.titre = v; rendrePage(); })];
       },
     },
+    appel_action: {
+      label: 'Appel à l’action', icone: '📣', categorie: 'Général',
+      defaut: () => ({
+        image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=900&q=80',
+        survol: 'Offre limitée', titre: 'Profitez de notre offre de lancement',
+        texte: 'Une phrase courte et percutante pour convaincre votre visiteur de passer à l’action.',
+        boutonTexte: 'En profiter', boutonLien: '#',
+      }),
+      rendre(w) {
+        return el('div', { class: 'rendu-cta', style: { backgroundImage: w.contenu.image ? `url('${w.contenu.image}')` : 'none' } },
+          el('div', { class: 'rendu-cta__voile' }),
+          el('div', { class: 'rendu-cta__corps' },
+            el('span', { class: 'rendu-cta__survol' }, w.contenu.survol),
+            el('h3', {}, w.contenu.titre),
+            el('p', {}, w.contenu.texte),
+            el('a', { href: w.contenu.boutonLien, class: 'rendu-bouton rendu-bouton--plein', onclick: (e) => e.preventDefault() }, w.contenu.boutonTexte)));
+      },
+      champs(w) {
+        return [
+          champTexte("Adresse de l'image de fond", w.contenu.image, (v) => { w.contenu.image = v; rendrePage(); }),
+          champTexte('Survol (petit texte au-dessus)', w.contenu.survol, (v) => { w.contenu.survol = v; rendrePage(); }),
+          champTexte('Titre', w.contenu.titre, (v) => { w.contenu.titre = v; rendrePage(); }),
+          champTextarea('Texte', w.contenu.texte, (v) => { w.contenu.texte = v; rendrePage(); }),
+          champTexte('Texte du bouton', w.contenu.boutonTexte, (v) => { w.contenu.boutonTexte = v; rendrePage(); }),
+          champTexte('Lien du bouton', w.contenu.boutonLien, (v) => { w.contenu.boutonLien = v; rendrePage(); }),
+        ];
+      },
+    },
+    hotspot_image: {
+      label: 'Hotspot d’image', icone: '📍', categorie: 'Général',
+      defaut: () => ({
+        src: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=700&q=80',
+        points: [
+          { x: 28, y: 38, texte: 'Un détail à remarquer ici.' },
+          { x: 68, y: 62, texte: 'Et un second, ailleurs sur la photo.' },
+        ],
+      }),
+      rendre(w) {
+        return el('div', { class: 'rendu-hotspot' },
+          el('img', { src: w.contenu.src, alt: '' }),
+          ...w.contenu.points.map((p) => el('span', {
+            class: 'rendu-hotspot__point', style: { left: p.x + '%', top: p.y + '%' }, title: p.texte,
+          }, '+')));
+      },
+      champs(w) {
+        const c = [champTexte("Adresse de l'image", w.contenu.src, (v) => { w.contenu.src = v; rendrePage(); })];
+        w.contenu.points.forEach((p, i) => {
+          c.push(champNombre(`Point ${i + 1} — position X (%)`, p.x, (v) => { p.x = v; rendrePage(); }));
+          c.push(champNombre(`Point ${i + 1} — position Y (%)`, p.y, (v) => { p.y = v; rendrePage(); }));
+          c.push(champTexte(`Point ${i + 1} — texte (au survol)`, p.texte, (v) => { p.texte = v; rendrePage(); }));
+        });
+        return c;
+      },
+    },
+    boite_dynamique: {
+      label: 'Boîte dynamique', icone: '🧩', categorie: 'Général',
+      defaut: () => ({
+        icone: '⚡', survol: 'Nouveau', titre: 'Un titre modulable',
+        texte: 'Un bloc à composer librement : icône, étiquette, titre, texte et lien, pour les cas que les autres widgets ne couvrent pas.',
+        lienTexte: 'En savoir plus', lien: '#',
+      }),
+      rendre(w) {
+        return el('div', { class: 'rendu-boite-dynamique' },
+          el('span', { class: 'rendu-boite-dynamique__icone' }, w.contenu.icone),
+          el('span', { class: 'rendu-boite-dynamique__survol' }, w.contenu.survol),
+          el('h4', {}, w.contenu.titre),
+          el('p', {}, w.contenu.texte),
+          el('a', { href: w.contenu.lien, onclick: (e) => e.preventDefault() }, w.contenu.lienTexte + ' →'));
+      },
+      champs(w) {
+        return [
+          champTexte('Icône (emoji)', w.contenu.icone, (v) => { w.contenu.icone = v; rendrePage(); }),
+          champTexte('Survol (petite étiquette)', w.contenu.survol, (v) => { w.contenu.survol = v; rendrePage(); }),
+          champTexte('Titre', w.contenu.titre, (v) => { w.contenu.titre = v; rendrePage(); }),
+          champTextarea('Texte', w.contenu.texte, (v) => { w.contenu.texte = v; rendrePage(); }),
+          champTexte('Texte du lien', w.contenu.lienTexte, (v) => { w.contenu.lienTexte = v; rendrePage(); }),
+          champTexte('Lien', w.contenu.lien, (v) => { w.contenu.lien = v; rendrePage(); }),
+        ];
+      },
+    },
   };
 
   function videoEmbedUrl(url) {
