@@ -54,6 +54,43 @@
     return el('div', { class: 'champ-toggle' }, el('span', {}, label), sw);
   }
   function champAide(texte) { return el('div', { class: 'champ-aide-texte' }, texte); }
+
+  function slugify(texte) {
+    return (texte || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'sans-titre';
+  }
+
+  // Bloc Référencement (SEO) partagé par Pages, Articles et Produits : aperçu Google en direct + compteurs de caractères.
+  function rendreOngletSEO(panneau, { titre, url, metaTitre, metaDescription, onMetaTitre, onMetaDescription }) {
+    const apercuTitre = el('div', { class: 'apercu-google__titre' }, metaTitre || titre || '(Sans titre)');
+    const apercuUrl = el('div', { class: 'apercu-google__url' }, url);
+    const apercuDesc = el('div', { class: 'apercu-google__description' }, metaDescription || 'Aucune description renseignée.');
+    panneau.appendChild(el('div', { class: 'apercu-google' },
+      el('div', { class: 'apercu-google__libelle' }, 'Aperçu dans les résultats de recherche'),
+      apercuTitre, apercuUrl, apercuDesc));
+
+    const MAX_TITRE = 70, MAX_DESC = 160;
+    const champMetaTitre = el('input', { type: 'text', value: metaTitre ?? '' });
+    const compteurTitre = el('span', { class: 'compteur-champ' }, (metaTitre || '').length + ' / ' + MAX_TITRE);
+    champMetaTitre.addEventListener('input', () => {
+      onMetaTitre(champMetaTitre.value);
+      compteurTitre.textContent = champMetaTitre.value.length + ' / ' + MAX_TITRE;
+      compteurTitre.classList.toggle('depasse', champMetaTitre.value.length > MAX_TITRE);
+      apercuTitre.textContent = champMetaTitre.value || titre || '(Sans titre)';
+    });
+    panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Méta-titre'), champMetaTitre, compteurTitre));
+
+    const champMetaDesc = el('textarea', {}, metaDescription ?? '');
+    const compteurDesc = el('span', { class: 'compteur-champ' }, (metaDescription || '').length + ' / ' + MAX_DESC);
+    champMetaDesc.addEventListener('input', () => {
+      onMetaDescription(champMetaDesc.value);
+      compteurDesc.textContent = champMetaDesc.value.length + ' / ' + MAX_DESC;
+      compteurDesc.classList.toggle('depasse', champMetaDesc.value.length > MAX_DESC);
+      apercuDesc.textContent = champMetaDesc.value || 'Aucune description renseignée.';
+    });
+    panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Méta-description'), champMetaDesc, compteurDesc));
+    panneau.appendChild(champAide('Affichés dans les résultats des moteurs de recherche.'));
+  }
   function selectBrut(options, valeur, onChange) {
     const select = el('select', {});
     options.forEach((o) => {
@@ -436,9 +473,10 @@
           champTexte("Lien de l'appel à l'action", page.ctaLien, (v) => { page.ctaLien = v; maj(); })));
       }
     } else {
-      panneau.appendChild(champTexte('Méta-titre', page.metaTitre, (v) => { page.metaTitre = v; maj(); }));
-      panneau.appendChild(champTextarea('Méta-description', page.metaDescription, (v) => { page.metaDescription = v; maj(); }));
-      panneau.appendChild(champAide('Affichés dans les résultats des moteurs de recherche.'));
+      rendreOngletSEO(panneau, {
+        titre: page.titre, url: page.slug, metaTitre: page.metaTitre, metaDescription: page.metaDescription,
+        onMetaTitre: (v) => { page.metaTitre = v; maj(); }, onMetaDescription: (v) => { page.metaDescription = v; maj(); },
+      });
     }
     mise.appendChild(el('div', {}, ongletsDiv, panneau));
 
@@ -531,9 +569,10 @@
       panneau.appendChild(champTextarea('Contenu', article.contenu, (v) => { article.contenu = v; maj(); }, true));
       panneau.appendChild(champTexte("Adresse de l'image à la une", article.imageUrl, (v) => { article.imageUrl = v; maj(); }));
     } else {
-      panneau.appendChild(champTexte('Méta-titre', article.metaTitre, (v) => { article.metaTitre = v; maj(); }));
-      panneau.appendChild(champTextarea('Méta-description', article.metaDescription, (v) => { article.metaDescription = v; maj(); }));
-      panneau.appendChild(champAide('Affichés dans les résultats des moteurs de recherche.'));
+      rendreOngletSEO(panneau, {
+        titre: article.titre, url: '/articles/' + slugify(article.titre), metaTitre: article.metaTitre, metaDescription: article.metaDescription,
+        onMetaTitre: (v) => { article.metaTitre = v; maj(); }, onMetaDescription: (v) => { article.metaDescription = v; maj(); },
+      });
     }
     mise.appendChild(el('div', {}, ongletsDiv, panneau));
 
@@ -649,9 +688,10 @@
       panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Images'), rendreBlocImagesProduit(produit, maj)));
       panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Déclinaisons'), rendreBlocDeclinaisons(produit, maj)));
     } else {
-      panneau.appendChild(champTexte('Méta-titre', produit.metaTitre, (v) => { produit.metaTitre = v; maj(); }));
-      panneau.appendChild(champTextarea('Méta-description', produit.metaDescription, (v) => { produit.metaDescription = v; maj(); }));
-      panneau.appendChild(champAide('Affichés dans les résultats des moteurs de recherche.'));
+      rendreOngletSEO(panneau, {
+        titre: produit.nom, url: '/produits/' + slugify(produit.nom), metaTitre: produit.metaTitre, metaDescription: produit.metaDescription,
+        onMetaTitre: (v) => { produit.metaTitre = v; maj(); }, onMetaDescription: (v) => { produit.metaDescription = v; maj(); },
+      });
     }
 
     mise.appendChild(el('div', {}, ongletsDiv, panneau));
