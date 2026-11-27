@@ -54,6 +54,16 @@
     return el('div', { class: 'champ-toggle' }, el('span', {}, label), sw);
   }
   function champAide(texte) { return el('div', { class: 'champ-aide-texte' }, texte); }
+  function champRadioGroup(label, options, valeur, onChange) {
+    const nomGroupe = 'radio-' + uid();
+    const groupe = el('div', { class: 'champ champ-radio-groupe' }, el('label', {}, label));
+    options.forEach((o) => {
+      const input = el('input', { type: 'radio', name: nomGroupe, checked: o.valeur === valeur ? 'checked' : undefined });
+      input.addEventListener('change', () => { if (input.checked) onChange(o.valeur); });
+      groupe.appendChild(el('label', { class: 'option-radio' }, input, o.label));
+    });
+    return groupe;
+  }
 
   function slugify(texte) {
     return (texte || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -211,7 +221,7 @@
           descriptionCourte: 'Levain naturel, 24h de fermentation.', descriptionLongue: 'Notre pain de campagne est pétri à la main et cuit au feu de bois, pour une croûte croustillante et une mie alvéolée.',
           images: ['https://images.unsplash.com/photo-1549931319-a545319b2e58?w=400&q=80'],
           stock: 24, statut: 'actif', categorieId: idCatProduitBois,
-          declinaisons: [{ id: uid(), nom: 'Poids', valeurs: '500g, 1kg' }],
+          avecDeclinaisons: true, declinaisons: [{ id: uid(), nom: 'Poids', valeurs: '500g, 1kg' }],
           dateModif: Date.now() - 50000,
         },
         {
@@ -219,7 +229,7 @@
           descriptionCourte: 'Croustillant et feuilleté, pur beurre AOP.', descriptionLongue: 'Préparé chaque matin selon une recette traditionnelle, notre croissant pur beurre est feuilleté à la main.',
           images: ['https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&q=80'],
           stock: 40, statut: 'actif', categorieId: idCatProduitCuir,
-          declinaisons: [],
+          avecDeclinaisons: false, declinaisons: [],
           dateModif: Date.now() - 20000,
         },
       ],
@@ -690,7 +700,7 @@
   }
 
   function creerProduit() {
-    const produit = { id: uid(), nom: 'Nouveau produit', sku: '', prix: 0, prixBarre: '', descriptionCourte: '', descriptionLongue: '', images: [], stock: 0, statut: 'inactif', categorieId: state.categoriesProduits[0] ? state.categoriesProduits[0].id : null, declinaisons: [], metaTitre: '', metaDescription: '', dateModif: Date.now() };
+    const produit = { id: uid(), nom: 'Nouveau produit', sku: '', prix: 0, prixBarre: '', descriptionCourte: '', descriptionLongue: '', images: [], stock: 0, statut: 'inactif', categorieId: state.categoriesProduits[0] ? state.categoriesProduits[0].id : null, avecDeclinaisons: false, declinaisons: [], metaTitre: '', metaDescription: '', dateModif: Date.now() };
     state.produits.push(produit);
     marquerModifie();
     allerA('produits-edition', { id: produit.id });
@@ -702,7 +712,7 @@
     rafraichirContenu();
   }
 
-  let ongletProduitActif = 'fiche';
+  let ongletProduitActif = 'essentiel';
 
   function rendreEditionProduit(c) {
     const produit = state.produits.find((p) => p.id === state.edition.id);
@@ -715,25 +725,44 @@
       el('button', { class: 'bouton-principal', onclick: () => { flusherSauvegarde(); toast('✓ Produit enregistré'); } }, 'Enregistrer')));
 
     const mise = el('div', { class: 'mise-en-page-edition' });
-    const onglets = ['fiche', 'seo'];
-    const libellesOnglets = { fiche: 'Fiche produit', seo: 'Référencement (SEO)' };
+    const onglets = ['essentiel', 'declinaisons', 'prix', 'seo'];
+    const libellesOnglets = { essentiel: 'Essentiel', declinaisons: 'Déclinaisons', prix: 'Prix', seo: 'Référencement (SEO)' };
     const ongletsDiv = el('div', { class: 'onglets-form' });
     onglets.forEach((o) => ongletsDiv.appendChild(el('button', { class: ongletProduitActif === o ? 'actif' : '', onclick: () => { ongletProduitActif = o; rafraichirContenu(); } }, libellesOnglets[o])));
 
     const panneau = el('div', { class: 'panneau-form' });
-    if (ongletProduitActif === 'fiche') {
+    if (ongletProduitActif === 'essentiel') {
       panneau.appendChild(champTexte('Nom du produit', produit.nom, (v) => { produit.nom = v; maj(); }));
       panneau.appendChild(el('div', { class: 'champ-inline' },
         champTexte('Référence (SKU)', produit.sku, (v) => { produit.sku = v; maj(); }),
         champNombre('Stock', produit.stock, (v) => { produit.stock = v; maj(); })));
-      panneau.appendChild(el('div', { class: 'champ-inline' },
-        champNombre('Prix (€)', produit.prix, (v) => { produit.prix = v; maj(); }),
-        champNombre('Prix barré (€, optionnel)', produit.prixBarre, (v) => { produit.prixBarre = v; maj(); })));
       panneau.appendChild(champTextarea('Description courte', produit.descriptionCourte, (v) => { produit.descriptionCourte = v; maj(); }));
       panneau.appendChild(champTextarea('Description longue', produit.descriptionLongue, (v) => { produit.descriptionLongue = v; maj(); }, true));
-
       panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Images'), rendreBlocImagesProduit(produit, maj)));
-      panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Déclinaisons'), rendreBlocDeclinaisons(produit, maj)));
+    } else if (ongletProduitActif === 'declinaisons') {
+      const avecDeclinaisons = produit.avecDeclinaisons ?? produit.declinaisons.length > 0;
+      panneau.appendChild(champRadioGroup('Type de produit', [
+        { valeur: false, label: 'Produit simple' },
+        { valeur: true, label: 'Produit avec déclinaisons (ex. tailles, couleurs…)' },
+      ], avecDeclinaisons, (v) => { produit.avecDeclinaisons = v; maj(); rafraichirContenu(); }));
+      if (avecDeclinaisons) {
+        panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Déclinaisons'), rendreBlocDeclinaisons(produit, maj)));
+      }
+    } else if (ongletProduitActif === 'prix') {
+      const infoPrix = el('div', { class: 'info-prix-final' });
+      const majApercuPrix = () => {
+        const prix = Number(produit.prix) || 0;
+        const prixBarre = Number(produit.prixBarre) || 0;
+        infoPrix.textContent = '';
+        infoPrix.appendChild(document.createTextNode('Prix de vente final : '));
+        infoPrix.appendChild(el('strong', {}, prix.toFixed(2) + ' €'));
+        if (prixBarre > prix) infoPrix.appendChild(el('span', { class: 'prix-barre-info' }, ' au lieu de ' + prixBarre.toFixed(2) + ' €'));
+      };
+      panneau.appendChild(el('div', { class: 'champ-inline' },
+        champNombre('Prix (€)', produit.prix, (v) => { produit.prix = v; maj(); majApercuPrix(); }),
+        champNombre('Prix barré (€, optionnel)', produit.prixBarre, (v) => { produit.prixBarre = v; maj(); majApercuPrix(); })));
+      majApercuPrix();
+      panneau.appendChild(infoPrix);
     } else {
       rendreOngletSEO(panneau, {
         titre: produit.nom, url: '/produits/' + slugify(produit.nom), metaTitre: produit.metaTitre, metaDescription: produit.metaDescription,
