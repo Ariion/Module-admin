@@ -1195,6 +1195,18 @@
   document.getElementById('bouton-bascule-nav').addEventListener('click', () => document.querySelector('.admin').classList.toggle('nav-ouverte'));
   document.getElementById('bouton-enregistrer').addEventListener('click', () => { flusherSauvegarde(); toast('✓ Enregistré'); });
 
+  const menuCreerListe = document.getElementById('menu-creer-liste');
+  document.getElementById('bouton-creer').addEventListener('click', (e) => { e.stopPropagation(); menuCreerListe.hidden = !menuCreerListe.hidden; });
+  menuCreerListe.querySelectorAll('[data-creer]').forEach((b) => {
+    b.addEventListener('click', () => {
+      menuCreerListe.hidden = true;
+      if (b.dataset.creer === 'page') creerPage();
+      else if (b.dataset.creer === 'article') creerArticle();
+      else if (b.dataset.creer === 'produit') creerProduit();
+    });
+  });
+  document.addEventListener('click', () => { menuCreerListe.hidden = true; });
+
   allerA('tableau-de-bord');
   document.getElementById('nom-site-barre').textContent = state.reglages.nomSite;
 })();

@@ -44,6 +44,21 @@ button{ font:inherit }
 }
 .bouton-enregistrer:hover{ background:var(--accent-fonce); }
 
+.menu-creer{ position:relative; }
+.menu-creer__bouton{
+  background:rgba(255,255,255,.08); color:#fff; border:0; padding:6px 12px; border-radius:4px; font-size:.84rem; font-weight:600; cursor:pointer;
+}
+.menu-creer__bouton:hover{ background:rgba(255,255,255,.16); }
+.menu-creer__liste{
+  position:absolute; top:calc(100% + 6px); left:0; background:#fff; border:1px solid var(--trait); border-radius:6px;
+  box-shadow:0 8px 24px rgba(0,0,0,.18); min-width:190px; padding:6px; z-index:30;
+}
+.menu-creer__liste button{
+  display:block; width:100%; text-align:left; background:none; border:0; padding:9px 10px; border-radius:4px; font-size:.86rem;
+  color:var(--texte); cursor:pointer;
+}
+.menu-creer__liste button:hover{ background:#f0f0f1; }
+
 /* -------------------------------------------------- nav latérale */
 .admin__corps{ flex:1; display:flex; min-height:0; }
 .nav-laterale{
@@ -73,13 +88,15 @@ button{ font:inherit }
 @media (max-width:600px){
   .barre-haute{ padding:0 8px; gap:6px; }
   .barre-haute__gauche{ gap:8px; min-width:0; }
-  .barre-haute__site{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:110px; }
+  .barre-haute__site{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:80px; }
   .barre-haute__droite{ gap:6px; }
   .etat-sauvegarde{ display:none; }
   .bouton-voir-site .texte-long{ display:none; }
   .bouton-voir-site{ padding:6px 10px; }
   .bouton-enregistrer .texte-long{ display:none; }
   .bouton-enregistrer{ padding:8px 12px; }
+  .menu-creer__bouton .texte-long{ display:none; }
+  .menu-creer__bouton{ padding:6px 9px; }
 }
 @media (max-width:360px){
   .barre-haute__site{ display:none; }
