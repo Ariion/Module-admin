@@ -152,13 +152,6 @@
     return select;
   }
 
-  function deplacer(tableau, index, delta) {
-    const cible = index + delta;
-    if (cible < 0 || cible >= tableau.length) return;
-    const [item] = tableau.splice(index, 1);
-    tableau.splice(cible, 0, item);
-  }
-
   // -------------------------------------------------- persistance (même esprit que constructeur/app.js)
 
   const PERSISTANCE_CLE = 'backoffice:etat';
@@ -1274,20 +1267,43 @@
     c.appendChild(carteFooter);
   }
 
-  function rendreListeLiensReordonnable(liste, maj) {
+  // Glisser-déposer natif (HTML5 drag & drop) pour réordonner, comme WordPress/PrestaShop : la poignée ⠿ déclenche le
+  // drag, chaque ligne sert de zone de dépôt — plus fiable que de rendre toute la ligne draggable (conflit avec la
+  // sélection de texte dans les champs).
+  function rendreListeReordonnable(liste, maj, construireLigne) {
     const conteneur = el('div', {});
-    liste.forEach((lien, i) => {
+    let indexGlisse = null;
+    liste.forEach((item, i) => {
+      const poignee = el('span', { class: 'poignee-glisser', draggable: 'true', title: 'Glisser pour réordonner' }, '⠿');
+      const retirer = el('button', { class: 'retirer' }, '✕');
+      retirer.addEventListener('click', () => { liste.splice(i, 1); maj(); rafraichirContenu(); });
+      const ligne = el('div', { class: 'liste-repetee__item' }, poignee, ...construireLigne(item, maj), retirer);
+
+      poignee.addEventListener('dragstart', (e) => { indexGlisse = i; e.dataTransfer.effectAllowed = 'move'; ligne.classList.add('en-glissement'); });
+      poignee.addEventListener('dragend', () => { ligne.classList.remove('en-glissement'); indexGlisse = null; });
+      ligne.addEventListener('dragover', (e) => { if (indexGlisse !== null) { e.preventDefault(); ligne.classList.add('survol-glisser'); } });
+      ligne.addEventListener('dragleave', () => ligne.classList.remove('survol-glisser'));
+      ligne.addEventListener('drop', (e) => {
+        e.preventDefault();
+        ligne.classList.remove('survol-glisser');
+        if (indexGlisse === null || indexGlisse === i) return;
+        const [deplace] = liste.splice(indexGlisse, 1);
+        liste.splice(i, 0, deplace);
+        maj();
+        rafraichirContenu();
+      });
+      conteneur.appendChild(ligne);
+    });
+    return conteneur;
+  }
+
+  function rendreListeLiensReordonnable(liste, maj) {
+    const conteneur = rendreListeReordonnable(liste, maj, (lien) => {
       const labelInput = el('input', { type: 'text', placeholder: 'Libellé', value: lien.label });
       labelInput.addEventListener('input', () => { lien.label = labelInput.value; maj(); });
       const urlInput = el('input', { type: 'text', placeholder: 'URL', value: lien.url });
       urlInput.addEventListener('input', () => { lien.url = urlInput.value; maj(); });
-      const haut = el('button', { title: 'Monter' }, '▲');
-      haut.addEventListener('click', () => { deplacer(liste, i, -1); maj(); rafraichirContenu(); });
-      const bas = el('button', { title: 'Descendre' }, '▼');
-      bas.addEventListener('click', () => { deplacer(liste, i, 1); maj(); rafraichirContenu(); });
-      const retirer = el('button', { class: 'retirer' }, '✕');
-      retirer.addEventListener('click', () => { liste.splice(i, 1); maj(); rafraichirContenu(); });
-      conteneur.appendChild(el('div', { class: 'liste-repetee__item' }, el('div', { class: 'poignees-ordre' }, haut, bas), labelInput, urlInput, retirer));
+      return [labelInput, urlInput];
     });
     const ajouter = el('button', { class: 'lien-ajouter' }, '+ Ajouter un lien');
     ajouter.addEventListener('click', () => { liste.push({ id: uid(), label: 'Nouveau lien', url: '#' }); maj(); rafraichirContenu(); });
@@ -1296,15 +1312,12 @@
   }
 
   function rendreListeReseaux(liste, maj) {
-    const conteneur = el('div', {});
-    liste.forEach((r, i) => {
+    const conteneur = rendreListeReordonnable(liste, maj, (r) => {
       const plateformeInput = el('input', { type: 'text', placeholder: 'Plateforme (ex. Instagram)', value: r.plateforme });
       plateformeInput.addEventListener('input', () => { r.plateforme = plateformeInput.value; maj(); });
       const urlInput = el('input', { type: 'text', placeholder: 'URL', value: r.url });
       urlInput.addEventListener('input', () => { r.url = urlInput.value; maj(); });
-      const retirer = el('button', { class: 'retirer' }, '✕');
-      retirer.addEventListener('click', () => { liste.splice(i, 1); maj(); rafraichirContenu(); });
-      conteneur.appendChild(el('div', { class: 'liste-repetee__item' }, plateformeInput, urlInput, retirer));
+      return [plateformeInput, urlInput];
     });
     const ajouter = el('button', { class: 'lien-ajouter' }, '+ Ajouter un réseau social');
     ajouter.addEventListener('click', () => { liste.push({ id: uid(), plateforme: '', url: '' }); maj(); rafraichirContenu(); });

@@ -281,11 +281,13 @@ table.table-liste tr:hover td{ background:#f6f7f7; }
 .widget-lateral h3{ font-size:.86rem; margin:0 0 12px; }
 
 /* listes à éléments répétés (images, déclinaisons, liens de menu...) */
-.liste-repetee__item{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.liste-repetee__item{ display:flex; gap:8px; align-items:center; margin-bottom:8px; padding:2px; border-radius:4px; border:1px solid transparent; transition:background .1s; }
 .liste-repetee__item input{ flex:1; }
-.liste-repetee__item .poignees-ordre{ display:flex; flex-direction:column; gap:1px; }
-.liste-repetee__item .poignees-ordre button{ background:#fff; border:1px solid var(--trait); width:22px; height:16px; font-size:.65rem; cursor:pointer; line-height:1; padding:0; }
 .liste-repetee__item button.retirer{ background:none; border:0; color:var(--danger); cursor:pointer; font-size:1rem; width:24px; }
+.poignee-glisser{ cursor:grab; color:var(--texte-discret); font-size:1.1rem; padding:0 4px; user-select:none; }
+.poignee-glisser:active{ cursor:grabbing; }
+.liste-repetee__item.en-glissement{ opacity:.4; }
+.liste-repetee__item.survol-glisser{ background:#eef4fb; border-color:var(--accent); }
 .lien-ajouter{ background:none; border:1px dashed var(--trait); color:var(--accent); padding:8px 12px; border-radius:4px; cursor:pointer; font-size:.84rem; width:100%; text-align:center; }
 .lien-ajouter:hover{ border-color:var(--accent); background:#f5f9fc; }
 
