@@ -29,14 +29,33 @@
   .carte__corps{padding:16px 18px}
   .carte h3{margin:0 0 6px;font-size:1.02rem}
   .carte p{margin:0;color:var(--doux);font-size:.9rem}
-  footer{border-top:1px solid var(--trait);margin-top:60px;padding:26px 28px;text-align:center;color:var(--doux);font-size:.85rem}
+  footer{border-top:1px solid var(--trait);margin-top:60px;padding:40px 28px 26px;text-align:center;color:var(--doux);font-size:.85rem}
+  .pied-colonnes{display:flex;justify-content:center;gap:56px;flex-wrap:wrap;max-width:1040px;margin:0 auto 26px;text-align:left}
+  .pied-colonnes:empty{display:none;margin:0}
+  .pied-colonne h4{margin:0 0 10px;font-size:.84rem;color:var(--encre)}
+  .pied-colonne a{display:block;color:var(--doux);text-decoration:none;font-size:.84rem;margin-bottom:6px}
+  .pied-colonne a:hover{color:var(--accent)}
+  .pied-reseaux{display:flex;justify-content:center;gap:16px;margin-bottom:18px}
+  .pied-reseaux:empty{display:none;margin:0}
+  .pied-reseaux a{color:var(--doux);text-decoration:none;font-size:.84rem;border:1px solid var(--trait);padding:6px 14px;border-radius:999px}
+  .pied-reseaux a:hover{color:var(--accent);border-color:var(--accent)}
+  .carte__prix{font-weight:600;color:var(--encre)}
+  .carte__prix-barre{color:var(--doux);text-decoration:line-through;font-weight:400;margin-right:6px}
+  .carte__badge{display:inline-block;background:var(--accent);color:#fff;font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:999px;margin-bottom:6px}
+  #a-propos-backoffice{display:none}
+  #a-propos-contenu{color:var(--doux)}
+  #a-propos-contenu h2{color:var(--encre);font-size:1.2rem;margin:1em 0 .4em}
+  #a-propos-contenu p{margin:0 0 1em}
+  #a-propos-contenu ul,#a-propos-contenu ol{padding-left:22px;margin:0 0 1em}
+  #a-propos-contenu blockquote{margin:0 0 1em;padding-left:16px;border-left:3px solid var(--trait)}
+  #a-propos-contenu a{color:var(--accent)}
 </style>
 </head>
 <body>
 
 <header>
-  <span class="marque" data-edit="text">Le Fournil de Claire</span>
-  <nav>
+  <span class="marque" data-edit="text" id="marque-site">Le Fournil de Claire</span>
+  <nav id="nav-principale">
     <a href="#pains">Nos pains</a>
     <a href="#contact">Contact</a>
   </nav>
@@ -53,10 +72,15 @@
   </div>
 </div>
 
+<section id="a-propos-backoffice">
+  <h2 class="section__titre" id="a-propos-titre"></h2>
+  <div id="a-propos-contenu"></div>
+</section>
+
 <section id="pains">
   <h2 class="section__titre" data-edit="text">Nos pains du jour</h2>
   <p class="section__soustitre" data-edit="text">Trois fournées, tous les matins, jamais les mêmes d'un jour à l'autre.</p>
-  <div class="grille">
+  <div class="grille" id="grille-produits">
     <article class="carte">
       <img data-edit="image" src="https://images.unsplash.com/photo-1549931319-a545319b2e58?w=600&q=80" alt="Pain de campagne">
       <div class="carte__corps">
@@ -81,16 +105,42 @@
   </div>
 </section>
 
+<section id="articles">
+  <h2 class="section__titre" data-edit="text">Nos actualités</h2>
+  <p class="section__soustitre" data-edit="text">Les dernières nouvelles de la boutique.</p>
+  <div class="grille" id="grille-articles">
+    <article class="carte">
+      <img data-edit="image" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=80" alt="Nouvelle fournée">
+      <div class="carte__corps">
+        <h3 data-edit="text">Nouvelle fournée de pains spéciaux</h3>
+        <p data-edit="text">Trois nouvelles recettes arrivent en boutique ce week-end.</p>
+      </div>
+    </article>
+    <article class="carte">
+      <img data-edit="image" src="https://images.unsplash.com/photo-1549931319-a545319b2e58?w=600&q=80" alt="Conseils">
+      <div class="carte__corps">
+        <h3 data-edit="text">Comment bien conserver son pain</h3>
+        <p data-edit="text">Nos conseils pour profiter de votre pain plusieurs jours.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
 <section id="contact">
   <h2 class="section__titre" data-edit="text">Nous trouver</h2>
   <p data-edit="text">12 rue du Four, 40200 Mimizan — ouvert du mardi au dimanche, 7h-13h30.</p>
 </section>
 
-<footer data-edit="text">Le Fournil de Claire — fait à la main, tous les jours.</footer>
+<footer>
+  <div class="pied-colonnes" id="pied-colonnes"></div>
+  <div class="pied-reseaux" id="pied-reseaux"></div>
+  <p data-edit="text" id="pied-copyright">Le Fournil de Claire — fait à la main, tous les jours.</p>
+</footer>
 <p style="text-align:center;margin:0 0 20px;font-size:.78rem">
   <a href="/backoffice/index.html" style="color:inherit;opacity:.55;text-decoration:underline">Back-office</a>
 </p>
 
+<script src="rendu-backoffice.js"></script>
 <script src="/moteur/edit.js"></script>
 </body>
 </html>
