@@ -338,6 +338,7 @@
           reseaux: [{ id: uid(), plateforme: 'Instagram', url: 'https://instagram.com' }, { id: uid(), plateforme: 'Facebook', url: 'https://facebook.com' }],
         },
       },
+      medias: [],
     };
   }
 
@@ -385,6 +386,7 @@
       'pages-edition': rendreEditionPage,
       articles: rendreListeArticles,
       'articles-edition': rendreEditionArticle,
+      medias: rendreMedias,
       produits: rendreListeProduits,
       'produits-edition': rendreEditionProduit,
       commandes: rendreListeCommandes,
@@ -793,6 +795,64 @@
     champ.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ajouter(); } });
     conteneur.appendChild(el('div', { class: 'ajout-categorie', style: { marginTop: '10px' } }, champ, bouton));
     return conteneur;
+  }
+
+  // -------------------------------------------------- MÉDIAS
+
+  const TAILLE_MAX_MEDIA = 1.5 * 1024 * 1024; // 1,5 Mo par fichier : tout est stocké en base64 dans le même localStorage que le reste des données.
+
+  function formaterTaille(octets) {
+    if (octets < 1024) return octets + ' o';
+    if (octets < 1024 * 1024) return (octets / 1024).toFixed(0) + ' Ko';
+    return (octets / (1024 * 1024)).toFixed(1) + ' Mo';
+  }
+
+  function rendreMedias(c) {
+    c.appendChild(el('div', { class: 'entete-vue' }, el('h1', {}, 'Médias')));
+
+    const champFichier = el('input', { type: 'file', accept: 'image/*', multiple: true, style: { display: 'none' } });
+    champFichier.addEventListener('change', () => {
+      Array.from(champFichier.files).forEach((fichier) => {
+        if (fichier.size > TAILLE_MAX_MEDIA) { toast('✗ « ' + fichier.name + ' » dépasse 1,5 Mo, ignoré'); return; }
+        const lecteur = new FileReader();
+        lecteur.onload = () => {
+          state.medias.push({ id: uid(), nom: fichier.name, taille: fichier.size, dataUrl: lecteur.result, dateAjout: Date.now() });
+          marquerModifie();
+          rafraichirContenu();
+        };
+        lecteur.readAsDataURL(fichier);
+      });
+      champFichier.value = '';
+    });
+    const boutonAjouter = el('button', { class: 'bouton-principal', onclick: () => champFichier.click() }, '+ Ajouter des médias');
+    c.appendChild(el('div', { class: 'barre-outils' }, boutonAjouter, champFichier));
+    c.appendChild(champAide('Images stockées directement dans ce navigateur (comme le reste des données du backoffice). 1,5 Mo max par fichier.'));
+
+    if (!state.medias.length) {
+      c.appendChild(el('div', { class: 'vide-liste' }, 'Aucun média pour le moment. Ajoutez votre première image.'));
+      return;
+    }
+
+    const grille = el('div', { class: 'grille-medias' });
+    state.medias.slice().sort((a, b) => b.dateAjout - a.dateAjout).forEach((m) => {
+      const boutonCopier = el('button', { class: 'bouton-secondaire', onclick: async () => {
+        try { await navigator.clipboard.writeText(m.dataUrl); toast('✓ Adresse copiée'); }
+        catch (e) { toast('✗ Copie impossible sur ce navigateur'); }
+      } }, '📋 Copier l’URL');
+      const boutonSupprimer = el('button', { class: 'bouton-secondaire bouton-danger', onclick: () => {
+        if (!window.confirm('Supprimer ce média ?')) return;
+        state.medias = state.medias.filter((mm) => mm.id !== m.id);
+        marquerModifie();
+        rafraichirContenu();
+      } }, 'Supprimer');
+      grille.appendChild(el('div', { class: 'carte-media' },
+        el('img', { src: m.dataUrl, alt: m.nom }),
+        el('div', { class: 'carte-media__info' },
+          el('div', { class: 'carte-media__nom', title: m.nom }, m.nom),
+          el('div', { class: 'carte-media__taille' }, formaterTaille(m.taille))),
+        el('div', { class: 'carte-media__actions' }, boutonCopier, boutonSupprimer)));
+    });
+    c.appendChild(grille);
   }
 
   // -------------------------------------------------- PRODUITS

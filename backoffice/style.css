@@ -296,6 +296,15 @@ table.table-liste tr:hover td{ background:#f6f7f7; }
 .bloc-images-produit .image-item img{ width:100%; height:100%; object-fit:cover; display:block; }
 .bloc-images-produit .image-item button{ position:absolute; top:2px; right:2px; background:rgba(0,0,0,.6); color:#fff; border:0; width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:.7rem; }
 
+.grille-medias{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:16px; margin-top:16px; }
+.carte-media{ background:var(--carte-fond); border:1px solid var(--trait); border-radius:6px; overflow:hidden; }
+.carte-media img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; background:#f0f0f1; }
+.carte-media__info{ padding:8px 10px 2px; }
+.carte-media__nom{ font-size:.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.carte-media__taille{ font-size:.76rem; color:var(--texte-discret); margin-top:2px; }
+.carte-media__actions{ display:flex; gap:6px; padding:8px 10px 10px; }
+.carte-media__actions button{ flex:1; font-size:.76rem; padding:6px 8px; }
+
 .declinaison-carte{ border:1px solid var(--trait); border-radius:6px; padding:12px; margin-bottom:10px; background:#fafafa; }
 .declinaison-carte__entete{ display:flex; gap:8px; margin-bottom:8px; }
 .declinaison-carte__entete input{ flex:1; }
