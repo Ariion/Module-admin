@@ -386,7 +386,38 @@
         el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA(r.vue, { id: r.id }); } }, r.titre),
         el('span', { class: 'type' }, r.type + ' · ' + formaterDate(r.date))));
     });
-    c.appendChild(el('div', { class: 'carte' }, el('h2', {}, 'Derniers éléments modifiés'), liste));
+
+    const grille = el('div', { class: 'grille-widgets-tdb' });
+    grille.appendChild(el('div', { class: 'carte' }, el('h2', {}, 'Derniers éléments modifiés'), liste));
+    grille.appendChild(rendreWidgetBrouillonRapide());
+    c.appendChild(grille);
+  }
+
+  // Widget "Brouillon rapide" façon WordPress : crée directement un article en brouillon sans quitter le tableau de bord.
+  function rendreWidgetBrouillonRapide() {
+    const champTitre = el('input', { type: 'text', placeholder: 'Titre' });
+    const champContenu = el('textarea', { placeholder: "Qu'avez-vous en tête ?" });
+    const enregistrer = () => {
+      if (!champTitre.value.trim() && !champContenu.value.trim()) return;
+      const article = {
+        id: uid(), titre: champTitre.value.trim() || 'Sans titre',
+        categorieId: state.categoriesArticles[0] ? state.categoriesArticles[0].id : null,
+        auteur: '', contenu: champContenu.value, extrait: '', imageUrl: '', statut: 'brouillon', datePublication: '',
+        metaTitre: '', metaDescription: '', dateModif: Date.now(),
+      };
+      state.articles.push(article);
+      marquerModifie();
+      champTitre.value = '';
+      champContenu.value = '';
+      toast('✓ Brouillon enregistré');
+      rafraichirContenu();
+    };
+    const bouton = el('button', { class: 'bouton-principal', onclick: enregistrer }, 'Enregistrer le brouillon');
+    return el('div', { class: 'carte' },
+      el('h2', {}, 'Brouillon rapide'),
+      el('div', { class: 'champ' }, el('label', {}, 'Titre'), champTitre),
+      el('div', { class: 'champ' }, el('label', {}, 'Contenu'), champContenu),
+      bouton);
   }
   function carteStat(valeur, libelle) {
     return el('div', { class: 'carte-stat' }, el('div', { class: 'carte-stat__valeur' }, String(valeur)), el('div', { class: 'carte-stat__libelle' }, libelle));

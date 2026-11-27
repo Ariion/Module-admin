@@ -113,6 +113,9 @@ button{ font:inherit }
 .liste-recents li{ display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--trait); font-size:.88rem; }
 .liste-recents li:last-child{ border-bottom:0; }
 .liste-recents .type{ color:var(--texte-discret); font-size:.78rem; }
+.grille-widgets-tdb{ display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; }
+.grille-widgets-tdb .carte{ margin-bottom:0; }
+@media (max-width:900px){ .grille-widgets-tdb{ grid-template-columns:1fr; } }
 
 /* -------------------------------------------------- barre d'outils liste (recherche, filtre, ajouter) */
 .barre-outils{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
@@ -197,6 +200,13 @@ table.table-liste tr:hover td{ background:#f6f7f7; }
 .champ-toggle__switch::after{ content:""; position:absolute; width:16px; height:16px; border-radius:50%; background:#fff; top:2px; left:2px; transition:left .15s; }
 .champ-toggle__switch.actif{ background:var(--succes); }
 .champ-toggle__switch.actif::after{ left:18px; }
+
+.champ-radio-groupe .option-radio{ display:flex; align-items:center; gap:8px; font-weight:400; font-size:.88rem; color:var(--texte); padding:6px 0; cursor:pointer; }
+.champ-radio-groupe .option-radio input{ width:15px; height:15px; cursor:pointer; }
+.info-prix-final{
+  background:#eaf2fb; border:1px solid #cfe2f6; color:var(--accent-fonce); border-radius:6px; padding:12px 14px; font-size:.88rem; margin-top:4px;
+}
+.prix-barre-info{ color:var(--texte-discret); text-decoration:line-through; }
 
 .compteur-champ{ display:block; font-size:.74rem; color:var(--texte-discret); margin-top:4px; text-align:right; }
 .compteur-champ.depasse{ color:var(--danger); font-weight:600; }
