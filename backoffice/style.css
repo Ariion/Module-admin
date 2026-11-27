@@ -76,6 +76,11 @@ button{ font:inherit }
   color:rgba(255,255,255,.35);
 }
 .nav-laterale__icone{ font-size:1rem; width:18px; text-align:center; }
+.nav-laterale__item{ position:relative; }
+.badge-nav{
+  background:var(--danger); color:#fff; font-size:.68rem; font-weight:700; line-height:1; border-radius:99px;
+  padding:3px 6px; margin-left:auto;
+}
 .nav-laterale__pied{ margin-top:auto; padding:14px 18px; border-top:1px solid rgba(255,255,255,.1); }
 .nav-laterale__pied a{ color:var(--nav-texte); text-decoration:none; font-size:.82rem; }
 .nav-laterale__pied a:hover{ color:#fff; }

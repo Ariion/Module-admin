@@ -334,6 +334,15 @@
     }
   }
 
+  // Badge sur "Commandes" : nombre de commandes payées/en préparation restant à traiter (façon PrestaShop/WooCommerce).
+  function mettreAJourBadgeCommandes() {
+    const badge = document.getElementById('badge-nav-commandes');
+    if (!badge) return;
+    const n = state.commandes.filter((cmd) => cmd.statut === 'paiement-accepte' || cmd.statut === 'en-preparation').length;
+    badge.textContent = String(n);
+    badge.hidden = n === 0;
+  }
+
   function rafraichirContenu() {
     const conteneur = document.getElementById('contenu');
     conteneur.innerHTML = '';
@@ -354,6 +363,7 @@
     };
     (rendus[state.vue] || rendreTableauDeBord)(conteneur);
     document.getElementById('nom-site-barre').textContent = state.reglages.nomSite;
+    mettreAJourBadgeCommandes();
   }
 
   function formaterDate(ts) {
