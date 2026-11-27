@@ -394,9 +394,38 @@
     c.appendChild(barre);
   }
 
+  // -------------------------------------------------- sélection en masse (listes Pages/Articles/Produits, comme PrestaShop)
+
+  function caseSelectionEntete(selection, ids) {
+    const cb = el('input', { type: 'checkbox' });
+    cb.checked = ids.length > 0 && ids.every((id) => selection.has(id));
+    cb.addEventListener('change', () => { ids.forEach((id) => { if (cb.checked) selection.add(id); else selection.delete(id); }); rafraichirContenu(); });
+    return el('th', { class: 'case-selection' }, cb);
+  }
+  function caseSelectionLigne(selection, id) {
+    const cb = el('input', { type: 'checkbox' });
+    cb.checked = selection.has(id);
+    cb.addEventListener('change', () => { if (cb.checked) selection.add(id); else selection.delete(id); rafraichirContenu(); });
+    return el('td', { class: 'case-selection' }, cb);
+  }
+  function rendreBarreSelection(c, selection, { onSupprimer, pluriel }) {
+    if (!selection.size) return;
+    const n = selection.size;
+    c.appendChild(el('div', { class: 'barre-selection' },
+      el('span', {}, n + ' ' + (n > 1 ? (pluriel || 'éléments sélectionnés') : 'élément sélectionné')),
+      el('button', { class: 'bouton-danger-plein', onclick: () => {
+        if (!window.confirm('Supprimer ' + n + ' élément(s) ? Cette action est irréversible.')) return;
+        onSupprimer(Array.from(selection));
+        selection.clear();
+        marquerModifie();
+        rafraichirContenu();
+      } }, '🗑 Supprimer la sélection')));
+  }
+
   // -------------------------------------------------- PAGES
 
   let rechercheStock = { pages: '', articles: '', produits: '', commandes: '', clients: '' };
+  let selectionStock = { pages: new Set(), articles: new Set(), produits: new Set() };
 
   function rendreListePages(c) {
     c.appendChild(el('div', { class: 'entete-vue' },
@@ -408,14 +437,20 @@
     const q = rechercheStock.pages.toLowerCase();
     const items = state.pages.filter((p) => !q || p.titre.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
 
+    rendreBarreSelection(c, selectionStock.pages, {
+      pluriel: 'pages sélectionnées',
+      onSupprimer: (ids) => { state.pages = state.pages.filter((p) => !ids.includes(p.id)); },
+    });
+
     const tableCarte = el('div', { class: 'table-carte' });
     if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucune page pour le moment.')); c.appendChild(tableCarte); return; }
 
     const table = el('table', { class: 'table-liste' },
-      el('thead', {}, el('tr', {}, el('th', {}, 'Titre'), el('th', {}, 'Type'), el('th', {}, 'URL'), el('th', {}, 'Statut'), el('th', {}, 'Modifiée'), el('th', {}, 'Actions'))));
+      el('thead', {}, el('tr', {}, caseSelectionEntete(selectionStock.pages, items.map((p) => p.id)), el('th', {}, 'Titre'), el('th', {}, 'Type'), el('th', {}, 'URL'), el('th', {}, 'Statut'), el('th', {}, 'Modifiée'), el('th', {}, 'Actions'))));
     const corps = el('tbody', {});
     items.forEach((p) => {
       corps.appendChild(el('tr', {},
+        caseSelectionLigne(selectionStock.pages, p.id),
         el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('pages-edition', { id: p.id }); } }, p.titre)),
         el('td', {}, p.type === 'vente' ? el('span', { class: 'badge type-vente' }, 'Page de vente') : 'Standard'),
         el('td', {}, p.slug),
@@ -508,14 +543,20 @@
     const q = rechercheStock.articles.toLowerCase();
     const items = state.articles.filter((a) => (!q || a.titre.toLowerCase().includes(q)) && (!filtreCategorieArticle || a.categorieId === filtreCategorieArticle));
 
+    rendreBarreSelection(c, selectionStock.articles, {
+      pluriel: 'articles sélectionnés',
+      onSupprimer: (ids) => { state.articles = state.articles.filter((a) => !ids.includes(a.id)); },
+    });
+
     const tableCarte = el('div', { class: 'table-carte' });
     if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucun article pour le moment.')); c.appendChild(tableCarte); return; }
     const table = el('table', { class: 'table-liste' },
-      el('thead', {}, el('tr', {}, el('th', {}, 'Titre'), el('th', {}, 'Catégorie'), el('th', {}, 'Auteur'), el('th', {}, 'Statut'), el('th', {}, 'Modifié'), el('th', {}, 'Actions'))));
+      el('thead', {}, el('tr', {}, caseSelectionEntete(selectionStock.articles, items.map((a) => a.id)), el('th', {}, 'Titre'), el('th', {}, 'Catégorie'), el('th', {}, 'Auteur'), el('th', {}, 'Statut'), el('th', {}, 'Modifié'), el('th', {}, 'Actions'))));
     const corps = el('tbody', {});
     items.forEach((a) => {
       const cat = state.categoriesArticles.find((cc) => cc.id === a.categorieId);
       corps.appendChild(el('tr', {},
+        caseSelectionLigne(selectionStock.articles, a.id),
         el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('articles-edition', { id: a.id }); } }, a.titre)),
         el('td', {}, cat ? cat.nom : '—'),
         el('td', {}, a.auteur || '—'),
@@ -620,13 +661,19 @@
     const q = rechercheStock.produits.toLowerCase();
     const items = state.produits.filter((p) => !q || p.nom.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
 
+    rendreBarreSelection(c, selectionStock.produits, {
+      pluriel: 'produits sélectionnés',
+      onSupprimer: (ids) => { state.produits = state.produits.filter((p) => !ids.includes(p.id)); },
+    });
+
     const tableCarte = el('div', { class: 'table-carte' });
     if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucun produit pour le moment.')); c.appendChild(tableCarte); return; }
     const table = el('table', { class: 'table-liste' },
-      el('thead', {}, el('tr', {}, el('th', {}, ''), el('th', {}, 'Nom'), el('th', {}, 'Référence'), el('th', {}, 'Prix'), el('th', {}, 'Stock'), el('th', {}, 'Statut'), el('th', {}, 'Actions'))));
+      el('thead', {}, el('tr', {}, caseSelectionEntete(selectionStock.produits, items.map((p) => p.id)), el('th', {}, ''), el('th', {}, 'Nom'), el('th', {}, 'Référence'), el('th', {}, 'Prix'), el('th', {}, 'Stock'), el('th', {}, 'Statut'), el('th', {}, 'Actions'))));
     const corps = el('tbody', {});
     items.forEach((p) => {
       corps.appendChild(el('tr', {},
+        caseSelectionLigne(selectionStock.produits, p.id),
         el('td', {}, p.images[0] ? el('img', { class: 'vignette-produit', src: p.images[0], alt: '' }) : el('div', { class: 'vignette-produit' })),
         el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('produits-edition', { id: p.id }); } }, p.nom)),
         el('td', {}, p.sku),

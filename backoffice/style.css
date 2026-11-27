@@ -122,6 +122,17 @@ button{ font:inherit }
 .barre-outils input[type="search"]{ min-width:220px; }
 .barre-outils__spacer{ flex:1; }
 
+.barre-selection{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fcf0f1; border:1px solid #f1c3c6;
+  color:var(--danger); border-radius:6px; padding:10px 14px; margin-bottom:12px; font-size:.86rem; font-weight:600;
+}
+.bouton-danger-plein{
+  background:var(--danger); color:#fff; border:0; padding:7px 14px; border-radius:4px; font-weight:600; font-size:.82rem; cursor:pointer;
+}
+.bouton-danger-plein:hover{ background:#b32d2f; }
+.case-selection{ width:34px; text-align:center !important; }
+.case-selection input[type="checkbox"]{ width:15px; height:15px; cursor:pointer; }
+
 /* -------------------------------------------------- table */
 .table-carte{ background:var(--carte-fond); border:1px solid var(--trait); border-radius:6px; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
 table.table-liste{ width:100%; min-width:620px; border-collapse:collapse; font-size:.86rem; }
