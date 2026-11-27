@@ -222,13 +222,13 @@
           id: idPageAccueil, titre: 'Accueil', slug: '/', type: 'standard', statut: 'publie',
           contenu: 'Bienvenue sur notre site. Cette page est gérée depuis le back-office.',
           metaTitre: 'Le Fournil de Claire — Boulangerie artisanale', metaDescription: 'Pain au levain, viennoiseries et pâtisseries faites main, tous les jours.',
-          ctaTexte: '', ctaLien: '', dateModif: Date.now() - 86400000,
+          ctaTexte: '', ctaLien: '', supprime: false, dateSuppression: null, dateModif: Date.now() - 86400000,
         },
         {
           id: idPageVente, titre: 'Offre de lancement', slug: '/offre-lancement', type: 'vente', statut: 'publie',
           contenu: 'Profitez de -20% sur votre première commande en ligne.',
           metaTitre: 'Offre de lancement — Le Fournil de Claire', metaDescription: "Profitez d'une remise de bienvenue sur votre première commande.",
-          ctaTexte: 'J’en profite', ctaLien: '/boutique', dateModif: Date.now() - 3600000,
+          ctaTexte: 'J’en profite', ctaLien: '/boutique', supprime: false, dateSuppression: null, dateModif: Date.now() - 3600000,
         },
       ],
       categoriesArticles: [
@@ -241,14 +241,14 @@
           contenu: 'Dès ce samedi, retrouvez nos nouveaux pains aux graines et au levain naturel.',
           extrait: 'Trois nouvelles recettes arrivent en boutique ce week-end.',
           imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=80',
-          statut: 'publie', datePublication: '2026-11-20', dateModif: Date.now() - 172800000,
+          statut: 'publie', datePublication: '2026-11-20', supprime: false, dateSuppression: null, dateModif: Date.now() - 172800000,
         },
         {
           id: uid(), titre: 'Comment bien conserver son pain', categorieId: idCatArticleConseils, auteur: 'Claire',
           contenu: 'Quelques astuces simples pour garder votre pain frais plus longtemps.',
           extrait: 'Nos conseils pour profiter de votre pain plusieurs jours.',
           imageUrl: 'https://images.unsplash.com/photo-1549931319-a545319b2e58?w=600&q=80',
-          statut: 'brouillon', datePublication: '', dateModif: Date.now() - 7200000,
+          statut: 'brouillon', datePublication: '', supprime: false, dateSuppression: null, dateModif: Date.now() - 7200000,
         },
       ],
       categoriesProduits: [
@@ -262,7 +262,7 @@
           images: ['https://images.unsplash.com/photo-1549931319-a545319b2e58?w=400&q=80'],
           stock: 24, statut: 'actif', categorieId: idCatProduitBois,
           avecDeclinaisons: true, declinaisons: [{ id: uid(), nom: 'Poids', valeurs: '500g, 1kg' }],
-          dateModif: Date.now() - 50000,
+          supprime: false, dateSuppression: null, dateModif: Date.now() - 50000,
         },
         {
           id: idProduitCroissant, nom: 'Croissant pur beurre', sku: 'VIEN-CROIS', prix: 1.3, prixBarre: '',
@@ -270,7 +270,7 @@
           images: ['https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&q=80'],
           stock: 40, statut: 'actif', categorieId: idCatProduitCuir,
           avecDeclinaisons: false, declinaisons: [],
-          dateModif: Date.now() - 20000,
+          supprime: false, dateSuppression: null, dateModif: Date.now() - 20000,
         },
       ],
       clients: [
@@ -416,18 +416,18 @@
   function rendreTableauDeBord(c) {
     c.appendChild(el('div', { class: 'entete-vue' }, el('h1', {}, 'Tableau de bord')));
     c.appendChild(el('div', { class: 'grille-stats' },
-      carteStat(state.pages.length, 'Pages'),
-      carteStat(state.articles.length, 'Articles'),
-      carteStat(state.produits.length, 'Produits'),
+      carteStat(state.pages.filter((p) => !p.supprime).length, 'Pages'),
+      carteStat(state.articles.filter((a) => !a.supprime).length, 'Articles'),
+      carteStat(state.produits.filter((p) => !p.supprime).length, 'Produits'),
       carteStat(state.produits.reduce((s, p) => s + (p.stock || 0), 0), 'Unités en stock'),
       carteStat(state.commandes.length, 'Commandes'),
       carteStat(state.clients.length, 'Clients'),
       carteStat(state.commandes.filter((cmd) => cmd.statut !== 'annulee').reduce((s, cmd) => s + montantCommande(cmd), 0).toFixed(2) + ' €', 'Chiffre d’affaires')));
 
     const recents = [
-      ...state.pages.map((p) => ({ titre: p.titre, type: 'Page', date: p.dateModif, vue: 'pages-edition', id: p.id })),
-      ...state.articles.map((a) => ({ titre: a.titre, type: 'Article', date: a.dateModif, vue: 'articles-edition', id: a.id })),
-      ...state.produits.map((p) => ({ titre: p.nom, type: 'Produit', date: p.dateModif, vue: 'produits-edition', id: p.id })),
+      ...state.pages.filter((p) => !p.supprime).map((p) => ({ titre: p.titre, type: 'Page', date: p.dateModif, vue: 'pages-edition', id: p.id })),
+      ...state.articles.filter((a) => !a.supprime).map((a) => ({ titre: a.titre, type: 'Article', date: a.dateModif, vue: 'articles-edition', id: a.id })),
+      ...state.produits.filter((p) => !p.supprime).map((p) => ({ titre: p.nom, type: 'Produit', date: p.dateModif, vue: 'produits-edition', id: p.id })),
     ].sort((a, b) => (b.date || 0) - (a.date || 0)).slice(0, 6);
 
     const liste = el('ul', { class: 'liste-recents' });
@@ -453,7 +453,7 @@
         id: uid(), titre: champTitre.value.trim() || 'Sans titre',
         categorieId: state.categoriesArticles[0] ? state.categoriesArticles[0].id : null,
         auteur: '', contenu: champContenu.value, extrait: '', imageUrl: '', statut: 'brouillon', datePublication: '',
-        metaTitre: '', metaDescription: '', dateModif: Date.now(),
+        metaTitre: '', metaDescription: '', supprime: false, dateSuppression: null, dateModif: Date.now(),
       };
       state.articles.push(article);
       marquerModifie();
@@ -499,18 +499,32 @@
     cb.addEventListener('change', () => { if (cb.checked) selection.add(id); else selection.delete(id); rafraichirContenu(); });
     return el('td', { class: 'case-selection' }, cb);
   }
-  function rendreBarreSelection(c, selection, { onSupprimer, pluriel }) {
+  function rendreBarreSelection(c, selection, options) {
     if (!selection.size) return;
     const n = selection.size;
+    const actions = options.actions || [{
+      label: '🗑 Supprimer la sélection', classe: 'bouton-danger-plein',
+      confirmation: 'Supprimer ' + n + ' élément(s) ? Cette action est irréversible.',
+      onClick: options.onSupprimer,
+    }];
+    const boutons = actions.map((a) => el('button', { class: a.classe || 'bouton-secondaire', onclick: () => {
+      if (a.confirmation && !window.confirm(a.confirmation)) return;
+      a.onClick(Array.from(selection));
+      selection.clear();
+      marquerModifie();
+      rafraichirContenu();
+    } }, a.label));
     c.appendChild(el('div', { class: 'barre-selection' },
-      el('span', {}, n + ' ' + (n > 1 ? (pluriel || 'éléments sélectionnés') : 'élément sélectionné')),
-      el('button', { class: 'bouton-danger-plein', onclick: () => {
-        if (!window.confirm('Supprimer ' + n + ' élément(s) ? Cette action est irréversible.')) return;
-        onSupprimer(Array.from(selection));
-        selection.clear();
-        marquerModifie();
-        rafraichirContenu();
-      } }, '🗑 Supprimer la sélection')));
+      el('span', {}, n + ' ' + (n > 1 ? (options.pluriel || 'éléments sélectionnés') : 'élément sélectionné')),
+      el('div', { class: 'barre-selection__actions' }, ...boutons)));
+  }
+
+  // -------------------------------------------------- corbeille (soft-delete) : Pages/Articles/Produits, comme WordPress
+  let vueCorbeille = { pages: false, articles: false, produits: false };
+  function rendreFiltreCorbeille(c, cle, nbActifs, nbCorbeille) {
+    c.appendChild(el('div', { class: 'filtre-corbeille' },
+      el('button', { class: vueCorbeille[cle] ? '' : 'actif', onclick: () => { vueCorbeille[cle] = false; rafraichirContenu(); } }, 'Tous (' + nbActifs + ')'),
+      el('button', { class: vueCorbeille[cle] ? 'actif' : '', onclick: () => { vueCorbeille[cle] = true; rafraichirContenu(); } }, '🗑 Corbeille (' + nbCorbeille + ')')));
   }
 
   // -------------------------------------------------- PAGES
@@ -523,18 +537,26 @@
       el('h1', {}, 'Pages'),
       el('button', { class: 'bouton-principal', onclick: () => creerPage() }, '+ Ajouter une page')));
 
+    const enCorbeille = vueCorbeille.pages;
+    rendreFiltreCorbeille(c, 'pages', state.pages.filter((p) => !p.supprime).length, state.pages.filter((p) => p.supprime).length);
     rendreBarreOutils(c, { recherche: rechercheStock.pages, onRecherche: (v) => { rechercheStock.pages = v; rafraichirContenu(); } });
 
     const q = rechercheStock.pages.toLowerCase();
-    const items = state.pages.filter((p) => !q || p.titre.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
+    const items = state.pages.filter((p) => !!p.supprime === enCorbeille && (!q || p.titre.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q)));
 
-    rendreBarreSelection(c, selectionStock.pages, {
+    rendreBarreSelection(c, selectionStock.pages, enCorbeille ? {
       pluriel: 'pages sélectionnées',
-      onSupprimer: (ids) => { state.pages = state.pages.filter((p) => !ids.includes(p.id)); },
+      actions: [
+        { label: '↩ Restaurer', onClick: (ids) => { state.pages.forEach((p) => { if (ids.includes(p.id)) { p.supprime = false; p.dateSuppression = null; } }); } },
+        { label: '🗑 Supprimer définitivement', classe: 'bouton-danger-plein', confirmation: 'Supprimer définitivement cette sélection ? Cette action est irréversible.', onClick: (ids) => { state.pages = state.pages.filter((p) => !ids.includes(p.id)); } },
+      ],
+    } : {
+      pluriel: 'pages sélectionnées',
+      actions: [{ label: '🗑 Mettre à la corbeille', classe: 'bouton-danger-plein', onClick: (ids) => { state.pages.forEach((p) => { if (ids.includes(p.id)) { p.supprime = true; p.dateSuppression = Date.now(); } }); } }],
     });
 
     const tableCarte = el('div', { class: 'table-carte' });
-    if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucune page pour le moment.')); c.appendChild(tableCarte); return; }
+    if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, enCorbeille ? 'La corbeille est vide.' : 'Aucune page pour le moment.')); c.appendChild(tableCarte); return; }
 
     const table = el('table', { class: 'table-liste' },
       el('thead', {}, el('tr', {}, caseSelectionEntete(selectionStock.pages, items.map((p) => p.id)), el('th', {}, 'Titre'), el('th', {}, 'Type'), el('th', {}, 'URL'), el('th', {}, 'Statut'), el('th', {}, 'Modifiée'), el('th', {}, 'Actions'))));
@@ -542,12 +564,15 @@
     items.forEach((p) => {
       corps.appendChild(el('tr', {},
         caseSelectionLigne(selectionStock.pages, p.id),
-        el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('pages-edition', { id: p.id }); } }, p.titre)),
+        el('td', {}, enCorbeille ? p.titre : el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('pages-edition', { id: p.id }); } }, p.titre)),
         el('td', {}, p.type === 'vente' ? el('span', { class: 'badge type-vente' }, 'Page de vente') : 'Standard'),
         el('td', {}, p.slug),
         el('td', {}, el('span', { class: 'badge ' + p.statut }, p.statut === 'publie' ? 'Publiée' : 'Brouillon')),
         el('td', {}, formaterDate(p.dateModif)),
-        el('td', {}, el('div', { class: 'actions-ligne' },
+        el('td', {}, enCorbeille ? el('div', { class: 'actions-ligne' },
+          el('button', { onclick: () => restaurerPage(p.id) }, 'Restaurer'),
+          el('button', { class: 'suppr', onclick: () => supprimerPageDefinitivement(p.id) }, 'Supprimer définitivement')
+        ) : el('div', { class: 'actions-ligne' },
           el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('pages-edition', { id: p.id }); } }, 'Modifier'),
           el('button', { class: 'suppr', onclick: () => supprimerPage(p.id) }, 'Supprimer')))));
     });
@@ -557,13 +582,26 @@
   }
 
   function creerPage() {
-    const page = { id: uid(), titre: 'Nouvelle page', slug: '/nouvelle-page', type: 'standard', statut: 'brouillon', contenu: '', metaTitre: '', metaDescription: '', ctaTexte: '', ctaLien: '', dateModif: Date.now() };
+    const page = { id: uid(), titre: 'Nouvelle page', slug: '/nouvelle-page', type: 'standard', statut: 'brouillon', contenu: '', metaTitre: '', metaDescription: '', ctaTexte: '', ctaLien: '', supprime: false, dateSuppression: null, dateModif: Date.now() };
     state.pages.push(page);
     marquerModifie();
     allerA('pages-edition', { id: page.id });
   }
   function supprimerPage(id) {
-    if (!window.confirm('Supprimer cette page ?')) return;
+    if (!window.confirm('Mettre cette page à la corbeille ?')) return;
+    const page = state.pages.find((p) => p.id === id);
+    if (page) { page.supprime = true; page.dateSuppression = Date.now(); }
+    marquerModifie();
+    rafraichirContenu();
+  }
+  function restaurerPage(id) {
+    const page = state.pages.find((p) => p.id === id);
+    if (page) { page.supprime = false; page.dateSuppression = null; }
+    marquerModifie();
+    rafraichirContenu();
+  }
+  function supprimerPageDefinitivement(id) {
+    if (!window.confirm('Supprimer définitivement cette page ? Cette action est irréversible.')) return;
     state.pages = state.pages.filter((p) => p.id !== id);
     marquerModifie();
     rafraichirContenu();
@@ -629,18 +667,26 @@
     filtreCategorie.addEventListener('change', () => { filtreCategorieArticle = filtreCategorie.value; rafraichirContenu(); });
     filtreCategorie.value = filtreCategorieArticle || '';
 
+    const enCorbeille = vueCorbeille.articles;
+    rendreFiltreCorbeille(c, 'articles', state.articles.filter((a) => !a.supprime).length, state.articles.filter((a) => a.supprime).length);
     rendreBarreOutils(c, { recherche: rechercheStock.articles, onRecherche: (v) => { rechercheStock.articles = v; rafraichirContenu(); }, filtres: [filtreCategorie] });
 
     const q = rechercheStock.articles.toLowerCase();
-    const items = state.articles.filter((a) => (!q || a.titre.toLowerCase().includes(q)) && (!filtreCategorieArticle || a.categorieId === filtreCategorieArticle));
+    const items = state.articles.filter((a) => !!a.supprime === enCorbeille && (!q || a.titre.toLowerCase().includes(q)) && (!filtreCategorieArticle || a.categorieId === filtreCategorieArticle));
 
-    rendreBarreSelection(c, selectionStock.articles, {
+    rendreBarreSelection(c, selectionStock.articles, enCorbeille ? {
       pluriel: 'articles sélectionnés',
-      onSupprimer: (ids) => { state.articles = state.articles.filter((a) => !ids.includes(a.id)); },
+      actions: [
+        { label: '↩ Restaurer', onClick: (ids) => { state.articles.forEach((a) => { if (ids.includes(a.id)) { a.supprime = false; a.dateSuppression = null; } }); } },
+        { label: '🗑 Supprimer définitivement', classe: 'bouton-danger-plein', confirmation: 'Supprimer définitivement cette sélection ? Cette action est irréversible.', onClick: (ids) => { state.articles = state.articles.filter((a) => !ids.includes(a.id)); } },
+      ],
+    } : {
+      pluriel: 'articles sélectionnés',
+      actions: [{ label: '🗑 Mettre à la corbeille', classe: 'bouton-danger-plein', onClick: (ids) => { state.articles.forEach((a) => { if (ids.includes(a.id)) { a.supprime = true; a.dateSuppression = Date.now(); } }); } }],
     });
 
     const tableCarte = el('div', { class: 'table-carte' });
-    if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucun article pour le moment.')); c.appendChild(tableCarte); return; }
+    if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, enCorbeille ? 'La corbeille est vide.' : 'Aucun article pour le moment.')); c.appendChild(tableCarte); return; }
     const table = el('table', { class: 'table-liste' },
       el('thead', {}, el('tr', {}, caseSelectionEntete(selectionStock.articles, items.map((a) => a.id)), el('th', {}, 'Titre'), el('th', {}, 'Catégorie'), el('th', {}, 'Auteur'), el('th', {}, 'Statut'), el('th', {}, 'Modifié'), el('th', {}, 'Actions'))));
     const corps = el('tbody', {});
@@ -648,12 +694,15 @@
       const cat = state.categoriesArticles.find((cc) => cc.id === a.categorieId);
       corps.appendChild(el('tr', {},
         caseSelectionLigne(selectionStock.articles, a.id),
-        el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('articles-edition', { id: a.id }); } }, a.titre)),
+        el('td', {}, enCorbeille ? a.titre : el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('articles-edition', { id: a.id }); } }, a.titre)),
         el('td', {}, cat ? cat.nom : '—'),
         el('td', {}, a.auteur || '—'),
         el('td', {}, el('span', { class: 'badge ' + a.statut }, a.statut === 'publie' ? 'Publié' : 'Brouillon')),
         el('td', {}, formaterDate(a.dateModif)),
-        el('td', {}, el('div', { class: 'actions-ligne' },
+        el('td', {}, enCorbeille ? el('div', { class: 'actions-ligne' },
+          el('button', { onclick: () => restaurerArticle(a.id) }, 'Restaurer'),
+          el('button', { class: 'suppr', onclick: () => supprimerArticleDefinitivement(a.id) }, 'Supprimer définitivement')
+        ) : el('div', { class: 'actions-ligne' },
           el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('articles-edition', { id: a.id }); } }, 'Modifier'),
           el('button', { class: 'suppr', onclick: () => supprimerArticle(a.id) }, 'Supprimer')))));
     });
@@ -664,13 +713,26 @@
   let filtreCategorieArticle = '';
 
   function creerArticle() {
-    const article = { id: uid(), titre: 'Nouvel article', categorieId: state.categoriesArticles[0] ? state.categoriesArticles[0].id : null, auteur: '', contenu: '', extrait: '', imageUrl: '', statut: 'brouillon', datePublication: '', metaTitre: '', metaDescription: '', dateModif: Date.now() };
+    const article = { id: uid(), titre: 'Nouvel article', categorieId: state.categoriesArticles[0] ? state.categoriesArticles[0].id : null, auteur: '', contenu: '', extrait: '', imageUrl: '', statut: 'brouillon', datePublication: '', metaTitre: '', metaDescription: '', supprime: false, dateSuppression: null, dateModif: Date.now() };
     state.articles.push(article);
     marquerModifie();
     allerA('articles-edition', { id: article.id });
   }
   function supprimerArticle(id) {
-    if (!window.confirm('Supprimer cet article ?')) return;
+    if (!window.confirm('Mettre cet article à la corbeille ?')) return;
+    const article = state.articles.find((a) => a.id === id);
+    if (article) { article.supprime = true; article.dateSuppression = Date.now(); }
+    marquerModifie();
+    rafraichirContenu();
+  }
+  function restaurerArticle(id) {
+    const article = state.articles.find((a) => a.id === id);
+    if (article) { article.supprime = false; article.dateSuppression = null; }
+    marquerModifie();
+    rafraichirContenu();
+  }
+  function supprimerArticleDefinitivement(id) {
+    if (!window.confirm('Supprimer définitivement cet article ? Cette action est irréversible.')) return;
     state.articles = state.articles.filter((a) => a.id !== id);
     marquerModifie();
     rafraichirContenu();
@@ -747,18 +809,26 @@
       el('h1', {}, 'Produits'),
       el('button', { class: 'bouton-principal', onclick: () => creerProduit() }, '+ Ajouter un produit')));
 
+    const enCorbeille = vueCorbeille.produits;
+    rendreFiltreCorbeille(c, 'produits', state.produits.filter((p) => !p.supprime).length, state.produits.filter((p) => p.supprime).length);
     rendreBarreOutils(c, { recherche: rechercheStock.produits, onRecherche: (v) => { rechercheStock.produits = v; rafraichirContenu(); } });
 
     const q = rechercheStock.produits.toLowerCase();
-    const items = state.produits.filter((p) => !q || p.nom.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q));
+    const items = state.produits.filter((p) => !!p.supprime === enCorbeille && (!q || p.nom.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)));
 
-    rendreBarreSelection(c, selectionStock.produits, {
+    rendreBarreSelection(c, selectionStock.produits, enCorbeille ? {
       pluriel: 'produits sélectionnés',
-      onSupprimer: (ids) => { state.produits = state.produits.filter((p) => !ids.includes(p.id)); },
+      actions: [
+        { label: '↩ Restaurer', onClick: (ids) => { state.produits.forEach((p) => { if (ids.includes(p.id)) { p.supprime = false; p.dateSuppression = null; } }); } },
+        { label: '🗑 Supprimer définitivement', classe: 'bouton-danger-plein', confirmation: 'Supprimer définitivement cette sélection ? Cette action est irréversible.', onClick: (ids) => { state.produits = state.produits.filter((p) => !ids.includes(p.id)); } },
+      ],
+    } : {
+      pluriel: 'produits sélectionnés',
+      actions: [{ label: '🗑 Mettre à la corbeille', classe: 'bouton-danger-plein', onClick: (ids) => { state.produits.forEach((p) => { if (ids.includes(p.id)) { p.supprime = true; p.dateSuppression = Date.now(); } }); } }],
     });
 
     const tableCarte = el('div', { class: 'table-carte' });
-    if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, 'Aucun produit pour le moment.')); c.appendChild(tableCarte); return; }
+    if (!items.length) { tableCarte.appendChild(el('div', { class: 'vide-liste' }, enCorbeille ? 'La corbeille est vide.' : 'Aucun produit pour le moment.')); c.appendChild(tableCarte); return; }
     const table = el('table', { class: 'table-liste' },
       el('thead', {}, el('tr', {}, caseSelectionEntete(selectionStock.produits, items.map((p) => p.id)), el('th', {}, ''), el('th', {}, 'Nom'), el('th', {}, 'Référence'), el('th', {}, 'Prix'), el('th', {}, 'Stock'), el('th', {}, 'Statut'), el('th', {}, 'Actions'))));
     const corps = el('tbody', {});
@@ -766,12 +836,15 @@
       corps.appendChild(el('tr', {},
         caseSelectionLigne(selectionStock.produits, p.id),
         el('td', {}, p.images[0] ? el('img', { class: 'vignette-produit', src: p.images[0], alt: '' }) : el('div', { class: 'vignette-produit' })),
-        el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('produits-edition', { id: p.id }); } }, p.nom), p.nouveaute ? el('span', { class: 'badge badge-nouveaute' }, 'Nouveau') : null),
+        el('td', {}, enCorbeille ? p.nom : el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('produits-edition', { id: p.id }); } }, p.nom), p.nouveaute ? el('span', { class: 'badge badge-nouveaute' }, 'Nouveau') : null),
         el('td', {}, p.sku),
         el('td', {}, Number(p.prix).toFixed(2) + ' €'),
         el('td', {}, String(p.stock)),
         el('td', {}, el('span', { class: 'badge ' + (p.statut === 'actif' ? 'publie' : 'inactif') }, p.statut === 'actif' ? 'Actif' : 'Inactif')),
-        el('td', {}, el('div', { class: 'actions-ligne' },
+        el('td', {}, enCorbeille ? el('div', { class: 'actions-ligne' },
+          el('button', { onclick: () => restaurerProduit(p.id) }, 'Restaurer'),
+          el('button', { class: 'suppr', onclick: () => supprimerProduitDefinitivement(p.id) }, 'Supprimer définitivement')
+        ) : el('div', { class: 'actions-ligne' },
           el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('produits-edition', { id: p.id }); } }, 'Modifier'),
           el('button', { class: 'suppr', onclick: () => supprimerProduit(p.id) }, 'Supprimer')))));
     });
@@ -781,13 +854,26 @@
   }
 
   function creerProduit() {
-    const produit = { id: uid(), nom: 'Nouveau produit', sku: '', prix: 0, prixBarre: '', descriptionCourte: '', descriptionLongue: '', images: [], stock: 0, statut: 'inactif', categorieId: state.categoriesProduits[0] ? state.categoriesProduits[0].id : null, nouveaute: false, avecDeclinaisons: false, declinaisons: [], metaTitre: '', metaDescription: '', dateModif: Date.now() };
+    const produit = { id: uid(), nom: 'Nouveau produit', sku: '', prix: 0, prixBarre: '', descriptionCourte: '', descriptionLongue: '', images: [], stock: 0, statut: 'inactif', categorieId: state.categoriesProduits[0] ? state.categoriesProduits[0].id : null, nouveaute: false, avecDeclinaisons: false, declinaisons: [], metaTitre: '', metaDescription: '', supprime: false, dateSuppression: null, dateModif: Date.now() };
     state.produits.push(produit);
     marquerModifie();
     allerA('produits-edition', { id: produit.id });
   }
   function supprimerProduit(id) {
-    if (!window.confirm('Supprimer ce produit ?')) return;
+    if (!window.confirm('Mettre ce produit à la corbeille ?')) return;
+    const produit = state.produits.find((p) => p.id === id);
+    if (produit) { produit.supprime = true; produit.dateSuppression = Date.now(); }
+    marquerModifie();
+    rafraichirContenu();
+  }
+  function restaurerProduit(id) {
+    const produit = state.produits.find((p) => p.id === id);
+    if (produit) { produit.supprime = false; produit.dateSuppression = null; }
+    marquerModifie();
+    rafraichirContenu();
+  }
+  function supprimerProduitDefinitivement(id) {
+    if (!window.confirm('Supprimer définitivement ce produit ? Cette action est irréversible.')) return;
     state.produits = state.produits.filter((p) => p.id !== id);
     marquerModifie();
     rafraichirContenu();

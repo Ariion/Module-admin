@@ -155,8 +155,19 @@ button{ font:inherit }
   background:var(--danger); color:#fff; border:0; padding:7px 14px; border-radius:4px; font-weight:600; font-size:.82rem; cursor:pointer;
 }
 .bouton-danger-plein:hover{ background:#b32d2f; }
+.barre-selection__actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.barre-selection__actions button.bouton-secondaire, .barre-selection__actions button:not(.bouton-danger-plein){
+  background:#fff; color:var(--texte); border:1px solid var(--trait); padding:7px 14px; border-radius:4px; font-weight:600; font-size:.82rem; cursor:pointer;
+}
 .case-selection{ width:34px; text-align:center !important; }
 .case-selection input[type="checkbox"]{ width:15px; height:15px; cursor:pointer; }
+
+.filtre-corbeille{ display:flex; gap:4px; margin-bottom:12px; }
+.filtre-corbeille button{
+  background:none; border:0; padding:6px 12px; border-radius:99px; font-size:.84rem; color:var(--texte-discret); cursor:pointer;
+}
+.filtre-corbeille button.actif{ background:var(--carte-fond); color:var(--accent); font-weight:600; border:1px solid var(--trait); }
+.filtre-corbeille button:hover:not(.actif){ color:var(--texte); }
 
 /* -------------------------------------------------- table */
 .table-carte{ background:var(--carte-fond); border:1px solid var(--trait); border-radius:6px; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
