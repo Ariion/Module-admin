@@ -756,7 +756,7 @@
       panneau.appendChild(champTexte('Titre', article.titre, (v) => { article.titre = v; maj(); }));
       panneau.appendChild(champTexte('Résumé / extrait', article.extrait, (v) => { article.extrait = v; maj(); }));
       panneau.appendChild(champRiche('Contenu', article.contenu, (v) => { article.contenu = v; maj(); }));
-      panneau.appendChild(champTexte("Adresse de l'image à la une", article.imageUrl, (v) => { article.imageUrl = v; maj(); }));
+      panneau.appendChild(champImageAvecBibliotheque("Adresse de l'image à la une", article.imageUrl, (v) => { article.imageUrl = v; maj(); }));
     } else {
       rendreOngletSEO(panneau, {
         titre: article.titre, url: '/articles/' + slugify(article.titre), metaTitre: article.metaTitre, metaDescription: article.metaDescription,
@@ -853,6 +853,32 @@
         el('div', { class: 'carte-media__actions' }, boutonCopier, boutonSupprimer)));
     });
     c.appendChild(grille);
+  }
+
+  // Sélecteur de média en modale : réutilisé partout où un champ image peut piocher dans la bibliothèque plutôt que coller une URL à la main.
+  function ouvrirSelecteurMedia(onChoisir) {
+    if (!state.medias.length) { toast('Aucun média — ajoutez-en depuis « Médias »'); return; }
+    const fermer = () => fond.remove();
+    const grille = el('div', { class: 'grille-medias' });
+    state.medias.slice().sort((a, b) => b.dateAjout - a.dateAjout).forEach((m) => {
+      grille.appendChild(el('div', { class: 'carte-media carte-media--selectionnable', onclick: () => { onChoisir(m.dataUrl); fermer(); } },
+        el('img', { src: m.dataUrl, alt: m.nom }),
+        el('div', { class: 'carte-media__info' }, el('div', { class: 'carte-media__nom', title: m.nom }, m.nom))));
+    });
+    const modale = el('div', { class: 'modale' },
+      el('div', { class: 'modale__entete' }, el('h2', {}, 'Choisir un média'), el('button', { class: 'modale__fermer', onclick: fermer }, '✕')),
+      el('div', { class: 'modale__corps' }, grille));
+    const fond = el('div', { class: 'modale-fond' }, modale);
+    fond.addEventListener('click', (e) => { if (e.target === fond) fermer(); });
+    document.body.appendChild(fond);
+  }
+
+  // Champ URL d'image avec bouton vers la bibliothèque de médias ; met à jour l'input en DOM directement (pas de rafraichirContenu) pour ne pas perdre le focus pendant la saisie.
+  function champImageAvecBibliotheque(label, valeur, onChange) {
+    const input = el('input', { type: 'url', placeholder: 'Adresse de l’image (URL)', value: valeur ?? '' });
+    input.addEventListener('input', () => onChange(input.value));
+    const boutonBibliotheque = el('button', { type: 'button', class: 'bouton-secondaire', onclick: () => ouvrirSelecteurMedia((dataUrl) => { input.value = dataUrl; onChange(dataUrl); }) }, '📁 Bibliothèque');
+    return el('div', { class: 'champ' }, el('label', {}, label), el('div', { class: 'champ-avec-bouton' }, input, boutonBibliotheque));
   }
 
   // -------------------------------------------------- PRODUITS
@@ -1025,7 +1051,8 @@
     const bouton = el('button', { class: 'bouton-secondaire' }, 'Ajouter');
     bouton.addEventListener('click', ajouter);
     champUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ajouter(); } });
-    conteneur.appendChild(el('div', { class: 'ajout-categorie' }, champUrl, bouton));
+    const boutonBibliotheque = el('button', { class: 'bouton-secondaire', onclick: () => ouvrirSelecteurMedia((dataUrl) => { produit.images.push(dataUrl); maj(); rafraichirContenu(); }) }, '📁 Bibliothèque');
+    conteneur.appendChild(el('div', { class: 'ajout-categorie' }, champUrl, bouton, boutonBibliotheque));
     return conteneur;
   }
 
