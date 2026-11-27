@@ -1196,6 +1196,46 @@
       champTexte('Nom du site', state.reglages.nomSite, (v) => { state.reglages.nomSite = v; maj(); }),
       champTextarea('Description / slogan', state.reglages.description, (v) => { state.reglages.description = v; maj(); }),
       champAide("La charte graphique (couleurs, police) du contenu publié se règle dans le Constructeur, onglet « Réglages du site ».")));
+
+    c.appendChild(rendreCarteSauvegardeDonnees());
+  }
+
+  // Export/import JSON de toutes les données du backoffice : tout vit en localStorage, donc une vraie sauvegarde/restauration évite une perte de données irréversible.
+  function rendreCarteSauvegardeDonnees() {
+    const boutonExporter = el('button', { class: 'bouton-secondaire', onclick: () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const lien = el('a', { href: url, download: 'backoffice-' + slugify(state.reglages.nomSite) + '-' + new Date().toISOString().slice(0, 10) + '.json' });
+      document.body.appendChild(lien);
+      lien.click();
+      lien.remove();
+      URL.revokeObjectURL(url);
+      toast('✓ Export téléchargé');
+    } }, '⬇ Exporter les données (JSON)');
+
+    const champFichier = el('input', { type: 'file', accept: 'application/json', style: { display: 'none' } });
+    champFichier.addEventListener('change', () => {
+      const fichier = champFichier.files[0];
+      if (!fichier) return;
+      const lecteur = new FileReader();
+      lecteur.onload = () => {
+        let donnees;
+        try { donnees = JSON.parse(lecteur.result); } catch (e) { toast('✗ Fichier invalide'); return; }
+        if (!window.confirm('Importer ce fichier remplacera toutes les données actuelles (pages, articles, produits, commandes, clients…). Continuer ?')) return;
+        Object.assign(state, donnees);
+        marquerModifie();
+        flusherSauvegarde();
+        toast('✓ Données importées');
+        allerA('tableau-de-bord');
+      };
+      lecteur.readAsText(fichier);
+      champFichier.value = '';
+    });
+    const boutonImporter = el('button', { class: 'bouton-secondaire', onclick: () => champFichier.click() }, '⬆ Importer des données');
+
+    return el('div', { class: 'carte' }, el('h2', {}, 'Sauvegarde des données'),
+      el('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap' } }, boutonExporter, boutonImporter, champFichier),
+      champAide('Toutes les données de ce backoffice sont stockées uniquement dans ce navigateur. Exportez régulièrement une copie de sauvegarde.'));
   }
 
   // -------------------------------------------------- amorçage
