@@ -609,6 +609,7 @@
   }
 
   let ongletEditionActif = 'contenu';
+  let apercuEnDirectVisible = false;
 
   function rendreEditionPage(c) {
     const page = state.pages.find((p) => p.id === state.edition.id);
@@ -618,8 +619,23 @@
     c.appendChild(el('div', { class: 'fil-ariane' }, el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('pages'); } }, 'Pages'), ' / ' + page.titre));
     c.appendChild(el('div', { class: 'entete-vue' },
       el('h1', {}, page.titre || 'Sans titre'),
-      el('div', {}, el('a', { class: 'bouton-secondaire', href: lienApercuPage(page), target: '_blank', rel: 'noopener', style: { marginRight: '8px' } }, '↗ Aperçu'),
-        el('button', { class: 'bouton-principal', onclick: () => { flusherSauvegarde(); toast('✓ Page enregistrée'); } }, 'Enregistrer'))));
+      el('div', {},
+        el('button', { class: 'bouton-secondaire', style: { marginRight: '8px' }, onclick: () => { apercuEnDirectVisible = !apercuEnDirectVisible; rafraichirContenu(); } }, (apercuEnDirectVisible ? '✕ Fermer' : '👁 Aperçu en direct')),
+        el('a', { class: 'bouton-secondaire', href: lienApercuPage(page), target: '_blank', rel: 'noopener', style: { marginRight: '8px' } }, '↗ Nouvel onglet'),
+        el('button', { class: 'bouton-principal', onclick: () => {
+          flusherSauvegarde();
+          toast('✓ Page enregistrée');
+          const ifr = document.getElementById('apercu-direct-iframe');
+          if (ifr) ifr.src = ifr.src;
+        } }, 'Enregistrer'))));
+
+    if (apercuEnDirectVisible) {
+      c.appendChild(el('div', { class: 'apercu-direct' },
+        el('div', { class: 'apercu-direct__barre' },
+          el('span', {}, '👁 Aperçu en direct — ' + lienApercuPage(page)),
+          el('button', { class: 'bouton-secondaire', onclick: () => { const ifr = document.getElementById('apercu-direct-iframe'); if (ifr) ifr.src = ifr.src; } }, '⟳ Actualiser')),
+        el('iframe', { id: 'apercu-direct-iframe', src: lienApercuPage(page), title: 'Aperçu en direct du site' })));
+    }
 
     const mise = el('div', { class: 'mise-en-page-edition' });
     const onglets = ['contenu', 'seo'];
