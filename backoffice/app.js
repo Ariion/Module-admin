@@ -358,11 +358,17 @@
     mettreAJourLienVoirSite();
   }
 
+  // Pas de vrai serveur ici : une page autre que l'accueil se prévisualise via ?page=<slug>,
+  // que demo/rendu-backoffice.js sait lire (le routage par chemin n'existe pas sur un hébergement statique).
+  function lienApercuPage(page) {
+    if (!page) return '/demo/index.html';
+    return page.slug === '/' ? '/demo/index.html' : '/demo/index.html?page=' + encodeURIComponent(page.slug);
+  }
+
   function mettreAJourLienVoirSite() {
     const lien = document.getElementById('lien-voir-site');
     if (state.vue === 'pages-edition' && state.edition) {
-      const page = state.pages.find((p) => p.id === state.edition.id);
-      lien.href = page ? '/demo/index.html' + (page.slug && page.slug !== '/' ? page.slug : '') : '/demo/index.html';
+      lien.href = lienApercuPage(state.pages.find((p) => p.id === state.edition.id));
     } else {
       lien.href = '/demo/index.html';
     }
@@ -612,7 +618,7 @@
     c.appendChild(el('div', { class: 'fil-ariane' }, el('a', { href: '#', onclick: (e) => { e.preventDefault(); allerA('pages'); } }, 'Pages'), ' / ' + page.titre));
     c.appendChild(el('div', { class: 'entete-vue' },
       el('h1', {}, page.titre || 'Sans titre'),
-      el('div', {}, el('a', { class: 'bouton-secondaire', href: page.slug, target: '_blank', rel: 'noopener', style: { marginRight: '8px' } }, '↗ Aperçu'),
+      el('div', {}, el('a', { class: 'bouton-secondaire', href: lienApercuPage(page), target: '_blank', rel: 'noopener', style: { marginRight: '8px' } }, '↗ Aperçu'),
         el('button', { class: 'bouton-principal', onclick: () => { flusherSauvegarde(); toast('✓ Page enregistrée'); } }, 'Enregistrer'))));
 
     const mise = el('div', { class: 'mise-en-page-edition' });

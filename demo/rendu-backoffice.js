@@ -52,22 +52,29 @@
     }
   }
 
-  // -------------------------------------------------- page d'accueil (contenu géré dans Pages)
-  const pageAccueil = Array.isArray(state.pages) && state.pages.find((p) => p.slug === '/' && !p.supprime && p.statut === 'publie');
-  if (pageAccueil && pageAccueil.contenu && pageAccueil.contenu.trim()) {
+  // -------------------------------------------------- page affichée (contenu géré dans Pages)
+  // Sans vrai serveur, impossible de router par chemin : la page demandée se passe en
+  // ?page=<slug>, comme le génère le lien "↗ Aperçu" du backoffice. Sans paramètre, page d'accueil.
+  const slugDemande = new URLSearchParams(location.search).get('page');
+  const pageAffichee = Array.isArray(state.pages) && state.pages.find((p) =>
+    !p.supprime && p.statut === 'publie' && p.slug === (slugDemande || '/'));
+  if (pageAffichee && pageAffichee.contenu && pageAffichee.contenu.trim()) {
     const section = document.getElementById('a-propos-backoffice');
     const titre = document.getElementById('a-propos-titre');
     const contenu = document.getElementById('a-propos-contenu');
     if (section && titre && contenu) {
-      titre.textContent = pageAccueil.titre || '';
-      contenu.innerHTML = pageAccueil.contenu;
+      titre.textContent = pageAffichee.titre || '';
+      contenu.innerHTML = pageAffichee.contenu;
+      if (pageAffichee.type === 'vente' && pageAffichee.ctaTexte) {
+        contenu.appendChild(el('p', {}, el('a', { class: 'bouton', href: pageAffichee.ctaLien || '#' }, pageAffichee.ctaTexte)));
+      }
       section.style.display = 'block';
     }
-    if (pageAccueil.metaTitre) document.title = pageAccueil.metaTitre;
-    if (pageAccueil.metaDescription) {
+    if (pageAffichee.metaTitre) document.title = pageAffichee.metaTitre;
+    if (pageAffichee.metaDescription) {
       let meta = document.querySelector('meta[name="description"]');
       if (!meta) { meta = el('meta', { name: 'description' }); document.head.appendChild(meta); }
-      meta.setAttribute('content', pageAccueil.metaDescription);
+      meta.setAttribute('content', pageAffichee.metaDescription);
     }
   }
 
