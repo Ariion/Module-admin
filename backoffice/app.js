@@ -38,6 +38,46 @@
     input.addEventListener('input', () => onChange(input.value));
     return el('div', { class: 'champ' }, el('label', {}, label), input);
   }
+
+  // Éditeur riche minimal (contentEditable + document.execCommand), façon TinyMCE/Gutenberg simplifié pour Pages/Articles/Produits.
+  const COMMANDES_EDITEUR = [
+    { commande: 'bold', icone: 'B', titre: 'Gras', style: 'font-weight:700' },
+    { commande: 'italic', icone: 'I', titre: 'Italique', style: 'font-style:italic' },
+    { commande: 'underline', icone: 'U', titre: 'Souligné', style: 'text-decoration:underline' },
+    { separateur: true },
+    { commande: 'formatBlock', valeur: 'h2', icone: 'H2', titre: 'Titre' },
+    { commande: 'formatBlock', valeur: 'p', icone: '¶', titre: 'Paragraphe' },
+    { separateur: true },
+    { commande: 'insertUnorderedList', icone: '• •', titre: 'Liste à puces' },
+    { commande: 'insertOrderedList', icone: '1.', titre: 'Liste numérotée' },
+    { commande: 'formatBlock', valeur: 'blockquote', icone: '❝', titre: 'Citation' },
+    { separateur: true },
+    { commande: 'createLink', icone: '🔗', titre: 'Insérer un lien', demandeUrl: true },
+    { commande: 'unlink', icone: '🔗✕', titre: 'Retirer le lien' },
+  ];
+  function champRiche(label, valeurHtml, onChange) {
+    const zone = el('div', { class: 'editeur-riche__zone', contenteditable: 'true', html: valeurHtml ?? '' });
+    const barre = el('div', { class: 'editeur-riche__barre' });
+    COMMANDES_EDITEUR.forEach((cfg) => {
+      if (cfg.separateur) { barre.appendChild(el('span', { class: 'editeur-riche__separateur' })); return; }
+      const bouton = el('button', { type: 'button', title: cfg.titre, style: cfg.style || {} }, cfg.icone);
+      bouton.addEventListener('mousedown', (e) => e.preventDefault());
+      bouton.addEventListener('click', () => {
+        zone.focus();
+        if (cfg.demandeUrl) {
+          const url = window.prompt('Adresse du lien :', 'https://');
+          if (!url) return;
+          document.execCommand(cfg.commande, false, url);
+        } else {
+          document.execCommand(cfg.commande, false, cfg.valeur || null);
+        }
+        onChange(zone.innerHTML);
+      });
+      barre.appendChild(bouton);
+    });
+    zone.addEventListener('input', () => onChange(zone.innerHTML));
+    return el('div', { class: 'champ' }, el('label', {}, label), el('div', { class: 'editeur-riche' }, barre, zone));
+  }
   function champSelect(label, options, valeur, onChange) {
     const select = el('select', {});
     options.forEach((o) => {
@@ -552,7 +592,7 @@
     if (ongletEditionActif === 'contenu') {
       panneau.appendChild(champTexte('Titre', page.titre, (v) => { page.titre = v; maj(); }));
       panneau.appendChild(champTexte('URL (slug)', page.slug, (v) => { page.slug = v; maj(); }));
-      panneau.appendChild(champTextarea('Contenu', page.contenu, (v) => { page.contenu = v; maj(); }, true));
+      panneau.appendChild(champRiche('Contenu', page.contenu, (v) => { page.contenu = v; maj(); }));
       if (page.type === 'vente') {
         panneau.appendChild(el('div', { class: 'champ-inline' },
           champTexte("Texte du bouton d'appel à l'action", page.ctaTexte, (v) => { page.ctaTexte = v; maj(); }),
@@ -658,7 +698,7 @@
     if (ongletArticleActif === 'contenu') {
       panneau.appendChild(champTexte('Titre', article.titre, (v) => { article.titre = v; maj(); }));
       panneau.appendChild(champTexte('Résumé / extrait', article.extrait, (v) => { article.extrait = v; maj(); }));
-      panneau.appendChild(champTextarea('Contenu', article.contenu, (v) => { article.contenu = v; maj(); }, true));
+      panneau.appendChild(champRiche('Contenu', article.contenu, (v) => { article.contenu = v; maj(); }));
       panneau.appendChild(champTexte("Adresse de l'image à la une", article.imageUrl, (v) => { article.imageUrl = v; maj(); }));
     } else {
       rendreOngletSEO(panneau, {
@@ -778,7 +818,7 @@
         champTexte('Référence (SKU)', produit.sku, (v) => { produit.sku = v; maj(); }),
         champNombre('Stock', produit.stock, (v) => { produit.stock = v; maj(); })));
       panneau.appendChild(champTextarea('Description courte', produit.descriptionCourte, (v) => { produit.descriptionCourte = v; maj(); }));
-      panneau.appendChild(champTextarea('Description longue', produit.descriptionLongue, (v) => { produit.descriptionLongue = v; maj(); }, true));
+      panneau.appendChild(champRiche('Description longue', produit.descriptionLongue, (v) => { produit.descriptionLongue = v; maj(); }));
       panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Images'), rendreBlocImagesProduit(produit, maj)));
       panneau.appendChild(champToggle('Marquer comme nouveauté', produit.nouveaute, (v) => { produit.nouveaute = v; maj(); rafraichirContenu(); }));
     } else if (ongletProduitActif === 'declinaisons') {

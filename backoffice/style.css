@@ -198,7 +198,16 @@ table.table-liste tr:hover td{ background:#f6f7f7; }
 
 /* -------------------------------------------------- formulaire édition */
 .mise-en-page-edition{ display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
+.mise-en-page-edition > *{ min-width:0; }
 @media (max-width:1100px){ .mise-en-page-edition{ grid-template-columns:1fr; } }
+@media (max-width:600px){
+  /* .contenu a overflow-y:auto, ce qui force overflow-x à "auto" aussi (règle CSS implicite) :
+     un enfant trop large ne déborde donc jamais visiblement la page (document.scrollWidth reste
+     inchangé) mais devient défilable/coupé silencieusement à l'intérieur de .contenu. D'où ces
+     règles pour empêcher toute rangée interne de dépasser la largeur utile sur petit écran. */
+  .champ-inline{ flex-direction:column; gap:0; }
+  .onglets-form{ flex-wrap:wrap; }
+}
 
 .onglets-form{ display:flex; gap:2px; border-bottom:1px solid var(--trait); margin-bottom:0; background:var(--carte-fond); border-radius:6px 6px 0 0; padding:0 8px; }
 .onglets-form button{
@@ -215,6 +224,23 @@ table.table-liste tr:hover td{ background:#f6f7f7; }
 }
 .champ textarea{ min-height:100px; resize:vertical; font-family:inherit; }
 .champ textarea.textarea-longue{ min-height:220px; }
+
+.editeur-riche{ border:1px solid var(--trait); border-radius:4px; overflow:hidden; }
+.editeur-riche__barre{ display:flex; flex-wrap:wrap; gap:2px; padding:6px; background:#f6f7f7; border-bottom:1px solid var(--trait); }
+.editeur-riche__barre button{
+  background:none; border:0; border-radius:4px; padding:6px 9px; font-size:.82rem; font-weight:600; color:var(--texte);
+  cursor:pointer; min-width:30px;
+}
+.editeur-riche__barre button:hover{ background:#e2e4e7; }
+.editeur-riche__separateur{ width:1px; background:var(--trait); margin:4px 4px; }
+.editeur-riche__zone{
+  min-height:220px; padding:14px 16px; font-size:.92rem; line-height:1.6; outline:none;
+}
+.editeur-riche__zone h2{ font-size:1.2rem; margin:.6em 0 .3em; }
+.editeur-riche__zone blockquote{ margin:.6em 0; padding-left:14px; border-left:3px solid var(--trait); color:var(--texte-discret); }
+.editeur-riche__zone ul, .editeur-riche__zone ol{ padding-left:22px; margin:.4em 0; }
+.editeur-riche__zone p{ margin:0 0 .6em; }
+.editeur-riche__zone a{ color:var(--accent); }
 .champ-aide-texte{ font-size:.78rem; color:var(--texte-discret); margin-top:4px; }
 .champ-inline{ display:flex; gap:12px; }
 .champ-inline > div{ flex:1; }
