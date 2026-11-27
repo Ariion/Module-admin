@@ -56,6 +56,10 @@ button{ font:inherit }
 }
 .nav-laterale__item:hover{ background:var(--nav-fond-survol); color:#fff; }
 .nav-laterale__item.actif{ background:var(--accent); color:#fff; }
+.nav-laterale__groupe-titre{
+  padding:16px 18px 6px; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+  color:rgba(255,255,255,.35);
+}
 .nav-laterale__icone{ font-size:1rem; width:18px; text-align:center; }
 .nav-laterale__pied{ margin-top:auto; padding:14px 18px; border-top:1px solid rgba(255,255,255,.1); }
 .nav-laterale__pied a{ color:var(--nav-texte); text-decoration:none; font-size:.82rem; }
