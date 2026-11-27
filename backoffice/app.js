@@ -726,7 +726,7 @@
       corps.appendChild(el('tr', {},
         caseSelectionLigne(selectionStock.produits, p.id),
         el('td', {}, p.images[0] ? el('img', { class: 'vignette-produit', src: p.images[0], alt: '' }) : el('div', { class: 'vignette-produit' })),
-        el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('produits-edition', { id: p.id }); } }, p.nom)),
+        el('td', {}, el('a', { class: 'titre-lien', href: '#', onclick: (e) => { e.preventDefault(); allerA('produits-edition', { id: p.id }); } }, p.nom), p.nouveaute ? el('span', { class: 'badge badge-nouveaute' }, 'Nouveau') : null),
         el('td', {}, p.sku),
         el('td', {}, Number(p.prix).toFixed(2) + ' €'),
         el('td', {}, String(p.stock)),
@@ -741,7 +741,7 @@
   }
 
   function creerProduit() {
-    const produit = { id: uid(), nom: 'Nouveau produit', sku: '', prix: 0, prixBarre: '', descriptionCourte: '', descriptionLongue: '', images: [], stock: 0, statut: 'inactif', categorieId: state.categoriesProduits[0] ? state.categoriesProduits[0].id : null, avecDeclinaisons: false, declinaisons: [], metaTitre: '', metaDescription: '', dateModif: Date.now() };
+    const produit = { id: uid(), nom: 'Nouveau produit', sku: '', prix: 0, prixBarre: '', descriptionCourte: '', descriptionLongue: '', images: [], stock: 0, statut: 'inactif', categorieId: state.categoriesProduits[0] ? state.categoriesProduits[0].id : null, nouveaute: false, avecDeclinaisons: false, declinaisons: [], metaTitre: '', metaDescription: '', dateModif: Date.now() };
     state.produits.push(produit);
     marquerModifie();
     allerA('produits-edition', { id: produit.id });
@@ -780,6 +780,7 @@
       panneau.appendChild(champTextarea('Description courte', produit.descriptionCourte, (v) => { produit.descriptionCourte = v; maj(); }));
       panneau.appendChild(champTextarea('Description longue', produit.descriptionLongue, (v) => { produit.descriptionLongue = v; maj(); }, true));
       panneau.appendChild(el('div', { class: 'champ' }, el('label', {}, 'Images'), rendreBlocImagesProduit(produit, maj)));
+      panneau.appendChild(champToggle('Marquer comme nouveauté', produit.nouveaute, (v) => { produit.nouveaute = v; maj(); rafraichirContenu(); }));
     } else if (ongletProduitActif === 'declinaisons') {
       const avecDeclinaisons = produit.avecDeclinaisons ?? produit.declinaisons.length > 0;
       panneau.appendChild(champRadioGroup('Type de produit', [

@@ -189,6 +189,7 @@ table.table-liste tr:hover td{ background:#f6f7f7; }
 .badge.expediee{ background:#e6f7f5; color:#0f9488; }
 .badge.livree{ background:#edfaef; color:var(--succes); }
 .badge.annulee{ background:#fbeaea; color:var(--danger); }
+.badge-nouveaute{ background:#fdf0d5; color:#b06a00; margin-left:8px; }
 
 .pagination{ display:flex; gap:6px; justify-content:flex-end; padding:12px 14px; }
 .pagination button{ background:#fff; border:1px solid var(--trait); border-radius:4px; width:30px; height:30px; cursor:pointer; }
